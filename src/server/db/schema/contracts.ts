@@ -33,6 +33,8 @@ export const contracts = sqliteTable(
     status: text("status", { enum: contractStatuses }).notNull().default("draft"),
     /** false = acknowledgement only ("I have read and approve"). */
     requireSignature: bool("require_signature").notNull().default(true),
+    /** Reusable template (not sent). Supports {{placeholders}} filled when creating from it. */
+    isTemplate: bool("is_template").notNull().default(false),
     shareToken: text("share_token"),
     contentHash: text("content_hash"),
     version: integer("version").notNull().default(1),

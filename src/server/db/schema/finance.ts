@@ -141,3 +141,21 @@ export const invoiceItems = sqliteTable(
   },
   (t) => [index("invoice_items_invoice_idx").on(t.invoiceId)],
 );
+
+/**
+ * Exchange rates for reporting in the base currency (settings.business.baseCurrency).
+ * `rate` = how many units of `base` one unit of `currency` is worth on `date`.
+ */
+export const fxRates = sqliteTable(
+  "fx_rates",
+  {
+    id: pk(),
+    currency: text("currency").notNull(),
+    base: text("base").notNull(),
+    rate: real("rate").notNull(),
+    date: timestamp("date").notNull(),
+    source: text("source").notNull().default("manual"),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("fx_rates_pair_date_uq").on(t.currency, t.base, t.date)],
+);
