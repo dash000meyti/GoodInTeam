@@ -1,0 +1,34 @@
+/** Inferred row types for convenience: `import type { Project } from "@/server/db/schema"`. */
+import type { apiTokens, users } from "./auth";
+import type { clients } from "./crm";
+import type { milestones, projects, projectUpdates } from "./projects";
+import type { events, tasks, timeEntries } from "./work";
+import type { accounts, categories, invoiceItems, invoices, transactions } from "./finance";
+import type { contracts, contractSignatures } from "./contracts";
+import type { vaultItems } from "./vault";
+import type { docs } from "./knowledge";
+import type { leads, media, posts, series, testimonials } from "./content";
+
+export type User = typeof users.$inferSelect;
+export type ApiToken = typeof apiTokens.$inferSelect;
+export type Client = typeof clients.$inferSelect;
+export type Project = typeof projects.$inferSelect;
+export type Milestone = typeof milestones.$inferSelect;
+export type ProjectUpdate = typeof projectUpdates.$inferSelect;
+export type Task = typeof tasks.$inferSelect;
+export type TimeEntry = typeof timeEntries.$inferSelect;
+export type CalendarEvent = typeof events.$inferSelect;
+export type Account = typeof accounts.$inferSelect;
+export type Category = typeof categories.$inferSelect;
+export type Transaction = typeof transactions.$inferSelect;
+export type Invoice = typeof invoices.$inferSelect;
+export type InvoiceItem = typeof invoiceItems.$inferSelect;
+export type Contract = typeof contracts.$inferSelect;
+export type ContractSignature = typeof contractSignatures.$inferSelect;
+export type VaultItem = typeof vaultItems.$inferSelect;
+export type Doc = typeof docs.$inferSelect;
+export type Post = typeof posts.$inferSelect;
+export type Series = typeof series.$inferSelect;
+export type Media = typeof media.$inferSelect;
+export type Lead = typeof leads.$inferSelect;
+export type Testimonial = typeof testimonials.$inferSelect;

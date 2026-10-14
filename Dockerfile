@@ -1,0 +1,47 @@
+# syntax=docker/dockerfile:1.7
+# ─── Good Team — production image ──────────────────────────────────────────
+# Runtime data (SQLite DB, uploads, backups) lives in the /data volume.
+
+ARG NODE_VERSION=22
+
+FROM node:${NODE_VERSION}-bookworm-slim AS base
+ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1
+RUN corepack enable
+
+# 1) Dependencies (with toolchain for native modules like better-sqlite3)
+FROM base AS deps
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+# 2) Build
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ARG NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+RUN pnpm build
+
+# 3) Runtime
+FROM node:${NODE_VERSION}-bookworm-slim AS runner
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0 DATA_DIR=/data
+RUN apt-get update && apt-get install -y --no-install-recommends curl tini && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /data && chown node:node /data
+
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/drizzle ./drizzle
+COPY --from=builder --chown=node:node /app/scripts/backup.mjs ./scripts/backup.mjs
+
+USER node
+VOLUME ["/data"]
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:3000/api/health || exit 1
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["node", "server.js"]

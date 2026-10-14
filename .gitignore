@@ -1,0 +1,33 @@
+# deps
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+
+# testing
+/coverage
+/test-results
+/playwright-report
+
+# next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# runtime data (SQLite DB, uploads, backups) — lives in the Docker volume
+/data
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+pnpm-debug.log*
+
+# env files (commit .env.example only)
+.env*
+!.env.example
+
+# vercel
+.vercel

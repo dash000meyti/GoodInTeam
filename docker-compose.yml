@@ -1,0 +1,27 @@
+# Production-like run:   docker compose up -d --build
+# Data persists in the named volume `goodteam-data` (mounted at /data).
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    image: ghcr.io/dash000meyti/goodinteam:latest
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATA_DIR: /data
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      APP_SECRET: ${APP_SECRET:?Set APP_SECRET in .env}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Tehran}
+      OWNER_EMAIL: ${OWNER_EMAIL:-}
+      OWNER_PASSWORD: ${OWNER_PASSWORD:-}
+    volumes:
+      - goodteam-data:/data
+
+volumes:
+  goodteam-data:

@@ -1,0 +1,25 @@
+import type { clients as fa } from "../fa/clients";
+
+export const clients: Record<keyof typeof fa, string> = {
+  title: "Clients & teams",
+  subtitle: "Companies, teams and people you work with.",
+  new: "New client",
+  edit: "Edit client",
+  kind: "Type",
+  kind_company: "Company",
+  kind_team: "Team",
+  kind_person: "Person",
+  website: "Website",
+  address: "Address",
+  taxId: "Tax ID",
+  defaultCurrency: "Default currency",
+  portalUsers: "Portal users",
+  portalUsersHint: "These people sign in to the client portal with their own email and password.",
+  invite: "Invite user",
+  inviteDone: "User created. Send them this temporary password securely:",
+  tempPassword: "Temporary password",
+  empty: "No clients yet.",
+  emptyHint: "Add clients and teams to link projects, invoices and contracts to them.",
+  projectsCount: "{n} projects",
+  archive: "Archive",
+};
