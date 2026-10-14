@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import * as g from "date-fns";
 import * as j from "date-fns-jalali";
-import { enUS, faIR } from "date-fns-jalali/locale";
+import { enUS } from "date-fns/locale";
+import { faIR } from "date-fns-jalali/locale";
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
