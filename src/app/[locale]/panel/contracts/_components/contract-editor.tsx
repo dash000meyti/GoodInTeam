@@ -250,7 +250,8 @@ export function ContractEditor({
               rows={24}
               dir="auto"
               placeholder={c.bodyPlaceholder}
-              className="[&_textarea]:min-h-[50vh]"
+              // Monospace breaks Persian letter joining → write contracts in the UI font.
+              className="[&_textarea]:min-h-[50vh] [&_textarea]:font-sans [&_textarea]:text-[15px] [&_textarea]:leading-8"
             />
             {form.errors.bodyMd?.[0] ? (
               <p className="text-xs font-medium text-destructive" role="alert">
