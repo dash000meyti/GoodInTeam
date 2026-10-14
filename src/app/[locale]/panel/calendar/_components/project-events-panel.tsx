@@ -94,25 +94,40 @@ function EventList({
   if (!items.length) return null;
   return (
     <section>
-      <h3 className="mb-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">{title}</h3>
+      <h3 className="mb-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">
+        {title}
+      </h3>
       <ul className="divide-y divide-dashed">
         {items.map((item) => {
           const ev = item.event!;
           const key = dayKeyOf(item.start, tz);
           const isCommitment = ev.kind === "commitment";
           return (
-            <li key={item.key} className={cn("flex items-center gap-3 py-3", muted && "opacity-75")}>
+            <li
+              key={item.key}
+              className={cn("flex items-center gap-3 py-3", muted && "opacity-75")}
+            >
               <div className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-muted/60 py-1.5 text-center">
                 <span className="text-[10px] font-semibold text-muted-foreground">
                   {weekdayName(key, locale, "short")}
                 </span>
-                <span className="text-lg leading-6 font-extrabold tabular-nums">{dayNumber(key, locale)}</span>
-                <span className="text-[10px] text-muted-foreground">{monthName(key, locale, "short")}</span>
+                <span className="text-lg leading-6 font-extrabold tabular-nums">
+                  {dayNumber(key, locale)}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {monthName(key, locale, "short")}
+                </span>
               </div>
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5 font-semibold">
-                  <ItemIcon item={item} className="size-3.5 shrink-0" style={{ color: item.color }} />
-                  <span className="truncate">{item.title}</span>
+                  <ItemIcon
+                    item={item}
+                    className="size-3.5 shrink-0"
+                    style={{ color: item.color }}
+                  />
+                  <span dir="auto" className="truncate">
+                    {item.title}
+                  </span>
                 </p>
                 <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                   <span className="tabular-nums">

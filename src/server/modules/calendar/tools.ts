@@ -114,7 +114,8 @@ export const calendarTools = [
     input: eventInput,
     scope: "write",
     roles: [...STAFF],
-    handler: (input, actor) => svc.eventToJson(svc.getEvent(actor, svc.createEvent(actor, input).id)),
+    handler: (input, actor) =>
+      svc.eventToJson(svc.getEvent(actor, svc.createEvent(actor, input).id)),
   }),
   defineTool({
     name: "calendar_update_event",
@@ -124,7 +125,8 @@ export const calendarTools = [
     input: updateEventInput,
     scope: "write",
     roles: [...STAFF],
-    handler: (input, actor) => svc.eventToJson(svc.getEvent(actor, svc.updateEvent(actor, input).id)),
+    handler: (input, actor) =>
+      svc.eventToJson(svc.getEvent(actor, svc.updateEvent(actor, input).id)),
   }),
   defineTool({
     name: "calendar_delete_event",
@@ -167,7 +169,8 @@ export const calendarTools = [
     scope: "write",
     roles: [...STAFF],
     handler: (input, actor) => {
-      if (input.due) svc.rescheduleCommitment(actor, { id: input.id, due: input.due, dueTime: input.dueTime });
+      if (input.due)
+        svc.rescheduleCommitment(actor, { id: input.id, due: input.due, dueTime: input.dueTime });
       if (input.status) svc.setCommitmentStatus(actor, { id: input.id, status: input.status });
       return svc.eventToJson(svc.getEvent(actor, input.id));
     },

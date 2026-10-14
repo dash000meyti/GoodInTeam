@@ -44,9 +44,7 @@ export interface EventPrefill {
 }
 
 export type EventDialogState =
-  | { mode: "create"; prefill: EventPrefill }
-  | { mode: "edit"; event: CalendarEventData }
-  | null;
+  { mode: "create"; prefill: EventPrefill } | { mode: "edit"; event: CalendarEventData } | null;
 
 type DeleteTarget = Pick<CalendarEventData, "id" | "title" | "recurrence">;
 

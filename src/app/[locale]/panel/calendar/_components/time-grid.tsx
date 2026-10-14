@@ -153,7 +153,9 @@ export function TimeGridView({
                     ...chipStyle(item.color),
                   }}
                 >
-                  <span className={cn("truncate", muted && "line-through")}>{itemTitle(item, c)}</span>
+                  <span dir="auto" className={cn("truncate", muted && "line-through")}>
+                    {itemTitle(item, c)}
+                  </span>
                 </button>
               </ItemPopover>
             );
@@ -209,16 +211,23 @@ function DayColumn({
   const weekend = isWeekend(weekdayOfKey(dayKey), cal.locale);
 
   return (
-    <div className={cn("relative border-s border-dashed", weekend && "bg-muted/25 dark:bg-muted/15")}>
+    <div
+      className={cn("relative border-s border-dashed", weekend && "bg-muted/25 dark:bg-muted/15")}
+    >
       {HOURS.map((h) => (
         <button
           key={h}
           type="button"
+          tabIndex={-1}
           aria-label={format(c.createAt, { time: `${dayText} ${hourLabel(h, cal.locale)}` })}
           onClick={(e) => {
             const half = e.nativeEvent.offsetY >= HOUR / 2 ? 30 : 0;
             const startTime = `${pad(h)}:${pad(half)}`;
-            cal.openCreate({ date: dayKey, startTime, endTime: `${pad((h + 1) % 24)}:${pad(half)}` });
+            cal.openCreate({
+              date: dayKey,
+              startTime,
+              endTime: `${pad((h + 1) % 24)}:${pad(half)}`,
+            });
           }}
           className="absolute inset-x-0 cursor-pointer border-t border-dashed border-border/80 outline-none after:pointer-events-none after:absolute after:inset-x-0 after:top-1/2 after:border-t after:border-dotted after:border-border/50 first:border-t-0 hover:bg-primary/4 focus-visible:bg-primary/8 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset"
           style={{ top: h * HOUR, height: HOUR }}
@@ -249,7 +258,14 @@ function DayColumn({
                 backgroundColor: `color-mix(in oklab, ${item.color} 18%, var(--card))`,
               }}
             >
-              <span className={cn("min-w-0 truncate font-bold", muted && "line-through")}>
+              <span
+                dir="auto"
+                className={cn(
+                  "max-w-full min-w-0 self-start truncate font-bold",
+                  compact && "self-auto",
+                  muted && "line-through",
+                )}
+              >
                 {itemTitle(item, c)}
               </span>
               <span

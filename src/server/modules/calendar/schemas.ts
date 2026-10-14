@@ -167,7 +167,15 @@ export const rescheduleCommitmentInput = z.object({
   dueTime: z.preprocess(blankToUndefined, zTime.optional()),
 });
 
-export const commitmentFilters = ["all", "pending", "overdue", "upcoming", "kept", "missed", "canceled"] as const;
+export const commitmentFilters = [
+  "all",
+  "pending",
+  "overdue",
+  "upcoming",
+  "kept",
+  "missed",
+  "canceled",
+] as const;
 
 export const listCommitmentsInput = z.object({
   status: z.enum(commitmentFilters).default("all"),

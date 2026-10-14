@@ -78,7 +78,12 @@ export function AgendaView({
               href={dayHref(g.key)}
               className="flex w-12 shrink-0 flex-col items-center rounded-xl py-1 text-center transition-colors hover:bg-accent sm:w-14"
             >
-              <span className={cn("text-xs font-semibold", today ? "text-primary" : "text-muted-foreground")}>
+              <span
+                className={cn(
+                  "text-xs font-semibold",
+                  today ? "text-primary" : "text-muted-foreground",
+                )}
+              >
                 {weekdayName(g.key, cal.locale, "short")}
               </span>
               <span
@@ -124,7 +129,8 @@ export function AgendaRow({
     : continued
       ? "…"
       : timeLabel(item.start, cal.tz, cal.locale);
-  const endText = !item.allDay && item.end > item.start ? timeLabel(item.end, cal.tz, cal.locale) : null;
+  const endText =
+    !item.allDay && item.end > item.start ? timeLabel(item.end, cal.tz, cal.locale) : null;
   const meta = [itemTypeLabel(item, c), item.project?.name, item.client?.name, item.event?.location]
     .filter(Boolean)
     .join(" · ");
@@ -153,18 +159,24 @@ export function AgendaRow({
           </span>
           <span
             aria-hidden
-            className={cn("w-1 shrink-0 self-stretch rounded-full", compact ? "min-h-7" : "min-h-9")}
+            className={cn(
+              "w-1 shrink-0 self-stretch rounded-full",
+              compact ? "min-h-7" : "min-h-9",
+            )}
             style={{ backgroundColor: item.color }}
           />
           <span className="min-w-0 flex-1">
-            <span
-              className={cn(
-                "block truncate font-semibold",
-                compact ? "text-[13px]" : "text-sm",
-                muted && "text-muted-foreground line-through",
-              )}
-            >
-              {itemTitle(item, c)}
+            <span className="flex min-w-0">
+              <span
+                dir="auto"
+                className={cn(
+                  "truncate font-semibold",
+                  compact ? "text-[13px]" : "text-sm",
+                  muted && "text-muted-foreground line-through",
+                )}
+              >
+                {itemTitle(item, c)}
+              </span>
             </span>
             <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
               <ItemIcon item={item} className="size-3 shrink-0" style={{ color: item.color }} />
@@ -194,7 +206,12 @@ export function AgendaRow({
       </ItemPopover>
       {ev?.meetingUrl && !compact && (
         <Button asChild size="sm" variant="soft" className="shrink-0">
-          <a href={ev.meetingUrl} target="_blank" rel="noopener noreferrer" aria-label={`${c.join}: ${item.title}`}>
+          <a
+            href={ev.meetingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${c.join}: ${item.title}`}
+          >
             <VideoIcon /> <span className="hidden sm:inline">{c.join}</span>
           </a>
         </Button>

@@ -12,8 +12,18 @@ describe("layoutSpans", () => {
     const { segments } = layoutSpans([span("a", -D, 2 * D), span("b", 5 * D, 9 * D)], week);
     const a = segments.find((s) => s.item.key === "a")!;
     const b = segments.find((s) => s.item.key === "b")!;
-    expect(a).toMatchObject({ startCol: 0, endCol: 1, continuesBefore: true, continuesAfter: false });
-    expect(b).toMatchObject({ startCol: 5, endCol: 6, continuesBefore: false, continuesAfter: true });
+    expect(a).toMatchObject({
+      startCol: 0,
+      endCol: 1,
+      continuesBefore: true,
+      continuesAfter: false,
+    });
+    expect(b).toMatchObject({
+      startCol: 5,
+      endCol: 6,
+      continuesBefore: false,
+      continuesAfter: true,
+    });
   });
 
   it("treats point items as occupying their day", () => {

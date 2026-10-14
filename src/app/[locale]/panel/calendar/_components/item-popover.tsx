@@ -75,7 +75,8 @@ export function ItemDetails({ item, onClose }: { item: CalendarItem; onClose?: (
   const fmt = { locale: cal.locale, timeZone: cal.tz };
   const isCommitment = ev?.kind === "commitment";
   const canEdit = !!ev?.canEdit;
-  const pendingCommitment = isCommitment && (ev.status === "confirmed" || ev.status === "tentative");
+  const pendingCommitment =
+    isCommitment && (ev.status === "confirmed" || ev.status === "tentative");
   const href = (p: string) => localePath(cal.locale, p);
 
   const setStatus = (status: "kept" | "missed") =>
@@ -178,8 +179,7 @@ export function ItemDetails({ item, onClose }: { item: CalendarItem; onClose?: (
         )}
         {item.amount && (
           <Row icon={WalletIcon}>
-            {c.amountDue}:{" "}
-            <b>{formatMoney(item.amount.minor, item.amount.currency, cal.locale)}</b>
+            {c.amountDue}: <b>{formatMoney(item.amount.minor, item.amount.currency, cal.locale)}</b>
           </Row>
         )}
         {ev && ev.attendees.length > 0 && (
@@ -263,7 +263,12 @@ export function ItemDetails({ item, onClose }: { item: CalendarItem; onClose?: (
               <CopyPlusIcon /> {c.duplicate}
             </Button>
             <Button variant="ghost" size="icon-sm" asChild>
-              <a href={`/api/calendar/events/${ev.id}`} download aria-label={c.downloadIcs} title={c.downloadIcs}>
+              <a
+                href={`/api/calendar/events/${ev.id}`}
+                download
+                aria-label={c.downloadIcs}
+                title={c.downloadIcs}
+              >
                 <DownloadIcon />
               </a>
             </Button>

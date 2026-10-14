@@ -58,9 +58,9 @@ describe("rrule for ics", () => {
   });
 
   it("shifts BYMONTHDAY across month edges", () => {
-    expect(shiftRRuleDays(parseRRule("FREQ=MONTHLY;BYMONTHDAY=1,15,-1")!, -1).byMonthDay).toEqual(
-      [-1, 14, -2],
-    );
+    expect(shiftRRuleDays(parseRRule("FREQ=MONTHLY;BYMONTHDAY=1,15,-1")!, -1).byMonthDay).toEqual([
+      -1, 14, -2,
+    ]);
     expect(shiftRRuleDays(parseRRule("FREQ=MONTHLY;BYMONTHDAY=-1,10")!, 1).byMonthDay).toEqual([
       1, 11,
     ]);

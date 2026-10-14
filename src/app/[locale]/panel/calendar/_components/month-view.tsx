@@ -33,16 +33,16 @@ export function MonthView({
 }) {
   const cal = useCalendar();
   const weeks = useMemo(
-    () => monthWeeks(anchor, { tz: cal.tz, calendar: cal.calendar, weekStartsOn: cal.weekStartsOn }),
+    () =>
+      monthWeeks(anchor, { tz: cal.tz, calendar: cal.calendar, weekStartsOn: cal.weekStartsOn }),
     [anchor, cal.tz, cal.calendar, cal.weekStartsOn],
   );
   return (
-    <div role="grid" aria-readonly className="select-none">
-      <div role="row" className="grid grid-cols-7 border-b border-dashed">
+    <div className="select-none">
+      <div aria-hidden className="grid grid-cols-7 border-b border-dashed">
         {weeks[0]!.map((cell) => (
           <div
             key={cell.weekday}
-            role="columnheader"
             className="truncate px-1 py-2.5 text-center text-xs font-semibold text-muted-foreground"
           >
             <span className="hidden md:inline">{weekdayName(cell.key, cal.locale, "long")}</span>
@@ -81,7 +81,6 @@ function WeekRow({
 
   return (
     <div
-      role="row"
       className="relative grid grid-cols-7 border-b border-dashed last:border-b-0"
       style={{ gridTemplateRows: `2.25rem repeat(${MAX_LANES}, 1.375rem) minmax(0.375rem, 1fr)` }}
     >
@@ -91,8 +90,6 @@ function WeekRow({
         return (
           <div
             key={cell.key}
-            role="gridcell"
-            aria-label={label}
             className={cn(
               "relative min-h-24 border-e border-dashed last:border-e-0 sm:min-h-[7.25rem]",
               !cell.inMonth
@@ -103,6 +100,7 @@ function WeekRow({
           >
             <button
               type="button"
+              tabIndex={-1}
               className="absolute inset-0 cursor-pointer transition-colors outline-none hover:bg-primary/4 focus-visible:bg-primary/8 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset"
               aria-label={format(c.createOn, { date: label })}
               onClick={() => cal.openCreate({ date: cell.key })}
@@ -192,7 +190,9 @@ function SegmentChip({ seg }: { seg: SpanSegment<CalendarItem> }) {
             {timeLabel(item.start, cal.tz, cal.locale)}
           </span>
         )}
-        <span className={cn("truncate", muted && "line-through")}>{itemTitle(item, t.calendar)}</span>
+        <span dir="auto" className={cn("truncate", muted && "line-through")}>
+          {itemTitle(item, t.calendar)}
+        </span>
       </button>
     </ItemPopover>
   );

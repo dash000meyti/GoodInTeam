@@ -60,7 +60,11 @@ export default async function CommitmentsPage({
   const all = listCommitments(actor, {}, now);
   const filtered =
     clientId || projectId
-      ? listCommitments(actor, { clientId: clientId ?? undefined, projectId: projectId ?? undefined }, now)
+      ? listCommitments(
+          actor,
+          { clientId: clientId ?? undefined, projectId: projectId ?? undefined },
+          now,
+        )
       : all;
   const { items, stats } = filtered;
 
@@ -164,11 +168,13 @@ export default async function CommitmentsPage({
             />
           )}
           {all.items.length === 0 ? (
-            <EmptyState icon={HandshakeIcon} title={c.noCommitments} description={c.noCommitmentsHint} />
+            <EmptyState
+              icon={HandshakeIcon}
+              title={c.noCommitments}
+              description={c.noCommitmentsHint}
+            />
           ) : (
-            groupOrder.map((g) => (
-              <GroupCard key={g} group={g} items={groups[g]} ctx={ctx} />
-            ))
+            groupOrder.map((g) => <GroupCard key={g} group={g} items={groups[g]} ctx={ctx} />)
           )}
         </div>
 
@@ -221,8 +227,16 @@ const groupMeta: Record<
   (typeof groupOrder)[number],
   { icon: typeof CheckIcon; tone: string; badge: "destructive" | "warning" | "success" | "neutral" }
 > = {
-  overdue: { icon: AlertTriangleIcon, tone: "bg-destructive/12 text-destructive", badge: "destructive" },
-  upcoming: { icon: HourglassIcon, tone: "bg-warning/16 text-[#b76e00] dark:text-warning", badge: "warning" },
+  overdue: {
+    icon: AlertTriangleIcon,
+    tone: "bg-destructive/12 text-destructive",
+    badge: "destructive",
+  },
+  upcoming: {
+    icon: HourglassIcon,
+    tone: "bg-warning/16 text-[#b76e00] dark:text-warning",
+    badge: "warning",
+  },
   kept: { icon: CheckIcon, tone: "bg-success/12 text-success", badge: "success" },
   missed: { icon: XIcon, tone: "bg-grey-500/12 text-muted-foreground", badge: "neutral" },
 };
@@ -253,7 +267,9 @@ function GroupCard({
         </Badge>
       </div>
       {items.length === 0 ? (
-        <p className="px-6 py-6 text-center text-sm text-muted-foreground">{c[`groupEmpty_${group}`]}</p>
+        <p className="px-6 py-6 text-center text-sm text-muted-foreground">
+          {c[`groupEmpty_${group}`]}
+        </p>
       ) : (
         <ul className="divide-y divide-dashed">
           {items.map((item) => (

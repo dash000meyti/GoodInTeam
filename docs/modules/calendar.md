@@ -113,11 +113,11 @@ A one-line quick form ("what + to whom + due") sits at the top.
 
 ## Access
 
-| Role         | Calendar                                                                                                         |
-| ------------ | ---------------------------------------------------------------------------------------------------------------- |
-| owner/admin  | everything; edit all events; invoice overlay                                                                     |
-| member       | events they created + events of projects they're assigned to; task overlay: assigned/created/project tasks; may edit only events they created; can't link clients directly |
-| client       | no calendar page; `ProjectEventsPanel` shows only `visibleToClient` events of their portal projects, without description/attendees/reminders |
+| Role        | Calendar                                                                                                                                                                   |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| owner/admin | everything; edit all events; invoice overlay                                                                                                                               |
+| member      | events they created + events of projects they're assigned to; task overlay: assigned/created/project tasks; may edit only events they created; can't link clients directly |
+| client      | no calendar page; `ProjectEventsPanel` shows only `visibleToClient` events of their portal projects, without description/attendees/reminders                               |
 
 `eventAccessWhere(actor)` in `service.ts` is the single SQL filter.
 
@@ -125,7 +125,7 @@ A one-line quick form ("what + to whom + due") sits at the top.
 
 ```tsx
 import { ProjectEventsPanel } from "@/app/[locale]/panel/calendar/_components/project-events-panel";
-<ProjectEventsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
+<ProjectEventsPanel projectId={project.id} ctx={ctx} clientView={isClient} />;
 ```
 
 Async server component: upcoming (next 120 days, recurring expanded) and recent events of the
@@ -139,14 +139,14 @@ project, with Join buttons. `clientView` is forced for client users.
 
 ## Tools (MCP / REST)
 
-| Tool                             | Scope                 | What                                                                 |
-| -------------------------------- | --------------------- | -------------------------------------------------------------------- |
-| `calendar_list`                  | read                  | everything in a range (`from`/`to`, optional `sources`)              |
-| `calendar_agenda`                | read                  | today / next N days, structured + ready-to-read `text`               |
-| `calendar_get_event`             | read                  | one event (UTC + local wall-clock times)                             |
-| `calendar_create_event`          | write                 | create (date/time fields or `startAt`/`endAt`, RRULE, attendees…)    |
-| `calendar_update_event`          | write                 | partial update; moving the start keeps the duration                  |
-| `calendar_delete_event`          | write (destructive)   | delete (whole series)                                                |
-| `calendar_list_commitments`      | read                  | filter by status/client/project + keeping stats                      |
-| `calendar_create_commitment`     | write                 | what + to whom + due (+ promisedAt)                                  |
-| `calendar_set_commitment_status` | write                 | kept / missed / canceled / pending and/or reschedule with `due`      |
+| Tool                             | Scope               | What                                                              |
+| -------------------------------- | ------------------- | ----------------------------------------------------------------- |
+| `calendar_list`                  | read                | everything in a range (`from`/`to`, optional `sources`)           |
+| `calendar_agenda`                | read                | today / next N days, structured + ready-to-read `text`            |
+| `calendar_get_event`             | read                | one event (UTC + local wall-clock times)                          |
+| `calendar_create_event`          | write               | create (date/time fields or `startAt`/`endAt`, RRULE, attendees…) |
+| `calendar_update_event`          | write               | partial update; moving the start keeps the duration               |
+| `calendar_delete_event`          | write (destructive) | delete (whole series)                                             |
+| `calendar_list_commitments`      | read                | filter by status/client/project + keeping stats                   |
+| `calendar_create_commitment`     | write               | what + to whom + due (+ promisedAt)                               |
+| `calendar_set_commitment_status` | write               | kept / missed / canceled / pending and/or reschedule with `due`   |

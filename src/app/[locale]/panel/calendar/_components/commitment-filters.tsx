@@ -44,7 +44,11 @@ export function CommitmentFilters({
         onChange={(v) => go({ client: v || null })}
         noneLabel={c.filterClient}
         placeholder={c.filterClient}
-        options={clients.map((x) => ({ value: x.id, label: x.name, icon: <ColorDot color={x.color} /> }))}
+        options={clients.map((x) => ({
+          value: x.id,
+          label: x.name,
+          icon: <ColorDot color={x.color} />,
+        }))}
       />
       <SelectField
         size="sm"
@@ -53,7 +57,11 @@ export function CommitmentFilters({
         onChange={(v) => go({ project: v || null })}
         noneLabel={c.filterProject}
         placeholder={c.filterProject}
-        options={projects.map((x) => ({ value: x.id, label: x.name, icon: <ColorDot color={x.color} /> }))}
+        options={projects.map((x) => ({
+          value: x.id,
+          label: x.name,
+          icon: <ColorDot color={x.color} />,
+        }))}
       />
       {(clientId || projectId) && (
         <Button variant="ghost" size="sm" onClick={() => go({ client: null, project: null })}>

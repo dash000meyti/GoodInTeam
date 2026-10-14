@@ -22,7 +22,11 @@ const { dayStartMs } = await import("@/components/calendar/grid");
 
 const TZ = "Asia/Tehran";
 const at = (iso: string) => new Date(iso);
-const actor = (u: { id: string; role: Actor["user"]["role"]; clientId?: string | null }): Actor => ({
+const actor = (u: {
+  id: string;
+  role: Actor["user"]["role"];
+  clientId?: string | null;
+}): Actor => ({
   via: "session",
   scopes: ["read", "write", "admin"],
   user: {
@@ -106,11 +110,17 @@ const range = (from: string, to: string) => ({
 
 describe("access", () => {
   it("owner sees everything, members only own + assigned project events", () => {
-    const all = svc.listCalendarItems(owner, { ...range("2026-10-10", "2026-10-20"), sources: ["events"] });
+    const all = svc.listCalendarItems(owner, {
+      ...range("2026-10-10", "2026-10-20"),
+      sources: ["events"],
+    });
     expect(new Set(all.map((i) => i.title))).toEqual(
       new Set(["Dentist", "Acme sync", "P1 internal", "P2 meeting", "Standup"]),
     );
-    const mine = svc.listCalendarItems(member, { ...range("2026-10-10", "2026-10-20"), sources: ["events"] });
+    const mine = svc.listCalendarItems(member, {
+      ...range("2026-10-10", "2026-10-20"),
+      sources: ["events"],
+    });
     expect(new Set(mine.map((i) => i.title))).toEqual(new Set(["Acme sync", "P1 internal"]));
     expect(mine.every((i) => i.event?.canEdit === false)).toBe(true);
   });
@@ -244,9 +254,9 @@ describe("commitments", () => {
     expect(moved.startAt.toISOString()).toBe("2026-10-20T11:30:00.000Z");
 
     expect(() => svc.setCommitmentStatus(owner, { id: ids.shared!, status: "kept" })).toThrow();
-    expect(svc.listCommitmentsJson(owner, { status: "overdue" }).commitments.map((c) => c.title)).toContain(
-      "Late",
-    );
+    expect(
+      svc.listCommitmentsJson(owner, { status: "overdue" }).commitments.map((c) => c.title),
+    ).toContain("Late");
   });
 });
 

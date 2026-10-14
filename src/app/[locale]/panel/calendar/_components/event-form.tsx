@@ -1,7 +1,14 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import { ChevronDownIcon, Loader2Icon, PlusIcon, RepeatIcon, Trash2Icon, XIcon } from "lucide-react";
+import {
+  ChevronDownIcon,
+  Loader2Icon,
+  PlusIcon,
+  RepeatIcon,
+  Trash2Icon,
+  XIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -54,7 +61,8 @@ const presetKeys = ["daily", "weekdays", "weekly", "biweekly", "monthly", "yearl
 type PresetKey = (typeof presetKeys)[number];
 
 function presetRule(key: PresetKey, locale: "fa" | "en") {
-  if (key === "weekdays") return locale === "fa" ? rrulePresets.weekdaysIran : rrulePresets.weekdays;
+  if (key === "weekdays")
+    return locale === "fa" ? rrulePresets.weekdaysIran : rrulePresets.weekdays;
   return rrulePresets[key];
 }
 
@@ -172,7 +180,13 @@ export function EventFormDialog({
   );
 }
 
-function EventForm({ state, onDone }: { state: NonNullable<EventDialogState>; onDone: () => void }) {
+function EventForm({
+  state,
+  onDone,
+}: {
+  state: NonNullable<EventDialogState>;
+  onDone: () => void;
+}) {
   const t = useT();
   const c = t.calendar;
   const cal = useCalendar();
@@ -196,7 +210,12 @@ function EventForm({ state, onDone }: { state: NonNullable<EventDialogState>; on
   const [customRule, setCustomRule] = useState(initialPreset === "custom" ? init.recurrence : "");
   const [more, setMore] = useState(
     !!editing &&
-      !!(editing.description || editing.attendees.length || editing.color || editing.visibleToClient),
+      !!(
+        editing.description ||
+        editing.attendees.length ||
+        editing.color ||
+        editing.visibleToClient
+      ),
   );
   const { exec, pending: deleting } = useAction();
   const form = useActionForm(editing ? updateEventAction : createEventAction, {
@@ -227,7 +246,15 @@ function EventForm({ state, onDone }: { state: NonNullable<EventDialogState>; on
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{editing ? c.editEvent : isCommitment ? c.newCommitment : c.newEvent}</DialogTitle>
+        <DialogTitle>
+          {editing
+            ? isCommitment
+              ? c.editCommitment
+              : c.editEvent
+            : isCommitment
+              ? c.newCommitment
+              : c.newEvent}
+        </DialogTitle>
         {editing?.recurrence && (
           <DialogDescription className="flex items-center gap-1.5">
             <RepeatIcon className="size-3.5" /> {c.recurringNote}
@@ -300,18 +327,21 @@ function EventForm({ state, onDone }: { state: NonNullable<EventDialogState>; on
         </fieldset>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label={isCommitment ? c.due : c.date} htmlFor={id("date")} error={err("date")}>
-            <DatePicker id={id("date")} name="date" defaultValue={init.date} clearable={false} />
-          </Field>
-          <div className="flex items-end pb-2">
-            <label htmlFor={id("allDay")} className="flex cursor-pointer items-center gap-3 text-sm font-semibold">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4 sm:col-span-2 sm:grid-cols-2 sm:gap-5">
+            <Field label={isCommitment ? c.due : c.date} htmlFor={id("date")} error={err("date")}>
+              <DatePicker id={id("date")} name="date" defaultValue={init.date} clearable={false} />
+            </Field>
+            <label
+              htmlFor={id("allDay")}
+              className="flex cursor-pointer items-center gap-3 pb-2.5 text-sm font-semibold"
+            >
               <input type="hidden" name="allDay" value={allDay ? "true" : "false"} />
               <Switch id={id("allDay")} checked={allDay} onCheckedChange={setAllDay} />
               {c.allDay}
             </label>
           </div>
           {!allDay ? (
-            <>
+            <div className="grid grid-cols-2 gap-4 sm:col-span-2 sm:gap-5">
               <Field label={c.startTime} htmlFor={id("start")} error={err("startTime")}>
                 <Input
                   id={id("start")}
@@ -334,13 +364,18 @@ function EventForm({ state, onDone }: { state: NonNullable<EventDialogState>; on
                 />
               </Field>
               {showEndDate && (
-                <Field label={c.endDate} error={err("endDate")} className="sm:col-span-2">
+                <Field label={c.endDate} error={err("endDate")} className="col-span-2">
                   <DatePicker name="endDate" defaultValue={init.endDate} />
                 </Field>
               )}
-            </>
+            </div>
           ) : (
-            <Field label={c.endDate} hint={c.endDateHint} error={err("endDate")} className="sm:col-span-2">
+            <Field
+              label={c.endDate}
+              hint={c.endDateHint}
+              error={err("endDate")}
+              className="sm:col-span-2"
+            >
               <DatePicker name="endDate" defaultValue={init.endDate} />
             </Field>
           )}
@@ -535,7 +570,12 @@ function EventForm({ state, onDone }: { state: NonNullable<EventDialogState>; on
                   )
                 }
                 trigger={
-                  <Button type="button" variant="ghost" className="text-destructive" disabled={deleting}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-destructive"
+                    disabled={deleting}
+                  >
                     <Trash2Icon /> {t.common.delete}
                   </Button>
                 }

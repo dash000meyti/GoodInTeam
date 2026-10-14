@@ -59,7 +59,11 @@ export function monthName(key: string, locale: Locale, style: "long" | "short" =
   return dtf(locale, { month: style }).format(civil(key));
 }
 
-export function weekdayName(key: string, locale: Locale, style: "long" | "short" | "narrow" = "long") {
+export function weekdayName(
+  key: string,
+  locale: Locale,
+  style: "long" | "short" | "narrow" = "long",
+) {
   return dtf(locale, { weekday: style }).format(civil(key));
 }
 
@@ -158,7 +162,9 @@ export function rruleSummary(rule: string, t: RRuleMessages, locale: Locale, tz:
   const sep = locale === "fa" ? "، " : ", ";
   if (r.byDay?.length) {
     const days = r.byDay
-      .map((b) => (b.ordinal ? `${digits(b.ordinal, locale)} ` : "") + weekdayByIndex(b.day, locale))
+      .map(
+        (b) => (b.ordinal ? `${digits(b.ordinal, locale)} ` : "") + weekdayByIndex(b.day, locale),
+      )
       .join(sep);
     text = format(t.rr_on, { rule: text, days });
   } else if (r.byMonthDay?.length) {

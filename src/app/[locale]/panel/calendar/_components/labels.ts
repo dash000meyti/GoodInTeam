@@ -37,4 +37,3 @@ export function reminderLabel(minutes: number, c: CalMessages, locale: "fa" | "e
   if (minutes % 60 === 0) return format(c.remind_hours, { n: digits(minutes / 60, locale) });
   return format(c.remind_minutes, { n: digits(minutes, locale) });
 }
-

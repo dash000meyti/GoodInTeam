@@ -106,7 +106,8 @@ function loadEventForWrite(actor: Actor, id: string) {
     .where(and(eq(events.id, id), eventAccessWhere(actor)))
     .get();
   if (!row) throw notFound("Event");
-  if (!canEditEvent(actor, row)) throw forbidden("Only the creator or an admin can change this event");
+  if (!canEditEvent(actor, row))
+    throw forbidden("Only the creator or an admin can change this event");
   return row;
 }
 
@@ -134,13 +135,22 @@ function projectClientId(projectId: string) {
 function checkRefs(actor: Actor, input: { projectId?: string | null; clientId?: string | null }) {
   if (input.projectId) {
     if (isAdmin(actor)) {
-      const p = db.select({ id: projects.id }).from(projects).where(eq(projects.id, input.projectId)).get();
-      if (!p) throw new AppError("validation", "Unknown project", { projectId: ["Unknown project"] });
+      const p = db
+        .select({ id: projects.id })
+        .from(projects)
+        .where(eq(projects.id, input.projectId))
+        .get();
+      if (!p)
+        throw new AppError("validation", "Unknown project", { projectId: ["Unknown project"] });
     } else assertProjectRead(actor, input.projectId);
   }
   if (input.clientId) {
     if (!isAdmin(actor)) throw forbidden("Only admins can link a client directly");
-    const c = db.select({ id: clients.id }).from(clients).where(eq(clients.id, input.clientId)).get();
+    const c = db
+      .select({ id: clients.id })
+      .from(clients)
+      .where(eq(clients.id, input.clientId))
+      .get();
     if (!c) throw new AppError("validation", "Unknown client", { clientId: ["Unknown client"] });
   }
 }
@@ -217,7 +227,10 @@ function explicitTiming(
     const e = parseWhen(input.endAt, tz);
     endMs = allDay ? dayStartMs(dayKeyOf(e.ms, tz), tz) : e.ms;
     if (endMs <= startMs) {
-      if (!allDay) throw new AppError("validation", "endAt must be after startAt", { endAt: ["endAt must be after startAt"] });
+      if (!allDay)
+        throw new AppError("validation", "endAt must be after startAt", {
+          endAt: ["endAt must be after startAt"],
+        });
       endMs = null;
     }
   } else if (input.endAt === undefined && existing?.endAt && existing.allDay === allDay) {
@@ -247,7 +260,8 @@ function mergeTiming(input: UpdateEventInput, row: CalendarEvent, tz: string): T
   }
   const allDay = input.allDay ?? row.allDay;
   const date = input.date ?? dayKeyOf(row.startAt, tz);
-  const startTime = input.startTime !== undefined ? input.startTime : timeOf(row.startAt.getTime(), tz);
+  const startTime =
+    input.startTime !== undefined ? input.startTime : timeOf(row.startAt.getTime(), tz);
   const keepEnd = input.endTime === undefined && input.endDate === undefined;
   if (keepEnd && row.endAt && allDay === row.allDay) {
     if (allDay) {
@@ -297,9 +311,14 @@ function occurrences(row: CalendarEvent, from: number, to: number, tz: string) {
   const first = row.startAt.getTime();
   const duration = occurrenceEnd(row, first, tz) - first;
   const starts = row.recurrence
-    ? expandRRule(row.recurrence, row.startAt, new Date(from - duration), new Date(to), tz, 500).map(
-        (d) => d.getTime(),
-      )
+    ? expandRRule(
+        row.recurrence,
+        row.startAt,
+        new Date(from - duration),
+        new Date(to),
+        tz,
+        500,
+      ).map((d) => d.getTime())
     : [first];
   return starts.filter((s) => s < to && Math.max(s + duration, s + 1) > from);
 }
@@ -343,26 +362,24 @@ function eventItems(actor: Actor, row: EventWithRefs, from: number, to: number, 
   const data = toEventData(actor, row);
   const color = row.color ?? kindMeta[row.kind].color;
   const source: CalendarSource = row.kind === "commitment" ? "commitments" : "events";
-  return occurrences(row, from, to, tz).map(
-    (start): CalendarItem => ({
-      key: `ev:${row.id}:${start}`,
-      source,
-      type: "event",
-      id: row.id,
-      title: row.title,
-      start,
-      end: occurrenceEnd(row, start, tz),
-      allDay: row.allDay,
-      color,
-      status: row.status,
-      done: row.status === "done",
-      href: null,
-      project: row.project ?? null,
-      client: row.client ?? null,
-      event: data,
-      amount: null,
-    }),
-  );
+  return occurrences(row, from, to, tz).map((start): CalendarItem => ({
+    key: `ev:${row.id}:${start}`,
+    source,
+    type: "event",
+    id: row.id,
+    title: row.title,
+    start,
+    end: occurrenceEnd(row, start, tz),
+    allDay: row.allDay,
+    color,
+    status: row.status,
+    done: row.status === "done",
+    href: null,
+    project: row.project ?? null,
+    client: row.client ?? null,
+    event: data,
+    amount: null,
+  }));
 }
 
 function sortItems(items: CalendarItem[]) {
@@ -691,7 +708,15 @@ export function listProjectEvents(
 
 // ─── Agenda (LLM-friendly) ──────────────────────────────────────────────────
 
-const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const WEEKDAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 export function agenda(actor: Actor, input: z.output<typeof agendaInput>) {
   assertStaff(actor);
@@ -722,7 +747,11 @@ export function agenda(actor: Actor, input: z.output<typeof agendaInput>) {
           ? `${timeOf(i.start, tz)}–${timeOf(i.end, tz)}`
           : timeOf(i.start, tz);
       const type =
-        i.type === "event" ? (i.event!.kind === "commitment" ? "commitment" : i.event!.kind) : i.type;
+        i.type === "event"
+          ? i.event!.kind === "commitment"
+            ? "commitment"
+            : i.event!.kind
+          : i.type;
       const status =
         i.type === "event" && i.event!.kind === "commitment"
           ? toCommitmentState(i.event!.status)
@@ -808,14 +837,19 @@ export function createEvent(actor: Actor, input: EventInput) {
       kind: input.kind,
       status: input.status ?? "confirmed",
       ...timing,
-      promisedAt:
-        values.promisedAt ?? (input.kind === "commitment" ? new Date() : null),
+      promisedAt: values.promisedAt ?? (input.kind === "commitment" ? new Date() : null),
       attendees: input.attendees ?? [],
       createdBy: actor.user.id,
     })
     .returning()
     .get();
-  logActivity(actor, input.kind === "commitment" ? "commitment.create" : "event.create", "event", row.id, row.title);
+  logActivity(
+    actor,
+    input.kind === "commitment" ? "commitment.create" : "event.create",
+    "event",
+    row.id,
+    row.title,
+  );
   return row;
 }
 
@@ -1058,7 +1092,8 @@ export function listCommitmentsJson(actor: Actor, input: z.output<typeof listCom
 
 function dueTiming(due: string, dueTime: string | undefined, tz: string): Timing {
   const w = parseWhen(due, tz);
-  if (w.dayOnly && dueTime) return { allDay: false, startAt: new Date(wallTimeMs(due, dueTime, tz)), endAt: null };
+  if (w.dayOnly && dueTime)
+    return { allDay: false, startAt: new Date(wallTimeMs(due, dueTime, tz)), endAt: null };
   return { allDay: w.dayOnly, startAt: new Date(w.ms), endAt: null };
 }
 
@@ -1091,8 +1126,7 @@ export function createCommitment(actor: Actor, input: z.output<typeof commitment
 
 function loadCommitmentForWrite(actor: Actor, id: string) {
   const row = loadEventForWrite(actor, id);
-  if (row.kind !== "commitment")
-    throw new AppError("validation", "This event is not a commitment");
+  if (row.kind !== "commitment") throw new AppError("validation", "This event is not a commitment");
   return row;
 }
 
@@ -1163,7 +1197,14 @@ export function runEventReminders(now = Date.now()) {
   for (const { ev, locale } of rows) {
     const lead = (ev.remindMinutesBefore ?? 0) * 60_000;
     const next = ev.recurrence
-      ? expandRRule(ev.recurrence, ev.startAt, new Date(now - 10 * 60_000), new Date(now + lead + 60_000), tz, 5)
+      ? expandRRule(
+          ev.recurrence,
+          ev.startAt,
+          new Date(now - 10 * 60_000),
+          new Date(now + lead + 60_000),
+          tz,
+          5,
+        )
       : [ev.startAt].filter((d) => d.getTime() >= now - 10 * 60_000);
     const occ = next.find((d) => d.getTime() - lead <= now);
     if (!occ) continue;
@@ -1178,7 +1219,10 @@ export function runEventReminders(now = Date.now()) {
         : t.reminderBody.replace("{time}", timeOf(occ.getTime(), tz)),
       href: `/panel/calendar?view=day&date=${dayKeyOf(occ, tz)}`,
     });
-    db.update(events).set({ remindedAt: new Date(now) }).where(eq(events.id, ev.id)).run();
+    db.update(events)
+      .set({ remindedAt: new Date(now) })
+      .where(eq(events.id, ev.id))
+      .run();
     sent++;
   }
   return sent;

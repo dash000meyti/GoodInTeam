@@ -149,7 +149,10 @@ function uidHost() {
   }
 }
 
-type EventRow = CalendarEvent & { project?: { name: string } | null; client?: { name: string } | null };
+type EventRow = CalendarEvent & {
+  project?: { name: string } | null;
+  client?: { name: string } | null;
+};
 
 export function eventToIcs(row: EventRow, tz: string, opts: { panelUrl?: string } = {}): IcsEvent {
   const title = row.kind === "commitment" ? `🤝 ${row.title}` : row.title;
@@ -215,7 +218,9 @@ export function buildFeed(token: string, opts: { includeTasks?: boolean; now?: n
     })
     .sync();
   const list: IcsEvent[] = rows.map((row) =>
-    eventToIcs(row, tz, { panelUrl: `${env.siteUrl}/panel/calendar?view=day&date=${dayKeyOf(row.startAt, tz)}` }),
+    eventToIcs(row, tz, {
+      panelUrl: `${env.siteUrl}/panel/calendar?view=day&date=${dayKeyOf(row.startAt, tz)}`,
+    }),
   );
 
   if (opts.includeTasks) {

@@ -120,9 +120,7 @@ export function DatePicker({
           >
             <Prev />
           </Button>
-          <span className="text-sm font-bold">
-            {fmt(month, "MMMM yyyy")}
-          </span>
+          <span className="text-sm font-bold">{fmt(month, "MMMM yyyy")}</span>
           <Button
             type="button"
             variant="ghost"

@@ -89,7 +89,11 @@ export function CalendarView({
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
       const el = e.target as HTMLElement | null;
       if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
-      if (document.querySelector('[role="dialog"],[role="alertdialog"],[data-radix-popper-content-wrapper]'))
+      if (
+        document.querySelector(
+          '[role="dialog"],[role="alertdialog"],[data-radix-popper-content-wrapper]',
+        )
+      )
         return;
       const rtl = document.documentElement.dir === "rtl";
       let to: string | null = null;
