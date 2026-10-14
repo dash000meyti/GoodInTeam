@@ -6,6 +6,9 @@ import type { ToolDef } from "./define-tool";
 import { clientsTools } from "@/server/modules/clients/tools";
 import { contractsTools } from "@/server/modules/contracts/tools";
 import { projectsTools } from "@/server/modules/projects/tools";
+import { timeTools } from "@/server/modules/time/tools";
+import { tasksTools } from "@/server/modules/tasks/tools";
+import { notificationsTools } from "@/server/modules/notifications/tools";
 import { systemTools } from "./system-tools";
 
 /**
@@ -18,6 +21,9 @@ export const tools: ToolDef[] = [
   ...projectsTools,
   ...clientsTools,
   ...contractsTools,
+  ...timeTools,
+  ...tasksTools,
+  ...notificationsTools,
 ];
 
 const byName = new Map(tools.map((t) => [t.name, t]));
