@@ -3,8 +3,11 @@ import { z } from "zod";
 import type { Actor } from "@/server/auth/actor";
 import { AppError } from "@/server/errors";
 import type { ToolDef } from "./define-tool";
+import { apiTokensTools } from "@/server/modules/api-tokens/tools";
 import { clientsTools } from "@/server/modules/clients/tools";
 import { projectsTools } from "@/server/modules/projects/tools";
+import { settingsTools } from "@/server/modules/settings/tools";
+import { usersTools } from "@/server/modules/users/tools";
 import { systemTools } from "./system-tools";
 
 /**
@@ -12,7 +15,14 @@ import { systemTools } from "./system-tools";
  * Add a module: create src/server/modules/<module>/tools.ts exporting
  * `<module>Tools: ToolDef[]` and spread it here.
  */
-export const tools: ToolDef[] = [...systemTools, ...projectsTools, ...clientsTools];
+export const tools: ToolDef[] = [
+  ...systemTools,
+  ...projectsTools,
+  ...clientsTools,
+  ...settingsTools,
+  ...usersTools,
+  ...apiTokensTools,
+];
 
 const byName = new Map(tools.map((t) => [t.name, t]));
 
