@@ -18,11 +18,16 @@ const base = opt("base", "http://localhost:3000");
 const out = opt("out", "./shots");
 const login = opt("login");
 const only = opt("only");
-const paths = args.filter((a, i) => !a.startsWith("--") && !["--base", "--out", "--login", "--only"].includes(args[i - 1]));
+const paths = args.filter(
+  (a, i) => !a.startsWith("--") && !["--base", "--out", "--login", "--only"].includes(args[i - 1]),
+);
 mkdirSync(out, { recursive: true });
 
 const browser = await chromium
-  .launch({ executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome" })
+  .launch({
+    executablePath:
+      process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome",
+  })
   .catch(() => chromium.launch());
 let problems = 0;
 const variants = [];
@@ -42,13 +47,20 @@ for (const v of variants) {
   const errors = [];
   page.on("console", (m) => m.type() === "error" && errors.push(`console: ${m.text()}`));
   page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
-  page.on("response", (r) => r.status() >= 400 && !r.url().includes("favicon") && errors.push(`${r.status()} ${r.url()}`));
+  page.on(
+    "response",
+    (r) =>
+      r.status() >= 400 && !r.url().includes("favicon") && errors.push(`${r.status()} ${r.url()}`),
+  );
   if (login) {
     const [email, password] = login.split(":");
     await page.goto(`${base}/login`);
     await page.fill("#email", email);
     await page.fill("#password", password);
-    await Promise.all([page.waitForURL(/\/panel/, { timeout: 20000 }), page.click("button[type=submit]")]);
+    await Promise.all([
+      page.waitForURL(/\/panel/, { timeout: 20000 }),
+      page.click("button[type=submit]"),
+    ]);
   }
   for (const p of paths) {
     errors.length = 0;

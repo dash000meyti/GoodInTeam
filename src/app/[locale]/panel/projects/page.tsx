@@ -73,7 +73,9 @@ export default async function ProjectsPage() {
                     <ProjectStatusBadge status={proj.status} t={p} />
                   </div>
                   {proj.description && (
-                    <p className="line-clamp-2 text-sm text-muted-foreground">{proj.description}</p>
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {markdownToText(proj.description, 200)}
+                    </p>
                   )}
                   <div className="mt-auto space-y-2">
                     <div className="flex items-center justify-between text-xs font-semibold">

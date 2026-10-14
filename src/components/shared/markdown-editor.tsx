@@ -48,7 +48,9 @@ export function MarkdownEditor({
   const tabCls = (active: boolean) =>
     cn(
       "inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors",
-      active ? "bg-background text-foreground shadow-sm dark:bg-card" : "text-muted-foreground hover:text-foreground",
+      active
+        ? "bg-background text-foreground shadow-sm dark:bg-card"
+        : "text-muted-foreground hover:text-foreground",
     );
 
   return (
@@ -80,7 +82,10 @@ export function MarkdownEditor({
           {pending ? (
             <p className="text-sm text-muted-foreground">{t.common.loading}</p>
           ) : (
-            <div className="prose-gt text-[15px]" dangerouslySetInnerHTML={{ __html: html || `<p class="text-muted-foreground">—</p>` }} />
+            <div
+              className="prose-gt text-[15px]"
+              dangerouslySetInnerHTML={{ __html: html || `<p class="text-muted-foreground">—</p>` }}
+            />
           )}
         </div>
       )}

@@ -39,7 +39,9 @@ export async function ClientPortalHome({ ctx }: { ctx: PanelContext }) {
                   <h2 className="font-bold">{p.name}</h2>
                 </div>
                 {p.description && (
-                  <p className="line-clamp-2 text-sm text-muted-foreground">{p.description}</p>
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                    {markdownToText(p.description, 200)}
+                  </p>
                 )}
                 {p.shareProgress && (
                   <div className="flex items-center gap-3">

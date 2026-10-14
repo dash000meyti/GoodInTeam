@@ -15,7 +15,10 @@ import { cn } from "@/lib/utils";
  *
  * Each config key becomes a CSS var `--color-<key>` usable in fills/strokes.
  */
-export type ChartConfig = Record<string, { label?: React.ReactNode; color?: string; icon?: React.ComponentType }>;
+export type ChartConfig = Record<
+  string,
+  { label?: React.ReactNode; color?: string; icon?: React.ComponentType }
+>;
 
 const ChartContext = React.createContext<{ config: ChartConfig } | null>(null);
 
@@ -86,13 +89,18 @@ function ChartTooltipContent({
   if (!active || !payload?.length) return null;
   return (
     <div className="grid min-w-36 gap-1.5 rounded-xl border border-border bg-popover/95 px-3 py-2 text-xs shadow-dropdown backdrop-blur">
-      {!hideLabel && <div className="font-bold">{labelFormatter ? labelFormatter(label) : label}</div>}
+      {!hideLabel && (
+        <div className="font-bold">{labelFormatter ? labelFormatter(label) : label}</div>
+      )}
       {payload.map((item) => {
         const key = String(item.dataKey ?? item.name ?? "");
         const conf = config[key];
         return (
           <div key={key} className="flex items-center gap-2">
-            <span className="size-2.5 shrink-0 rounded-[3px]" style={{ backgroundColor: item.color ?? conf?.color }} />
+            <span
+              className="size-2.5 shrink-0 rounded-[3px]"
+              style={{ backgroundColor: item.color ?? conf?.color }}
+            />
             <span className="text-muted-foreground">{conf?.label ?? key}</span>
             <span className="ms-auto font-mono font-semibold tabular-nums">
               {formatter ? formatter(item.value ?? 0, key) : item.value}
@@ -106,7 +114,11 @@ function ChartTooltipContent({
 
 const ChartLegend = Recharts.Legend;
 
-function ChartLegendContent({ payload }: { payload?: { dataKey?: string | number; color?: string; value?: string }[] }) {
+function ChartLegendContent({
+  payload,
+}: {
+  payload?: { dataKey?: string | number; color?: string; value?: string }[];
+}) {
   const { config } = useChart();
   if (!payload?.length) return null;
   return (
