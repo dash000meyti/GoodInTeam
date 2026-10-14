@@ -1,151 +1,97 @@
-"use client";
-
-import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { MenuIcon } from "lucide-react";
+import { ArrowUpLeftIcon } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { LocaleSwitcher } from "@/components/shared/locale-switcher";
 import { ThemeToggle } from "@/components/shared/theme-controls";
-import { localePath, stripLocale } from "@/i18n/config";
-import { useLocale, useT } from "@/i18n/client";
-import { cn } from "@/lib/utils";
+import { localePath, type Locale } from "@/i18n/config";
+import type { Messages } from "@/i18n/messages";
+import { HeaderShell, LanguageToggle, MobileMenu, NavLinks, type NavItem } from "./header-client";
 
-export const siteNav = [
-  { href: "/work", key: "work" },
-  { href: "/services", key: "services" },
-  { href: "/blog", key: "blog" },
-  { href: "/learn", key: "learn" },
-  { href: "/about", key: "about" },
+export const siteSections = [
+  { path: "/work", key: "work" },
+  { path: "/services", key: "services" },
+  { path: "/blog", key: "blog" },
+  { path: "/learn", key: "learn" },
+  { path: "/about", key: "about" },
 ] as const;
 
-function NavLinks({ withActive }: { withActive: boolean }) {
-  const t = useT();
-  const locale = useLocale();
-  return siteNav.map((item) => (
-    <NavLink
-      key={item.href}
-      href={localePath(locale, item.href)}
-      itemHref={item.href}
-      withActive={withActive}
-    >
-      {t.nav[item.key]}
-    </NavLink>
-  ));
-}
+/** Paths that exist in every locale (language toggle keeps them as-is). */
+export const staticSitePaths = ["/", ...siteSections.map((s) => s.path), "/contact"];
 
-function ActiveAware({
-  itemHref,
-  children,
-}: {
-  itemHref: string;
-  children: (active: boolean) => React.ReactNode;
-}) {
-  // usePathname() is URL data → only used inside <Suspense>.
-  const { path } = stripLocale(usePathname());
-  return children(path === itemHref || path.startsWith(`${itemHref}/`));
-}
-
-function NavLink({
-  href,
-  itemHref,
-  withActive,
-  children,
-}: {
-  href: string;
-  itemHref: string;
-  withActive: boolean;
-  children: React.ReactNode;
-}) {
-  const cls = (active: boolean) =>
-    cn(
-      "rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground",
-      active && "text-foreground",
-    );
-  if (!withActive)
-    return (
-      <Link href={href} className={cls(false)}>
-        {children}
-      </Link>
-    );
+/**
+ * Public header — a server component; only the scroll state, active link,
+ * language target and mobile menu are tiny client islands.
+ */
+export function SiteHeader({ locale, t }: { locale: Locale; t: Messages }) {
+  const items: NavItem[] = siteSections.map((s) => ({
+    href: localePath(locale, s.path),
+    section: s.path,
+    label: t.nav[s.key],
+  }));
+  const toggleCls =
+    "inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
   return (
-    <ActiveAware itemHref={itemHref}>
-      {(active) => (
-        <Link href={href} className={cls(active)} aria-current={active ? "page" : undefined}>
-          {children}
-        </Link>
-      )}
-    </ActiveAware>
-  );
-}
-
-export function SiteHeader() {
-  const t = useT();
-  const locale = useLocale();
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  return (
-    <header
-      className={cn(
-        "sticky top-0 z-50 transition-[background-color,box-shadow,height] duration-300",
-        scrolled ? "glass h-16 shadow-[0_1px_0_0_var(--border)]" : "h-20 bg-transparent",
-      )}
-    >
-      <div className="mx-auto flex h-full max-w-7xl items-center gap-6 px-4 sm:px-6">
-        <Link href={localePath(locale, "/")} aria-label={t.common.appName} className="shrink-0">
+    <HeaderShell>
+      <div className="mx-auto flex h-full max-w-7xl items-center gap-4 px-4 sm:px-6">
+        <Link
+          href={localePath(locale, "/")}
+          aria-label={t.common.appName}
+          className="shrink-0 rounded-lg"
+        >
           <Logo label={t.common.appName} />
         </Link>
-        <nav className="hidden items-center gap-1 md:flex" aria-label="main">
-          <Suspense fallback={<NavLinks withActive={false} />}>
-            <NavLinks withActive />
-          </Suspense>
+        <nav
+          aria-label={t.nav.home}
+          className="mx-auto hidden items-center gap-0.5 rounded-full border border-border/70 bg-muted/60 p-1 md:flex dark:bg-muted/40"
+        >
+          <NavLinks items={items} />
         </nav>
-        <div className="ms-auto flex items-center gap-1">
-          <LocaleSwitcher />
+        <div className="ms-auto flex items-center gap-1 md:ms-0">
+          <LanguageToggle
+            current={locale}
+            label={t.site.switchLanguage}
+            ariaLabel={t.site.switchLanguageLabel}
+            staticPaths={staticSitePaths}
+            className={`${toggleCls} hidden sm:inline-flex`}
+          />
           <ThemeToggle />
-          <Button asChild variant="inherit" size="sm" className="ms-2 hidden sm:inline-flex">
-            <Link href={localePath(locale, "/contact")}>{t.nav.contact}</Link>
-          </Button>
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden"
-                aria-label={t.common.toggleMenu}
+          <Link
+            href={localePath(locale, "/contact")}
+            className="group ms-1 hidden h-9 items-center gap-1.5 rounded-full bg-grey-800 ps-4 pe-3 text-sm font-semibold text-white transition-colors hover:bg-grey-700 sm:inline-flex dark:bg-white dark:text-grey-800 dark:hover:bg-grey-300"
+          >
+            {t.site.heroPrimaryCta}
+            <ArrowUpLeftIcon className="size-4 transition-transform group-hover:-translate-y-0.5 ltr:rotate-90 ltr:group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+          </Link>
+          <MobileMenu label={t.common.toggleMenu} closeLabel={t.common.close}>
+            <nav className="flex flex-col gap-1" aria-label={t.nav.home}>
+              {[...siteSections, { path: "/contact", key: "contact" } as const].map((s, i) => (
+                <Link
+                  key={s.path}
+                  href={localePath(locale, s.path)}
+                  className="gt-menu-item flex items-center justify-between rounded-2xl px-4 py-3.5 text-2xl font-extrabold tracking-tight hover:bg-accent"
+                  style={{ animationDelay: `${i * 40}ms` }}
+                >
+                  {t.nav[s.key]}
+                </Link>
+              ))}
+            </nav>
+            <div className="mt-8 flex items-center gap-2 border-t border-dashed pt-6">
+              <LanguageToggle
+                current={locale}
+                label={t.site.switchLanguage}
+                ariaLabel={t.site.switchLanguageLabel}
+                staticPaths={staticSitePaths}
+                className={`${toggleCls} border`}
+              />
+              <Link
+                href={localePath(locale, "/contact")}
+                className="ms-auto inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground"
               >
-                <MenuIcon className="size-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="end" className="p-6">
-              <SheetTitle className="sr-only">{t.common.toggleMenu}</SheetTitle>
-              <Logo label={t.common.appName} />
-              <nav className="mt-6 flex flex-col gap-1">
-                {[...siteNav, { href: "/contact", key: "contact" } as const].map((item) => (
-                  <Link
-                    key={item.href}
-                    href={localePath(locale, item.href)}
-                    onClick={() => setOpen(false)}
-                    className="rounded-lg px-3 py-2.5 text-base font-semibold hover:bg-accent"
-                  >
-                    {t.nav[item.key]}
-                  </Link>
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
+                {t.site.heroPrimaryCta}
+              </Link>
+            </div>
+          </MobileMenu>
         </div>
       </div>
-    </header>
+    </HeaderShell>
   );
 }

@@ -16,7 +16,9 @@ export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const first = pathname.split("/")[1] ?? "";
 
-  if (first === defaultLocale) {
+  // Generated metadata images (opengraph-image) carry the internal /fa prefix
+  // in their URL — serve them directly instead of redirecting.
+  if (first === defaultLocale && !/\/(?:opengraph|twitter)-image(?:-[\w]+)?$/.test(pathname)) {
     const url = req.nextUrl.clone();
     url.pathname = pathname.slice(defaultLocale.length + 1) || "/";
     return NextResponse.redirect(url, 308);
