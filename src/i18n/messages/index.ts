@@ -13,6 +13,7 @@ import { site as faSite } from "./fa/site";
 import { projects as faProjects } from "./fa/projects";
 import { clients as faClients } from "./fa/clients";
 import { vault as faVault } from "./fa/vault";
+import { docs as faDocs } from "./fa/docs";
 import { auth as enAuth } from "./en/auth";
 import { common as enCommon } from "./en/common";
 import { nav as enNav } from "./en/nav";
@@ -21,6 +22,7 @@ import { site as enSite } from "./en/site";
 import { projects as enProjects } from "./en/projects";
 import { clients as enClients } from "./en/clients";
 import { vault as enVault } from "./en/vault";
+import { docs as enDocs } from "./en/docs";
 
 const fa = {
   common: faCommon,
@@ -31,6 +33,7 @@ const fa = {
   projects: faProjects,
   clients: faClients,
   vault: faVault,
+  docs: faDocs,
 };
 
 type Source = typeof fa;
@@ -46,6 +49,7 @@ const en: Messages = {
   projects: enProjects,
   clients: enClients,
   vault: enVault,
+  docs: enDocs,
 };
 
 export const messages: Record<Locale, Messages> = { fa, en };

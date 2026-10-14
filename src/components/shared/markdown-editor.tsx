@@ -20,6 +20,7 @@ export function MarkdownEditor({
   placeholder,
   className,
   dir = "auto",
+  mono = true,
 }: {
   name?: string;
   defaultValue?: string;
@@ -29,6 +30,8 @@ export function MarkdownEditor({
   placeholder?: string;
   className?: string;
   dir?: "rtl" | "ltr" | "auto";
+  /** Monospace textarea (default). Prose-heavy editors (docs) can turn it off. */
+  mono?: boolean;
 }) {
   const t = useT();
   const [inner, setInner] = useState(defaultValue);
@@ -75,7 +78,10 @@ export function MarkdownEditor({
           }}
           rows={rows}
           placeholder={placeholder}
-          className="min-h-48 resize-y rounded-none border-0 font-mono text-[13px] leading-6 focus-visible:ring-0"
+          className={cn(
+            "min-h-48 resize-y rounded-none border-0 focus-visible:ring-0",
+            mono ? "font-mono text-[13px] leading-6" : "text-[15px] leading-7",
+          )}
         />
       ) : (
         <div className="min-h-48 p-4">
