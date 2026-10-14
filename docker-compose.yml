@@ -8,6 +8,7 @@ services:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
     image: ghcr.io/dash000meyti/goodinteam:latest
     restart: unless-stopped
+    init: true # proper signal handling / zombie reaping for node
     ports:
       - "${PORT:-3000}:3000"
     env_file:

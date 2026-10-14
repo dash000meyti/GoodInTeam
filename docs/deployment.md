@@ -2,8 +2,9 @@
 
 ## Image & volume
 
-- `Dockerfile` builds a standalone Next.js server (multi-stage, Node 22, non-root, `tini`,
-  healthcheck on `/api/health`).
+- `Dockerfile` builds a standalone Next.js server (multi-stage, Node 22 slim, non-root, no OS
+  packages needed, healthcheck on `/api/health`; compose adds `init: true` for signal handling).
+  Verified: build → run with a volume → auto-migrate → owner bootstrap → health → backup.
 - **All state lives in `/data`** (mount a volume there):
   - `/data/app.db` (+ `-wal`, `-shm`) — SQLite database
   - `/data/uploads/` — media uploads

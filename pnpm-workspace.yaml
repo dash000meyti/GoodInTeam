@@ -1,5 +1,8 @@
 onlyBuiltDependencies:
-  - better-sqlite3
   - esbuild
   - sharp
   - unrs-resolver
+# better-sqlite3 ships prebuilt N-API binaries (prebuilds/); skip its node-gyp build
+# so installs work without a compiler (e.g. slim Docker images).
+ignoredBuiltDependencies:
+  - better-sqlite3
