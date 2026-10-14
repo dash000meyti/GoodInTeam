@@ -87,6 +87,7 @@ export function AccountForm({
             <Input
               id="acc-name"
               name="name"
+              dir="auto"
               defaultValue={user.name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
@@ -108,6 +109,7 @@ export function AccountForm({
             <Input
               id="acc-title"
               name="title"
+              dir="auto"
               defaultValue={user.title ?? ""}
               placeholder={s.jobTitlePlaceholder}
             />

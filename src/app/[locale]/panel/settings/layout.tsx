@@ -22,7 +22,13 @@ export default async function SettingsLayout({
       <PageHeader
         title={t.settings.title}
         description={t.settings.subtitle}
-        crumbs={[{ label: t.nav.dashboard, href: href("/panel") }, { label: t.settings.title }]}
+        crumbs={[
+          {
+            label: actor.user.role === "client" ? t.nav.portalHome : t.nav.dashboard,
+            href: href("/panel"),
+          },
+          { label: t.settings.title },
+        ]}
       />
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
         <SettingsNav role={actor.user.role} />

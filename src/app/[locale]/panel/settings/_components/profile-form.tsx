@@ -114,9 +114,9 @@ export function ProfileForm({ values }: { values: ProfileValues }) {
             )}
             <AvatarFallback className="text-lg">{initials(displayName || "?")}</AvatarFallback>
           </Avatar>
-          <div className="min-w-0 flex-1 space-y-1">
+          <div className="min-w-0 flex-1 basis-44 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="truncate text-lg font-extrabold">{displayName || "—"}</p>
+              <p className="text-lg leading-snug font-extrabold">{displayName || "—"}</p>
               {preview.available && (
                 <Badge variant="success">
                   <span className="size-1.5 animate-pulse rounded-full bg-current" />
@@ -131,7 +131,7 @@ export function ProfileForm({ values }: { values: ProfileValues }) {
               <p className="text-xs text-muted-foreground">{preview.location[pl]}</p>
             )}
           </div>
-          <div className="flex gap-1.5">
+          <div className="flex w-full flex-wrap gap-1.5 sm:w-auto">
             {networks
               .filter((n) => preview.socials[n])
               .map((n) => {

@@ -11,7 +11,17 @@ import {
   Trash2Icon,
   UserPlusIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +46,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { ConfirmDialog } from "@/components/shared/confirm-button";
 import { CopyButton } from "@/components/shared/copy-button";
 import { SelectField } from "@/components/shared/select-field";
 import { useAction, useActionForm } from "@/components/shared/use-action-form";
@@ -187,8 +196,39 @@ export function UserActions({
   const s = t.settings;
   const { exec, pending } = useAction();
   const [temp, setTemp] = useState<{ email: string; tempPassword: string } | null>(null);
+  // Confirmations are controlled dialogs *outside* the menu, so the menu
+  // closes normally and nothing stays modal after the action.
+  const [confirm, setConfirm] = useState<"reset" | "disable" | "delete" | null>(null);
   const staff = user.role !== "client";
   const roles = (actorIsOwner ? ["owner", "admin", "member"] : ["admin", "member"]) as UserRole[];
+
+  const confirmations = {
+    reset: {
+      title: format(s.resetPasswordTitle, { name: user.name }),
+      body: s.resetPasswordBody,
+      label: s.resetPassword,
+      run: () =>
+        exec(
+          resetUserPasswordAction({ id: user.id }).then((r) => {
+            if (r.ok) setTemp(r.data);
+            return r;
+          }),
+        ),
+    },
+    disable: {
+      title: format(s.disableTitle, { name: user.name }),
+      body: s.disableBody,
+      label: s.disableUser,
+      run: () => exec(setUserDisabledAction({ id: user.id, disabled: true }), s.userDisabled),
+    },
+    delete: {
+      title: format(s.deleteUserTitle, { name: user.name }),
+      body: s.deleteUserBody,
+      label: s.deleteUser,
+      run: () => exec(deleteUserAction({ id: user.id }), s.userDeleted),
+    },
+  } as const;
+  const current = confirm ? confirmations[confirm] : null;
 
   return (
     <>
@@ -198,7 +238,13 @@ export function UserActions({
             {pending ? <Loader2Icon className="animate-spin" /> : <MoreHorizontalIcon />}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent
+          align="end"
+          className="w-56"
+          onCloseAutoFocus={(e) => {
+            if (confirm) e.preventDefault();
+          }}
+        >
           <DropdownMenuLabel className="truncate">{user.name}</DropdownMenuLabel>
           {staff && (
             <DropdownMenuSub>
@@ -228,24 +274,9 @@ export function UserActions({
               </DropdownMenuSubContent>
             </DropdownMenuSub>
           )}
-          <ConfirmDialog
-            title={format(s.resetPasswordTitle, { name: user.name })}
-            description={s.resetPasswordBody}
-            confirmLabel={s.resetPassword}
-            onConfirm={() =>
-              exec(
-                resetUserPasswordAction({ id: user.id }).then((r) => {
-                  if (r.ok) setTemp(r.data);
-                  return r;
-                }),
-              )
-            }
-            trigger={
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <KeyRoundIcon /> {s.resetPassword}
-              </DropdownMenuItem>
-            }
-          />
+          <DropdownMenuItem onSelect={() => setConfirm("reset")}>
+            <KeyRoundIcon /> {s.resetPassword}
+          </DropdownMenuItem>
           {user.disabled ? (
             <DropdownMenuItem
               onSelect={() =>
@@ -255,34 +286,34 @@ export function UserActions({
               <CircleCheckIcon /> {s.enableUser}
             </DropdownMenuItem>
           ) : (
-            <ConfirmDialog
-              title={format(s.disableTitle, { name: user.name })}
-              description={s.disableBody}
-              confirmLabel={s.disableUser}
-              onConfirm={() =>
-                exec(setUserDisabledAction({ id: user.id, disabled: true }), s.userDisabled)
-              }
-              trigger={
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                  <BanIcon /> {s.disableUser}
-                </DropdownMenuItem>
-              }
-            />
+            <DropdownMenuItem onSelect={() => setConfirm("disable")}>
+              <BanIcon /> {s.disableUser}
+            </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
-          <ConfirmDialog
-            title={format(s.deleteUserTitle, { name: user.name })}
-            description={s.deleteUserBody}
-            confirmLabel={s.deleteUser}
-            onConfirm={() => exec(deleteUserAction({ id: user.id }), s.userDeleted)}
-            trigger={
-              <DropdownMenuItem variant="destructive" onSelect={(e) => e.preventDefault()}>
-                <Trash2Icon /> {s.deleteUser}
-              </DropdownMenuItem>
-            }
-          />
+          <DropdownMenuItem variant="destructive" onSelect={() => setConfirm("delete")}>
+            <Trash2Icon /> {s.deleteUser}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={!!current} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{current?.title}</AlertDialogTitle>
+            <AlertDialogDescription>{current?.body}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              className={confirm === "reset" ? buttonVariants() : undefined}
+              onClick={() => current?.run()}
+            >
+              {current?.label}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={!!temp} onOpenChange={(o) => !o && setTemp(null)}>
         <DialogContent>
