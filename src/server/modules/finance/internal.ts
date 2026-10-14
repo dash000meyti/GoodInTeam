@@ -46,6 +46,19 @@ export function parseDay(day: string, time?: string, field = "date") {
   return fromDateInput(d, time, appTimezone());
 }
 
+/**
+ * Day (+ optional time) for a money movement: a day without a time that is
+ * *today* means "now" (keeps same-day ordering natural); other days → 00:00.
+ */
+export function parseMovementDate(day: string | undefined, time: string | undefined, fallback?: Date) {
+  if (day) {
+    if (!time && normalizeDay(day) === dateInputValue(Date.now())) return new Date();
+    return parseDay(day, time);
+  }
+  if (time) return parseDay(dateInputValue(Date.now())!, time);
+  return fallback ?? new Date();
+}
+
 /** Optional day → instant; undefined/empty → `fallback`. */
 export function parseOptDay(day: string | null | undefined, time?: string, field = "date") {
   if (!day) return null;

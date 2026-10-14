@@ -39,7 +39,7 @@ import { accountBalance, minorToMajor, sumByCurrency, type AccountFlowRow, type 
 import { mapImportRows, parseCsv, toCsv } from "./csv";
 import { FinanceError } from "./errors";
 import { applyInvoicePaymentDelta } from "./invoices";
-import { dateInputValue, dayRange, parseAmount, parseDay } from "./internal";
+import { dayRange, parseAmount, parseMovementDate } from "./internal";
 import type {
   accountInput,
   categoryInput,
@@ -478,9 +478,7 @@ function checkCategory(categoryId: string | null | undefined, kind: TransactionK
 }
 
 function occurredAtFrom(date: string | undefined, time: string | undefined, fallback?: Date) {
-  if (date) return parseDay(date, time);
-  if (time) return parseDay(dateInputValue(Date.now())!, time);
-  return fallback ?? new Date();
+  return parseMovementDate(date, time, fallback);
 }
 
 type TxFields = Omit<typeof transactions.$inferInsert, "id" | "createdAt" | "updatedAt" | "createdBy">;

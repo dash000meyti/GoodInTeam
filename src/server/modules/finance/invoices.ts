@@ -54,10 +54,10 @@ import {
   percentToBps,
 } from "./invoice-calc";
 import {
-  dateInputValue,
   installCalendar,
   parseAmount,
   parseDay,
+  parseMovementDate,
   parseOptDay,
   todayStart,
 } from "./internal";
@@ -525,11 +525,7 @@ export function recordPayment(actor: Actor, input: z.output<typeof recordPayment
   if (account.currency !== inv.currency) throw new FinanceError("invoiceCurrencyMismatch", "accountId");
   const amountMinor = parseAmount(input.amount, inv.currency);
   if (amountMinor > balanceDue(inv)) throw new FinanceError("amountExceedsDue", "amount");
-  const occurredAt = input.date
-    ? parseDay(input.date, input.time)
-    : input.time
-      ? parseDay(dateInputValue(Date.now())!, input.time)
-      : new Date();
+  const occurredAt = parseMovementDate(input.date, input.time);
 
   const txRow = db.transaction((tx) => {
     const row = tx
