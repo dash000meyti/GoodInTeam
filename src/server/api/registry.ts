@@ -4,6 +4,7 @@ import type { Actor } from "@/server/auth/actor";
 import { AppError } from "@/server/errors";
 import type { ToolDef } from "./define-tool";
 import { clientsTools } from "@/server/modules/clients/tools";
+import { contractsTools } from "@/server/modules/contracts/tools";
 import { projectsTools } from "@/server/modules/projects/tools";
 import { systemTools } from "./system-tools";
 
@@ -12,7 +13,12 @@ import { systemTools } from "./system-tools";
  * Add a module: create src/server/modules/<module>/tools.ts exporting
  * `<module>Tools: ToolDef[]` and spread it here.
  */
-export const tools: ToolDef[] = [...systemTools, ...projectsTools, ...clientsTools];
+export const tools: ToolDef[] = [
+  ...systemTools,
+  ...projectsTools,
+  ...clientsTools,
+  ...contractsTools,
+];
 
 const byName = new Map(tools.map((t) => [t.name, t]));
 
