@@ -7,6 +7,7 @@ import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { formatDate, formatPercent } from "@/lib/format";
+import { markdownToText } from "@/lib/markdown";
 import { db } from "@/server/db/client";
 import { projects } from "@/server/db/schema";
 import type { PanelContext } from "@/server/page-context";

@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { ColorDot } from "@/components/shared/color-dot";
 import { formatDate, formatHours, formatPercent } from "@/lib/format";
+import { markdownToText } from "@/lib/markdown";
 import { isAdmin } from "@/server/auth/actor";
 import { clientOptions } from "@/server/modules/clients/service";
 import { listProjects } from "@/server/modules/projects/service";
