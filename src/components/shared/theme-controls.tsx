@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { CheckIcon, MonitorIcon, MoonIcon, PaletteIcon, SunIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,20 @@ import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { colorPresets, presetSwatches, PRESET_STORAGE_KEY, type ColorPreset } from "./theme";
 
-function usePreset() {
-  const [preset, setPresetState] = useState<ColorPreset>("green");
-  useEffect(() => {
-    const current = document.documentElement.getAttribute("data-preset") as ColorPreset | null;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync with pre-paint script
-    setPresetState(current ?? "green");
-  }, []);
+// The preset lives on <html data-preset>; every hook instance (header menu,
+// Settings → Appearance) observes the attribute so they stay in sync.
+function subscribePreset(onChange: () => void) {
+  const mo = new MutationObserver(onChange);
+  mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-preset"] });
+  return () => mo.disconnect();
+}
+const readPreset = () =>
+  (document.documentElement.getAttribute("data-preset") as ColorPreset | null) ?? "green";
+
+/** Current color preset + setter (persists to localStorage). */
+export function usePreset() {
+  const preset = useSyncExternalStore(subscribePreset, readPreset, () => "green" as ColorPreset);
   const setPreset = (p: ColorPreset) => {
-    setPresetState(p);
     if (p === "green") document.documentElement.removeAttribute("data-preset");
     else document.documentElement.setAttribute("data-preset", p);
     try {
