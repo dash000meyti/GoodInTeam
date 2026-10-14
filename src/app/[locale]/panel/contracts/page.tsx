@@ -445,7 +445,11 @@ function TemplatesTab({ ctx }: { ctx: PanelContext }) {
 async function ClientContracts({ ctx }: { ctx: PanelContext }) {
   const { actor, t, fmt, href, now } = ctx;
   const c = t.contracts;
-  const rows = await listContracts(actor, {});
+  const isPending = (s: string) => s === "sent" || s === "viewed";
+  // Documents waiting for the client come first.
+  const rows = (await listContracts(actor, {})).sort(
+    (a, b) => Number(isPending(b.effectiveStatus)) - Number(isPending(a.effectiveStatus)),
+  );
   return (
     <>
       <PageHeader title={c.portalTitle} description={c.portalSubtitle} />
@@ -480,18 +484,28 @@ async function ClientContracts({ ctx }: { ctx: PanelContext }) {
                     <dt className="text-muted-foreground">{c.sentAt}</dt>
                     <dd className="font-semibold">{formatDate(r.sentAt, fmt)}</dd>
                   </div>
-                  <div>
-                    <dt className="text-muted-foreground">
-                      {signed ? (r.requireSignature ? c.signedAt : c.approvedAt) : c.expiresAt}
-                    </dt>
-                    <dd className="font-semibold">
-                      {signed
-                        ? formatDate(r.signedAt, fmt)
-                        : r.expiresAt
-                          ? formatRelative(r.expiresAt, fmt, now)
-                          : c.noExpiry}
-                    </dd>
-                  </div>
+                  {(signed || pending || r.effectiveStatus === "declined") && (
+                    <div>
+                      <dt className="text-muted-foreground">
+                        {signed
+                          ? r.requireSignature
+                            ? c.signedAt
+                            : c.approvedAt
+                          : pending
+                            ? c.expiresAt
+                            : c.declinedAt}
+                      </dt>
+                      <dd className="font-semibold">
+                        {signed
+                          ? formatDate(r.signedAt, fmt)
+                          : pending
+                            ? r.expiresAt
+                              ? formatRelative(r.expiresAt, fmt, now)
+                              : c.noExpiry
+                            : formatDate(r.declinedAt, fmt)}
+                      </dd>
+                    </div>
+                  )}
                 </dl>
                 {r.shareToken && (
                   <Button
