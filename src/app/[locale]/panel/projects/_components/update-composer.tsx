@@ -12,17 +12,7 @@ import { useActionForm } from "@/components/shared/use-action-form";
 import { useT } from "@/i18n/client";
 import { projectUpdateKinds } from "@/server/db/schema/projects";
 import { addProjectUpdateAction } from "@/server/modules/projects/actions";
-
-const kindLabels = {
-  fa: {
-    update: "به‌روزرسانی",
-    release: "انتشار",
-    issue: "مشکل",
-    request: "درخواست",
-    note: "یادداشت",
-  },
-  en: { update: "Update", release: "Release", issue: "Issue", request: "Request", note: "Note" },
-};
+import { kindLabels } from "./update-kinds";
 
 export function UpdateComposer({ projectId, locale }: { projectId: string; locale: "fa" | "en" }) {
   const t = useT();
@@ -72,5 +62,3 @@ export function UpdateComposer({ projectId, locale }: { projectId: string; local
     </form>
   );
 }
-
-export { kindLabels };

@@ -1,6 +1,8 @@
 import "server-only";
 import {
   and,
+  gt,
+  or,
   asc,
   count,
   desc,
@@ -143,7 +145,12 @@ export async function staffDashboard(
     ? (db
         .select({ n: count() })
         .from(contracts)
-        .where(inArray(contracts.status, ["sent", "viewed"]))
+        .where(
+          and(
+            inArray(contracts.status, ["sent", "viewed"]),
+            or(isNull(contracts.expiresAt), gt(contracts.expiresAt, new Date(now))),
+          ),
+        )
         .get()?.n ?? 0)
     : 0;
   const newLeads = isAdmin(actor)

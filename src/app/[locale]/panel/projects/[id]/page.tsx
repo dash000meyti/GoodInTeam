@@ -29,7 +29,8 @@ import { MilestonesPanel } from "../_components/milestones-panel";
 import { ProjectActions } from "../_components/project-actions";
 import { ProjectStatusBadge } from "../_components/project-status-badge";
 import { ShareLinkCard } from "../_components/share-link-card";
-import { kindLabels, UpdateComposer } from "../_components/update-composer";
+import { UpdateComposer } from "../_components/update-composer";
+import { kindLabels } from "../_components/update-kinds";
 
 export default async function ProjectPage({ params }: PageProps<"/[locale]/panel/projects/[id]">) {
   const { id } = await params;

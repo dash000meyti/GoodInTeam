@@ -75,7 +75,12 @@ export const panelNav: NavGroup[] = [
       { href: "/panel/clients", label: "clients", icon: UsersIcon, roles: ADMIN },
       { href: "/panel/finance", label: "finance", icon: WalletIcon, roles: ADMIN },
       { href: "/panel/invoices", label: "invoices", icon: ReceiptIcon, roles: ALL },
-      { href: "/panel/contracts", label: "contracts", icon: FileSignatureIcon, roles: ALL },
+      {
+        href: "/panel/contracts",
+        label: "contracts",
+        icon: FileSignatureIcon,
+        roles: ["owner", "admin", "client"],
+      },
     ],
   },
   {

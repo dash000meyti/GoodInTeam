@@ -75,7 +75,7 @@ export function MarkdownEditor({
           }}
           rows={rows}
           placeholder={placeholder}
-          className="min-h-48 resize-y rounded-none border-0 font-mono text-[13px] leading-6 focus-visible:ring-0"
+          className="min-h-48 resize-y rounded-none border-0 text-[14px] leading-7 focus-visible:ring-0"
         />
       ) : (
         <div className="min-h-48 p-4">
