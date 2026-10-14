@@ -31,3 +31,6 @@ pnpm-debug.log*
 
 # vercel
 .vercel
+
+# local agent worktrees (Claude Code)
+/.claude/worktrees/
