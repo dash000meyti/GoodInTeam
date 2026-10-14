@@ -87,7 +87,11 @@ export function NotificationsBell({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[calc(100vw-2rem)] max-w-sm overflow-hidden p-0">
+      <PopoverContent
+        align="end"
+        collisionPadding={12}
+        className="w-[calc(100vw-1.5rem)] max-w-sm overflow-hidden p-0"
+      >
         <div className="flex items-center justify-between gap-2 border-b border-dashed px-4 py-3">
           <div>
             <p className="text-sm font-bold">{n.title}</p>
@@ -142,7 +146,7 @@ export function NotificationsBell({
                           item.read ? "font-medium" : "font-bold",
                         )}
                       >
-                        {item.title}
+                        <bdi>{item.title}</bdi>
                       </span>
                       {item.body && (
                         <span className="line-clamp-2 text-xs text-muted-foreground">

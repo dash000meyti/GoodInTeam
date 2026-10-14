@@ -185,7 +185,7 @@ export function QuickAdd({
           <>
             {parsed?.title && (
               <span className="me-1 max-w-full truncate text-xs text-muted-foreground">
-                {parsed.title}
+                <bdi>{parsed.title}</bdi>
               </span>
             )}
             {chips}

@@ -81,7 +81,7 @@ export async function ProjectTimePanel({
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid gap-6 lg:grid-cols-5 lg:items-start">
         <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>{tt.weeklyHours}</CardTitle>
@@ -124,7 +124,7 @@ export async function ProjectTimePanel({
                   <li key={e.id} className="flex items-center gap-3 py-3">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">
-                        {e.description || e.task?.title || tt.noDescription}
+                        <bdi>{e.description || e.task?.title || tt.noDescription}</bdi>
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
                         {formatDayLabel(e.startedAt, { ...fmt, short: true })} ·{" "}

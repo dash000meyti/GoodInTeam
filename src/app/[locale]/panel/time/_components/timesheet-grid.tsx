@@ -62,10 +62,10 @@ export function TimesheetGrid({
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[760px] border-separate border-spacing-0 text-sm">
+      <table className="w-full min-w-[680px] border-separate border-spacing-0 text-sm sm:min-w-[760px]">
         <thead>
           <tr>
-            <th className="sticky start-0 z-10 w-56 bg-card px-4 py-3 text-start text-xs font-bold text-muted-foreground sm:px-6">
+            <th className="sticky start-0 z-10 w-36 bg-card px-4 py-3 text-start text-xs font-bold text-muted-foreground sm:w-56 sm:px-6">
               {t.common.project}
             </th>
             {days.map((d) => (
@@ -95,10 +95,12 @@ export function TimesheetGrid({
         <tbody>
           {rows.map((row) => (
             <tr key={row.projectId ?? "_none"} className="group">
-              <td className="sticky start-0 z-10 border-t border-dashed bg-card px-4 py-1 sm:px-6">
+              <td className="sticky start-0 z-10 max-w-36 border-t border-dashed bg-card px-4 py-1 sm:max-w-56 sm:px-6">
                 <span className="flex items-center gap-2 font-semibold">
                   <ColorDot color={row.color} />
-                  <span className="truncate">{row.name ?? t.common.noProject}</span>
+                  <span className="truncate">
+                    <bdi>{row.name ?? t.common.noProject}</bdi>
+                  </span>
                 </span>
               </td>
               {row.cells.map((c, i) => (

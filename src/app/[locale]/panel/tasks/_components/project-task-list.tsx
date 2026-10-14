@@ -109,7 +109,7 @@ export function ProjectTaskList({
                     task.status === "done" && "text-muted-foreground line-through",
                   )}
                 >
-                  {task.title}
+                  <bdi>{task.title}</bdi>
                 </p>
               ) : (
                 <Link
@@ -119,7 +119,7 @@ export function ProjectTaskList({
                     task.status === "done" && "text-muted-foreground line-through",
                   )}
                 >
-                  {task.title}
+                  <bdi>{task.title}</bdi>
                   <ArrowUpRightIcon className="size-3 opacity-0 transition-opacity group-hover:opacity-100 rtl:-scale-x-100" />
                 </Link>
               )}

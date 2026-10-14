@@ -88,11 +88,13 @@ export function EntryRow({ entry, serverNow }: { entry: EntryRowView; serverNow:
             !entry.description && "font-medium text-muted-foreground",
           )}
         >
-          {entry.description || entry.task?.title || tt.noDescription}
+          <bdi>{entry.description || entry.task?.title || tt.noDescription}</bdi>
         </span>
         <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
           {entry.project && <ColorDot color={entry.project.color} className="size-2" />}
-          <span className="truncate">{meta}</span>
+          <span className="truncate">
+            <bdi>{meta}</bdi>
+          </span>
           <span className="shrink-0 tabular-nums sm:hidden" dir="ltr">
             · {entry.timeRange}
           </span>

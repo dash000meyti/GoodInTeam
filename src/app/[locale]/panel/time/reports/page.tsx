@@ -129,7 +129,7 @@ export default async function TimeReportsPage({
             fromKey={range.fromKey}
             toKey={range.toKey}
           />
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
             <ParamSelect
               base={href("/panel/time/reports")}
               params={{ ...rangeParams, ...keep }}
@@ -137,7 +137,7 @@ export default async function TimeReportsPage({
               value={projectParam ?? ""}
               noneLabel={tt.allProjects}
               placeholder={tt.allProjects}
-              className="w-48"
+              className="w-full sm:w-48"
               options={projects.map((p) => ({
                 value: p.id,
                 label: p.name,
@@ -152,7 +152,7 @@ export default async function TimeReportsPage({
                 value={userParam ?? ""}
                 noneLabel={tt.myTime}
                 ariaLabel={tt.whose}
-                className="w-40"
+                className="w-full sm:w-40"
                 options={[
                   { value: "all", label: tt.everyone },
                   ...users
@@ -267,7 +267,9 @@ export default async function TimeReportsPage({
                         <TableCell className="ps-6">
                           <span className="flex items-center gap-2">
                             <ColorDot color={p.color ?? NONE_COLOR} />
-                            <span className="truncate">{p.name ?? t.common.noProject}</span>
+                            <span className="truncate">
+                              <bdi>{p.name ?? t.common.noProject}</bdi>
+                            </span>
                           </span>
                         </TableCell>
                         <TableCell className="text-end font-mono tabular-nums">
@@ -305,7 +307,7 @@ export default async function TimeReportsPage({
                         >
                           <TableCell className="ps-12">
                             <span className="block max-w-[16rem] truncate sm:max-w-md">
-                              {task.title ?? tt.noTask}
+                              <bdi>{task.title ?? tt.noTask}</bdi>
                             </span>
                           </TableCell>
                           <TableCell className="text-end font-mono tabular-nums">

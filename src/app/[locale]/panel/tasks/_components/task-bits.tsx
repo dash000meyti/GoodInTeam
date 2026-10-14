@@ -155,7 +155,9 @@ export function TaskMeta({ task, compact }: { task: TaskView; compact?: boolean 
     items.push(
       <span key="p" className="flex min-w-0 items-center gap-1.5">
         <ColorDot color={task.project.color} className="size-2" />
-        <span className="truncate">{task.project.name}</span>
+        <span className="truncate">
+          <bdi>{task.project.name}</bdi>
+        </span>
       </span>,
     );
   if (task.dueLabel)
@@ -184,14 +186,14 @@ export function TaskMeta({ task, compact }: { task: TaskView; compact?: boolean 
     );
   for (const tag of task.tags.slice(0, 3))
     items.push(
-      <span key={`t-${tag}`} className="font-medium text-info">
+      <bdi key={`t-${tag}`} className="font-medium text-info">
         #{tag}
-      </span>,
+      </bdi>,
     );
   if (task.assignee && !compact)
     items.push(
       <span key="u" className="truncate">
-        {task.assignee}
+        <bdi>{task.assignee}</bdi>
       </span>,
     );
   if (!items.length) return null;

@@ -141,7 +141,7 @@ function TaskRow({ task, onOpen }: { task: TaskView; onOpen: (id: string) => voi
             done && "text-muted-foreground line-through",
           )}
         >
-          {task.title}
+          <bdi>{task.title}</bdi>
         </span>
         <TaskMeta task={task} />
       </button>

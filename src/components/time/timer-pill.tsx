@@ -121,7 +121,11 @@ export function TimerPill({
           </Button>
         )}
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[calc(100vw-2rem)] max-w-sm overflow-hidden p-0">
+      <PopoverContent
+        align="end"
+        collisionPadding={12}
+        className="w-[calc(100vw-1.5rem)] max-w-sm overflow-hidden p-0"
+      >
         <div className="flex items-center justify-between gap-2 border-b border-dashed bg-primary/6 px-4 py-3">
           <div className="flex items-center gap-2">
             <TimerIcon className="size-4 text-primary" />
@@ -155,13 +159,15 @@ export function TimerPill({
                 />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">
-                    {timer.description ||
-                      timer.task?.title ||
-                      timer.project?.name ||
-                      tt.noDescription}
+                    <bdi>
+                      {timer.description ||
+                        timer.task?.title ||
+                        timer.project?.name ||
+                        tt.noDescription}
+                    </bdi>
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {timer.project?.name ?? t.common.noProject} ·{" "}
+                    <bdi>{timer.project?.name ?? t.common.noProject}</bdi> ·{" "}
                     {format(tt.startedAt, { time: formatTime(timer.startedAt, fmt) })}
                   </p>
                 </div>

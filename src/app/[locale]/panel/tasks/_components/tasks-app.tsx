@@ -84,7 +84,7 @@ export function TasksApp(props: TasksAppProps) {
       const el = e.target as HTMLElement | null;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (el?.closest("input, textarea, select, [contenteditable=true], [role=dialog]")) return;
-      if (e.key === "n" || e.key === "ن") {
+      if (e.code === "KeyN") {
         e.preventDefault();
         quickAdd.current?.focus();
       }
@@ -173,12 +173,12 @@ export function TasksApp(props: TasksAppProps) {
       <div
         className={
           view === "list"
-            ? "mt-6 grid gap-4 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-6"
-            : "mt-6 grid gap-4"
+            ? "mt-6 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-6"
+            : "mt-6 grid grid-cols-[minmax(0,1fr)] gap-4"
         }
       >
         {view === "list" && (
-          <aside className="lg:sticky lg:top-24 lg:self-start">
+          <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
             <SmartListNav active={list} counts={counts} onSelect={setList} />
           </aside>
         )}

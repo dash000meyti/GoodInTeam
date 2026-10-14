@@ -407,7 +407,7 @@ function TaskEditor({
                           done && "text-muted-foreground line-through",
                         )}
                       >
-                        {s.title}
+                        <bdi>{s.title}</bdi>
                       </button>
                       <Button
                         type="button"

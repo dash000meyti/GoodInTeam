@@ -142,7 +142,9 @@ export function ProjectDonut({
                   className="size-2.5 shrink-0 rounded-full"
                   style={{ backgroundColor: i.color }}
                 />
-                <span className="min-w-0 flex-1 truncate font-semibold">{i.name}</span>
+                <span className="min-w-0 flex-1 truncate font-semibold">
+                  <bdi>{i.name}</bdi>
+                </span>
                 <span className="font-mono text-xs text-muted-foreground tabular-nums">
                   {formatDuration(hoursToMs(i.hours), locale)}
                 </span>

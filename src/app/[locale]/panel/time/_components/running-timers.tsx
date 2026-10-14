@@ -236,7 +236,7 @@ function RunningCard({
             !timer.description && "text-muted-foreground",
           )}
         >
-          {timer.description || timer.task?.title || tt.noDescription}
+          <bdi>{timer.description || timer.task?.title || tt.noDescription}</bdi>
         </button>
       )}
 
@@ -275,7 +275,7 @@ function RunningCard({
         <div className="flex flex-wrap items-center gap-2">
           {timer.task && (
             <Badge variant="neutral" className="max-w-full truncate">
-              {timer.task.title}
+              <bdi>{timer.task.title}</bdi>
             </Badge>
           )}
           {timer.long && (

@@ -241,7 +241,7 @@ function BoardCard({
             task.status === "done" && "text-muted-foreground line-through",
           )}
         >
-          {task.title}
+          <bdi>{task.title}</bdi>
         </button>
         <PriorityFlag priority={task.priority} className="mt-1" />
         <DropdownMenu>

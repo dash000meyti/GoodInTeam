@@ -27,7 +27,7 @@ import { appTimezone } from "@/server/modules/settings/service";
 import { startTimer } from "@/server/modules/time/service";
 import { normalizeClock } from "@/lib/duration";
 import { parseQuickAdd } from "@/lib/quick-add";
-import { addDays, fromDateInput, startOfDay, toDateInputValue, toTimeInputValue } from "@/lib/tz";
+import { addDays, fromDateInput, startOfDay, toDateInputValue } from "@/lib/tz";
 import { accessibleTask, taskAccessWhere } from "./access";
 import { nextTaskOccurrence } from "./recurrence";
 import type {
@@ -45,7 +45,6 @@ export { taskAccessWhere };
 export const OPEN_STATUSES = ["inbox", "todo", "in_progress", "waiting", "someday"] as const;
 /** Statuses that show up in Today / Upcoming (someday is deliberately parked). */
 const ACTIVE_STATUSES = ["inbox", "todo", "in_progress", "waiting"] as const;
-export const BOARD_STATUSES = ["todo", "in_progress", "waiting", "done"] as const;
 export const UPCOMING_DAYS = 14;
 const NO_PROJECT = "_none";
 
@@ -274,34 +273,6 @@ export function smartListCounts(actor: Actor, now = Date.now()) {
     someday: n(listWhere("someday", b)),
     done: Math.min(n(listWhere("done", b)), 50),
   };
-}
-
-/** Kanban columns (todo / in_progress / waiting / done — done: last 14 days). */
-export async function boardTasks(
-  actor: Actor,
-  input: z.output<typeof listTasksInput>,
-  now = Date.now(),
-) {
-  assertStaff(actor);
-  const tz = appTimezone();
-  const recent = addDays(startOfDay(now, tz), -14, tz);
-  const rows = await db.query.tasks.findMany({
-    where: and(
-      taskAccessWhere(actor),
-      filtersWhere(input),
-      or(
-        inArray(tasks.status, ["todo", "in_progress", "waiting"]),
-        and(eq(tasks.status, "done"), gte(tasks.completedAt, recent)),
-      ),
-    ),
-    with: {
-      project: { columns: projectCols },
-      assignee: { columns: { id: true, name: true } },
-    },
-    orderBy: [asc(tasks.sort), asc(tasks.createdAt)],
-    limit: 400,
-  });
-  return withExtras(rows);
 }
 
 /** Full task with subtasks, project and tracked time. */
@@ -753,9 +724,4 @@ export function markTaskReminded(id: string, now = Date.now()) {
     .set({ remindedAt: new Date(now) })
     .where(eq(tasks.id, id))
     .run();
-}
-
-/** "HH:mm" of a due date for forms (empty when all-day). */
-export function dueTimeValue(t: { dueAt: Date | null; dueAllDay: boolean }, tz: string) {
-  return t.dueAt && !t.dueAllDay ? toTimeInputValue(t.dueAt, tz) : "";
 }

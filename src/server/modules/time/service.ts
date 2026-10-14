@@ -9,7 +9,7 @@ import { AppError, forbidden, notFound } from "@/server/errors";
 import { projectAccessWhere } from "@/server/modules/projects/service";
 import { appTimezone } from "@/server/modules/settings/service";
 import { accessibleTask } from "@/server/modules/tasks/access";
-import { addDays, fromDateInput, startOfDay, startOfWeek } from "@/lib/tz";
+import { addDays, fromDateInput, startOfWeek } from "@/lib/tz";
 import { formatDurationInput } from "@/lib/duration";
 import {
   dayKey,
@@ -828,12 +828,7 @@ export async function exportEntriesCsv(
   return `﻿${lines.join("\r\n")}\r\n`;
 }
 
-/** Day-start helper for pages: today's start in the app timezone. */
-export function todayStart(now: number) {
-  return startOfDay(now, appTimezone());
-}
-
-/** Running timers older than `ms` that haven't been flagged yet (for jobs). */
+/** Running timers older than `olderThanMs` (the job de-duplicates notifications). */
 export function longRunningEntries(olderThanMs: number) {
   return db
     .select({
