@@ -217,10 +217,11 @@ export function OverlaysSection({ t }: { t: Messages }) {
         title={d.command}
         code={`// Global ⌘K palette: entries come from components/panel/nav-config.ts
 const { setPaletteOpen } = usePanelUI();
-<Command>
+<CommandDialog open={open} onOpenChange={setOpen} title="…">
   <CommandInput placeholder="…" />
-  <CommandList><CommandGroup heading="…"><CommandItem>…</CommandItem></CommandGroup></CommandList>
-</Command>`}
+  <CommandList><CommandGroup heading="…"><CommandItem onSelect={…}>…</CommandItem></CommandGroup></CommandList>
+</CommandDialog>
+// Inline <Command> scrolls its first item into view on mount — prefer the dialog.`}
       >
         <CommandDemo />
       </Example>
@@ -310,7 +311,7 @@ export function NavigationSection({ t }: { t: Messages }) {
           <span className="text-foreground/70">{d.demoProject}</span>
         </nav>
         <Button variant="ghost" size="sm" className="ms-auto text-muted-foreground">
-          <ChevronLeftIcon className="ltr:rotate-180" /> {t.common.back}
+          <ChevronLeftIcon className="rtl:rotate-180" /> {t.common.back}
         </Button>
       </Example>
     </DsSection>

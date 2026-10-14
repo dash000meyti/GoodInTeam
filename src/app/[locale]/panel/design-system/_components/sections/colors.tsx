@@ -45,16 +45,19 @@ export function ColorsSection({ t }: { t: Messages }) {
           {colorPresets.map((p) => (
             <div
               key={p}
-              className="grid grid-cols-[72px_repeat(5,minmax(0,1fr))] items-center gap-2"
+              className="grid grid-cols-5 items-center gap-2 sm:grid-cols-[72px_repeat(5,minmax(0,1fr))]"
             >
-              <span className="font-mono text-xs font-bold text-muted-foreground" dir="ltr">
+              <span
+                className="col-span-5 font-mono text-xs font-bold text-muted-foreground sm:col-span-1"
+                dir="ltr"
+              >
                 {p}
               </span>
               {steps.map((st) => (
                 <Swatch
                   key={st}
                   color={presetScales[p][st]}
-                  label={st === "main" ? "primary" : `primary-${st}`}
+                  label={st === "main" ? "primary" : st}
                   value={presetScales[p][st]}
                   copy={st === "main" ? "var(--primary)" : `var(--primary-${st})`}
                 />

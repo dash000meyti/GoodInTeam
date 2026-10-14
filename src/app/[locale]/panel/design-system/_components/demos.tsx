@@ -12,6 +12,7 @@ import {
   PanelRightIcon,
   PencilIcon,
   PlusIcon,
+  SearchIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
   TimerIcon,
@@ -21,7 +22,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Command,
+  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -49,6 +50,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -300,43 +302,53 @@ export function DropdownDemo() {
   );
 }
 
-/** Inline Command list + a button that opens the real ⌘K palette. */
+/**
+ * Command list in a CommandDialog (cmdk scrolls its selected item into view on
+ * mount, so an inline demo would make the page jump) + the real ⌘K palette.
+ */
 export function CommandDemo() {
   const t = useT();
   const d = t.designSystem;
   const { setPaletteOpen } = usePanelUI();
+  const [open, setOpen] = useState(false);
   return (
-    <div className="grid w-full gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
-      <Command className="rounded-xl border shadow-card">
+    <>
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        <SearchIcon /> {d.command}
+      </Button>
+      <Button variant="soft" onClick={() => setPaletteOpen(true)}>
+        {d.openPalette}
+        <Kbd dir="ltr" className="bg-background/60">
+          ⌘K
+        </Kbd>
+      </Button>
+      <CommandDialog open={open} onOpenChange={setOpen} title={d.command}>
         <CommandInput placeholder={d.commandPlaceholder} />
-        <CommandList className="max-h-56">
+        <CommandList>
           <CommandEmpty>{t.common.empty}</CommandEmpty>
           <CommandGroup heading={d.commandGroupNav}>
-            <CommandItem>
+            <CommandItem onSelect={() => setOpen(false)}>
               <FolderKanbanIcon /> {t.nav.projects}
             </CommandItem>
-            <CommandItem>
+            <CommandItem onSelect={() => setOpen(false)}>
               <CalendarDaysIcon /> {t.nav.calendar}
             </CommandItem>
-            <CommandItem>
+            <CommandItem onSelect={() => setOpen(false)}>
               <SettingsIcon /> {t.nav.settings}
             </CommandItem>
           </CommandGroup>
           <CommandGroup heading={d.commandGroupActions}>
-            <CommandItem>
+            <CommandItem onSelect={() => setOpen(false)}>
               <TimerIcon /> {d.startTimer}
               <CommandShortcut dir="ltr">T</CommandShortcut>
             </CommandItem>
-            <CommandItem>
+            <CommandItem onSelect={() => setOpen(false)}>
               <PlusIcon /> {d.newProject}
             </CommandItem>
           </CommandGroup>
         </CommandList>
-      </Command>
-      <Button variant="soft" onClick={() => setPaletteOpen(true)}>
-        {d.openPalette}
-      </Button>
-    </div>
+      </CommandDialog>
+    </>
   );
 }
 

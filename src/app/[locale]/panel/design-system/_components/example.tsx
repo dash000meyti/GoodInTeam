@@ -24,15 +24,18 @@ export async function CodeBlock({
 }) {
   const html = await highlight(code.trim(), lang);
   return (
-    <div dir="ltr" className={cn("group/code relative", className)}>
-      <div
-        // .prose-gt rules are unlayered → overrides need `!` to win over them.
-        className="prose-gt max-h-72 scrollbar-thin overflow-auto [&_pre]:!m-0 [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!py-3 [&_pre]:!ps-4 [&_pre]:!pe-14 [&_pre]:!text-[12.5px] [&_pre]:!leading-6"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
-      <div className="absolute end-2 top-2 opacity-70 transition-opacity group-hover/code:opacity-100">
+    <div dir="ltr" className={cn("min-w-0", className)}>
+      <div className="flex items-center justify-between gap-2 px-3 pt-1.5">
+        <span className="font-mono text-[11px] font-semibold text-muted-foreground uppercase">
+          {lang}
+        </span>
         <CopyButton value={code.trim()} size="icon-sm" />
       </div>
+      <div
+        // .prose-gt rules are unlayered → overrides need `!` to win over them.
+        className="prose-gt max-h-72 scrollbar-thin overflow-auto [&_pre]:!m-0 [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!bg-transparent [&_pre]:!px-4 [&_pre]:!pt-1 [&_pre]:!pb-3 [&_pre]:!text-[12.5px] [&_pre]:!leading-6 [&_pre_span]:!bg-transparent"
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
     </div>
   );
 }
