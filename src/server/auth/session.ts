@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { and, eq, gt } from "drizzle-orm";
 import { db } from "@/server/db/client";
 import { sessions, users, type UserRole } from "@/server/db/schema";
@@ -60,6 +61,9 @@ export async function destroySession() {
 export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
+  // Session-shell prefetches resolve cookies but not the clock: the expiry
+  // check (and every Date.now() after panelContext) is request-time only.
+  await connection();
   const id = sha256(token);
   const now = new Date();
   const row = db
