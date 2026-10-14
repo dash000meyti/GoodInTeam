@@ -16,6 +16,7 @@ export const SESSION_COOKIE = "gt_session";
 const SESSION_DAYS = 30;
 const RENEW_WHEN_DAYS_LEFT = 15;
 const DAY = 86_400_000;
+const SEEN_THROTTLE_MS = 5 * 60_000;
 
 export async function createSession(
   userId: string,
@@ -71,6 +72,7 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
     .select({
       sessionId: sessions.id,
       expiresAt: sessions.expiresAt,
+      lastSeenAt: sessions.lastSeenAt,
       id: users.id,
       email: users.email,
       name: users.name,
@@ -93,6 +95,9 @@ export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
       .set({ expiresAt: new Date(now.getTime() + SESSION_DAYS * DAY), lastSeenAt: now })
       .where(eq(sessions.id, id))
       .run();
+  } else if (!row.lastSeenAt || now.getTime() - row.lastSeenAt.getTime() > SEEN_THROTTLE_MS) {
+    // "Last seen" for Settings → Sessions (throttled to one write per few minutes).
+    db.update(sessions).set({ lastSeenAt: now }).where(eq(sessions.id, id)).run();
   }
   return {
     id: row.id,

@@ -11,3 +11,6 @@ export const setupInput = z.object({
   email: z.email().max(200),
   password: z.string().min(10).max(500),
 });
+
+/** Opaque session handle as shown in Settings → Sessions (not the DB id). */
+export const sessionHandleInput = z.object({ id: z.string().min(8).max(64) });

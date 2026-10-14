@@ -21,6 +21,7 @@ export function CopyButton({
       type="button"
       variant="outline"
       size={size}
+      aria-label={size === "icon-sm" ? (label ?? t.common.copy) : undefined}
       onClick={async () => {
         await navigator.clipboard.writeText(value);
         setDone(true);

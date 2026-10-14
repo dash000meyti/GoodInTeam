@@ -3,12 +3,15 @@ import { z } from "zod";
 import type { Actor } from "@/server/auth/actor";
 import { AppError } from "@/server/errors";
 import type { ToolDef } from "./define-tool";
+import { apiTokensTools } from "@/server/modules/api-tokens/tools";
 import { clientsTools } from "@/server/modules/clients/tools";
 import { contractsTools } from "@/server/modules/contracts/tools";
 import { projectsTools } from "@/server/modules/projects/tools";
 import { timeTools } from "@/server/modules/time/tools";
 import { tasksTools } from "@/server/modules/tasks/tools";
 import { notificationsTools } from "@/server/modules/notifications/tools";
+import { settingsTools } from "@/server/modules/settings/tools";
+import { usersTools } from "@/server/modules/users/tools";
 import { systemTools } from "./system-tools";
 
 /**
@@ -24,6 +27,9 @@ export const tools: ToolDef[] = [
   ...timeTools,
   ...tasksTools,
   ...notificationsTools,
+  ...settingsTools,
+  ...usersTools,
+  ...apiTokensTools,
 ];
 
 const byName = new Map(tools.map((t) => [t.name, t]));

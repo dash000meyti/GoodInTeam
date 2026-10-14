@@ -1,16 +1,26 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { localePath } from "@/i18n/config";
-import { definePublicAction } from "@/server/action";
+import { defineAction, definePublicAction } from "@/server/action";
 import { logActivity } from "@/server/activity";
 import { verifyPassword } from "@/server/auth/password";
 import { rateLimit } from "@/server/auth/rate-limit";
 import { requestMeta } from "@/server/auth/request";
 import { createSession, destroySession, getActor } from "@/server/auth/session";
 import { AppError } from "@/server/errors";
-import { createUser, findUserByEmail, hasOwner } from "@/server/modules/users/service";
-import { loginInput, setupInput } from "./schemas";
+import { localized } from "@/server/modules/users/localize";
+import { changePasswordInput } from "@/server/modules/users/schemas";
+import {
+  changePassword,
+  createUser,
+  findUserByEmail,
+  hasOwner,
+} from "@/server/modules/users/service";
+import { loginInput, sessionHandleInput, setupInput } from "./schemas";
+import { currentSessionId, revokeOtherSessions, revokeSession } from "./sessions";
 
 /** Only allow same-site relative redirects (prevents open-redirects). */
 function safeNext(next: string | undefined, fallback: string) {
@@ -60,3 +70,30 @@ export async function logout() {
   if (actor) logActivity(actor, "auth.logout", "user", actor.user.id);
   redirect(localePath(actor?.user.locale ?? "fa", "/login"));
 }
+
+/** Settings → My account → change password (session only; never via API). */
+export const changePasswordAction = defineAction({ input: changePasswordInput }, (input, actor) =>
+  localized(async () => {
+    const res = await changePassword(actor, input, { keepSessionId: await currentSessionId() });
+    refresh();
+    return res;
+  }),
+);
+
+export const revokeSessionAction = defineAction(
+  { input: sessionHandleInput },
+  async ({ id }, actor) => {
+    revokeSession(actor, id, await currentSessionId());
+    refresh();
+    return null;
+  },
+);
+
+export const revokeOtherSessionsAction = defineAction(
+  { input: z.object({}) },
+  async (_input, actor) => {
+    const n = revokeOtherSessions(actor, await currentSessionId());
+    refresh();
+    return { revoked: n };
+  },
+);
