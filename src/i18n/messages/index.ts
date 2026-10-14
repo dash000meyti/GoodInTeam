@@ -12,6 +12,9 @@ import { panel as faPanel } from "./fa/panel";
 import { site as faSite } from "./fa/site";
 import { projects as faProjects } from "./fa/projects";
 import { clients as faClients } from "./fa/clients";
+import { time as faTime } from "./fa/time";
+import { tasks as faTasks } from "./fa/tasks";
+import { notifications as faNotifications } from "./fa/notifications";
 import { auth as enAuth } from "./en/auth";
 import { common as enCommon } from "./en/common";
 import { nav as enNav } from "./en/nav";
@@ -19,6 +22,9 @@ import { panel as enPanel } from "./en/panel";
 import { site as enSite } from "./en/site";
 import { projects as enProjects } from "./en/projects";
 import { clients as enClients } from "./en/clients";
+import { time as enTime } from "./en/time";
+import { tasks as enTasks } from "./en/tasks";
+import { notifications as enNotifications } from "./en/notifications";
 
 const fa = {
   common: faCommon,
@@ -28,6 +34,9 @@ const fa = {
   site: faSite,
   projects: faProjects,
   clients: faClients,
+  time: faTime,
+  tasks: faTasks,
+  notifications: faNotifications,
 };
 
 type Source = typeof fa;
@@ -42,6 +51,9 @@ const en: Messages = {
   site: enSite,
   projects: enProjects,
   clients: enClients,
+  time: enTime,
+  tasks: enTasks,
+  notifications: enNotifications,
 };
 
 export const messages: Record<Locale, Messages> = { fa, en };
