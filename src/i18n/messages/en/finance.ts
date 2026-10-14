@@ -80,7 +80,8 @@ export const finance: Record<keyof typeof fa, string> = {
   budgetUsedHint: "(Value of tracked time + expenses) ÷ budget",
   noProfitability: "No project has income, expenses or tracked time yet.",
   getStarted: "Start tracking money",
-  getStartedHint: "Create an account (bank, cash, USDT wallet…) and record your first income or expense.",
+  getStartedHint:
+    "Create an account (bank, cash, USDT wallet…) and record your first income or expense.",
 
   // ── Transactions ──
   transactionsTitle: "Transactions",
@@ -178,7 +179,8 @@ export const finance: Record<keyof typeof fa, string> = {
   archive: "Archive",
   unarchive: "Unarchive",
   accountsEmpty: "You haven't created any accounts yet.",
-  accountsEmptyHint: "Create one for every place you keep money: bank, cash box, card or USDT wallet.",
+  accountsEmptyHint:
+    "Create one for every place you keep money: bank, cash box, card or USDT wallet.",
   deleteAccountHint: "Only accounts without transactions can be deleted; archive it otherwise.",
   txCount: "{n} transactions",
   statement: "Statement",
@@ -226,7 +228,8 @@ export const finance: Record<keyof typeof fa, string> = {
   line_income: "Income",
   line_expense: "Expense",
   ledgersEmpty: "No transactions or invoices with a counterparty yet.",
-  ledgersEmptyHint: "Pick a client or type a counterparty name when recording a transaction to build its ledger.",
+  ledgersEmptyHint:
+    "Pick a client or type a counterparty name when recording a transaction to build its ledger.",
   projectsLedgerEmpty: "No transactions are linked to a project yet.",
   netCash: "Net cash",
   viewLedger: "Ledger",
@@ -248,13 +251,15 @@ export const finance: Record<keyof typeof fa, string> = {
   change: "Change",
   ratesEmpty: "No exchange rates yet.",
   ratesEmptyHint: "Add USD, USDT and other rates to see every account totalled in {base}.",
-  baseHint: "The base currency comes from business settings. Rates are for reporting only and never change transactions.",
+  baseHint:
+    "The base currency comes from business settings. Rates are for reporting only and never change transactions.",
   deleteRateHint: "This rate will be removed from the history.",
   updatedOn: "Updated {date}",
 
   // ── Invoices ──
   invoicesTitle: "Invoices",
-  invoicesSubtitle: "Issue invoices, share a link with your client, record payments and track receivables.",
+  invoicesSubtitle:
+    "Issue invoices, share a link with your client, record payments and track receivables.",
   clientInvoicesSubtitle: "Your invoices and their payment status.",
   newInvoice: "New invoice",
   editInvoice: "Edit invoice",
@@ -349,7 +354,8 @@ export const finance: Record<keyof typeof fa, string> = {
   deleteInvoiceHint: "The draft is deleted and its linked time entries are released.",
   print: "Print / PDF",
   shareLink: "Invoice link",
-  shareLinkHint: "Your client can view, print or save the invoice with this link — no sign-in needed.",
+  shareLinkHint:
+    "Your client can view, print or save the invoice with this link — no sign-in needed.",
   notSentYet: "This invoice hasn't been sent yet and has no public link.",
   payments: "Payments",
   noPayments: "No payments recorded yet.",
@@ -406,7 +412,8 @@ export const finance: Record<keyof typeof fa, string> = {
   err_rateForBase: "The base currency doesn't need a rate.",
   err_accountNotFound: "Choose an account.",
   err_accountArchived: "This account is archived.",
-  err_accountHasTransactions: "This account has transactions and can't be deleted; archive it instead.",
+  err_accountHasTransactions:
+    "This account has transactions and can't be deleted; archive it instead.",
   err_currencyLocked: "The currency of an account with transactions can't be changed.",
   err_transferAccountRequired: "Choose the destination account.",
   err_transferSameAccount: "Source and destination accounts must differ.",

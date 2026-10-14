@@ -15,6 +15,9 @@ import { normalizeDay } from "./calc";
 
 // ─── Generic CSV ────────────────────────────────────────────────────────────
 
+/** UTF-8 byte order mark (Excel needs it to read Persian text correctly). */
+export const BOM = String.fromCharCode(0xfeff);
+
 function detectDelimiter(firstLine: string) {
   const counts = [",", ";", "\t"].map((d) => ({ d, n: firstLine.split(d).length - 1 }));
   counts.sort((a, b) => b.n - a.n);
@@ -23,7 +26,7 @@ function detectDelimiter(firstLine: string) {
 
 /** RFC 4180-ish parser: quotes, escaped quotes, CRLF, BOM; auto-detects , ; or tab. */
 export function parseCsv(text: string): string[][] {
-  const src = text.replace(/^﻿/, "");
+  const src = text.startsWith(BOM) ? text.slice(1) : text;
   const firstLine = src.split(/\r?\n/, 1)[0] ?? "";
   const delim = detectDelimiter(firstLine);
   const rows: string[][] = [];
@@ -64,8 +67,10 @@ function quote(v: string) {
 
 /** Serialize rows to CSV (CRLF, quoted when needed, UTF-8 BOM for Excel). */
 export function toCsv(rows: (string | number | null | undefined)[][], bom = true) {
-  const body = rows.map((r) => r.map((c) => quote(c == null ? "" : String(c))).join(",")).join("\r\n");
-  return (bom ? "﻿" : "") + body + "\r\n";
+  const body = rows
+    .map((r) => r.map((c) => quote(c == null ? "" : String(c))).join(","))
+    .join("\r\n");
+  return (bom ? BOM : "") + body + "\r\n";
 }
 
 // ─── Import mapping ─────────────────────────────────────────────────────────
@@ -103,12 +108,7 @@ export function mapHeader(header: string[]) {
 }
 
 export type ImportErrorCode =
-  | "missingColumns"
-  | "badDate"
-  | "badAmount"
-  | "badKind"
-  | "missingAccount"
-  | "unknownAccount";
+  "missingColumns" | "badDate" | "badAmount" | "badKind" | "missingAccount" | "unknownAccount";
 export type ImportWarningCode = "unknownCategory" | "categoryKind" | "transferSkipped";
 
 export interface ImportContext {
@@ -123,7 +123,14 @@ export interface ImportRow {
   errors: ImportErrorCode[];
   warnings: ImportWarningCode[];
   /** Raw display values. */
-  raw: { date: string; amount: string; kind: string; account: string; category: string; description: string };
+  raw: {
+    date: string;
+    amount: string;
+    kind: string;
+    account: string;
+    category: string;
+    description: string;
+  };
   data: {
     occurredAt: Date;
     kind: "income" | "expense";
@@ -174,7 +181,10 @@ export function parseImportDate(dateCell: string, timeCell: string | undefined, 
 }
 
 /** Validate + map parsed CSV rows (including header) to transactions. */
-export function mapImportRows(table: string[][], ctx: ImportContext): {
+export function mapImportRows(
+  table: string[][],
+  ctx: ImportContext,
+): {
   rows: ImportRow[];
   missingColumns: ImportField[];
 } {
@@ -188,7 +198,8 @@ export function mapImportRows(table: string[][], ctx: ImportContext): {
 
   const accounts = new Map(ctx.accounts.map((a) => [norm(a.name), a]));
   const categories = ctx.categories;
-  const cell = (r: string[], f: ImportField) => (col[f] === undefined ? "" : (r[col[f]!] ?? "").trim());
+  const cell = (r: string[], f: ImportField) =>
+    col[f] === undefined ? "" : (r[col[f]!] ?? "").trim();
 
   const rows = body.map((r, i): ImportRow => {
     const raw = {
@@ -202,7 +213,11 @@ export function mapImportRows(table: string[][], ctx: ImportContext): {
     const errors: ImportErrorCode[] = [];
     const warnings: ImportWarningCode[] = [];
 
-    const occurredAt = parseImportDate(raw.date, col.time === undefined ? undefined : cell(r, "time"), ctx.tz);
+    const occurredAt = parseImportDate(
+      raw.date,
+      col.time === undefined ? undefined : cell(r, "time"),
+      ctx.tz,
+    );
     if (!occurredAt) errors.push("badDate");
 
     let kindWord = kindWords[norm(raw.kind)];

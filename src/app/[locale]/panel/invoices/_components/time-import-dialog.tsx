@@ -58,7 +58,11 @@ export function TimeImportDialog({
   const load = () =>
     start(async () => {
       if (!projectId) return;
-      const res = await unbilledTimeAction({ projectId, from: from ?? undefined, to: to ?? undefined });
+      const res = await unbilledTimeAction({
+        projectId,
+        from: from ?? undefined,
+        to: to ?? undefined,
+      });
       if (!res.ok) {
         toast.error(res.error.message);
         return;
@@ -92,7 +96,9 @@ export function TimeImportDialog({
           <DialogDescription>{f.fromTimeHint}</DialogDescription>
         </DialogHeader>
         {!projectId ? (
-          <p className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">{f.selectProjectFirst}</p>
+          <p className="rounded-xl bg-muted/60 p-4 text-sm text-muted-foreground">
+            {f.selectProjectFirst}
+          </p>
         ) : (
           <>
             <div className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_auto]">
@@ -141,11 +147,21 @@ export function TimeImportDialog({
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold">{g.label}</span>
                             <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                              {format(f.hoursN, { n: formatNumber(g.hours, locale, { maximumFractionDigits: 2 }) })}
+                              {format(f.hoursN, {
+                                n: formatNumber(g.hours, locale, { maximumFractionDigits: 2 }),
+                              })}
                               {" × "}
                               {formatMoney(g.rateMinor, g.currency, locale)}
-                              <Badge variant="neutral">{format(f.billedEntries, { n: formatNumber(g.entryIds.length, locale) })}</Badge>
-                              {other && <Badge variant="warning">{format(f.otherCurrency, { currency: g.currency })}</Badge>}
+                              <Badge variant="neutral">
+                                {format(f.billedEntries, {
+                                  n: formatNumber(g.entryIds.length, locale),
+                                })}
+                              </Badge>
+                              {other && (
+                                <Badge variant="warning">
+                                  {format(f.otherCurrency, { currency: g.currency })}
+                                </Badge>
+                              )}
                             </span>
                           </span>
                           <span className="text-sm font-bold whitespace-nowrap tabular-nums">

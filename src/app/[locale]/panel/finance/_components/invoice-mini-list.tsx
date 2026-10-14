@@ -25,12 +25,16 @@ export function InvoiceMiniList({
 }) {
   const { t, href, fmt, locale } = ctx;
   const f = t.finance;
-  if (!invoices.length) return <p className="py-6 text-center text-sm text-muted-foreground">{empty}</p>;
+  if (!invoices.length)
+    return <p className="py-6 text-center text-sm text-muted-foreground">{empty}</p>;
   return (
     <ul className="divide-y divide-dashed">
       {invoices.map((inv) => (
         <li key={inv.id}>
-          <Link href={href(`/panel/invoices/${inv.id}`)} className="group flex items-center gap-3 py-2.5">
+          <Link
+            href={href(`/panel/invoices/${inv.id}`)}
+            className="group flex items-center gap-3 py-2.5"
+          >
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-semibold group-hover:text-primary" dir="ltr">
@@ -38,10 +42,17 @@ export function InvoiceMiniList({
                 </span>
                 <InvoiceStatusBadge status={inv.status} t={f} />
               </span>
-              <span className="block text-xs text-muted-foreground">{formatDate(inv.issueDate, fmt)}</span>
+              <span className="block text-xs text-muted-foreground">
+                {formatDate(inv.issueDate, fmt)}
+              </span>
             </span>
             <span className="text-end">
-              <Money minor={inv.totalMinor} currency={inv.currency} locale={locale} className="block text-sm font-bold" />
+              <Money
+                minor={inv.totalMinor}
+                currency={inv.currency}
+                locale={locale}
+                className="block text-sm font-bold"
+              />
               {inv.dueMinor > 0 && inv.dueMinor !== inv.totalMinor && (
                 <span className="block text-xs text-muted-foreground">
                   {f.due}: <Money minor={inv.dueMinor} currency={inv.currency} locale={locale} />

@@ -11,7 +11,8 @@ import {
 import type { Messages } from "@/i18n/messages";
 import { cn } from "@/lib/utils";
 
-export type FinanceSection = "overview" | "transactions" | "accounts" | "categories" | "ledgers" | "rates";
+export type FinanceSection =
+  "overview" | "transactions" | "accounts" | "categories" | "ledgers" | "rates";
 
 const items: { key: FinanceSection; path: string; icon: LucideIcon }[] = [
   { key: "overview", path: "/panel/finance", icon: ChartPieIcon },

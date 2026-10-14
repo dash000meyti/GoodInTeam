@@ -56,7 +56,9 @@ export function RateFormDialog({
     .filter((c) => c !== base)
     .sort((a, b) => preferred.indexOf(a) - preferred.indexOf(b));
   const [open, setOpen] = useState(false);
-  const [currency, setCurrency] = useState(rate?.currency ?? defaultCurrency ?? choices[0] ?? "USD");
+  const [currency, setCurrency] = useState(
+    rate?.currency ?? defaultCurrency ?? choices[0] ?? "USD",
+  );
   const [value, setValue] = useState(rate?.rate ?? "");
   const [date, setDate] = useState<string | null>(rate?.date ?? null);
   const form = useActionForm(rate ? updateFxRateAction : setFxRateAction, {
@@ -78,7 +80,9 @@ export function RateFormDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{rate ? f.editRate : f.newRate}</DialogTitle>
-          <DialogDescription>{format(f.rateHint, { currency, base: baseSymbol })}</DialogDescription>
+          <DialogDescription>
+            {format(f.rateHint, { currency, base: baseSymbol })}
+          </DialogDescription>
         </DialogHeader>
         <form action={form.submit} className="grid gap-4">
           {rate && <input type="hidden" name="id" value={rate.id} />}
@@ -114,7 +118,7 @@ export function RateFormDialog({
               <p className="min-h-4 text-xs text-muted-foreground tabular-nums">
                 {parsed
                   ? `${format(f.rateFor, { currency })} ${formatNumber(parsed, locale, { maximumFractionDigits: 6 })} ${baseSymbol}`
-                  : " "}
+                  : null}
               </p>
             </Field>
           </div>

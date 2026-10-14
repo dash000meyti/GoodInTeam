@@ -36,10 +36,7 @@ import { useLocale, useT } from "@/i18n/client";
 import { formatMoney, isCurrency, parseMoneyInput } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { convertMinor, minorToMajor } from "@/server/modules/finance/calc";
-import {
-  createTransactionAction,
-  updateTransactionAction,
-} from "@/server/modules/finance/actions";
+import { createTransactionAction, updateTransactionAction } from "@/server/modules/finance/actions";
 import type { TxFormOptions, TxFormValues } from "../_lib/options";
 
 type Kind = "income" | "expense" | "transfer";
@@ -52,7 +49,11 @@ const kindStyles: Record<Kind, string> = {
   transfer:
     "data-[state=on]:bg-info/14 data-[state=on]:text-[#006c9c] dark:data-[state=on]:text-[#61f3f3]",
 };
-const kindIcons = { income: ArrowDownLeftIcon, expense: ArrowUpRightIcon, transfer: ArrowLeftRightIcon };
+const kindIcons = {
+  income: ArrowDownLeftIcon,
+  expense: ArrowUpRightIcon,
+  transfer: ArrowLeftRightIcon,
+};
 
 function nowTime() {
   const d = new Date();
@@ -65,7 +66,7 @@ export function AmountPreview({ value, currency }: { value: string; currency: st
   const minor = value && isCurrency(currency) ? parseMoneyInput(value, currency) : null;
   return (
     <p className="min-h-4 text-xs text-muted-foreground tabular-nums" aria-live="polite">
-      {minor != null && minor > 0 ? formatMoney(minor, currency, locale) : " "}
+      {minor != null && minor > 0 ? formatMoney(minor, currency, locale) : null}
     </p>
   );
 }
@@ -107,8 +108,10 @@ export function TransactionFormDialog({
   });
   const [open, setOpen] = useState(false);
   const [s, setS] = useState(initial);
-  const set = <K extends keyof ReturnType<typeof initial>>(k: K, v: ReturnType<typeof initial>[K]) =>
-    setS((p) => ({ ...p, [k]: v }));
+  const set = <K extends keyof ReturnType<typeof initial>>(
+    k: K,
+    v: ReturnType<typeof initial>[K],
+  ) => setS((p) => ({ ...p, [k]: v }));
 
   const form = useActionForm(isEdit ? updateTransactionAction : createTransactionAction, {
     successMessage: t.common.saved,
@@ -165,7 +168,9 @@ export function TransactionFormDialog({
           <div className="space-y-4 py-4 text-center">
             <p className="text-sm text-muted-foreground">{f.noAccountsYet}</p>
             <Button asChild>
-              <Link href={localePath(locale, "/panel/finance/accounts")}>{f.createAccountFirst}</Link>
+              <Link href={localePath(locale, "/panel/finance/accounts")}>
+                {f.createAccountFirst}
+              </Link>
             </Button>
           </div>
         ) : (
@@ -348,7 +353,9 @@ export function TransactionFormDialog({
                           ...prev,
                           projectId: v,
                           clientId:
-                            !prev.clientId && !prev.freeParty && p?.clientId ? p.clientId : prev.clientId,
+                            !prev.clientId && !prev.freeParty && p?.clientId
+                              ? p.clientId
+                              : prev.clientId,
                         }));
                       }}
                       noneLabel={t.common.noProject}

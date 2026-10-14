@@ -32,10 +32,17 @@ export function formatMoneySigned(
   const decimals = c?.decimals ?? 2;
   const value = minor / 10 ** decimals;
   const signDisplay = opts.signed ? "exceptZero" : "auto";
-  if (locale === "en" && c?.intl && !opts.compact) {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: c.intl, signDisplay }).format(
-      value,
-    );
+  if (locale === "en" && c?.intl) {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: c.intl,
+      signDisplay,
+      ...(opts.compact && {
+        notation: "compact",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1,
+      }),
+    }).format(value);
   }
   const num = new Intl.NumberFormat(localeMeta[locale].intl, {
     minimumFractionDigits: opts.compact ? 0 : decimals,
@@ -155,7 +162,10 @@ export function Approx({
     : null;
   return (
     <span
-      className={cn("inline-flex flex-wrap items-center gap-1 text-xs text-muted-foreground", className)}
+      className={cn(
+        "inline-flex flex-wrap items-center gap-1 text-xs text-muted-foreground",
+        className,
+      )}
       title={missing ? `${t.approxHint} — ${missing}` : t.approxHint}
     >
       <span>
@@ -166,7 +176,10 @@ export function Approx({
           <span className="text-[#b76e00] dark:text-[#ffd666]">· {missing}</span>
         ) : (
           <>
-            <AlertTriangleIcon aria-hidden className="size-3.5 text-[#b76e00] dark:text-[#ffd666]" />
+            <AlertTriangleIcon
+              aria-hidden
+              className="size-3.5 text-[#b76e00] dark:text-[#ffd666]"
+            />
             <span className="sr-only">{missing}</span>
           </>
         ))}

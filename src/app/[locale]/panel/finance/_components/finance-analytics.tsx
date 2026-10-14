@@ -4,7 +4,14 @@ import { useMemo, useState, type ReactNode } from "react";
 import { BarChart3Icon, TableIcon } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -116,7 +123,10 @@ export function FinanceAnalytics({
   } satisfies ChartConfig;
 
   const tick = (v: number) =>
-    formatNumber(minorToMajor(v, target), locale, { notation: "compact", maximumFractionDigits: 1 });
+    formatNumber(minorToMajor(v, target), locale, {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    });
 
   return (
     <div className="space-y-4">
@@ -169,7 +179,7 @@ export function FinanceAnalytics({
             </CardAction>
           </CardHeader>
           <CardContent className="space-y-5">
-            <dl className="grid grid-cols-3 gap-3">
+            <dl className="grid gap-2 sm:grid-cols-3 sm:gap-3">
               {(
                 [
                   ["income", f.periodIncome, data.income],
@@ -177,7 +187,10 @@ export function FinanceAnalytics({
                   ["net", f.periodNet, data.net],
                 ] as const
               ).map(([key, label, value]) => (
-                <div key={key} className="min-w-0 rounded-xl bg-muted/50 p-3">
+                <div
+                  key={key}
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-xl bg-muted/50 px-3 py-2.5 sm:block sm:p-3"
+                >
                   <dt className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                     {key !== "net" && (
                       <span
@@ -188,7 +201,10 @@ export function FinanceAnalytics({
                     )}
                     {label}
                   </dt>
-                  <dd className="mt-1 truncate text-base font-extrabold sm:text-lg" title={money(value)}>
+                  <dd
+                    className="truncate text-base font-extrabold sm:mt-1 sm:text-lg"
+                    title={money(value)}
+                  >
                     {approxPrefix}
                     {money(value, true)}
                   </dd>
@@ -256,20 +272,26 @@ export function FinanceAnalytics({
                         />
                       }
                     />
-                    {(dir === "rtl" ? (["expense", "income"] as const) : (["income", "expense"] as const)).map(
-                      (k) => (
-                        <Bar
-                          key={k}
-                          dataKey={k}
-                          fill={`var(--color-${k})`}
-                          radius={[4, 4, 0, 0]}
-                          maxBarSize={22}
-                        />
-                      ),
-                    )}
+                    {(dir === "rtl"
+                      ? (["expense", "income"] as const)
+                      : (["income", "expense"] as const)
+                    ).map((k) => (
+                      <Bar
+                        key={k}
+                        dataKey={k}
+                        fill={`var(--color-${k})`}
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={22}
+                      />
+                    ))}
                   </BarChart>
                 </ChartContainer>
-                <div className={cn("flex items-center justify-center gap-5 text-xs text-muted-foreground", seriesVars)}>
+                <div
+                  className={cn(
+                    "flex items-center justify-center gap-5 text-xs text-muted-foreground",
+                    seriesVars,
+                  )}
+                >
                   {(["income", "expense"] as const).map((k) => (
                     <span key={k} className="inline-flex items-center gap-1.5">
                       <span
@@ -301,7 +323,11 @@ export function FinanceAnalytics({
               <p className="py-12 text-center text-sm text-muted-foreground">{f.noChartData}</p>
             ) : (
               <div className="space-y-4">
-                <ChartContainer config={{}} className="mx-auto aspect-square h-44" aria-label={f.byCategory}>
+                <ChartContainer
+                  config={{}}
+                  className="mx-auto aspect-square h-44"
+                  aria-label={f.byCategory}
+                >
                   <PieChart>
                     <ChartTooltip
                       content={({ active, payload }) => {

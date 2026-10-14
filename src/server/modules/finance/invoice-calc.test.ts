@@ -88,15 +88,55 @@ describe("time entries → lines", () => {
     const h = 3_600_000;
     const groups = groupTimeEntries(
       [
-        { id: "1", ms: 2 * h, description: "API", taskId: "t1", taskTitle: "Build API", rateMinor: 100, currency: "USD" },
-        { id: "2", ms: h / 2, description: "x", taskId: "t1", taskTitle: "Build API", rateMinor: 100, currency: "USD" },
-        { id: "3", ms: h, description: "Call", taskId: null, taskTitle: null, rateMinor: null, currency: null },
-        { id: "4", ms: h / 3, description: "", taskId: null, taskTitle: null, rateMinor: 100, currency: "USD" },
+        {
+          id: "1",
+          ms: 2 * h,
+          description: "API",
+          taskId: "t1",
+          taskTitle: "Build API",
+          rateMinor: 100,
+          currency: "USD",
+        },
+        {
+          id: "2",
+          ms: h / 2,
+          description: "x",
+          taskId: "t1",
+          taskTitle: "Build API",
+          rateMinor: 100,
+          currency: "USD",
+        },
+        {
+          id: "3",
+          ms: h,
+          description: "Call",
+          taskId: null,
+          taskTitle: null,
+          rateMinor: null,
+          currency: null,
+        },
+        {
+          id: "4",
+          ms: h / 3,
+          description: "",
+          taskId: null,
+          taskTitle: null,
+          rateMinor: 100,
+          currency: "USD",
+        },
       ],
       { fallbackRateMinor: 50, fallbackCurrency: "USD", untitled: "Work" },
     );
-    expect(groups[0]).toMatchObject({ label: "Build API", entryIds: ["1", "2"], hours: 2.5, amountMinor: 250 });
-    expect(groups.find((g) => g.label === "Call")).toMatchObject({ rateMinor: 50, amountMinor: 50 });
+    expect(groups[0]).toMatchObject({
+      label: "Build API",
+      entryIds: ["1", "2"],
+      hours: 2.5,
+      amountMinor: 250,
+    });
+    expect(groups.find((g) => g.label === "Call")).toMatchObject({
+      rateMinor: 50,
+      amountMinor: 50,
+    });
     expect(groups.find((g) => g.label === "Work")).toMatchObject({ hours: 0.33, amountMinor: 33 });
   });
 });

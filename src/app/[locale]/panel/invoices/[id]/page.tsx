@@ -26,6 +26,7 @@ import { getInvoice } from "@/server/modules/finance/invoices";
 import { accountOptions } from "@/server/modules/finance/service";
 import { getSettings } from "@/server/modules/settings/service";
 import { panelContext } from "@/server/page-context";
+import { MarkViewed } from "../../../i/[token]/mark-viewed";
 import { InvoiceActions } from "../_components/invoice-actions";
 
 export default async function InvoicePage({ params }: PageProps<"/[locale]/panel/invoices/[id]">) {
@@ -56,15 +57,26 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
       at: p.occurredAt,
       label: f.ev_payment,
       icon: BanknoteIcon,
-      detail: <Money minor={p.amountMinor} currency={p.currency} locale={locale} className="font-semibold" />,
+      detail: (
+        <Money
+          minor={p.amountMinor}
+          currency={p.currency}
+          locale={locale}
+          className="font-semibold"
+        />
+      ),
     })),
-    ...(inv.paidAt && inv.status === "paid" ? [{ at: inv.paidAt, label: f.ev_paid, icon: CheckCircle2Icon }] : []),
+    ...(inv.paidAt && inv.status === "paid"
+      ? [{ at: inv.paidAt, label: f.ev_paid, icon: CheckCircle2Icon }]
+      : []),
   ].sort((a, b) => a.at.getTime() - b.at.getTime());
 
   return (
     <>
       <InvoicePrintStyles />
       <PrintLightMode />
+      {/* A client opening it in the portal counts as viewing it. */}
+      {!admin && inv.shareToken && <MarkViewed token={inv.shareToken} />}
       <PageHeader
         title={
           <span className="flex flex-wrap items-center gap-3">
@@ -81,7 +93,13 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
         actions={
           admin ? (
             <InvoiceActions
-              invoice={{ id: inv.id, number: inv.number, status: inv.status, currency: inv.currency, dueMinor: inv.dueMinor }}
+              invoice={{
+                id: inv.id,
+                number: inv.number,
+                status: inv.status,
+                currency: inv.currency,
+                dueMinor: inv.dueMinor,
+              }}
               publicUrl={publicUrl}
               accounts={accountOptions(actor)}
             />
@@ -124,7 +142,13 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
               </CardHeader>
               {publicUrl && (
                 <CardContent className="flex gap-2">
-                  <Input readOnly value={publicUrl} dir="ltr" className="font-mono text-xs" aria-label={f.shareLink} />
+                  <Input
+                    readOnly
+                    value={publicUrl}
+                    dir="ltr"
+                    className="font-mono text-xs"
+                    aria-label={f.shareLink}
+                  />
                   <CopyButton value={publicUrl} size="icon-sm" />
                 </CardContent>
               )}
@@ -135,7 +159,8 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
             <CardHeader>
               <CardTitle>{f.payments}</CardTitle>
               <CardDescription>
-                {f.paidAmount}: <Money minor={inv.paidMinor} currency={inv.currency} locale={locale} />
+                {f.paidAmount}:{" "}
+                <Money minor={inv.paidMinor} currency={inv.currency} locale={locale} />
                 {inv.dueMinor > 0 && (
                   <>
                     {" · "}
@@ -150,12 +175,25 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
               ) : (
                 <ul className="divide-y divide-dashed">
                   {inv.payments.map((p) => (
-                    <li key={p.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                    <li
+                      key={p.id}
+                      className="flex items-center justify-between gap-3 py-2.5 text-sm"
+                    >
                       <span>
                         <span className="block font-semibold">{formatDate(p.occurredAt, fmt)}</span>
-                        {admin && <span className="block text-xs text-muted-foreground">{p.accountName}</span>}
+                        {admin && (
+                          <span className="block text-xs text-muted-foreground">
+                            {p.accountName}
+                          </span>
+                        )}
                       </span>
-                      <Money minor={p.amountMinor} currency={p.currency} locale={locale} tone="income" className="font-bold" />
+                      <Money
+                        minor={p.amountMinor}
+                        currency={p.currency}
+                        locale={locale}
+                        tone="income"
+                        className="font-bold"
+                      />
                     </li>
                   ))}
                 </ul>
@@ -179,8 +217,12 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
                         </span>
                         <span className="min-w-0 text-sm">
                           <span className="block font-semibold">{e.label}</span>
-                          <span className="block text-xs text-muted-foreground">{formatDateTime(e.at, fmt)}</span>
-                          {e.detail && <span className="block text-xs text-muted-foreground">{e.detail}</span>}
+                          <span className="block text-xs text-muted-foreground">
+                            {formatDateTime(e.at, fmt)}
+                          </span>
+                          {e.detail && (
+                            <span className="block text-xs text-muted-foreground">{e.detail}</span>
+                          )}
                         </span>
                       </li>
                     );

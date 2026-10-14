@@ -143,7 +143,9 @@ export function projectStats(ids?: string[], now: number = Date.now()) {
       paidMinor: invoices.paidMinor,
     })
     .from(invoices)
-    .where(and(inArray(invoices.projectId, projectIds), notInArray(invoices.status, ["draft", "void"])))
+    .where(
+      and(inArray(invoices.projectId, projectIds), notInArray(invoices.status, ["draft", "void"])),
+    )
     .all();
   const time = db
     .select({
@@ -176,7 +178,9 @@ export function projectStats(ids?: string[], now: number = Date.now()) {
   const out = new Map<string, ProjectFinanceStats>();
   for (const p of list) {
     const income = sumByCurrency(money.filter((m) => m.projectId === p.id && m.kind === "income"));
-    const expense = sumByCurrency(money.filter((m) => m.projectId === p.id && m.kind === "expense"));
+    const expense = sumByCurrency(
+      money.filter((m) => m.projectId === p.id && m.kind === "expense"),
+    );
     const inc = sumConverted(income, p.currency, rates, base);
     const exp = sumConverted(expense, p.currency, rates, base);
     const pi = inv.filter((i) => i.projectId === p.id);
@@ -224,7 +228,10 @@ function monthLabel(t: number, locale: Locale, tz: string, opts: Intl.DateTimeFo
 }
 
 /** Everything the finance overview page shows, in one call. */
-export function financeOverview(actor: Actor, opts: { now: number; locale: Locale; months?: number }) {
+export function financeOverview(
+  actor: Actor,
+  opts: { now: number; locale: Locale; months?: number },
+) {
   assertAdmin(actor);
   const tz = appTimezone();
   const cal = calendarFor(opts.locale);
@@ -238,7 +245,9 @@ export function financeOverview(actor: Actor, opts: { now: number; locale: Local
   const approx = (rows: CurrencyAmount[]) => sumConverted(rows, base, rates, base);
 
   const accountRows = listAccounts(actor);
-  const balances = sumByCurrency(accountRows.map((a) => ({ currency: a.currency, minor: a.balance })));
+  const balances = sumByCurrency(
+    accountRows.map((a) => ({ currency: a.currency, minor: a.balance })),
+  );
 
   const recv = receivables();
 
@@ -291,13 +300,26 @@ export function financeOverview(actor: Actor, opts: { now: number; locale: Local
     .leftJoin(clients, eq(clients.id, projects.clientId))
     .where(and(isNull(projects.archivedAt), ne(projects.status, "canceled")))
     .all();
-  const stats = projectStats(projectRows.map((p) => p.id), opts.now);
+  const stats = projectStats(
+    projectRows.map((p) => p.id),
+    opts.now,
+  );
   const profitability = projectRows
     .map((p) => ({ ...p, ...stats.get(p.id)! }))
     .filter((p) => p.incomeMinor || p.expenseMinor || p.trackedMs || p.invoiced.length)
     .sort((a, b) => {
-      const av = sumConverted([{ currency: a.currency, minor: a.incomeMinor }], base, rates, base).minor;
-      const bv = sumConverted([{ currency: b.currency, minor: b.incomeMinor }], base, rates, base).minor;
+      const av = sumConverted(
+        [{ currency: a.currency, minor: a.incomeMinor }],
+        base,
+        rates,
+        base,
+      ).minor;
+      const bv = sumConverted(
+        [{ currency: b.currency, minor: b.incomeMinor }],
+        base,
+        rates,
+        base,
+      ).minor;
       return bv - av;
     });
 
@@ -308,7 +330,11 @@ export function financeOverview(actor: Actor, opts: { now: number; locale: Local
     month: {
       start: monthStart.getTime(),
       ...month,
-      approx: { income: approx(month.income), expense: approx(month.expense), net: approx(month.net) },
+      approx: {
+        income: approx(month.income),
+        expense: approx(month.expense),
+        net: approx(month.net),
+      },
       prevApprox: { income: approx(prev.income), expense: approx(prev.expense) },
     },
     accounts: accountRows,
@@ -345,7 +371,11 @@ export function financeOverview(actor: Actor, opts: { now: number; locale: Local
 // ─── Summary (tool) ─────────────────────────────────────────────────────────
 
 /** Totals for a month or day range, balances and receivables (for agents). */
-export function financeSummary(actor: Actor, input: z.output<typeof summaryInput>, now = Date.now()) {
+export function financeSummary(
+  actor: Actor,
+  input: z.output<typeof summaryInput>,
+  now = Date.now(),
+) {
   assertAdmin(actor);
   const tz = appTimezone();
   let start: number;
@@ -390,7 +420,11 @@ export function financeSummary(actor: Actor, input: z.output<typeof summaryInput
     income: flows.income,
     expense: flows.expense,
     net: flows.net,
-    approxInBase: { income: approx(flows.income), expense: approx(flows.expense), net: approx(flows.net) },
+    approxInBase: {
+      income: approx(flows.income),
+      expense: approx(flows.expense),
+      net: approx(flows.net),
+    },
     byCategory: byCategory.map((r) => ({ ...r, category: r.category ?? null })),
     accounts: accountRows.map((a) => ({
       id: a.id,

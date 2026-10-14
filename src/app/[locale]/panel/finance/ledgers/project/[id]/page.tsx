@@ -116,7 +116,7 @@ export default async function ProjectLedgerPage({
             stats.effectiveRateMinor != null ? (
               <>
                 {f.colEffectiveRate}:{" "}
-                <Money minor={stats.effectiveRateMinor} currency={stats.currency} locale={locale} /> /{" "}
+                <Money minor={stats.effectiveRateMinor} currency={stats.currency} locale={locale} />{" "}
                 {f.perHour}
               </>
             ) : undefined
@@ -128,7 +128,10 @@ export default async function ProjectLedgerPage({
           tone="warning"
           value={
             stats.budgetUsedPct != null
-              ? formatNumber(stats.budgetUsedPct / 100, locale, { style: "percent", maximumFractionDigits: 0 })
+              ? formatNumber(stats.budgetUsedPct / 100, locale, {
+                  style: "percent",
+                  maximumFractionDigits: 0,
+                })
               : "—"
           }
           hint={
@@ -137,7 +140,12 @@ export default async function ProjectLedgerPage({
                 <Progress value={Math.min(100, stats.budgetUsedPct)} />
                 <span>
                   {f.pf_budget}:{" "}
-                  <Money minor={stats.budgetMinor ?? 0} currency={stats.currency} locale={locale} compact />
+                  <Money
+                    minor={stats.budgetMinor ?? 0}
+                    currency={stats.currency}
+                    locale={locale}
+                    compact
+                  />
                   {" · "}
                   {f.budgetUsedHint}
                 </span>
@@ -147,10 +155,14 @@ export default async function ProjectLedgerPage({
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2">
+      <div className="grid gap-6 2xl:grid-cols-3">
+        <div className="2xl:col-span-2">
           {data.groups.length === 0 ? (
-            <EmptyState icon={FolderKanbanIcon} title={f.noLedgerLines} description={f.projectLedgerHint} />
+            <EmptyState
+              icon={FolderKanbanIcon}
+              title={f.noLedgerLines}
+              description={f.projectLedgerHint}
+            />
           ) : (
             <LedgerTables groups={data.groups} ctx={ctx} mode="project" name={project.name} />
           )}
@@ -176,7 +188,12 @@ export default async function ProjectLedgerPage({
               </div>
               <div className="rounded-xl bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground">{f.colOutstanding}</p>
-                <MoneyStack rows={stats.outstanding} locale={locale} compact className="font-bold" />
+                <MoneyStack
+                  rows={stats.outstanding}
+                  locale={locale}
+                  compact
+                  className="font-bold"
+                />
               </div>
             </div>
             <InvoiceMiniList invoices={data.invoices} ctx={ctx} empty={f.pf_noInvoices} />

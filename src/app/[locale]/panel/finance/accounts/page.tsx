@@ -86,7 +86,14 @@ export default async function AccountsPage({
               />
             </div>
             {totals.length > 1 && (
-              <Approx value={approx} base={base} locale={locale} t={f} compact={false} className="text-sm" />
+              <Approx
+                value={approx}
+                base={base}
+                locale={locale}
+                t={f}
+                compact={false}
+                className="text-sm"
+              />
             )}
           </Card>
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -151,7 +158,9 @@ export default async function AccountsPage({
                     {a.pending !== 0 && (
                       <p className="mt-1 text-xs text-[#b76e00] dark:text-[#ffd666]">
                         {format(f.pendingAmount, {
-                          amount: formatMoneySigned(a.pending, a.currency, locale, { signed: true }),
+                          amount: formatMoneySigned(a.pending, a.currency, locale, {
+                            signed: true,
+                          }),
                         })}
                       </p>
                     )}

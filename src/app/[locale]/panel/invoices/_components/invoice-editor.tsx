@@ -51,7 +51,13 @@ export interface EditorInvoice {
 
 let seq = 0;
 const key = () => `l${++seq}`;
-const blank = (): EditorLine => ({ key: key(), description: "", quantity: "1", unitPrice: "", timeEntryIds: [] });
+const blank = (): EditorLine => ({
+  key: key(),
+  description: "",
+  quantity: "1",
+  unitPrice: "",
+  timeEntryIds: [],
+});
 
 function addDaysTo(day: string, n: number) {
   const d = parseDateValue(day) ?? new Date();
@@ -60,7 +66,11 @@ function addDaysTo(day: string, n: number) {
 }
 
 const num = (v: string) => {
-  const n = Number.parseFloat(toLatinDigits(v).replace(/[,\s٬]/g, "").replace("٫", "."));
+  const n = Number.parseFloat(
+    toLatinDigits(v)
+      .replace(/[,\s٬]/g, "")
+      .replace("٫", "."),
+  );
   return Number.isFinite(n) ? n : 0;
 };
 
@@ -91,7 +101,10 @@ export function InvoiceEditor({
   const [clientId, setClientId] = useState(invoice?.clientId ?? defaultClient?.id ?? "");
   const [projectId, setProjectId] = useState(invoice?.projectId ?? defaultProject?.id ?? "");
   const [currency, setCurrency] = useState(
-    invoice?.currency ?? defaultProject?.currency ?? defaultClient?.defaultCurrency ?? options.baseCurrency,
+    invoice?.currency ??
+      defaultProject?.currency ??
+      defaultClient?.defaultCurrency ??
+      options.baseCurrency,
   );
   const [number, setNumber] = useState(invoice?.number ?? "");
   const [issueDate, setIssueDate] = useState<string>(invoice?.issueDate ?? toDateValue(new Date()));
@@ -133,7 +146,9 @@ export function InvoiceEditor({
   });
   const money = (minor: number) => formatMoney(minor, cur, locale);
   const takenIds = useMemo(() => new Set(lines.flatMap((l) => l.timeEntryIds)), [lines]);
-  const projects = options.projects.filter((p) => !clientId || !p.clientId || p.clientId === clientId);
+  const projects = options.projects.filter(
+    (p) => !clientId || !p.clientId || p.clientId === clientId,
+  );
   const hasItems = lines.some((l) => l.description.trim() || l.unitPrice.trim());
 
   const setLine = (k: string, patch: Partial<EditorLine>) =>
@@ -197,7 +212,8 @@ export function InvoiceEditor({
                   const p = options.projects.find((x) => x.id === projectId);
                   if (p?.clientId && v && p.clientId !== v) setProjectId("");
                   const c = options.clients.find((x) => x.id === v);
-                  if (c && !hasItems && isCurrency(c.defaultCurrency)) setCurrency(c.defaultCurrency);
+                  if (c && !hasItems && isCurrency(c.defaultCurrency))
+                    setCurrency(c.defaultCurrency);
                 }}
                 noneLabel={f.noClient}
                 placeholder={f.noClient}
@@ -233,7 +249,11 @@ export function InvoiceEditor({
               />
             </Field>
             <Field label={f.issueDate} error={err("issueDate")}>
-              <DatePicker value={issueDate} onChange={(v) => v && setIssueDate(v)} clearable={false} />
+              <DatePicker
+                value={issueDate}
+                onChange={(v) => v && setIssueDate(v)}
+                clearable={false}
+              />
             </Field>
             <Field label={f.dueDate} error={err("dueDate")}>
               <DatePicker value={dueDate} onChange={setDueDate} placeholder={f.noDueDate} />
@@ -316,7 +336,9 @@ export function InvoiceEditor({
                       {l.timeEntryIds.length > 0 && (
                         <Badge variant="info">
                           <TimerIcon />
-                          {format(f.billedEntries, { n: formatNumber(l.timeEntryIds.length, locale) })}
+                          {format(f.billedEntries, {
+                            n: formatNumber(l.timeEntryIds.length, locale),
+                          })}
                         </Badge>
                       )}
                     </div>
@@ -326,6 +348,7 @@ export function InvoiceEditor({
                       inputMode="decimal"
                       dir="ltr"
                       aria-label={f.quantity}
+                      placeholder={f.quantity}
                       className="tabular-nums"
                     />
                     <div className="space-y-1">
@@ -335,6 +358,7 @@ export function InvoiceEditor({
                         inputMode="decimal"
                         dir="ltr"
                         aria-label={f.unitPrice}
+                        placeholder={f.unitPrice}
                         aria-invalid={!!priceErr || undefined}
                         className="tabular-nums"
                       />
@@ -349,7 +373,9 @@ export function InvoiceEditor({
                       size="icon"
                       className="justify-self-end"
                       onClick={() =>
-                        setLines((prev) => (prev.length > 1 ? prev.filter((x) => x.key !== l.key) : [blank()]))
+                        setLines((prev) =>
+                          prev.length > 1 ? prev.filter((x) => x.key !== l.key) : [blank()],
+                        )
                       }
                       aria-label={f.removeLine}
                     >
@@ -360,10 +386,20 @@ export function InvoiceEditor({
               })}
             </ul>
             <div className="flex flex-wrap gap-2 pt-1">
-              <Button type="button" variant="outline" size="sm" onClick={() => setLines((p) => [...p, blank()])}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setLines((p) => [...p, blank()])}
+              >
                 <PlusIcon /> {f.addLine}
               </Button>
-              <TimeImportDialog projectId={projectId || null} currency={cur} takenIds={takenIds} onAdd={addTime} />
+              <TimeImportDialog
+                projectId={projectId || null}
+                currency={cur}
+                takenIds={takenIds}
+                onAdd={addTime}
+              />
             </div>
           </CardContent>
         </Card>
@@ -415,7 +451,10 @@ export function InvoiceEditor({
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">
                   {format(f.taxLine, {
-                    pct: formatNumber(totals.taxBps / 10_000, locale, { style: "percent", maximumFractionDigits: 2 }),
+                    pct: formatNumber(totals.taxBps / 10_000, locale, {
+                      style: "percent",
+                      maximumFractionDigits: 2,
+                    }),
                   })}
                 </span>
                 <span className="font-semibold tabular-nums">{money(totals.tax)}</span>
@@ -429,10 +468,19 @@ export function InvoiceEditor({
               {isDraft ? (
                 <>
                   <Button type="button" onClick={() => submit(true)} disabled={form.pending}>
-                    {form.pending && sendAfter ? <Loader2Icon className="animate-spin" /> : <SendIcon className="rtl:-scale-x-100" />}
+                    {form.pending && sendAfter ? (
+                      <Loader2Icon className="animate-spin" />
+                    ) : (
+                      <SendIcon className="rtl:-scale-x-100" />
+                    )}
                     {f.saveAndSend}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => submit(false)} disabled={form.pending}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => submit(false)}
+                    disabled={form.pending}
+                  >
                     {form.pending && !sendAfter && <Loader2Icon className="animate-spin" />}
                     {f.saveDraft}
                   </Button>

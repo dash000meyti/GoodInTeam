@@ -8,7 +8,9 @@ import { getInvoice, invoiceFormOptions } from "@/server/modules/finance/invoice
 import { panelContext } from "@/server/page-context";
 import { InvoiceEditor } from "../../_components/invoice-editor";
 
-export default async function EditInvoicePage({ params }: PageProps<"/[locale]/panel/invoices/[id]/edit">) {
+export default async function EditInvoicePage({
+  params,
+}: PageProps<"/[locale]/panel/invoices/[id]/edit">) {
   const { id } = await params;
   const { actor, t, href, tz } = await panelContext({ roles: ["owner", "admin"] });
   const f = t.finance;

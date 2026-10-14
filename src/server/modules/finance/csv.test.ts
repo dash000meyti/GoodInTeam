@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { zonedParts } from "@/lib/tz";
-import { mapImportRows, parseCsv, parseImportDate, toCsv } from "./csv";
+import { BOM, mapImportRows, parseCsv, parseImportDate, toCsv } from "./csv";
 
 const TZ = "Asia/Tehran";
 
 describe("csv parse/serialize", () => {
   it("handles quotes, escaped quotes, CRLF and BOM", () => {
-    const rows = parseCsv('﻿a,b,c\r\n1,"hello, ""world""",3\r\n\r\n"multi\nline",x,\n');
+    const rows = parseCsv(BOM + 'a,b,c\r\n1,"hello, ""world""",3\r\n\r\n"multi\nline",x,\n');
     expect(rows).toEqual([
       ["a", "b", "c"],
       ["1", 'hello, "world"', "3"],
@@ -34,7 +34,8 @@ describe("csv parse/serialize", () => {
       ["2026-10-14", 'Say "hi", ok'],
       ["2026-10-15", ""],
     ]);
-    expect(toCsv([["x"]]).startsWith("﻿")).toBe(true);
+    expect(toCsv([["x"]]).startsWith(BOM)).toBe(true);
+    expect(BOM.charCodeAt(0)).toBe(0xfeff);
   });
 });
 
@@ -53,8 +54,16 @@ describe("import mapping", () => {
 
   it("parses Gregorian and Jalali dates with optional time", () => {
     const d = parseImportDate("۱۴۰۵/۰۷/۲۲ 14:30", undefined, TZ)!;
-    expect(zonedParts(d, TZ)).toMatchObject({ year: 2026, month: 10, day: 14, hour: 14, minute: 30 });
-    expect(parseImportDate("2026-10-14", "09:05", TZ)!.toISOString()).toBe("2026-10-14T05:35:00.000Z");
+    expect(zonedParts(d, TZ)).toMatchObject({
+      year: 2026,
+      month: 10,
+      day: 14,
+      hour: 14,
+      minute: 30,
+    });
+    expect(parseImportDate("2026-10-14", "09:05", TZ)!.toISOString()).toBe(
+      "2026-10-14T05:35:00.000Z",
+    );
     expect(parseImportDate("14/10/2026", undefined, TZ)).toBeNull();
     expect(parseImportDate("2026-10-14 25:00", undefined, TZ)).toBeNull();
   });

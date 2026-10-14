@@ -239,16 +239,34 @@ export function invoiceStatusCounts(actor: Actor) {
 export function invoiceKpis(actor: Actor, opts: { now: number; locale: "fa" | "en" }) {
   const access = invoiceAccessWhere(actor);
   const open = db
-    .select({ status: invoices.status, currency: invoices.currency, total: invoices.totalMinor, paid: invoices.paidMinor })
+    .select({
+      status: invoices.status,
+      currency: invoices.currency,
+      total: invoices.totalMinor,
+      paid: invoices.paidMinor,
+    })
     .from(invoices)
     .where(and(access, inArray(invoices.status, [...openInvoiceStatuses])))
     .all();
-  const outstanding = sumByCurrency(open.map((r) => ({ currency: r.currency, minor: balanceDue({ totalMinor: r.total, paidMinor: r.paid }) })));
+  const outstanding = sumByCurrency(
+    open.map((r) => ({
+      currency: r.currency,
+      minor: balanceDue({ totalMinor: r.total, paidMinor: r.paid }),
+    })),
+  );
   const overdueRows = open.filter((r) => r.status === "overdue");
-  const overdue = sumByCurrency(overdueRows.map((r) => ({ currency: r.currency, minor: balanceDue({ totalMinor: r.total, paidMinor: r.paid }) })));
+  const overdue = sumByCurrency(
+    overdueRows.map((r) => ({
+      currency: r.currency,
+      minor: balanceDue({ totalMinor: r.total, paidMinor: r.paid }),
+    })),
+  );
   const monthStart = startOfMonth(opts.now, appTimezone(), calendarFor(opts.locale));
   const paidThisMonth: CurrencyAmount[] = db
-    .select({ currency: transactions.currency, minor: sql<number>`sum(${transactions.amountMinor})` })
+    .select({
+      currency: transactions.currency,
+      minor: sql<number>`sum(${transactions.amountMinor})`,
+    })
     .from(transactions)
     .innerJoin(invoices, eq(invoices.id, transactions.invoiceId))
     .where(and(access, eq(transactions.kind, "income"), gte(transactions.occurredAt, monthStart)))
@@ -257,7 +275,14 @@ export function invoiceKpis(actor: Actor, opts: { now: number; locale: "fa" | "e
   const drafts = isAdmin(actor)
     ? (db.select({ n: count() }).from(invoices).where(eq(invoices.status, "draft")).get()?.n ?? 0)
     : 0;
-  return { outstanding, openCount: open.length, overdue, overdueCount: overdueRows.length, paidThisMonth, drafts };
+  return {
+    outstanding,
+    openCount: open.length,
+    overdue,
+    overdueCount: overdueRows.length,
+    paidThisMonth,
+    drafts,
+  };
 }
 
 export async function getInvoice(actor: Actor, id: string) {
@@ -265,7 +290,9 @@ export async function getInvoice(actor: Actor, id: string) {
     where: and(eq(invoices.id, id), invoiceAccessWhere(actor)),
     with: {
       client: true,
-      project: { columns: { id: true, name: true, color: true, currency: true, hourlyRateMinor: true } },
+      project: {
+        columns: { id: true, name: true, color: true, currency: true, hourlyRateMinor: true },
+      },
       items: { orderBy: (it, { asc }) => [asc(it.sort)] },
     },
   });
@@ -285,10 +312,34 @@ export async function getInvoice(actor: Actor, id: string) {
     .where(and(eq(transactions.invoiceId, id), eq(transactions.kind, "income")))
     .orderBy(asc(transactions.occurredAt))
     .all();
-  const createdBy = inv.createdBy
-    ? db.select({ name: users.name }).from(users).where(eq(users.id, inv.createdBy)).get()
-    : null;
-  return { ...inv, payments, dueMinor: inv.status === "void" ? 0 : balanceDue(inv), createdByName: createdBy?.name ?? null };
+  const admin = isAdmin(actor);
+  const createdBy =
+    admin && inv.createdBy
+      ? db.select({ name: users.name }).from(users).where(eq(users.id, inv.createdBy)).get()
+      : null;
+  // Clients (portal/API) only get what the printed invoice shows — no internal
+  // client notes, account names or internal project rates.
+  const { client, project, ...rest } = inv;
+  return {
+    ...rest,
+    client: client && (admin ? client : pickBillTo(client)),
+    project: project && (admin ? project : { ...project, hourlyRateMinor: null as number | null }),
+    payments: admin ? payments : payments.map((p) => ({ ...p, accountName: null })),
+    dueMinor: inv.status === "void" ? 0 : balanceDue(inv),
+    createdByName: createdBy?.name ?? null,
+  };
+}
+
+function pickBillTo(c: typeof clients.$inferSelect) {
+  return {
+    id: c.id,
+    name: c.name,
+    email: c.email,
+    phone: c.phone,
+    address: c.address,
+    taxId: c.taxId,
+    logoUrl: c.logoUrl,
+  };
 }
 
 /** Public, token-gated invoice (no auth). Drafts are never public. */
@@ -297,7 +348,9 @@ export async function getPublicInvoice(token: string) {
   const inv = await db.query.invoices.findFirst({
     where: and(eq(invoices.shareToken, token), ne(invoices.status, "draft")),
     with: {
-      client: true,
+      client: {
+        columns: { name: true, email: true, phone: true, address: true, taxId: true },
+      },
       project: { columns: { name: true } },
       items: { orderBy: (it, { asc }) => [asc(it.sort)] },
     },
@@ -377,7 +430,9 @@ export function createInvoice(actor: Actor, input: z.output<typeof invoiceInput>
   const business = getSettings("business");
   const currency = isCurrency(input.currency) ? input.currency : "IRT";
   const parties = resolveParties(input.clientId, input.projectId);
-  const issueDate = input.issueDate ? parseDay(input.issueDate, undefined, "issueDate") : new Date(todayStart());
+  const issueDate = input.issueDate
+    ? parseDay(input.issueDate, undefined, "issueDate")
+    : new Date(todayStart());
   const dueDate = parseOptDay(input.dueDate, undefined, "dueDate");
   const items = buildItems(input.items, currency);
   const discountMinor = input.discount
@@ -420,7 +475,12 @@ export function createInvoice(actor: Actor, input: z.output<typeof invoiceInput>
         .values(items.map((it) => ({ ...it, invoiceId: created!.id })))
         .run();
     }
-    syncTimeEntries(tx, created.id, items.flatMap((i) => i.timeEntryIds), false);
+    syncTimeEntries(
+      tx,
+      created.id,
+      items.flatMap((i) => i.timeEntryIds),
+      false,
+    );
     return created;
   });
   logActivity(actor, "invoice.create", "invoice", row.id, row.number);
@@ -444,7 +504,11 @@ export function updateInvoice(actor: Actor, input: z.output<typeof updateInvoice
       : { clientId: inv.clientId, projectId: inv.projectId };
   if (input.number && input.number !== inv.number) assertNumberFree(input.number, inv.id);
 
-  const existingItems = db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, inv.id)).all();
+  const existingItems = db
+    .select()
+    .from(invoiceItems)
+    .where(eq(invoiceItems.invoiceId, inv.id))
+    .all();
   const items = input.items ? buildItems(input.items, currency) : null;
   const lines = items ?? existingItems;
   const discountMinor =
@@ -453,7 +517,10 @@ export function updateInvoice(actor: Actor, input: z.output<typeof updateInvoice
         ? parseAmount(input.discount, currency, { field: "discount", allowZero: true })
         : 0
       : inv.discountMinor;
-  const taxBps = input.taxPercent !== undefined && input.taxPercent !== null ? percentToBps(input.taxPercent) : inv.taxBps;
+  const taxBps =
+    input.taxPercent !== undefined && input.taxPercent !== null
+      ? percentToBps(input.taxPercent)
+      : inv.taxBps;
   const totals = invoiceTotals({ items: lines, discountMinor, taxBps });
 
   db.transaction((tx) => {
@@ -462,8 +529,13 @@ export function updateInvoice(actor: Actor, input: z.output<typeof updateInvoice
         ...parties,
         number: input.number || inv.number,
         currency,
-        issueDate: input.issueDate ? parseDay(input.issueDate, undefined, "issueDate") : inv.issueDate,
-        dueDate: input.dueDate !== undefined ? parseOptDay(input.dueDate, undefined, "dueDate") : inv.dueDate,
+        issueDate: input.issueDate
+          ? parseDay(input.issueDate, undefined, "issueDate")
+          : inv.issueDate,
+        dueDate:
+          input.dueDate !== undefined
+            ? parseOptDay(input.dueDate, undefined, "dueDate")
+            : inv.dueDate,
         subtotalMinor: totals.subtotal,
         discountMinor: totals.discount,
         taxBps: totals.taxBps,
@@ -480,7 +552,12 @@ export function updateInvoice(actor: Actor, input: z.output<typeof updateInvoice
           .values(items.map((it) => ({ ...it, invoiceId: inv.id })))
           .run();
       }
-      syncTimeEntries(tx, inv.id, items.flatMap((i) => i.timeEntryIds), false);
+      syncTimeEntries(
+        tx,
+        inv.id,
+        items.flatMap((i) => i.timeEntryIds),
+        false,
+      );
     }
     refreshStatus(tx, inv.id);
   });
@@ -495,7 +572,9 @@ export function sendInvoice(actor: Actor, id: string) {
   const inv = db.select().from(invoices).where(eq(invoices.id, id)).get();
   if (!inv) throw notFound("Invoice");
   if (inv.status === "void") throw new FinanceError("invoiceNotEditable");
-  const itemCount = db.select({ n: count() }).from(invoiceItems).where(eq(invoiceItems.invoiceId, id)).get()?.n ?? 0;
+  const itemCount =
+    db.select({ n: count() }).from(invoiceItems).where(eq(invoiceItems.invoiceId, id)).get()?.n ??
+    0;
   if (!itemCount || inv.totalMinor <= 0) throw new FinanceError("invoiceEmpty");
   const token = inv.shareToken ?? newToken(18);
   db.transaction((tx) => {
@@ -522,7 +601,8 @@ export function recordPayment(actor: Actor, input: z.output<typeof recordPayment
   const account = db.select().from(accounts).where(eq(accounts.id, input.accountId)).get();
   if (!account) throw new FinanceError("accountNotFound", "accountId");
   if (account.archived) throw new FinanceError("accountArchived", "accountId");
-  if (account.currency !== inv.currency) throw new FinanceError("invoiceCurrencyMismatch", "accountId");
+  if (account.currency !== inv.currency)
+    throw new FinanceError("invoiceCurrencyMismatch", "accountId");
   const amountMinor = parseAmount(input.amount, inv.currency);
   if (amountMinor > balanceDue(inv)) throw new FinanceError("amountExceedsDue", "amount");
   const occurredAt = parseMovementDate(input.date, input.time);
@@ -561,8 +641,14 @@ export function recordPayment(actor: Actor, input: z.output<typeof recordPayment
     }
     return row;
   });
-  logActivity(actor, "invoice.payment", "invoice", inv.id, inv.number, { amountMinor, accountId: account.id });
-  return { transaction: txRow, invoice: db.select().from(invoices).where(eq(invoices.id, inv.id)).get()! };
+  logActivity(actor, "invoice.payment", "invoice", inv.id, inv.number, {
+    amountMinor,
+    accountId: account.id,
+  });
+  return {
+    transaction: txRow,
+    invoice: db.select().from(invoices).where(eq(invoices.id, inv.id)).get()!,
+  };
 }
 
 /** Void: keeps the number and any payments; releases billed time entries. */
@@ -594,7 +680,12 @@ export function duplicateInvoice(actor: Actor, id: string) {
   assertAdmin(actor);
   const inv = db.select().from(invoices).where(eq(invoices.id, id)).get();
   if (!inv) throw notFound("Invoice");
-  const items = db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, id)).orderBy(asc(invoiceItems.sort)).all();
+  const items = db
+    .select()
+    .from(invoiceItems)
+    .where(eq(invoiceItems.invoiceId, id))
+    .orderBy(asc(invoiceItems.sort))
+    .all();
   const issueDate = new Date(todayStart());
   const termDays = inv.dueDate
     ? Math.max(0, Math.round((inv.dueDate.getTime() - inv.issueDate.getTime()) / 86_400_000))
@@ -644,7 +735,11 @@ export function duplicateInvoice(actor: Actor, id: string) {
 // ─── Tracked time ───────────────────────────────────────────────────────────
 
 /** Unbilled, billable, finished time entries of a project grouped into invoice lines. */
-export function unbilledTime(actor: Actor, input: z.output<typeof unbilledTimeInput>, locale: "fa" | "en" = "en") {
+export function unbilledTime(
+  actor: Actor,
+  input: z.output<typeof unbilledTimeInput>,
+  locale: "fa" | "en" = "en",
+) {
   assertAdmin(actor);
   const project = db.select().from(projects).where(eq(projects.id, input.projectId)).get();
   if (!project) throw notFound("Project");
@@ -692,7 +787,11 @@ export function unbilledTime(actor: Actor, input: z.output<typeof unbilledTimeIn
       untitled: messages[locale].finance.untitledWork,
     },
   );
-  return { project: { id: project.id, name: project.name, currency: project.currency }, groups, entryCount: rows.length };
+  return {
+    project: { id: project.id, name: project.name, currency: project.currency },
+    groups,
+    entryCount: rows.length,
+  };
 }
 
 /** Create a draft invoice for a project's unbilled time (optionally sent). */
@@ -732,7 +831,8 @@ export function markInvoiceViewed(token: string) {
     refreshStatus(tx, inv.id);
   });
   const clientName = inv.clientId
-    ? db.select({ name: clients.name }).from(clients).where(eq(clients.id, inv.clientId)).get()?.name
+    ? db.select({ name: clients.name }).from(clients).where(eq(clients.id, inv.clientId)).get()
+        ?.name
     : null;
   const admins = db
     .select({ id: users.id, locale: users.locale })

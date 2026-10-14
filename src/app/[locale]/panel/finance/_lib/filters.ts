@@ -17,7 +17,10 @@ export function parseTxFilters(sp: SP) {
   const to = str(sp, "to");
   const filters = {
     q: str(sp, "q"),
-    kind: kind && (transactionKinds as readonly string[]).includes(kind) ? (kind as ListTransactionsInput["kind"]) : undefined,
+    kind:
+      kind && (transactionKinds as readonly string[]).includes(kind)
+        ? (kind as ListTransactionsInput["kind"])
+        : undefined,
     accountId: str(sp, "accountId"),
     categoryId: str(sp, "categoryId"),
     projectId: str(sp, "projectId"),

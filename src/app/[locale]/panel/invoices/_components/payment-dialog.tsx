@@ -89,13 +89,20 @@ export function PaymentDialog({
               {format(f.noMatchingAccount, { currency })}
             </p>
             <Button asChild variant="soft">
-              <Link href={localePath(locale, "/panel/finance/accounts")}>{f.createAccountFirst}</Link>
+              <Link href={localePath(locale, "/panel/finance/accounts")}>
+                {f.createAccountFirst}
+              </Link>
             </Button>
           </div>
         ) : (
           <form action={form.submit} className="grid gap-4">
             <input type="hidden" name="invoiceId" value={invoiceId} />
-            <Field label={`${f.paymentAmount} (${currency})`} htmlFor="pay-amount" error={form.errors.amount?.[0]} required>
+            <Field
+              label={`${f.paymentAmount} (${currency})`}
+              htmlFor="pay-amount"
+              error={form.errors.amount?.[0]}
+              required
+            >
               <div className="flex gap-2">
                 <Input
                   id="pay-amount"

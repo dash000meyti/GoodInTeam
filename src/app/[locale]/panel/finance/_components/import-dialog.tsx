@@ -27,10 +27,7 @@ import { useLocale, useT } from "@/i18n/client";
 import { formatDate } from "@/lib/format";
 import { formatMoneySigned } from "@/components/finance/money";
 import { cn } from "@/lib/utils";
-import {
-  importTransactionsAction,
-  previewImportAction,
-} from "@/server/modules/finance/actions";
+import { importTransactionsAction, previewImportAction } from "@/server/modules/finance/actions";
 
 type Preview = Extract<Awaited<ReturnType<typeof previewImportAction>>, { ok: true }>["data"];
 
@@ -48,9 +45,11 @@ export function ImportDialog({ trigger }: { trigger: ReactNode }) {
   const [csv, setCsv] = useState("");
   const [preview, setPreview] = useState<Preview | null>(null);
   const [pending, start] = useTransition();
+  const [busy, setBusy] = useState<"check" | "import" | null>(null);
 
   const check = (text: string) =>
     start(async () => {
+      setBusy("check");
       const res = await previewImportAction({ csv: text });
       if (res.ok) setPreview(res.data);
       else toast.error(res.error.message);
@@ -58,6 +57,7 @@ export function ImportDialog({ trigger }: { trigger: ReactNode }) {
 
   const commit = () =>
     start(async () => {
+      setBusy("import");
       const res = await importTransactionsAction({ csv });
       if (res.ok) {
         toast.success(format(f.importDone, { n: res.data.imported }));
@@ -66,7 +66,8 @@ export function ImportDialog({ trigger }: { trigger: ReactNode }) {
     });
 
   const downloadSample = () => {
-    const blob = new Blob(["﻿", SAMPLE], { type: "text/csv;charset=utf-8" });
+    const bom = String.fromCharCode(0xfeff); // so Excel opens the UTF-8 file correctly
+    const blob = new Blob([bom, SAMPLE], { type: "text/csv;charset=utf-8" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "transactions-sample.csv";
@@ -154,7 +155,10 @@ export function ImportDialog({ trigger }: { trigger: ReactNode }) {
                   </thead>
                   <tbody>
                     {preview.rows.map((r) => (
-                      <tr key={r.line} className={cn("border-t border-dashed", !r.ok && "bg-destructive/5")}>
+                      <tr
+                        key={r.line}
+                        className={cn("border-t border-dashed", !r.ok && "bg-destructive/5")}
+                      >
                         <td className="p-2 tabular-nums">{r.line}</td>
                         <td className="p-2 whitespace-nowrap">
                           {r.occurredAt ? formatDate(r.occurredAt, { locale }) : r.raw.date}
@@ -212,11 +216,11 @@ export function ImportDialog({ trigger }: { trigger: ReactNode }) {
 
         <DialogFooter>
           <Button variant="outline" onClick={() => check(csv)} disabled={!csv.trim() || pending}>
-            {pending && !preview ? <Loader2Icon className="animate-spin" /> : null}
+            {pending && busy === "check" ? <Loader2Icon className="animate-spin" /> : null}
             {f.previewImport}
           </Button>
           <Button onClick={commit} disabled={!preview?.valid || pending}>
-            {pending && preview ? <Loader2Icon className="animate-spin" /> : null}
+            {pending && busy === "import" ? <Loader2Icon className="animate-spin" /> : null}
             {format(f.importN, { n: preview?.valid ?? 0 })}
           </Button>
         </DialogFooter>

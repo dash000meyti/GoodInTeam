@@ -35,7 +35,13 @@ import { messages } from "@/i18n/messages";
 import { dateParts } from "@/lib/format";
 import { calendarFor, startOfMonth, toDateInputValue, toTimeInputValue } from "@/lib/tz";
 import { appTimezone } from "@/server/modules/settings/service";
-import { accountBalance, minorToMajor, sumByCurrency, type AccountFlowRow, type TxStatus } from "./calc";
+import {
+  accountBalance,
+  minorToMajor,
+  sumByCurrency,
+  type AccountFlowRow,
+  type TxStatus,
+} from "./calc";
 import { mapImportRows, parseCsv, toCsv } from "./csv";
 import { FinanceError } from "./errors";
 import { applyInvoicePaymentDelta } from "./invoices";
@@ -118,7 +124,13 @@ export function listAccounts(actor: Actor, opts: { includeArchived?: boolean } =
   );
   return rows.map((a) => ({
     ...a,
-    ...(balances.get(a.id) ?? { balance: a.openingBalanceMinor, pending: 0, cleared: a.openingBalanceMinor, income: 0, expense: 0 }),
+    ...(balances.get(a.id) ?? {
+      balance: a.openingBalanceMinor,
+      pending: 0,
+      cleared: a.openingBalanceMinor,
+      income: 0,
+      expense: 0,
+    }),
     txCount: counts.get(a.id) ?? 0,
   }));
 }
@@ -151,7 +163,11 @@ export function getAccount(actor: Actor, id: string) {
  * Transactions touching an account (newest first) with the running balance
  * after each one, in the account currency.
  */
-export function accountStatement(actor: Actor, id: string, opts: { page?: number; pageSize?: number } = {}) {
+export function accountStatement(
+  actor: Actor,
+  id: string,
+  opts: { page?: number; pageSize?: number } = {},
+) {
   const account = getAccount(actor, id);
   const rows = db
     .select({
@@ -187,13 +203,20 @@ export function accountStatement(actor: Actor, id: string, opts: { page?: number
   return {
     account,
     ...list,
-    rows: list.rows.map((r) => ({ ...r, delta: after.get(r.id)?.delta ?? 0, balanceAfter: after.get(r.id)?.balance ?? 0 })),
+    rows: list.rows.map((r) => ({
+      ...r,
+      delta: after.get(r.id)?.delta ?? 0,
+      balanceAfter: after.get(r.id)?.balance ?? 0,
+    })),
   };
 }
 
 export function createAccount(actor: Actor, input: z.output<typeof accountInput>) {
   assertAdmin(actor);
-  const max = db.select({ s: sql<number>`coalesce(max(${accounts.sort}), 0)` }).from(accounts).get();
+  const max = db
+    .select({ s: sql<number>`coalesce(max(${accounts.sort}), 0)` })
+    .from(accounts)
+    .get();
   const row = db
     .insert(accounts)
     .values({
@@ -201,7 +224,11 @@ export function createAccount(actor: Actor, input: z.output<typeof accountInput>
       kind: input.kind,
       currency: input.currency,
       openingBalanceMinor: input.openingBalance
-        ? parseAmount(input.openingBalance, input.currency, { field: "openingBalance", allowNegative: true, allowZero: true })
+        ? parseAmount(input.openingBalance, input.currency, {
+            field: "openingBalance",
+            allowNegative: true,
+            allowZero: true,
+          })
         : 0,
       color: input.color ?? null,
       notes: input.notes ?? null,
@@ -234,7 +261,11 @@ export function updateAccount(actor: Actor, { id, ...input }: z.output<typeof up
       currency,
       ...(input.openingBalance !== undefined && {
         openingBalanceMinor: input.openingBalance
-          ? parseAmount(input.openingBalance, currency, { field: "openingBalance", allowNegative: true, allowZero: true })
+          ? parseAmount(input.openingBalance, currency, {
+              field: "openingBalance",
+              allowNegative: true,
+              allowZero: true,
+            })
           : 0,
       }),
       ...(input.color !== undefined && { color: input.color }),
@@ -269,7 +300,11 @@ export function deleteAccount(actor: Actor, id: string) {
 
 export function listCategories(actor: Actor, opts: { now?: number; locale?: Locale } = {}) {
   assertAdmin(actor);
-  const rows = db.select().from(categories).orderBy(asc(categories.kind), asc(categories.name)).all();
+  const rows = db
+    .select()
+    .from(categories)
+    .orderBy(asc(categories.kind), asc(categories.name))
+    .all();
   const counts = new Map(
     db
       .select({ id: transactions.categoryId, n: count() })
@@ -278,7 +313,11 @@ export function listCategories(actor: Actor, opts: { now?: number; locale?: Loca
       .all()
       .map((r) => [r.id, r.n]),
   );
-  const monthStart = startOfMonth(opts.now ?? Date.now(), appTimezone(), calendarFor(opts.locale ?? "fa"));
+  const monthStart = startOfMonth(
+    opts.now ?? Date.now(),
+    appTimezone(),
+    calendarFor(opts.locale ?? "fa"),
+  );
   const month = db
     .select({
       id: transactions.categoryId,
@@ -299,7 +338,12 @@ export function listCategories(actor: Actor, opts: { now?: number; locale?: Loca
 export function categoryOptions(actor: Actor) {
   assertAdmin(actor);
   return db
-    .select({ id: categories.id, name: categories.name, kind: categories.kind, color: categories.color })
+    .select({
+      id: categories.id,
+      name: categories.name,
+      kind: categories.kind,
+      color: categories.color,
+    })
     .from(categories)
     .orderBy(asc(categories.name))
     .all();
@@ -316,12 +360,19 @@ export function createCategory(actor: Actor, input: z.output<typeof categoryInpu
   return row;
 }
 
-export function updateCategory(actor: Actor, { id, ...input }: z.output<typeof updateCategoryInput>) {
+export function updateCategory(
+  actor: Actor,
+  { id, ...input }: z.output<typeof updateCategoryInput>,
+) {
   assertAdmin(actor);
   const cat = db.select().from(categories).where(eq(categories.id, id)).get();
   if (!cat) throw notFound("Category");
   if (input.kind && input.kind !== cat.kind) {
-    const used = db.select({ id: transactions.id }).from(transactions).where(eq(transactions.categoryId, id)).get();
+    const used = db
+      .select({ id: transactions.id })
+      .from(transactions)
+      .where(eq(transactions.categoryId, id))
+      .get();
     if (used) throw new FinanceError("categoryKindMismatch", "kind");
   }
   const row = db
@@ -354,7 +405,10 @@ function txWhere(input: ListTransactionsInput): SQL | undefined {
   const q = input.q?.trim();
   return and(
     input.accountId
-      ? or(eq(transactions.accountId, input.accountId), eq(transactions.transferAccountId, input.accountId))
+      ? or(
+          eq(transactions.accountId, input.accountId),
+          eq(transactions.transferAccountId, input.accountId),
+        )
       : undefined,
     input.kind ? eq(transactions.kind, input.kind) : undefined,
     input.categoryId === "none"
@@ -375,7 +429,10 @@ function txWhere(input: ListTransactionsInput): SQL | undefined {
           like(transactions.tags, `%${q}%`),
           inArray(
             transactions.clientId,
-            db.select({ id: clients.id }).from(clients).where(like(clients.name, `%${q}%`)),
+            db
+              .select({ id: clients.id })
+              .from(clients)
+              .where(like(clients.name, `%${q}%`)),
           ),
         )
       : undefined,
@@ -463,7 +520,11 @@ export function getTransaction(actor: Actor, id: string) {
 }
 
 function activeAccount(id: string | null | undefined, field: string) {
-  if (!id) throw new FinanceError(field === "accountId" ? "accountNotFound" : "transferAccountRequired", field);
+  if (!id)
+    throw new FinanceError(
+      field === "accountId" ? "accountNotFound" : "transferAccountRequired",
+      field,
+    );
   const a = db.select().from(accounts).where(eq(accounts.id, id)).get();
   if (!a) throw new FinanceError("accountNotFound", field);
   return a;
@@ -471,7 +532,11 @@ function activeAccount(id: string | null | undefined, field: string) {
 
 function checkCategory(categoryId: string | null | undefined, kind: TransactionKind) {
   if (!categoryId || kind === "transfer") return null;
-  const c = db.select({ kind: categories.kind }).from(categories).where(eq(categories.id, categoryId)).get();
+  const c = db
+    .select({ kind: categories.kind })
+    .from(categories)
+    .where(eq(categories.id, categoryId))
+    .get();
   if (!c) return null;
   if (c.kind !== kind) throw new FinanceError("categoryKindMismatch", "categoryId");
   return categoryId;
@@ -481,7 +546,10 @@ function occurredAtFrom(date: string | undefined, time: string | undefined, fall
   return parseMovementDate(date, time, fallback);
 }
 
-type TxFields = Omit<typeof transactions.$inferInsert, "id" | "createdAt" | "updatedAt" | "createdBy">;
+type TxFields = Omit<
+  typeof transactions.$inferInsert,
+  "id" | "createdAt" | "updatedAt" | "createdBy"
+>;
 
 /** Validate a full transaction (create, or existing merged with a patch) → DB row values. */
 function buildTx(
@@ -489,7 +557,8 @@ function buildTx(
   opts: { requireActiveAccount: boolean; fallbackDate?: Date },
 ): TxFields {
   const account = activeAccount(input.accountId, "accountId");
-  if (opts.requireActiveAccount && account.archived) throw new FinanceError("accountArchived", "accountId");
+  if (opts.requireActiveAccount && account.archived)
+    throw new FinanceError("accountArchived", "accountId");
   const amountMinor = parseAmount(input.amount, account.currency);
   const occurredAt = occurredAtFrom(input.date, input.time, opts.fallbackDate);
   const base = {
@@ -505,10 +574,13 @@ function buildTx(
   if (input.kind === "transfer") {
     const to = activeAccount(input.transferAccountId, "transferAccountId");
     if (to.id === account.id) throw new FinanceError("transferSameAccount", "transferAccountId");
-    if (opts.requireActiveAccount && to.archived) throw new FinanceError("accountArchived", "transferAccountId");
+    if (opts.requireActiveAccount && to.archived)
+      throw new FinanceError("accountArchived", "transferAccountId");
     let transferAmountMinor: number;
     if (input.transferAmount) {
-      transferAmountMinor = parseAmount(input.transferAmount, to.currency, { field: "transferAmount" });
+      transferAmountMinor = parseAmount(input.transferAmount, to.currency, {
+        field: "transferAmount",
+      });
     } else if (to.currency === account.currency) transferAmountMinor = amountMinor;
     else throw new FinanceError("invalidTransferAmount", "transferAmount");
     return {
@@ -540,7 +612,13 @@ export function createTransaction(actor: Actor, input: z.output<typeof transacti
     .values({ ...values, createdBy: actor.user.id })
     .returning()
     .get();
-  logActivity(actor, "transaction.create", "transaction", row.id, `${row.kind} ${row.amountMinor} ${row.currency}`);
+  logActivity(
+    actor,
+    "transaction.create",
+    "transaction",
+    row.id,
+    `${row.kind} ${row.amountMinor} ${row.currency}`,
+  );
   return row;
 }
 
@@ -548,7 +626,11 @@ export function createTransaction(actor: Actor, input: z.output<typeof transacti
 function toInput(row: typeof transactions.$inferSelect): z.output<typeof transactionInput> {
   const tz = appTimezone();
   const transferCurrency = row.transferAccountId
-    ? (db.select({ c: accounts.currency }).from(accounts).where(eq(accounts.id, row.transferAccountId)).get()?.c ?? row.currency)
+    ? (db
+        .select({ c: accounts.currency })
+        .from(accounts)
+        .where(eq(accounts.id, row.transferAccountId))
+        .get()?.c ?? row.currency)
     : row.currency;
   return {
     kind: row.kind,
@@ -565,15 +647,23 @@ function toInput(row: typeof transactions.$inferSelect): z.output<typeof transac
     tags: row.tags,
     transferAccountId: row.transferAccountId,
     transferAmount:
-      row.transferAmountMinor != null ? String(minorToMajor(row.transferAmountMinor, transferCurrency)) : undefined,
+      row.transferAmountMinor != null
+        ? String(minorToMajor(row.transferAmountMinor, transferCurrency))
+        : undefined,
   };
 }
 
-export function updateTransaction(actor: Actor, { id, ...patch }: z.output<typeof updateTransactionInput>) {
+export function updateTransaction(
+  actor: Actor,
+  { id, ...patch }: z.output<typeof updateTransactionInput>,
+) {
   assertAdmin(actor);
   const row = db.select().from(transactions).where(eq(transactions.id, id)).get();
   if (!row) throw notFound("Transaction");
-  const merged = { ...toInput(row), ...Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined)) };
+  const merged = {
+    ...toInput(row),
+    ...Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined)),
+  };
   // When the account changes, amounts must be re-read in the new currency (already major units).
   const values = buildTx(merged as z.output<typeof transactionInput>, {
     requireActiveAccount: false,
@@ -581,8 +671,13 @@ export function updateTransaction(actor: Actor, { id, ...patch }: z.output<typeo
   });
   if (row.invoiceId) {
     if (values.kind !== "income") throw new FinanceError("linkedToInvoice", "kind");
-    const inv = db.select({ currency: invoices.currency }).from(invoices).where(eq(invoices.id, row.invoiceId)).get();
-    if (inv && values.currency !== inv.currency) throw new FinanceError("invoiceCurrencyMismatch", "accountId");
+    const inv = db
+      .select({ currency: invoices.currency })
+      .from(invoices)
+      .where(eq(invoices.id, row.invoiceId))
+      .get();
+    if (inv && values.currency !== inv.currency)
+      throw new FinanceError("invoiceCurrencyMismatch", "accountId");
   }
   const updated = db.transaction((tx) => {
     const u = tx.update(transactions).set(values).where(eq(transactions.id, id)).returning().get();
@@ -599,9 +694,16 @@ export function deleteTransaction(actor: Actor, id: string) {
   if (!row) throw notFound("Transaction");
   db.transaction((tx) => {
     tx.delete(transactions).where(eq(transactions.id, id)).run();
-    if (row.invoiceId && row.kind === "income") applyInvoicePaymentDelta(tx, row.invoiceId, -row.amountMinor);
+    if (row.invoiceId && row.kind === "income")
+      applyInvoicePaymentDelta(tx, row.invoiceId, -row.amountMinor);
   });
-  logActivity(actor, "transaction.delete", "transaction", id, `${row.kind} ${row.amountMinor} ${row.currency}`);
+  logActivity(
+    actor,
+    "transaction.delete",
+    "transaction",
+    id,
+    `${row.kind} ${row.amountMinor} ${row.currency}`,
+  );
 }
 
 // ─── CSV export / import ────────────────────────────────────────────────────
@@ -649,7 +751,9 @@ export function exportTransactionsCsv(actor: Actor, input: ListTransactionsInput
     r.currency,
     r.account.name,
     r.toAccount?.name ?? "",
-    r.toAccount && r.transferAmountMinor != null ? minorToMajor(r.transferAmountMinor, r.toAccount.currency) : "",
+    r.toAccount && r.transferAmountMinor != null
+      ? minorToMajor(r.transferAmountMinor, r.toAccount.currency)
+      : "",
     r.toAccount?.currency ?? "",
     r.category?.name ?? "",
     r.project?.name ?? "",
@@ -667,10 +771,18 @@ function importContext() {
   return {
     tz: appTimezone(),
     accounts: db
-      .select({ id: accounts.id, name: accounts.name, currency: accounts.currency, archived: accounts.archived })
+      .select({
+        id: accounts.id,
+        name: accounts.name,
+        currency: accounts.currency,
+        archived: accounts.archived,
+      })
       .from(accounts)
       .all(),
-    categories: db.select({ id: categories.id, name: categories.name, kind: categories.kind }).from(categories).all(),
+    categories: db
+      .select({ id: categories.id, name: categories.name, kind: categories.kind })
+      .from(categories)
+      .all(),
   };
 }
 
@@ -705,7 +817,11 @@ export function importTransactions(actor: Actor, csv: string) {
   db.transaction((tx) => {
     for (let i = 0; i < valid.length; i += 200) {
       tx.insert(transactions)
-        .values(valid.slice(i, i + 200).map((v) => ({ ...v, tags: ["import"], createdBy: actor.user.id })))
+        .values(
+          valid
+            .slice(i, i + 200)
+            .map((v) => ({ ...v, tags: ["import"], createdBy: actor.user.id })),
+        )
         .run();
     }
   });

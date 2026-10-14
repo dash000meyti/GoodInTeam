@@ -10,7 +10,14 @@ import {
   WalletIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -45,7 +52,8 @@ export default async function FinanceOverviewPage() {
   const f = t.finance;
   const o = financeOverview(actor, { now, locale });
   const options = txFormOptions(actor);
-  const multi = (rows: { currency: string }[]) => rows.length > 1 || rows.some((r) => r.currency !== o.base);
+  const multi = (rows: { currency: string }[]) =>
+    rows.length > 1 || rows.some((r) => r.currency !== o.base);
 
   const newButton = (
     <TransactionFormDialog
@@ -106,10 +114,22 @@ export default async function FinanceOverviewPage() {
               label={f.monthIncome}
               icon={ArrowDownLeftIcon}
               tone="success"
-              value={<MoneyStack rows={o.month.income} locale={locale} base={o.base} compact secondaryClassName="text-sm" />}
+              value={
+                <MoneyStack
+                  rows={o.month.income}
+                  locale={locale}
+                  base={o.base}
+                  compact
+                  secondaryClassName="text-sm"
+                />
+              }
               hint={
                 <Hint
-                  approx={multi(o.month.income) ? <Approx value={o.month.approx.income} base={o.base} locale={locale} t={f} /> : null}
+                  approx={
+                    multi(o.month.income) ? (
+                      <Approx value={o.month.approx.income} base={o.base} locale={locale} t={f} />
+                    ) : null
+                  }
                   trend={trend(o.month.approx.income.minor, o.month.prevApprox.income.minor)}
                 />
               }
@@ -118,10 +138,22 @@ export default async function FinanceOverviewPage() {
               label={f.monthExpense}
               icon={ArrowUpRightIcon}
               tone="destructive"
-              value={<MoneyStack rows={o.month.expense} locale={locale} base={o.base} compact secondaryClassName="text-sm" />}
+              value={
+                <MoneyStack
+                  rows={o.month.expense}
+                  locale={locale}
+                  base={o.base}
+                  compact
+                  secondaryClassName="text-sm"
+                />
+              }
               hint={
                 <Hint
-                  approx={multi(o.month.expense) ? <Approx value={o.month.approx.expense} base={o.base} locale={locale} t={f} /> : null}
+                  approx={
+                    multi(o.month.expense) ? (
+                      <Approx value={o.month.approx.expense} base={o.base} locale={locale} t={f} />
+                    ) : null
+                  }
                   trend={trend(o.month.approx.expense.minor, o.month.prevApprox.expense.minor)}
                 />
               }
@@ -130,7 +162,15 @@ export default async function FinanceOverviewPage() {
               label={f.monthNet}
               icon={ScaleIcon}
               tone="info"
-              value={<MoneyStack rows={o.month.net} locale={locale} base={o.base} compact secondaryClassName="text-sm" />}
+              value={
+                <MoneyStack
+                  rows={o.month.net}
+                  locale={locale}
+                  base={o.base}
+                  compact
+                  secondaryClassName="text-sm"
+                />
+              }
               hint={
                 multi(o.month.net) ? (
                   <Approx value={o.month.approx.net} base={o.base} locale={locale} t={f} />
@@ -141,7 +181,15 @@ export default async function FinanceOverviewPage() {
               label={f.receivables}
               icon={ReceiptIcon}
               tone="warning"
-              value={<MoneyStack rows={o.receivables.totals} locale={locale} base={o.base} compact secondaryClassName="text-sm" />}
+              value={
+                <MoneyStack
+                  rows={o.receivables.totals}
+                  locale={locale}
+                  base={o.base}
+                  compact
+                  secondaryClassName="text-sm"
+                />
+              }
               hint={format(f.openInvoicesCount, { n: formatNumber(o.receivables.count, locale) })}
             />
           </div>
@@ -232,8 +280,21 @@ function AccountsCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
         {o.balances.length > 0 && (
           <div className="space-y-1 rounded-xl bg-muted/50 p-3">
             <p className="text-xs font-semibold text-muted-foreground">{f.totalBalance}</p>
-            <MoneyStack rows={o.balances} locale={locale} base={o.base} className="font-extrabold" />
-            {o.balances.length > 1 && <Approx value={o.balancesApprox} base={o.base} locale={locale} t={f} className="flex" />}
+            <MoneyStack
+              rows={o.balances}
+              locale={locale}
+              base={o.base}
+              className="font-extrabold"
+            />
+            {o.balances.length > 1 && (
+              <Approx
+                value={o.balancesApprox}
+                base={o.base}
+                locale={locale}
+                t={f}
+                className="flex"
+              />
+            )}
           </div>
         )}
       </CardContent>
@@ -249,7 +310,13 @@ function ReceivablesCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
       <CardHeader>
         <CardTitle>{f.unpaidInvoices}</CardTitle>
         <CardDescription>
-          <MoneyStack rows={o.receivables.totals} locale={locale} base={o.base} compact className="text-sm" />
+          <MoneyStack
+            rows={o.receivables.totals}
+            locale={locale}
+            base={o.base}
+            compact
+            className="text-sm"
+          />
         </CardDescription>
         <CardAction>
           <Button asChild variant="ghost" size="sm">
@@ -277,12 +344,23 @@ function ReceivablesCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
                         </span>
                         <InvoiceStatusBadge status={inv.status} t={f} />
                       </span>
-                      <span className={cn("block text-xs text-muted-foreground", late && "text-destructive")}>
+                      <span
+                        className={cn(
+                          "block text-xs text-muted-foreground",
+                          late && "text-destructive",
+                        )}
+                      >
                         <span dir="ltr">{inv.number}</span>
                         {inv.dueDate ? ` · ${f.dueDate} ${formatDate(inv.dueDate, ctx.fmt)}` : ""}
                       </span>
                     </span>
-                    <Money minor={inv.dueMinor} currency={inv.currency} locale={locale} compact className="text-sm font-bold" />
+                    <Money
+                      minor={inv.dueMinor}
+                      currency={inv.currency}
+                      locale={locale}
+                      compact
+                      className="text-sm font-bold"
+                    />
                   </Link>
                 </li>
               );
@@ -307,103 +385,207 @@ function ProfitabilityCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
       {rows.length === 0 ? (
         <p className="px-6 pb-10 text-center text-sm text-muted-foreground">{f.noProfitability}</p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t.common.project}</TableHead>
-              <TableHead className="text-end">{f.colIncome}</TableHead>
-              <TableHead className="text-end">{f.colExpense}</TableHead>
-              <TableHead className="text-end">{f.colNet}</TableHead>
-              <TableHead className="text-end">{f.colHours}</TableHead>
-              <TableHead className="text-end" title={f.effectiveRateHint}>
-                {f.colEffectiveRate}
-              </TableHead>
-              <TableHead title={f.budgetUsedHint}>{f.colBudgetUsed}</TableHead>
-              <TableHead className="text-end">{f.colOutstanding}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <>
+          <ul className="divide-y divide-dashed border-t border-dashed md:hidden">
             {rows.map((p) => {
               const approx = p.approximate ? "≈ " : "";
               const net = p.incomeMinor - p.expenseMinor;
+              const cell = (label: string, value: React.ReactNode) => (
+                <div className="min-w-0">
+                  <dt className="text-[11px] text-muted-foreground">{label}</dt>
+                  <dd className="truncate text-sm font-semibold">{value}</dd>
+                </div>
+              );
               return (
-                <TableRow key={p.id}>
-                  <TableCell>
-                    <Link
-                      href={href(`/panel/finance/ledgers/project/${p.id}`)}
-                      className="group flex items-center gap-2.5"
-                    >
-                      <ColorDot color={p.color} />
-                      <span className="min-w-0">
-                        <span className="block max-w-44 truncate font-semibold group-hover:text-primary">
-                          {p.name}
-                        </span>
-                        <span className="block text-xs text-muted-foreground">
-                          {p.clientName ?? t.projects.noClient}
-                        </span>
+                <li key={p.id} className="space-y-3 px-5 py-4">
+                  <Link
+                    href={href(`/panel/finance/ledgers/project/${p.id}`)}
+                    className="flex items-center gap-2.5"
+                  >
+                    <ColorDot color={p.color} />
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold">{p.name}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {p.clientName ?? t.projects.noClient}
                       </span>
-                      {p.missing.length > 0 && (
-                        <AlertTriangleIcon
-                          className="size-4 text-warning"
-                          aria-label={format(f.missingRates, { list: p.missing.join(", ") })}
+                    </span>
+                  </Link>
+                  <dl className="grid grid-cols-3 gap-3">
+                    {cell(
+                      f.colIncome,
+                      <>
+                        {approx}
+                        <Money
+                          minor={p.incomeMinor}
+                          currency={p.currency}
+                          locale={locale}
+                          compact
                         />
-                      )}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-end">
-                    {approx}
-                    <Money minor={p.incomeMinor} currency={p.currency} locale={locale} compact />
-                  </TableCell>
-                  <TableCell className="text-end">
-                    {approx}
-                    <Money minor={p.expenseMinor} currency={p.currency} locale={locale} compact />
-                  </TableCell>
-                  <TableCell className="text-end font-bold">
-                    {approx}
-                    <Money
-                      minor={net}
-                      currency={p.currency}
-                      locale={locale}
-                      compact
-                      tone={net < 0 ? "expense" : "none"}
-                    />
-                  </TableCell>
-                  <TableCell className="text-end tabular-nums">
-                    {formatHours(p.trackedMs, locale)}
-                  </TableCell>
-                  <TableCell className="text-end">
-                    {p.effectiveRateMinor != null ? (
-                      <Money minor={p.effectiveRateMinor} currency={p.currency} locale={locale} compact />
-                    ) : (
-                      "—"
+                      </>,
                     )}
-                  </TableCell>
-                  <TableCell>
-                    {p.budgetUsedPct != null ? (
-                      <div className="flex items-center gap-2">
-                        <Progress
-                          value={Math.min(100, p.budgetUsedPct)}
-                          className="w-14"
-                          indicatorClassName={cn(
-                            p.budgetUsedPct > 100 ? "bg-destructive" : p.budgetUsedPct > 80 ? "bg-warning" : undefined,
-                          )}
+                    {cell(
+                      f.colExpense,
+                      <>
+                        {approx}
+                        <Money
+                          minor={p.expenseMinor}
+                          currency={p.currency}
+                          locale={locale}
+                          compact
                         />
-                        <span className="text-xs font-semibold tabular-nums">
-                          {formatNumber(p.budgetUsedPct / 100, locale, { style: "percent", maximumFractionDigits: 0 })}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground">—</span>
+                      </>,
                     )}
-                  </TableCell>
-                  <TableCell className="text-end">
-                    <MoneyStack rows={p.outstanding} locale={locale} compact />
-                  </TableCell>
-                </TableRow>
+                    {cell(
+                      f.colNet,
+                      <>
+                        {approx}
+                        <Money
+                          minor={net}
+                          currency={p.currency}
+                          locale={locale}
+                          compact
+                          tone={net < 0 ? "expense" : "none"}
+                        />
+                      </>,
+                    )}
+                    {cell(f.colHours, formatHours(p.trackedMs, locale))}
+                    {cell(
+                      f.colEffectiveRate,
+                      p.effectiveRateMinor != null ? (
+                        <Money
+                          minor={p.effectiveRateMinor}
+                          currency={p.currency}
+                          locale={locale}
+                          compact
+                        />
+                      ) : (
+                        "—"
+                      ),
+                    )}
+                    {cell(
+                      f.colBudgetUsed,
+                      p.budgetUsedPct != null
+                        ? formatNumber(p.budgetUsedPct / 100, locale, {
+                            style: "percent",
+                            maximumFractionDigits: 0,
+                          })
+                        : "—",
+                    )}
+                  </dl>
+                </li>
               );
             })}
-          </TableBody>
-        </Table>
+          </ul>
+          <Table className="hidden md:table">
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t.common.project}</TableHead>
+                <TableHead className="text-end">{f.colIncome}</TableHead>
+                <TableHead className="text-end">{f.colExpense}</TableHead>
+                <TableHead className="text-end">{f.colNet}</TableHead>
+                <TableHead className="text-end">{f.colHours}</TableHead>
+                <TableHead className="text-end" title={f.effectiveRateHint}>
+                  {f.colEffectiveRate}
+                </TableHead>
+                <TableHead title={f.budgetUsedHint}>{f.colBudgetUsed}</TableHead>
+                <TableHead className="text-end">{f.colOutstanding}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((p) => {
+                const approx = p.approximate ? "≈ " : "";
+                const net = p.incomeMinor - p.expenseMinor;
+                return (
+                  <TableRow key={p.id}>
+                    <TableCell>
+                      <Link
+                        href={href(`/panel/finance/ledgers/project/${p.id}`)}
+                        className="group flex items-center gap-2.5"
+                      >
+                        <ColorDot color={p.color} />
+                        <span className="min-w-0">
+                          <span className="block max-w-44 truncate font-semibold group-hover:text-primary">
+                            {p.name}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            {p.clientName ?? t.projects.noClient}
+                          </span>
+                        </span>
+                        {p.missing.length > 0 && (
+                          <AlertTriangleIcon
+                            className="size-4 text-warning"
+                            aria-label={format(f.missingRates, { list: p.missing.join(", ") })}
+                          />
+                        )}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-end">
+                      {approx}
+                      <Money minor={p.incomeMinor} currency={p.currency} locale={locale} compact />
+                    </TableCell>
+                    <TableCell className="text-end">
+                      {approx}
+                      <Money minor={p.expenseMinor} currency={p.currency} locale={locale} compact />
+                    </TableCell>
+                    <TableCell className="text-end font-bold">
+                      {approx}
+                      <Money
+                        minor={net}
+                        currency={p.currency}
+                        locale={locale}
+                        compact
+                        tone={net < 0 ? "expense" : "none"}
+                      />
+                    </TableCell>
+                    <TableCell className="text-end tabular-nums">
+                      {formatHours(p.trackedMs, locale)}
+                    </TableCell>
+                    <TableCell className="text-end">
+                      {p.effectiveRateMinor != null ? (
+                        <Money
+                          minor={p.effectiveRateMinor}
+                          currency={p.currency}
+                          locale={locale}
+                          compact
+                        />
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {p.budgetUsedPct != null ? (
+                        <div className="flex items-center gap-2">
+                          <Progress
+                            value={Math.min(100, p.budgetUsedPct)}
+                            className="w-14"
+                            indicatorClassName={cn(
+                              p.budgetUsedPct > 100
+                                ? "bg-destructive"
+                                : p.budgetUsedPct > 80
+                                  ? "bg-warning"
+                                  : undefined,
+                            )}
+                          />
+                          <span className="text-xs font-semibold tabular-nums">
+                            {formatNumber(p.budgetUsedPct / 100, locale, {
+                              style: "percent",
+                              maximumFractionDigits: 0,
+                            })}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-end">
+                      <MoneyStack rows={p.outstanding} locale={locale} compact />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </>
       )}
     </Card>
   );

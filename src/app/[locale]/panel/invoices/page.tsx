@@ -35,13 +35,19 @@ import { panelContext, type PanelContext } from "@/server/page-context";
 const tabs = ["all", "draft", "sent", "partial", "overdue", "paid", "void"] as const;
 type Tab = (typeof tabs)[number];
 
-export default async function InvoicesPage({ searchParams }: PageProps<"/[locale]/panel/invoices">) {
+export default async function InvoicesPage({
+  searchParams,
+}: PageProps<"/[locale]/panel/invoices">) {
   const ctx = await panelContext({ roles: ["owner", "admin", "client"] });
   const { actor, t, href, locale, now } = ctx;
   const f = t.finance;
   const admin = isAdmin(actor);
   const raw = (await searchParams).status;
-  const status = (typeof raw === "string" && ((tabs as readonly string[]).includes(raw) || raw === "open") ? raw : "all") as Tab | "open";
+  const status = (
+    typeof raw === "string" && ((tabs as readonly string[]).includes(raw) || raw === "open")
+      ? raw
+      : "all"
+  ) as Tab | "open";
   const list = listInvoices(actor, { status: status === "all" ? undefined : status });
   const counts = invoiceStatusCounts(actor);
   const kpis = invoiceKpis(actor, { now, locale });
@@ -49,7 +55,11 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/[locale
   const today = todayStart(now);
   const visibleTabs = admin ? tabs : tabs.filter((s) => s !== "draft" && s !== "void");
   const count = (s: Tab) =>
-    s === "all" ? counts.all : s === "sent" ? (counts.sent ?? 0) + (counts.viewed ?? 0) : (counts[s] ?? 0);
+    s === "all"
+      ? counts.all
+      : s === "sent"
+        ? (counts.sent ?? 0) + (counts.viewed ?? 0)
+        : (counts[s] ?? 0);
 
   const newButton = admin ? (
     <Button asChild>
@@ -64,31 +74,59 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/[locale
       <PageHeader
         title={f.invoicesTitle}
         description={admin ? f.invoicesSubtitle : f.clientInvoicesSubtitle}
-        crumbs={admin ? [{ label: f.title, href: href("/panel/finance") }, { label: f.invoicesTitle }] : undefined}
+        crumbs={
+          admin
+            ? [{ label: f.title, href: href("/panel/finance") }, { label: f.invoicesTitle }]
+            : undefined
+        }
         actions={newButton}
       />
 
       {admin && (
-        <div className="mb-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-6 xl:grid-cols-4">
           <KpiCard
             label={f.outstanding}
             icon={ReceiptIcon}
             tone="warning"
-            value={<MoneyStack rows={kpis.outstanding} locale={locale} base={base} compact secondaryClassName="text-sm" />}
+            value={
+              <MoneyStack
+                rows={kpis.outstanding}
+                locale={locale}
+                base={base}
+                compact
+                secondaryClassName="text-sm"
+              />
+            }
             hint={format(f.openInvoicesCount, { n: formatNumber(kpis.openCount, locale) })}
           />
           <KpiCard
             label={f.overdueAmount}
             icon={AlarmClockIcon}
             tone="destructive"
-            value={<MoneyStack rows={kpis.overdue} locale={locale} base={base} compact secondaryClassName="text-sm" />}
+            value={
+              <MoneyStack
+                rows={kpis.overdue}
+                locale={locale}
+                base={base}
+                compact
+                secondaryClassName="text-sm"
+              />
+            }
             hint={format(f.overdueCount, { n: formatNumber(kpis.overdueCount, locale) })}
           />
           <KpiCard
             label={f.paidThisMonth}
             icon={BanknoteIcon}
             tone="success"
-            value={<MoneyStack rows={kpis.paidThisMonth} locale={locale} base={base} compact secondaryClassName="text-sm" />}
+            value={
+              <MoneyStack
+                rows={kpis.paidThisMonth}
+                locale={locale}
+                base={base}
+                compact
+                secondaryClassName="text-sm"
+              />
+            }
           />
           <KpiCard
             label={f.drafts}
@@ -128,7 +166,9 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/[locale
                   <span
                     className={cn(
                       "rounded-md px-1.5 text-xs tabular-nums",
-                      on ? "bg-primary/12 text-primary-dark dark:text-primary-light" : "bg-grey-500/12",
+                      on
+                        ? "bg-primary/12 text-primary-dark dark:text-primary-light"
+                        : "bg-grey-500/12",
                     )}
                   >
                     {formatNumber(count(s), locale)}
@@ -170,16 +210,28 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/[locale
                         <TableCell>
                           <ClientCell inv={inv} />
                         </TableCell>
-                        <TableCell className="text-sm">{formatDate(inv.issueDate, ctx.fmt)}</TableCell>
+                        <TableCell className="text-sm">
+                          {formatDate(inv.issueDate, ctx.fmt)}
+                        </TableCell>
                         <TableCell className="text-sm">
                           <DueCell inv={inv} today={today} ctx={ctx} />
                         </TableCell>
                         <TableCell className="text-end">
-                          <Money minor={inv.totalMinor} currency={inv.currency} locale={locale} className="font-semibold" />
+                          <Money
+                            minor={inv.totalMinor}
+                            currency={inv.currency}
+                            locale={locale}
+                            className="font-semibold"
+                          />
                         </TableCell>
                         <TableCell className="text-end">
                           {inv.dueMinor > 0 && inv.status !== "draft" ? (
-                            <Money minor={inv.dueMinor} currency={inv.currency} locale={locale} className="font-bold" />
+                            <Money
+                              minor={inv.dueMinor}
+                              currency={inv.currency}
+                              locale={locale}
+                              className="font-bold"
+                            />
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}
@@ -195,7 +247,10 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/[locale
               <ul className="divide-y divide-dashed md:hidden">
                 {list.map((inv) => (
                   <li key={inv.id}>
-                    <Link href={href(`/panel/invoices/${inv.id}`)} className="flex items-start gap-3 px-4 py-3">
+                    <Link
+                      href={href(`/panel/invoices/${inv.id}`)}
+                      className="flex items-start gap-3 px-4 py-3"
+                    >
                       <span className="min-w-0 flex-1 space-y-1">
                         <span className="flex items-center gap-2">
                           <span className="font-mono text-sm font-bold" dir="ltr">
@@ -209,10 +264,16 @@ export default async function InvoicesPage({ searchParams }: PageProps<"/[locale
                         </span>
                       </span>
                       <span className="text-end">
-                        <Money minor={inv.totalMinor} currency={inv.currency} locale={locale} className="block text-sm font-bold" />
+                        <Money
+                          minor={inv.totalMinor}
+                          currency={inv.currency}
+                          locale={locale}
+                          className="block text-sm font-bold"
+                        />
                         {inv.dueMinor > 0 && inv.dueMinor !== inv.totalMinor && (
                           <span className="block text-xs text-muted-foreground">
-                            {f.due}: <Money minor={inv.dueMinor} currency={inv.currency} locale={locale} />
+                            {f.due}:{" "}
+                            <Money minor={inv.dueMinor} currency={inv.currency} locale={locale} />
                           </span>
                         )}
                       </span>
@@ -242,7 +303,9 @@ function ClientCell({ inv }: { inv: Row }) {
         </AvatarFallback>
       </Avatar>
       <span className="min-w-0">
-        <span className="block max-w-52 truncate text-sm font-semibold">{inv.client?.name ?? "—"}</span>
+        <span className="block max-w-52 truncate text-sm font-semibold">
+          {inv.client?.name ?? "—"}
+        </span>
         {inv.project && (
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <ColorDot color={inv.project.color} className="size-2" />
@@ -263,7 +326,12 @@ function DueCell({ inv, today, ctx }: { inv: Row; today: number; ctx: PanelConte
     <span className="flex flex-wrap items-center gap-x-2">
       <span>{formatDate(inv.dueDate, ctx.fmt)}</span>
       {open && (
-        <span className={cn("text-xs", days < 0 ? "font-semibold text-destructive" : "text-muted-foreground")}>
+        <span
+          className={cn(
+            "text-xs",
+            days < 0 ? "font-semibold text-destructive" : "text-muted-foreground",
+          )}
+        >
           {days < 0
             ? format(f.overdueDays, { n: formatNumber(-days, ctx.locale) })
             : days === 0

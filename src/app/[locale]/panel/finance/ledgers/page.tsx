@@ -73,7 +73,11 @@ export default async function LedgersPage({
             {f.ledgerHint}
           </p>
           {parties.length === 0 ? (
-            <EmptyState icon={BookUserIcon} title={f.ledgersEmpty} description={f.ledgersEmptyHint} />
+            <EmptyState
+              icon={BookUserIcon}
+              title={f.ledgersEmpty}
+              description={f.ledgersEmptyHint}
+            />
           ) : (
             <Card className="gap-0 overflow-hidden py-0">
               <div className="hidden md:block">
@@ -91,7 +95,13 @@ export default async function LedgersPage({
                     {parties.map((p) => (
                       <TableRow key={`${p.type}:${p.id ?? p.name}`}>
                         <TableCell className="align-top">
-                          <PartyName p={p} href={partyHref(p)} kindLabel={p.clientKind ? t.clients[`kind_${p.clientKind}`] : f.freeTextParty} />
+                          <PartyName
+                            p={p}
+                            href={partyHref(p)}
+                            kindLabel={
+                              p.clientKind ? t.clients[`kind_${p.clientKind}`] : f.freeTextParty
+                            }
+                          />
                         </TableCell>
                         <TableCell className="text-end align-top">{cells(p, "invoiced")}</TableCell>
                         <TableCell className="text-end align-top">{cells(p, "received")}</TableCell>
@@ -99,7 +109,12 @@ export default async function LedgersPage({
                         <TableCell className="align-top">
                           <span className="flex flex-col gap-1">
                             {p.currencies.map((c) => (
-                              <BalanceBadge key={c.currency} minor={c.balance} currency={c.currency} ctx={ctx} />
+                              <BalanceBadge
+                                key={c.currency}
+                                minor={c.balance}
+                                currency={c.currency}
+                                ctx={ctx}
+                              />
                             ))}
                           </span>
                         </TableCell>
@@ -111,10 +126,19 @@ export default async function LedgersPage({
               <ul className="divide-y divide-dashed md:hidden">
                 {parties.map((p) => (
                   <li key={`${p.type}:${p.id ?? p.name}`} className="space-y-2 px-4 py-3">
-                    <PartyName p={p} href={partyHref(p)} kindLabel={p.clientKind ? t.clients[`kind_${p.clientKind}`] : f.freeTextParty} />
+                    <PartyName
+                      p={p}
+                      href={partyHref(p)}
+                      kindLabel={p.clientKind ? t.clients[`kind_${p.clientKind}`] : f.freeTextParty}
+                    />
                     <div className="flex flex-col gap-1 ps-12">
                       {p.currencies.map((c) => (
-                        <BalanceBadge key={c.currency} minor={c.balance} currency={c.currency} ctx={ctx} />
+                        <BalanceBadge
+                          key={c.currency}
+                          minor={c.balance}
+                          currency={c.currency}
+                          ctx={ctx}
+                        />
                       ))}
                     </div>
                   </li>
@@ -170,7 +194,11 @@ export default async function LedgersPage({
                         <MoneyStack rows={p.stats.expense} locale={locale} compact />
                       </TableCell>
                       <TableCell className="text-end font-bold">
-                        <MoneyStack rows={subtractByCurrency(p.stats.income, p.stats.expense)} locale={locale} compact />
+                        <MoneyStack
+                          rows={subtractByCurrency(p.stats.income, p.stats.expense)}
+                          locale={locale}
+                          compact
+                        />
                       </TableCell>
                       <TableCell className="text-end">
                         <MoneyStack rows={p.stats.invoiced} locale={locale} compact />
@@ -210,7 +238,9 @@ function PartyName({
         </AvatarFallback>
       </Avatar>
       <span className="min-w-0">
-        <span className="block max-w-60 truncate font-semibold group-hover:text-primary">{p.name}</span>
+        <span className="block max-w-60 truncate font-semibold group-hover:text-primary">
+          {p.name}
+        </span>
         <Badge variant="neutral" className="mt-0.5">
           {kindLabel}
         </Badge>

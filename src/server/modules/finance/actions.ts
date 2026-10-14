@@ -52,12 +52,14 @@ export const createAccountAction = defineAction({ input: accountInput, roles }, 
   }),
 );
 
-export const updateAccountAction = defineAction({ input: updateAccountInput, roles }, (input, actor) =>
-  run(() => {
-    svc.updateAccount(actor, input);
-    refresh();
-    return { id: input.id };
-  }),
+export const updateAccountAction = defineAction(
+  { input: updateAccountInput, roles },
+  (input, actor) =>
+    run(() => {
+      svc.updateAccount(actor, input);
+      refresh();
+      return { id: input.id };
+    }),
 );
 
 export const archiveAccountAction = defineAction(
@@ -161,12 +163,14 @@ export const setFxRateAction = defineAction({ input: fxRateInput, roles }, (inpu
   }),
 );
 
-export const updateFxRateAction = defineAction({ input: updateFxRateInput, roles }, (input, actor) =>
-  run(() => {
-    fx.updateFxRate(actor, input);
-    refresh();
-    return { id: input.id };
-  }),
+export const updateFxRateAction = defineAction(
+  { input: updateFxRateInput, roles },
+  (input, actor) =>
+    run(() => {
+      fx.updateFxRate(actor, input);
+      refresh();
+      return { id: input.id };
+    }),
 );
 
 export const deleteFxRateAction = defineAction({ input: idInput, roles }, ({ id }, actor) =>

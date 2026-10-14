@@ -1,15 +1,7 @@
 import { z } from "zod";
 import { accountKinds, categoryKinds, invoiceStatuses, transactionKinds } from "@/server/db/schema";
 import { currencyCodes } from "@/lib/money";
-import {
-  zBool,
-  zColor,
-  zId,
-  zNullString,
-  zOptNumber,
-  zOptString,
-  zTags,
-} from "@/lib/zod-helpers";
+import { zBool, zColor, zId, zNullString, zOptNumber, zOptString, zTags } from "@/lib/zod-helpers";
 
 /**
  * Money typed by a person or sent by an agent, in MAJOR units of the relevant
@@ -21,7 +13,8 @@ const zMoney = z.preprocess(
   z.string().trim().min(1).max(40),
 );
 const zOptMoney = z.preprocess(
-  (v) => (v === "" || v === null || v === undefined ? undefined : typeof v === "number" ? String(v) : v),
+  (v) =>
+    v === "" || v === null || v === undefined ? undefined : typeof v === "number" ? String(v) : v,
   z.string().trim().max(40).optional(),
 );
 /** "YYYY-MM-DD" (Gregorian or Jalali like 1405/07/22) in the app timezone. */
@@ -118,7 +111,10 @@ export const fxRateInput = z.object({
   /** Currency being priced (e.g. "USD"). */
   currency: zCurrency,
   /** Units of the BASE currency that one unit of `currency` is worth (major per major). */
-  rate: z.preprocess((v) => (typeof v === "number" ? String(v) : v), z.string().trim().min(1).max(30)),
+  rate: z.preprocess(
+    (v) => (typeof v === "number" ? String(v) : v),
+    z.string().trim().min(1).max(30),
+  ),
   /** Day "YYYY-MM-DD" (defaults to today). */
   date: zOptDay,
 });

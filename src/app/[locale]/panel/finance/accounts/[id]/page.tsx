@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard } from "@/components/panel/stat-card";
+import { KpiCard } from "@/components/finance/kpi-card";
 import { Money } from "@/components/finance/money";
 import { format } from "@/i18n/format-message";
 import { formatNumber } from "@/lib/format";
@@ -111,8 +111,8 @@ export default async function AccountPage({
       <FinanceNav active="accounts" href={href} t={f} />
 
       <div className="mb-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label={f.balance} value={money(account.balance)} icon={WalletIcon} />
-        <StatCard
+        <KpiCard label={f.balance} value={money(account.balance)} icon={WalletIcon} />
+        <KpiCard
           label={f.openingBalance}
           value={money(account.openingBalanceMinor)}
           icon={ClockIcon}
@@ -125,8 +125,18 @@ export default async function AccountPage({
               : undefined
           }
         />
-        <StatCard label={f.colIncome} value={money(account.income)} icon={ArrowDownLeftIcon} tone="success" />
-        <StatCard label={f.colExpense} value={money(account.expense)} icon={ArrowUpRightIcon} tone="destructive" />
+        <KpiCard
+          label={f.colIncome}
+          value={money(account.income)}
+          icon={ArrowDownLeftIcon}
+          tone="success"
+        />
+        <KpiCard
+          label={f.colExpense}
+          value={money(account.expense)}
+          icon={ArrowUpRightIcon}
+          tone="destructive"
+        />
       </div>
 
       <Card className="gap-0 overflow-hidden py-0">
@@ -150,7 +160,9 @@ export default async function AccountPage({
               page={data.page}
               pages={data.pages}
               summary={format(f.resultsCount, { n: formatNumber(data.total, locale) })}
-              makeHref={(p) => href(`/panel/finance/accounts/${account.id}${p > 1 ? `?page=${p}` : ""}`)}
+              makeHref={(p) =>
+                href(`/panel/finance/accounts/${account.id}${p > 1 ? `?page=${p}` : ""}`)
+              }
             />
           </>
         )}

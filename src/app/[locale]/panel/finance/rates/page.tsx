@@ -110,7 +110,9 @@ export default async function RatesPage() {
                     )}
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">{format(f.rateFor, { currency })}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(f.rateFor, { currency })}
+                    </p>
                     <p className="text-2xl font-extrabold tracking-tight tabular-nums">
                       {num(r.rate)} <span className="text-base font-bold">{baseSymbol}</span>
                     </p>

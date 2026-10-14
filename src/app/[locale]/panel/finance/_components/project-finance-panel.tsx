@@ -9,7 +9,14 @@ import {
   ScaleIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { KpiCard } from "@/components/finance/kpi-card";
 import { Money, MoneyStack } from "@/components/finance/money";
@@ -96,7 +103,12 @@ export async function ProjectFinancePanel({
                           </span>
                         )}
                       </span>
-                      <Money minor={p.amountMinor} currency={p.currency} locale={locale} className="font-bold" />
+                      <Money
+                        minor={p.amountMinor}
+                        currency={p.currency}
+                        locale={locale}
+                        className="font-bold"
+                      />
                     </li>
                   ))}
                 </ul>
@@ -154,7 +166,12 @@ export async function ProjectFinancePanel({
                 <>
                   {" · "}
                   {f.colEffectiveRate}:{" "}
-                  <Money minor={stats.effectiveRateMinor} currency={stats.currency} locale={locale} compact />
+                  <Money
+                    minor={stats.effectiveRateMinor}
+                    currency={stats.currency}
+                    locale={locale}
+                    compact
+                  />
                 </>
               )}
             </>
@@ -166,7 +183,10 @@ export async function ProjectFinancePanel({
           tone="warning"
           value={
             stats.budgetUsedPct != null
-              ? formatNumber(stats.budgetUsedPct / 100, locale, { style: "percent", maximumFractionDigits: 0 })
+              ? formatNumber(stats.budgetUsedPct / 100, locale, {
+                  style: "percent",
+                  maximumFractionDigits: 0,
+                })
               : "—"
           }
           hint={
@@ -175,13 +195,28 @@ export async function ProjectFinancePanel({
                 <Progress
                   value={Math.min(100, stats.budgetUsedPct)}
                   indicatorClassName={cn(
-                    stats.budgetUsedPct > 100 ? "bg-destructive" : stats.budgetUsedPct > 80 ? "bg-warning" : undefined,
+                    stats.budgetUsedPct > 100
+                      ? "bg-destructive"
+                      : stats.budgetUsedPct > 80
+                        ? "bg-warning"
+                        : undefined,
                   )}
                 />
                 <span>
                   {f.pf_timeValue}:{" "}
-                  <Money minor={stats.timeValueMinor} currency={stats.currency} locale={locale} compact /> /{" "}
-                  <Money minor={stats.budgetMinor ?? 0} currency={stats.currency} locale={locale} compact />
+                  <Money
+                    minor={stats.timeValueMinor}
+                    currency={stats.currency}
+                    locale={locale}
+                    compact
+                  />{" "}
+                  /{" "}
+                  <Money
+                    minor={stats.budgetMinor ?? 0}
+                    currency={stats.currency}
+                    locale={locale}
+                    compact
+                  />
                 </span>
               </span>
             ) : undefined
@@ -246,7 +281,9 @@ export async function ProjectFinancePanel({
                           r.counterparty ||
                           f[`kind_${r.kind}`]}
                       </span>
-                      <span className="block text-xs text-muted-foreground">{formatDate(r.occurredAt, fmt)}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {formatDate(r.occurredAt, fmt)}
+                      </span>
                     </span>
                     <Money
                       minor={r.kind === "income" ? r.amountMinor : -r.amountMinor}

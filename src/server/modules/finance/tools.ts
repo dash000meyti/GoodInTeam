@@ -29,7 +29,9 @@ const MONEY_NOTE =
   "Returned amounts are integer MINOR units (`*Minor`) with their `currency` (IRT/IRR have 0 decimals; USD, USDT, EUR, AED… have 2). Never add different currencies together.";
 
 function publicLinks(token: string) {
-  return Object.fromEntries(locales.map((l) => [l, `${env.siteUrl}${localePath(l, `/i/${token}`)}`]));
+  return Object.fromEntries(
+    locales.map((l) => [l, `${env.siteUrl}${localePath(l, `/i/${token}`)}`]),
+  );
 }
 
 const createInvoiceToolInput = invoiceInput.extend({
@@ -40,7 +42,9 @@ const createInvoiceToolInput = invoiceInput.extend({
   fromTime: z
     .object({ from: zOptString(20), to: zOptString(20) })
     .optional()
-    .describe("Bill tracked time: inclusive day range 'YYYY-MM-DD' (omit both for all unbilled time)"),
+    .describe(
+      "Bill tracked time: inclusive day range 'YYYY-MM-DD' (omit both for all unbilled time)",
+    ),
 });
 
 export const financeTools = [

@@ -96,10 +96,20 @@ export default async function TransactionsPage({
               <div className="flex flex-wrap items-start gap-x-8 gap-y-3 border-b border-dashed px-5 py-4 text-sm">
                 <span className="font-bold text-muted-foreground">{f.filteredTotals}</span>
                 <Totals label={f.colIncome}>
-                  <MoneyStack rows={list.totals.income} locale={locale} base={options.base} tone="income" />
+                  <MoneyStack
+                    rows={list.totals.income}
+                    locale={locale}
+                    base={options.base}
+                    tone="income"
+                  />
                 </Totals>
                 <Totals label={f.colExpense}>
-                  <MoneyStack rows={list.totals.expense} locale={locale} base={options.base} tone="expense" />
+                  <MoneyStack
+                    rows={list.totals.expense}
+                    locale={locale}
+                    base={options.base}
+                    tone="expense"
+                  />
                 </Totals>
                 <Totals label={f.colNet}>
                   <MoneyStack

@@ -3,7 +3,9 @@ import { invoiceFormOptions } from "@/server/modules/finance/invoices";
 import { panelContext } from "@/server/page-context";
 import { InvoiceEditor } from "../_components/invoice-editor";
 
-export default async function NewInvoicePage({ searchParams }: PageProps<"/[locale]/panel/invoices/new">) {
+export default async function NewInvoicePage({
+  searchParams,
+}: PageProps<"/[locale]/panel/invoices/new">) {
   const { actor, t, href } = await panelContext({ roles: ["owner", "admin"] });
   const f = t.finance;
   const sp = await searchParams;

@@ -30,7 +30,10 @@ export function parseAmount(
   const field = opts.field ?? "amount";
   const text = toLatinDigits(String(input ?? "")).trim();
   const negative = /^[-−]/.test(text);
-  const minor = parseMoneyInput(text.replace(/^[-−+]/, ""), isCurrency(currency) ? currency : "USD");
+  const minor = parseMoneyInput(
+    text.replace(/^[-−+]/, ""),
+    isCurrency(currency) ? currency : "USD",
+  );
   if (minor == null || (negative && !opts.allowNegative)) {
     throw new FinanceError(field === "amount" ? "invalidAmount" : "invalidTransferAmount", field);
   }
@@ -50,7 +53,11 @@ export function parseDay(day: string, time?: string, field = "date") {
  * Day (+ optional time) for a money movement: a day without a time that is
  * *today* means "now" (keeps same-day ordering natural); other days → 00:00.
  */
-export function parseMovementDate(day: string | undefined, time: string | undefined, fallback?: Date) {
+export function parseMovementDate(
+  day: string | undefined,
+  time: string | undefined,
+  fallback?: Date,
+) {
   if (day) {
     if (!time && normalizeDay(day) === dateInputValue(Date.now())) return new Date();
     return parseDay(day, time);

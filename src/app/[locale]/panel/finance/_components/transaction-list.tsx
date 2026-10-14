@@ -42,7 +42,11 @@ export function KindIcon({ kind, className }: { kind: Row["kind"]; className?: s
   return (
     <span
       aria-hidden
-      className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl", k.cls, className)}
+      className={cn(
+        "flex size-9 shrink-0 items-center justify-center rounded-xl",
+        k.cls,
+        className,
+      )}
     >
       <Icon className="size-4 rtl:-scale-x-100" />
     </span>
@@ -200,7 +204,9 @@ export function TransactionList({
               <TableRow key={r.id}>
                 <TableCell className="align-top">
                   <div className="text-sm font-semibold">{formatDate(r.occurredAt, fmt)}</div>
-                  <div className="text-xs text-muted-foreground">{formatTime(r.occurredAt, fmt)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {formatTime(r.occurredAt, fmt)}
+                  </div>
                 </TableCell>
                 <TableCell className="max-w-[340px] align-top whitespace-normal">
                   <div className="flex items-start gap-3">

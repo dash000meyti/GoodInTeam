@@ -57,7 +57,12 @@ export function BalanceBadge({
     <span className="inline-flex flex-wrap items-center gap-2">
       <Badge variant={variant}>{minor > 0 ? f.theyOwe : minor < 0 ? f.weOwe : f.settled}</Badge>
       {minor !== 0 && (
-        <Money minor={Math.abs(minor)} currency={currency} locale={ctx.locale} className="font-bold" />
+        <Money
+          minor={Math.abs(minor)}
+          currency={currency}
+          locale={ctx.locale}
+          className="font-bold"
+        />
       )}
     </span>
   );
@@ -77,8 +82,20 @@ export function LedgerTables({
 }) {
   const { t, fmt, locale, href } = ctx;
   const f = t.finance;
-  const label = (l: LedgerGroup["lines"][number]) => {
-    if (l.type === "invoice") return format(f.line_invoice, { number: l.invoiceNumber ?? "" });
+  const label = (l: LedgerGroup["lines"][number]): React.ReactNode => {
+    if (l.type === "invoice") {
+      // Keep the LTR invoice number on one line inside RTL text.
+      const [before, after] = f.line_invoice.split("{number}");
+      return (
+        <>
+          {before}
+          <span dir="ltr" className="whitespace-nowrap">
+            {l.invoiceNumber}
+          </span>
+          {after}
+        </>
+      );
+    }
     if (mode === "project") return l.type === "received" ? f.line_income : f.line_expense;
     return l.type === "received" ? f.line_received : f.line_paid;
   };
@@ -95,27 +112,80 @@ export function LedgerTables({
             </CardTitle>
             {mode === "party" && (
               <CardDescription>
-                {format(g.balance > 0 ? f.theyOweLong : g.balance < 0 ? f.weOweLong : f.settledLong, {
-                  name,
-                  amount: formatMoneySigned(Math.abs(g.balance), g.currency, locale),
-                })}
+                {format(
+                  g.balance > 0 ? f.theyOweLong : g.balance < 0 ? f.weOweLong : f.settledLong,
+                  {
+                    name,
+                    amount: formatMoneySigned(Math.abs(g.balance), g.currency, locale),
+                  },
+                )}
               </CardDescription>
             )}
           </CardHeader>
-          <Table>
+          <ul className="divide-y divide-dashed md:hidden">
+            {g.lines.map((l) => {
+              const signed =
+                mode === "project" ? l.debit - l.credit : l.debit ? l.debit : -l.credit;
+              return (
+                <li key={l.id} className="space-y-1 px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="min-w-0 text-sm font-semibold">
+                      {l.invoiceId ? (
+                        <Link
+                          href={href(`/panel/invoices/${l.invoiceId}`)}
+                          className="hover:text-primary"
+                        >
+                          {label(l)}
+                        </Link>
+                      ) : (
+                        label(l)
+                      )}
+                    </span>
+                    <Money
+                      minor={signed}
+                      currency={g.currency}
+                      locale={locale}
+                      signed
+                      className="shrink-0 text-sm font-bold"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                    <span className="min-w-0 truncate">
+                      {[formatDate(l.at, fmt), l.description, l.accountName]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                    <span className="shrink-0">
+                      {f.colBalance}:{" "}
+                      <Money minor={l.balance} currency={g.currency} locale={locale} />
+                    </span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <Table className="hidden md:table">
             <TableHeader>
               <TableRow>
                 <TableHead>{t.common.date}</TableHead>
                 <TableHead>{t.common.description}</TableHead>
-                <TableHead className="text-end">{mode === "project" ? f.colIncome : f.debit}</TableHead>
-                <TableHead className="text-end">{mode === "project" ? f.colExpense : f.credit}</TableHead>
+                <TableHead className="text-end">
+                  {mode === "project" ? f.colIncome : f.debit}
+                </TableHead>
+                <TableHead className="text-end">
+                  {mode === "project" ? f.colExpense : f.credit}
+                </TableHead>
                 <TableHead className="text-end">{f.colBalance}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {g.lines.map((l) => {
                 const Icon =
-                  l.type === "invoice" ? FileTextIcon : l.type === "received" ? ArrowDownLeftIcon : ArrowUpRightIcon;
+                  l.type === "invoice"
+                    ? FileTextIcon
+                    : l.type === "received"
+                      ? ArrowDownLeftIcon
+                      : ArrowUpRightIcon;
                 return (
                   <TableRow key={l.id}>
                     <TableCell className="align-top text-sm">{formatDate(l.at, fmt)}</TableCell>
@@ -136,7 +206,10 @@ export function LedgerTables({
                         <div className="min-w-0 space-y-0.5">
                           <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
                             {l.invoiceId ? (
-                              <Link href={href(`/panel/invoices/${l.invoiceId}`)} className="hover:text-primary">
+                              <Link
+                                href={href(`/panel/invoices/${l.invoiceId}`)}
+                                className="hover:text-primary"
+                              >
                                 {label(l)}
                               </Link>
                             ) : (
@@ -146,7 +219,9 @@ export function LedgerTables({
                               <InvoiceStatusBadge status={l.invoiceStatus as InvoiceStatus} t={f} />
                             )}
                             {l.type !== "invoice" && l.invoiceNumber && (
-                              <Badge variant="info">{format(f.linkedInvoice, { number: l.invoiceNumber })}</Badge>
+                              <Badge variant="info">
+                                {format(f.linkedInvoice, { number: l.invoiceNumber })}
+                              </Badge>
                             )}
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -158,10 +233,18 @@ export function LedgerTables({
                       </div>
                     </TableCell>
                     <TableCell className="text-end align-top">
-                      {l.debit ? <Money minor={l.debit} currency={g.currency} locale={locale} /> : ""}
+                      {l.debit ? (
+                        <Money minor={l.debit} currency={g.currency} locale={locale} />
+                      ) : (
+                        ""
+                      )}
                     </TableCell>
                     <TableCell className="text-end align-top">
-                      {l.credit ? <Money minor={l.credit} currency={g.currency} locale={locale} /> : ""}
+                      {l.credit ? (
+                        <Money minor={l.credit} currency={g.currency} locale={locale} />
+                      ) : (
+                        ""
+                      )}
                     </TableCell>
                     <TableCell className="text-end align-top font-semibold">
                       <Money minor={l.balance} currency={g.currency} locale={locale} />
@@ -196,13 +279,20 @@ export function LedgerTotals({
   totals,
   ctx,
 }: {
-  totals: { currency: string; invoiced: number; received: number; paid: number; outstanding: number; balance: number }[];
+  totals: {
+    currency: string;
+    invoiced: number;
+    received: number;
+    paid: number;
+    outstanding: number;
+    balance: number;
+  }[];
   ctx: PanelContext;
 }) {
   const { t, locale } = ctx;
   const f = t.finance;
   return (
-    <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
       {(
         [
           ["invoiced", f.colInvoiced],
@@ -211,13 +301,18 @@ export function LedgerTotals({
           ["outstanding", f.colOutstanding],
         ] as const
       ).map(([k, label]) => (
-        <Card key={k} className="gap-1.5 p-5">
-          <p className="text-sm font-semibold text-muted-foreground">{label}</p>
-          <div className="flex flex-col gap-0.5 text-xl font-extrabold">
+        <Card key={k} className="min-w-0 gap-1.5 p-4 sm:p-5">
+          <p className="text-xs font-semibold text-muted-foreground sm:text-sm">{label}</p>
+          <div className="flex min-w-0 flex-col gap-0.5 text-base font-extrabold sm:text-xl">
             {totals.length === 0
               ? "—"
               : totals.map((row) => (
-                  <Money key={row.currency} minor={row[k]} currency={row.currency} locale={locale} />
+                  <Money
+                    key={row.currency}
+                    minor={row[k]}
+                    currency={row.currency}
+                    locale={locale}
+                  />
                 ))}
           </div>
         </Card>

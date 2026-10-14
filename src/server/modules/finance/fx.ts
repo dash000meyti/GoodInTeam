@@ -124,7 +124,11 @@ export function updateFxRate(actor: Actor, input: z.output<typeof updateFxRateIn
     .select({ id: fxRates.id })
     .from(fxRates)
     .where(
-      and(eq(fxRates.currency, patch.currency), eq(fxRates.base, row.base), eq(fxRates.date, patch.date)),
+      and(
+        eq(fxRates.currency, patch.currency),
+        eq(fxRates.base, row.base),
+        eq(fxRates.date, patch.date),
+      ),
     )
     .get();
   return db.transaction((tx) => {

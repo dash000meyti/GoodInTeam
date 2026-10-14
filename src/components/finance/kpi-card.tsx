@@ -33,16 +33,21 @@ export function KpiCard({
   className?: string;
 }) {
   return (
-    <Card className={cn("gap-3 p-5", className)}>
+    <Card className={cn("min-w-0 gap-3 p-4 sm:p-5", className)}>
       <div className="flex items-center gap-3">
         {Icon && (
-          <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", tones[tone])}>
+          <span
+            className={cn(
+              "flex size-9 shrink-0 items-center justify-center rounded-xl sm:size-10",
+              tones[tone],
+            )}
+          >
             <Icon className="size-5 rtl:-scale-x-100" />
           </span>
         )}
-        <p className="text-sm font-semibold text-muted-foreground">{label}</p>
+        <p className="min-w-0 text-sm font-semibold text-muted-foreground">{label}</p>
       </div>
-      <div className="text-2xl font-extrabold tracking-tight">{value}</div>
+      <div className="min-w-0 text-xl font-extrabold tracking-tight sm:text-2xl">{value}</div>
       {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
     </Card>
   );

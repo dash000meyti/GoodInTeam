@@ -37,10 +37,23 @@ interface PartyTotals {
   balance: number;
 }
 
-function totalsFrom(rows: { currency: string; field: keyof Omit<PartyTotals, "currency" | "balance">; minor: number }[]) {
+function totalsFrom(
+  rows: {
+    currency: string;
+    field: keyof Omit<PartyTotals, "currency" | "balance">;
+    minor: number;
+  }[],
+) {
   const map = new Map<string, PartyTotals>();
   for (const r of rows) {
-    const t = map.get(r.currency) ?? { currency: r.currency, invoiced: 0, received: 0, paid: 0, outstanding: 0, balance: 0 };
+    const t = map.get(r.currency) ?? {
+      currency: r.currency,
+      invoiced: 0,
+      received: 0,
+      paid: 0,
+      outstanding: 0,
+      balance: 0,
+    };
     t[r.field] += r.minor;
     map.set(r.currency, t);
   }
@@ -95,7 +108,11 @@ export function listCounterparties(actor: Actor) {
         sql`trim(${transactions.counterparty}) <> ''`,
       ),
     )
-    .groupBy(sql`lower(trim(${transactions.counterparty}))`, transactions.kind, transactions.currency)
+    .groupBy(
+      sql`lower(trim(${transactions.counterparty}))`,
+      transactions.kind,
+      transactions.currency,
+    )
     .all();
 
   const clientIds = [...new Set([...inv.map((i) => i.clientId!), ...tx.map((t) => t.clientId!)])];
@@ -118,10 +135,18 @@ export function listCounterparties(actor: Actor) {
       clientKind: c.kind,
       lastActivity: Math.max(0, ...ct.map((t) => Number(t.last) || 0)),
       currencies: totalsFrom([
-        ...ci.map((i) => ({ currency: i.currency, field: "invoiced" as const, minor: i.totalMinor })),
+        ...ci.map((i) => ({
+          currency: i.currency,
+          field: "invoiced" as const,
+          minor: i.totalMinor,
+        })),
         ...ci
           .filter((i) => (openInvoiceStatuses as readonly string[]).includes(i.status))
-          .map((i) => ({ currency: i.currency, field: "outstanding" as const, minor: balanceDue(i) })),
+          .map((i) => ({
+            currency: i.currency,
+            field: "outstanding" as const,
+            minor: balanceDue(i),
+          })),
         ...ct.map((t) => ({
           currency: t.currency,
           field: t.kind === "income" ? ("received" as const) : ("paid" as const),
@@ -151,7 +176,9 @@ export function listCounterparties(actor: Actor) {
       })),
     ),
   }));
-  return [...out, ...partyOut].sort((a, b) => b.lastActivity - a.lastActivity || a.name.localeCompare(b.name));
+  return [...out, ...partyOut].sort(
+    (a, b) => b.lastActivity - a.lastActivity || a.name.localeCompare(b.name),
+  );
 }
 
 function txEvents(where: ReturnType<typeof and>, mode: "party" | "project"): LedgerLine[] {
@@ -238,7 +265,10 @@ function invoicesOf(where: ReturnType<typeof and>) {
     .map((i) => ({ ...i, dueMinor: i.status === "void" ? 0 : balanceDue(i) }));
 }
 
-function summarize(groups: ReturnType<typeof runningLedger<LedgerLine>>, invs: { currency: string; status: string; totalMinor: number; paidMinor: number }[]) {
+function summarize(
+  groups: ReturnType<typeof runningLedger<LedgerLine>>,
+  invs: { currency: string; status: string; totalMinor: number; paidMinor: number }[],
+) {
   const outstanding = sumByCurrency(
     invs
       .filter((i) => (openInvoiceStatuses as readonly string[]).includes(i.status))
@@ -247,7 +277,9 @@ function summarize(groups: ReturnType<typeof runningLedger<LedgerLine>>, invs: {
   return groups.map((g) => ({
     currency: g.currency,
     invoiced: g.lines.filter((l) => l.type === "invoice").reduce((s, l) => s + l.debit, 0),
-    received: g.lines.filter((l) => l.type === "received").reduce((s, l) => s + l.credit + l.debit, 0),
+    received: g.lines
+      .filter((l) => l.type === "received")
+      .reduce((s, l) => s + l.credit + l.debit, 0),
     paid: g.lines.filter((l) => l.type === "paid").reduce((s, l) => s + l.debit + l.credit, 0),
     outstanding: outstanding.find((o) => o.currency === g.currency)?.minor ?? 0,
     balance: g.balance,
@@ -299,7 +331,10 @@ export function listProjectLedgers(actor: Actor) {
   const stats = projectStats(rows.map((r) => r.id));
   return rows
     .map((r) => ({ ...r, stats: stats.get(r.id)! }))
-    .filter((r) => r.stats && (r.stats.income.length || r.stats.expense.length || r.stats.invoiced.length));
+    .filter(
+      (r) =>
+        r.stats && (r.stats.income.length || r.stats.expense.length || r.stats.invoiced.length),
+    );
 }
 
 /** Project cash ledger: income (+) / expense (−) with running net per currency + invoices. */
@@ -334,13 +369,22 @@ export function getProjectLedger(actor: Actor, projectId: string) {
  * - clientView (client users, or admins previewing): only non-draft invoices and
  *   the client's payments, and only when the project shares finance.
  */
-export function getProjectFinance(actor: Actor, projectId: string, opts: { clientView?: boolean } = {}) {
+export function getProjectFinance(
+  actor: Actor,
+  projectId: string,
+  opts: { clientView?: boolean } = {},
+) {
   const asClient = opts.clientView || actor.user.role === "client";
   if (asClient) {
     if (actor.user.role === "client") assertCanSeeProjectFinance(actor, projectId);
     else assertAdmin(actor);
     const p = db
-      .select({ id: projects.id, clientId: projects.clientId, shareFinance: projects.shareFinance, currency: projects.currency })
+      .select({
+        id: projects.id,
+        clientId: projects.clientId,
+        shareFinance: projects.shareFinance,
+        currency: projects.currency,
+      })
       .from(projects)
       .where(eq(projects.id, projectId))
       .get();

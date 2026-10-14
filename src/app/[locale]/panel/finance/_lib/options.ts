@@ -4,7 +4,11 @@ import type { Actor } from "@/server/auth/actor";
 import { clientOptions } from "@/server/modules/clients/service";
 import { minorToMajor } from "@/server/modules/finance/calc";
 import { latestRates } from "@/server/modules/finance/fx";
-import { accountOptions, categoryOptions, type TransactionRow } from "@/server/modules/finance/service";
+import {
+  accountOptions,
+  categoryOptions,
+  type TransactionRow,
+} from "@/server/modules/finance/service";
 import { projectOptions } from "@/server/modules/projects/service";
 
 /** Pickers + FX data used by the transaction dialog (and other finance forms). */
@@ -13,7 +17,12 @@ export function txFormOptions(actor: Actor) {
   return {
     accounts: accountOptions(actor),
     categories: categoryOptions(actor),
-    projects: projectOptions(actor).map((p) => ({ id: p.id, name: p.name, color: p.color, clientId: p.clientId })),
+    projects: projectOptions(actor).map((p) => ({
+      id: p.id,
+      name: p.name,
+      color: p.color,
+      clientId: p.clientId,
+    })),
     clients: clientOptions(actor),
     base,
     rates,

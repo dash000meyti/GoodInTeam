@@ -53,7 +53,13 @@ export function InvoiceActions({
   publicUrl,
   accounts,
 }: {
-  invoice: { id: string; number: string; status: InvoiceStatus; currency: string; dueMinor: number };
+  invoice: {
+    id: string;
+    number: string;
+    status: InvoiceStatus;
+    currency: string;
+    dueMinor: number;
+  };
   publicUrl: string | null;
   accounts: PaymentAccount[];
 }) {
@@ -80,14 +86,20 @@ export function InvoiceActions({
     <>
       {invoice.status === "draft" ? (
         <Button onClick={send} disabled={sending}>
-          {sending ? <Loader2Icon className="animate-spin" /> : <SendIcon className="rtl:-scale-x-100" />}
+          {sending ? (
+            <Loader2Icon className="animate-spin" />
+          ) : (
+            <SendIcon className="rtl:-scale-x-100" />
+          )}
           {f.sendInvoice}
         </Button>
       ) : (
         publicUrl && (
           <Button
             variant="outline"
-            onClick={async () => toast.success((await copy(publicUrl)) ? t.common.copied : publicUrl)}
+            onClick={async () =>
+              toast.success((await copy(publicUrl)) ? t.common.copied : publicUrl)
+            }
           >
             <CopyIcon /> {f.copyLink}
           </Button>

@@ -25,7 +25,10 @@ export function InvoiceStatusBadge({
   className?: string;
 }) {
   return (
-    <Badge variant={variants[status]} className={cn(status === "void" && "line-through", className)}>
+    <Badge
+      variant={variants[status]}
+      className={cn(status === "void" && "line-through", className)}
+    >
       {t[`inv_${status}`]}
     </Badge>
   );

@@ -123,7 +123,9 @@ export function InvoiceDocument({
               <>
                 <p className="text-base font-bold">{invoice.client.name}</p>
                 {invoice.client.address && (
-                  <p className="whitespace-pre-line text-muted-foreground">{invoice.client.address}</p>
+                  <p className="whitespace-pre-line text-muted-foreground">
+                    {invoice.client.address}
+                  </p>
                 )}
                 {invoice.client.email && (
                   <p className="text-muted-foreground">
@@ -163,8 +165,27 @@ export function InvoiceDocument({
           </dl>
         </section>
 
-        <div className="-mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0">
-          <table className="w-full min-w-[520px] text-sm">
+        <ul className="divide-y divide-dashed border-y border-foreground/10 sm:hidden print:hidden">
+          {invoice.items.map((it) => (
+            <li key={it.id} className="flex items-start justify-between gap-4 py-3 text-sm">
+              <span className="min-w-0">
+                <span className="block font-medium whitespace-pre-line">{it.description}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {formatNumber(it.quantity, locale, { maximumFractionDigits: 2 })} ×{" "}
+                  <Money minor={it.unitPriceMinor} currency={cur} locale={locale} />
+                </span>
+              </span>
+              <Money
+                minor={it.amountMinor}
+                currency={cur}
+                locale={locale}
+                className="shrink-0 font-semibold"
+              />
+            </li>
+          ))}
+        </ul>
+        <div className="hidden sm:block print:block">
+          <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-foreground/10 text-xs text-muted-foreground">
                 <th className="w-8 py-2 text-start font-semibold">#</th>
@@ -197,11 +218,13 @@ export function InvoiceDocument({
         </div>
 
         <section className="flex flex-col-reverse gap-8 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1 space-y-2 text-sm">
-            {invoice.notes && (
-              <p className="whitespace-pre-line text-muted-foreground">{invoice.notes}</p>
-            )}
-          </div>
+          {invoice.notes ? (
+            <p className="min-w-0 flex-1 text-sm whitespace-pre-line text-muted-foreground">
+              {invoice.notes}
+            </p>
+          ) : (
+            <span aria-hidden className="hidden sm:block" />
+          )}
           <dl className="w-full space-y-2 text-sm sm:w-80">
             <Row label={f.subtotal}>
               <Money minor={invoice.subtotalMinor} currency={cur} locale={locale} />
