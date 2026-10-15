@@ -11,15 +11,12 @@ import {
   inArray,
   isNull,
   lt,
-  lte,
-  ne,
   notInArray,
   sql,
 } from "drizzle-orm";
 import { db } from "@/server/db/client";
 import {
   contracts,
-  events,
   invoices,
   leads,
   projects,
@@ -27,7 +24,11 @@ import {
   timeEntries,
   transactions,
 } from "@/server/db/schema";
-import { isAdmin, type Actor } from "@/server/auth/actor";
+import { assertStaff, isAdmin, type Actor } from "@/server/auth/actor";
+import { listCalendarItems } from "@/server/modules/calendar/service";
+import { projectAccessWhere } from "@/server/modules/projects/service";
+import { overdueTaskWhere, taskAccessWhere } from "@/server/modules/tasks/service";
+import { isOverdue } from "@/lib/due";
 import {
   addDays,
   calendarFor,
@@ -38,6 +39,7 @@ import {
 } from "@/lib/tz";
 
 const OPEN_TASK = ["done", "canceled", "someday"] as const;
+const UPCOMING_LIMIT = 8;
 
 /** Sum of tracked ms for a user in [from, to), counting running timers up to `now`. */
 function trackedMs(userId: string, from: Date, to: Date, now: number) {
@@ -57,10 +59,17 @@ function trackedMs(userId: string, from: Date, to: Date, now: number) {
   return Math.max(0, row?.ms ?? 0);
 }
 
+/**
+ * Staff home page data. Everything is scoped to what the actor may see:
+ * tasks via `taskAccessWhere` (members: their projects' tasks + own/assigned
+ * personal tasks), projects via `projectAccessWhere`, events via the calendar
+ * service (access + recurring occurrences). Money/contracts/leads: admins only.
+ */
 export async function staffDashboard(
   actor: Actor,
   opts: { tz: string; locale: "fa" | "en"; now: number },
 ) {
+  assertStaff(actor);
   const { tz, locale, now } = opts;
   const today = startOfDay(now, tz);
   const tomorrow = addDays(today, 1, tz);
@@ -74,41 +83,59 @@ export async function staffDashboard(
     orderBy: asc(timeEntries.startedAt),
   });
 
-  const openTaskWhere = notInArray(tasks.status, [...OPEN_TASK]);
+  const visibleTasks = taskAccessWhere(actor);
+  const openTaskWhere = and(visibleTasks, notInArray(tasks.status, [...OPEN_TASK]));
   const openTasks = db.select({ n: count() }).from(tasks).where(openTaskWhere).get()?.n ?? 0;
   const overdue =
     db
       .select({ n: count() })
       .from(tasks)
-      .where(and(openTaskWhere, lt(tasks.dueAt, today)))
+      .where(and(visibleTasks, overdueTaskWhere(now, today)))
       .get()?.n ?? 0;
-  const dueTodayList = await db.query.tasks.findMany({
+  const dueTodayRows = await db.query.tasks.findMany({
     where: and(openTaskWhere, lt(tasks.dueAt, tomorrow)),
     with: { project: { columns: { name: true, color: true } } },
     orderBy: [asc(tasks.dueAt), desc(tasks.priority)],
     limit: 8,
   });
+  const dueToday = dueTodayRows.map((task) => ({
+    ...task,
+    // All-day: overdue only after the due day ends; timed: after the instant.
+    overdue: isOverdue(task.dueAt, { allDay: task.dueAllDay, now, tz }),
+  }));
 
-  const upcoming = await db.query.events.findMany({
-    where: and(
-      gte(events.startAt, new Date(now - 60 * 60_000)),
-      lte(events.startAt, nextWeek),
-      ne(events.status, "canceled"),
-    ),
-    with: {
-      project: { columns: { name: true, color: true } },
-      client: { columns: { name: true } },
-    },
-    orderBy: asc(events.startAt),
-    limit: 8,
-  });
+  // Recurring series are expanded by the calendar service (next occurrences show up).
+  const upcoming = listCalendarItems(actor, {
+    from: now - 60 * 60_000,
+    to: nextWeek.getTime(),
+    sources: ["events", "commitments"],
+  })
+    .filter((item) => item.status !== "canceled")
+    .slice(0, UPCOMING_LIMIT)
+    .map((item) => ({
+      key: item.key,
+      title: item.title,
+      start: item.start,
+      allDay: item.allDay,
+      color: item.color,
+      project: item.project,
+      client: item.client,
+    }));
 
+  const activeWhere = and(
+    projectAccessWhere(actor),
+    inArray(projects.status, ["active", "planning"]),
+    isNull(projects.archivedAt),
+  );
   const activeProjects = await db.query.projects.findMany({
-    where: and(inArray(projects.status, ["active", "planning"]), isNull(projects.archivedAt)),
+    where: activeWhere,
+    columns: { id: true, name: true, color: true, progress: true, status: true },
     with: { client: { columns: { name: true } } },
     orderBy: [desc(projects.updatedAt)],
     limit: 6,
   });
+  const activeProjectCount =
+    db.select({ n: count() }).from(projects).where(activeWhere).get()?.n ?? 0;
 
   const money = isAdmin(actor)
     ? db
@@ -163,9 +190,10 @@ export async function staffDashboard(
     weekMs: trackedMs(actor.user.id, week, tomorrow, now),
     openTasks,
     overdue,
-    dueToday: dueTodayList,
+    dueToday,
     upcoming,
     activeProjects,
+    activeProjectCount,
     money,
     unpaidInvoices,
     pendingContracts,

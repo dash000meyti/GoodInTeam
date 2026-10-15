@@ -73,8 +73,26 @@ describe("smart lists", () => {
     expect(matchesFilters(t, { ...f, tag: "web" })).toBe(false);
   });
 
+  it("groups today: only tasks flagged overdue go in the overdue group", () => {
+    const opts = { todayKey: today, dayLabels: {}, overdueLabel: "Overdue", todayLabel: "Today" };
+    // All-day task due today: not overdue until the day ends.
+    const allDayToday = task({ dueKey: today, overdue: false, dueToday: true });
+    // Timed task due earlier today whose time has passed: overdue.
+    const timedPast = task({ dueKey: today, overdue: true, dueToday: true });
+    const yesterday = task({ dueKey: "2026-10-13", overdue: true });
+    const groups = groupTasks("today", [allDayToday, timedPast, yesterday], opts);
+    expect(groups.map((g) => [g.key, g.tasks.map((t) => t.id)])).toEqual([
+      ["overdue", [timedPast.id, yesterday.id]],
+      ["today", [allDayToday.id]],
+    ]);
+    // Nothing overdue → a single unlabeled group.
+    expect(groupTasks("today", [allDayToday], opts)).toEqual([
+      { key: "today", label: null, tasks: [allDayToday] },
+    ]);
+  });
+
   it("groups today (overdue first) and upcoming by day", () => {
-    const a = task({ dueKey: "2026-10-12" });
+    const a = task({ dueKey: "2026-10-12", overdue: true });
     const b = task({ dueKey: today, priority: 3 });
     const opts = {
       todayKey: today,

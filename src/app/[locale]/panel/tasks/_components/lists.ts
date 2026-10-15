@@ -32,6 +32,7 @@ export interface TaskView {
   /** "YYYY-MM-DD" in the app timezone. */
   dueKey: string | null;
   dueLabel: string | null;
+  /** Past due: all-day → after the due day ends; timed → after the instant (`isOverdue`). */
   overdue: boolean;
   dueToday: boolean;
   hasReminder: boolean;
@@ -124,8 +125,11 @@ export function groupTasks(
   },
 ): TaskGroup[] {
   if (list === "today") {
-    const overdue = tasks.filter((t) => t.dueKey! < opts.todayKey);
-    const today = tasks.filter((t) => t.dueKey! >= opts.todayKey);
+    // `overdue` comes from the server (`isOverdue`): all-day tasks only after their day
+    // ends, timed tasks once the time has passed — so a task due today isn't "overdue"
+    // from 00:00, but one due today at 09:00 is at 14:00.
+    const overdue = tasks.filter((t) => t.overdue);
+    const today = tasks.filter((t) => !t.overdue);
     return [
       ...(overdue.length
         ? [{ key: "overdue", label: opts.overdueLabel, tone: "overdue" as const, tasks: overdue }]

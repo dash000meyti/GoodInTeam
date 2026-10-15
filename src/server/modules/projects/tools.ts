@@ -18,7 +18,7 @@ export const projectsTools = [
     name: "projects_list",
     title: "List projects",
     description:
-      "List projects the caller can access, with client, status, progress (0-100) and tracked time (ms). Filter by status, clientId or free-text q.",
+      "List projects the caller can access, with client, status, progress (0-100) and tracked time (ms). Filter by status, clientId or free-text q. Budget, hourly rate and share token are returned to owner/admin only; for client users progress / trackedMs are null unless the project shares them.",
     input: listProjectsInput,
     scope: "read",
     handler: (input, actor) => svc.listProjects(actor, input),
@@ -27,7 +27,7 @@ export const projectsTools = [
     name: "projects_get",
     title: "Get project",
     description:
-      "Full project details: milestones, client-visible updates feed, tracked/billable time and (admins) income/expense totals.",
+      "Full project details: milestones, client-visible updates feed, tracked/billable time and (admins) income/expense totals. Money fields and the share token are admin-only.",
     input: z.object({ id: zId }),
     scope: "read",
     handler: ({ id }, actor) => svc.getProject(actor, id),
@@ -46,7 +46,7 @@ export const projectsTools = [
     name: "projects_update",
     title: "Update project",
     description:
-      "Update any project field (partial). Includes client-portal visibility flags (portalEnabled, shareProgress, shareTime, shareTasks, shareFinance, shareDocs).",
+      "Update project fields (partial): only the fields you send change. Send null to clear startDate, dueDate, budget, hourlyRate, estimateHours, clientId, description or URLs. Money is in major units of the project's currency (or of `currency` when you change it). Includes client-portal visibility flags (portalEnabled, shareProgress, shareTime, shareTasks, shareFinance, shareDocs).",
     input: updateProjectInput,
     scope: "write",
     roles: [...ADMIN],
@@ -65,7 +65,8 @@ export const projectsTools = [
   defineTool({
     name: "projects_update_milestone",
     title: "Update milestone",
-    description: "Update a milestone (e.g. set status to 'done').",
+    description:
+      "Update a milestone (partial: only the fields you send change, e.g. {id, status: 'done'}). dueDate null clears it.",
     input: updateMilestoneInput,
     scope: "write",
     roles: [...ADMIN],

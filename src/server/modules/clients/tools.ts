@@ -38,7 +38,8 @@ export const clientsTools = [
   defineTool({
     name: "clients_update",
     title: "Update client",
-    description: "Update client fields (partial).",
+    description:
+      "Update client fields (partial: only the fields you send change; null clears optional fields). defaultCurrency must be a supported code.",
     input: updateClientInput,
     scope: "write",
     roles: [...ADMIN],

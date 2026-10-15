@@ -16,7 +16,7 @@ import { logActivity } from "@/server/activity";
 import { forbidden, notFound } from "@/server/errors";
 import { appTimezone } from "@/server/modules/settings/service";
 import { newToken } from "@/lib/ids";
-import { isCurrency, toMinor } from "@/lib/money";
+import { fromMinor, isCurrency, toMinor, type CurrencyCode } from "@/lib/money";
 import { fromDateInput } from "@/lib/tz";
 import { slugify } from "@/lib/utils";
 import type {
@@ -27,6 +27,8 @@ import type {
   updateMilestoneInput,
   updateProjectInput,
 } from "./schemas";
+
+type ProjectRow = typeof projects.$inferSelect;
 
 // ─── Access control ─────────────────────────────────────────────────────────
 
@@ -58,14 +60,76 @@ export function assertProjectRead(actor: Actor, projectId: string) {
   if (!row) throw notFound("Project");
 }
 
+const isClientActor = (actor: Actor) => actor.user.role === "client";
+
+/** Clients see tracked time only when the project shares it; staff always. */
+function canSeeTime(actor: Actor, p: Pick<ProjectRow, "shareTime">) {
+  return !isClientActor(actor) || p.shareTime;
+}
+
+/** Clients see progress/milestones only when the project shares it; staff always. */
+function canSeeProgress(actor: Actor, p: Pick<ProjectRow, "shareProgress">) {
+  return !isClientActor(actor) || p.shareProgress;
+}
+
+/** Fields `projectView` may blank out (null / []) depending on the viewer. */
+interface RedactedProjectFields {
+  budgetMinor: number | null;
+  hourlyRateMinor: number | null;
+  shareToken: string | null;
+  progress: number | null;
+  estimateHours: number | null;
+  repoUrl: string | null;
+  tags: string[];
+}
+
+/**
+ * What a viewer may see of a project row (applied server-side, so pages, REST
+ * and MCP all get the same answer):
+ * - owner/admin: everything.
+ * - member: no money (budget, hourly rate) and no public share token.
+ * - client: additionally no internal fields (repo, tags); progress only with
+ *   `shareProgress`, estimate only with `shareTime`.
+ */
+export function projectView<T extends ProjectRow>(
+  actor: Actor,
+  p: T,
+): Omit<T, keyof RedactedProjectFields> & RedactedProjectFields {
+  const admin = isAdmin(actor);
+  const client = isClientActor(actor);
+  return {
+    ...p,
+    budgetMinor: admin ? p.budgetMinor : null,
+    hourlyRateMinor: admin ? p.hourlyRateMinor : null,
+    shareToken: admin ? p.shareToken : null,
+    progress: canSeeProgress(actor, p) ? p.progress : null,
+    estimateHours: client && !p.shareTime ? null : p.estimateHours,
+    repoUrl: client ? null : p.repoUrl,
+    tags: client ? [] : p.tags,
+  };
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function dayToDate(v: string | undefined | null) {
-  if (!v) return null;
+/** "YYYY-MM-DD" → start of that day in the app timezone; ISO date-times as-is. */
+function dayToDate(v: string) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return fromDateInput(v, undefined, appTimezone());
   const d = new Date(v);
   return Number.isNaN(d.getTime()) ? null : d;
 }
+
+/** Nullable day field: undefined = untouched (omitted), null = clear. */
+const dayField = (v: string | null) => (v === null ? null : dayToDate(v));
+
+/** Drop `undefined` values so a patch only contains the keys the caller sent. */
+function definedOnly<T extends Record<string, unknown>>(o: T) {
+  return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as {
+    [K in keyof T]?: Exclude<T[K], undefined>;
+  };
+}
+
+const currencyOf = (v: string): CurrencyCode => (isCurrency(v) ? v : "IRT");
+const clampProgress = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
 
 function uniqueSlug(name: string, excludeId?: string) {
   const base = slugify(name) || "project";
@@ -81,17 +145,49 @@ function uniqueSlug(name: string, excludeId?: string) {
   }
 }
 
-function toRow(input: Partial<z.output<typeof projectInput>>) {
-  const currency = input.currency && isCurrency(input.currency) ? input.currency : "IRT";
-  const { budget, hourlyRate, startDate, dueDate, ...rest } = input;
+/** Insert values for a new project (defaults come from the create schema). */
+function createRow(input: z.output<typeof projectInput>) {
+  const { budget, hourlyRate, startDate, dueDate, progress, ...rest } = input;
+  const currency = currencyOf(input.currency);
   return {
-    ...rest,
-    ...(startDate !== undefined && { startDate: dayToDate(startDate) }),
-    ...(dueDate !== undefined && { dueDate: dayToDate(dueDate) }),
-    ...(budget !== undefined && { budgetMinor: toMinor(budget, currency) }),
-    ...(hourlyRate !== undefined && { hourlyRateMinor: toMinor(hourlyRate, currency) }),
-    ...(rest.progress !== undefined && { progress: Math.max(0, Math.min(100, rest.progress)) }),
+    ...definedOnly(rest),
+    startDate: startDate ? dayToDate(startDate) : null,
+    dueDate: dueDate ? dayToDate(dueDate) : null,
+    budgetMinor: budget !== undefined ? toMinor(budget, currency) : null,
+    hourlyRateMinor: hourlyRate !== undefined ? toMinor(hourlyRate, currency) : null,
+    progress: progress !== undefined ? clampProgress(progress) : 0,
   };
+}
+
+/**
+ * Patch for a partial update: only keys present in `input` are written
+ * (`undefined` = untouched, `null` = clear). Money is converted with the new
+ * currency, or the project's current one when the currency isn't changing;
+ * changing only the currency keeps the amounts' major-unit values.
+ */
+function projectPatch(
+  input: Omit<z.output<typeof updateProjectInput>, "id">,
+  current: Pick<ProjectRow, "currency" | "budgetMinor" | "hourlyRateMinor">,
+) {
+  const { budget, hourlyRate, startDate, dueDate, progress, ...rest } = input;
+  const oldCurrency = currencyOf(current.currency);
+  const currency = input.currency ?? oldCurrency;
+  const money = (value: number | null | undefined, currentMinor: number | null) =>
+    value !== undefined
+      ? value === null
+        ? null
+        : toMinor(value, currency)
+      : currentMinor != null && currency !== oldCurrency
+        ? toMinor(fromMinor(currentMinor, oldCurrency), currency)
+        : undefined;
+  return definedOnly({
+    ...rest,
+    startDate: startDate === undefined ? undefined : dayField(startDate),
+    dueDate: dueDate === undefined ? undefined : dayField(dueDate),
+    budgetMinor: money(budget, current.budgetMinor),
+    hourlyRateMinor: money(hourlyRate, current.hourlyRateMinor),
+    progress: progress === undefined ? undefined : clampProgress(progress),
+  });
 }
 
 // ─── Queries ────────────────────────────────────────────────────────────────
@@ -116,10 +212,11 @@ export async function listProjects(actor: Actor, input: z.output<typeof listProj
       desc(projects.updatedAt),
     ],
   });
-  const ids = rows.map((r) => r.id);
-  const tracked = ids.length
-    ? new Map(
-        db
+  // Only aggregate time for projects whose time the viewer may see.
+  const ids = rows.filter((r) => canSeeTime(actor, r)).map((r) => r.id);
+  const tracked = new Map<string | null, number>(
+    ids.length
+      ? db
           .select({
             projectId: timeEntries.projectId,
             ms: sql<number>`sum(coalesce(${timeEntries.endedAt}, ${Date.now()}) - ${timeEntries.startedAt})`,
@@ -128,10 +225,14 @@ export async function listProjects(actor: Actor, input: z.output<typeof listProj
           .where(inArray(timeEntries.projectId, ids))
           .groupBy(timeEntries.projectId)
           .all()
-          .map((r) => [r.projectId, r.ms]),
-      )
-    : new Map();
-  return rows.map((r) => ({ ...r, trackedMs: (tracked.get(r.id) as number | undefined) ?? 0 }));
+          .map((r) => [r.projectId, r.ms] as const)
+      : [],
+  );
+  return rows.map((r) => ({
+    ...projectView(actor, r),
+    /** Tracked ms; null when the viewer may not see time (client without `shareTime`). */
+    trackedMs: canSeeTime(actor, r) ? (tracked.get(r.id) ?? 0) : null,
+  }));
 }
 
 /** Minimal list for <select> pickers (respects access). */
@@ -152,27 +253,44 @@ export function projectOptions(actor: Actor) {
 }
 
 export async function getProject(actor: Actor, id: string) {
-  const project = await db.query.projects.findFirst({
+  const row = await db.query.projects.findFirst({
     where: and(eq(projects.id, id), projectAccessWhere(actor)),
     with: {
       client: true,
       members: { with: { user: { columns: { id: true, name: true, email: true } } } },
     },
   });
-  if (!project) throw notFound("Project");
-  const isClient = actor.user.role === "client";
+  if (!row) throw notFound("Project");
+  const admin = isAdmin(actor);
+  const isClient = isClientActor(actor);
+  const { client, members, ...rest } = row;
+  const project = {
+    ...projectView(actor, rest),
+    // Client records (contact details, tax id, notes) are admin-only data.
+    client: client
+      ? admin
+        ? client
+        : { id: client.id, name: client.name, color: client.color, logoUrl: client.logoUrl }
+      : null,
+    // Team list is staff-only; per-member cost is admin-only.
+    members: isClient
+      ? []
+      : members.map((m) => ({ ...m, hourlyCostMinor: admin ? m.hourlyCostMinor : null })),
+  };
 
-  const ms = db
-    .select()
-    .from(milestones)
-    .where(
-      and(
-        eq(milestones.projectId, id),
-        isClient ? eq(milestones.visibleToClient, true) : undefined,
-      ),
-    )
-    .orderBy(asc(milestones.sort), asc(milestones.dueDate))
-    .all();
+  const ms = canSeeProgress(actor, row)
+    ? db
+        .select()
+        .from(milestones)
+        .where(
+          and(
+            eq(milestones.projectId, id),
+            isClient ? eq(milestones.visibleToClient, true) : undefined,
+          ),
+        )
+        .orderBy(asc(milestones.sort), asc(milestones.dueDate))
+        .all()
+    : [];
   const updates = await db.query.projectUpdates.findMany({
     where: and(
       eq(projectUpdates.projectId, id),
@@ -184,16 +302,18 @@ export async function getProject(actor: Actor, id: string) {
   });
 
   const now = Date.now();
-  const time = db
-    .select({
-      totalMs: sql<number>`coalesce(sum(coalesce(${timeEntries.endedAt}, ${now}) - ${timeEntries.startedAt}), 0)`,
-      billableMs: sql<number>`coalesce(sum(case when ${timeEntries.billable} then coalesce(${timeEntries.endedAt}, ${now}) - ${timeEntries.startedAt} else 0 end), 0)`,
-    })
-    .from(timeEntries)
-    .where(eq(timeEntries.projectId, id))
-    .get() ?? { totalMs: 0, billableMs: 0 };
+  const time = canSeeTime(actor, row)
+    ? (db
+        .select({
+          totalMs: sql<number>`coalesce(sum(coalesce(${timeEntries.endedAt}, ${now}) - ${timeEntries.startedAt}), 0)`,
+          billableMs: sql<number>`coalesce(sum(case when ${timeEntries.billable} then coalesce(${timeEntries.endedAt}, ${now}) - ${timeEntries.startedAt} else 0 end), 0)`,
+        })
+        .from(timeEntries)
+        .where(eq(timeEntries.projectId, id))
+        .get() ?? { totalMs: 0, billableMs: 0 })
+    : null;
 
-  const money = isAdmin(actor)
+  const money = admin
     ? db
         .select({
           kind: transactions.kind,
@@ -213,8 +333,8 @@ export async function getProject(actor: Actor, id: string) {
     milestones: ms,
     updates,
     stats: {
-      trackedMs: !isClient || project.shareTime ? time.totalMs : null,
-      billableMs: !isClient || project.shareTime ? time.billableMs : null,
+      trackedMs: time ? time.totalMs : null,
+      billableMs: time ? time.billableMs : null,
       money,
     },
   };
@@ -226,19 +346,38 @@ export function createProject(actor: Actor, input: z.output<typeof projectInput>
   assertAdmin(actor);
   const row = db
     .insert(projects)
-    .values({ ...toRow(input), name: input.name, slug: uniqueSlug(input.name) })
+    .values({ ...createRow(input), name: input.name, slug: uniqueSlug(input.name) })
     .returning()
     .get();
   logActivity(actor, "project.create", "project", row.id, row.name);
   return row;
 }
 
+/** Partial update — only the keys present in `input` change (see `projectPatch`). */
 export function updateProject(actor: Actor, { id, ...input }: z.output<typeof updateProjectInput>) {
   assertAdmin(actor);
-  const patch = toRow(input);
+  const current = db
+    .select({
+      name: projects.name,
+      currency: projects.currency,
+      budgetMinor: projects.budgetMinor,
+      hourlyRateMinor: projects.hourlyRateMinor,
+    })
+    .from(projects)
+    .where(eq(projects.id, id))
+    .get();
+  if (!current) throw notFound("Project");
+  const patch = projectPatch(input, current);
   const row = db
     .update(projects)
-    .set({ ...patch, ...(input.name ? { slug: uniqueSlug(input.name, id) } : {}) })
+    .set({
+      ...patch,
+      // Keep URLs stable: only re-slug when the name actually changes.
+      ...(patch.name !== undefined && patch.name !== current.name
+        ? { slug: uniqueSlug(patch.name, id) }
+        : {}),
+      updatedAt: new Date(),
+    })
     .where(eq(projects.id, id))
     .returning()
     .get();
@@ -333,7 +472,7 @@ export function addMilestone(actor: Actor, input: z.output<typeof milestoneInput
     .insert(milestones)
     .values({
       ...input,
-      dueDate: dayToDate(input.dueDate),
+      dueDate: input.dueDate ? dayToDate(input.dueDate) : null,
       sort: (max?.s ?? 0) + 1,
       completedAt: input.status === "done" ? new Date() : null,
     })
@@ -344,17 +483,26 @@ export function addMilestone(actor: Actor, input: z.output<typeof milestoneInput
   return row;
 }
 
+/** Partial update — only the keys present in `input` change. */
 export function updateMilestone(
   actor: Actor,
   { id, dueDate, ...input }: z.output<typeof updateMilestoneInput>,
 ) {
   assertAdmin(actor);
+  const current = db
+    .select({ status: milestones.status })
+    .from(milestones)
+    .where(eq(milestones.id, id))
+    .get();
+  if (!current) throw notFound("Milestone");
+  const statusChanged = input.status !== undefined && input.status !== current.status;
   const row = db
     .update(milestones)
     .set({
-      ...input,
-      ...(dueDate !== undefined && { dueDate: dayToDate(dueDate) }),
-      ...(input.status && { completedAt: input.status === "done" ? new Date() : null }),
+      ...definedOnly(input),
+      ...(dueDate !== undefined && { dueDate: dayField(dueDate) }),
+      ...(statusChanged && { completedAt: input.status === "done" ? new Date() : null }),
+      updatedAt: new Date(),
     })
     .where(eq(milestones.id, id))
     .returning()

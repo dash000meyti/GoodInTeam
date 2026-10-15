@@ -14,8 +14,8 @@ import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/panel/empty-state";
 import { format } from "@/i18n/format-message";
 import { formatDayLabel } from "@/lib/day-label";
+import { isOverdue } from "@/lib/due";
 import { formatNumber, formatPercent, formatTime } from "@/lib/format";
-import { startOfDay, toDateInputValue } from "@/lib/tz";
 import { isStaff } from "@/server/auth/actor";
 import { AppError } from "@/server/errors";
 import { projectTasks } from "@/server/modules/tasks/service";
@@ -45,11 +45,8 @@ export async function ProjectTasksPanel({
   if (!list) return null;
   const readOnly = clientView || !isStaff(actor);
   const visible = clientView ? list.filter((task) => task.visibleToClient) : list;
-  const todayKey = toDateInputValue(startOfDay(now, tz), tz);
-
   const items: ProjectTaskItem[] = visible.map((task) => {
-    const dueKey = task.dueAt ? toDateInputValue(task.dueAt, tz) : null;
-    const done = task.status === "done";
+    const finished = task.status === "done" || task.status === "canceled";
     return {
       id: task.id,
       title: task.title,
@@ -58,7 +55,7 @@ export async function ProjectTasksPanel({
       dueLabel: task.dueAt
         ? `${formatDayLabel(task.dueAt, { ...fmt, short: true })}${task.dueAllDay ? "" : ` ${formatTime(task.dueAt, fmt)}`}`
         : null,
-      overdue: !done && !!dueKey && dueKey < todayKey,
+      overdue: !finished && isOverdue(task.dueAt, { allDay: task.dueAllDay, now, tz }),
       visibleToClient: task.visibleToClient,
       assignee: readOnly ? null : (task.assignee?.name ?? null),
       subtasks: task.subtasks.total

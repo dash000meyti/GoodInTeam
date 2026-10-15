@@ -171,6 +171,21 @@ function dayBounds(now: number, tz: string) {
   return { today, tomorrow, upcomingEnd: addDays(tomorrow, UPCOMING_DAYS, tz) };
 }
 
+/**
+ * Active tasks whose due date has passed (mirrors `isOverdue` in `src/lib/due.ts`):
+ * all-day tasks once their day has ended (`dueAt` < start of today in the app
+ * timezone), timed tasks once the instant has passed.
+ */
+export function overdueTaskWhere(now: number, todayStart: Date) {
+  return and(
+    inArray(tasks.status, [...ACTIVE_STATUSES]),
+    or(
+      and(eq(tasks.dueAllDay, true), lt(tasks.dueAt, todayStart)),
+      and(eq(tasks.dueAllDay, false), lt(tasks.dueAt, new Date(now))),
+    ),
+  );
+}
+
 function listWhere(list: SmartList | undefined, b: ReturnType<typeof dayBounds>) {
   switch (list) {
     case "inbox":
@@ -266,7 +281,7 @@ export function smartListCounts(actor: Actor, now = Date.now()) {
   return {
     inbox: n(listWhere("inbox", b)),
     today: n(listWhere("today", b)),
-    overdue: n(and(inArray(tasks.status, [...ACTIVE_STATUSES]), lt(tasks.dueAt, b.today))),
+    overdue: n(overdueTaskWhere(now, b.today)),
     upcoming: n(listWhere("upcoming", b)),
     anytime: n(listWhere("anytime", b)),
     waiting: n(listWhere("waiting", b)),

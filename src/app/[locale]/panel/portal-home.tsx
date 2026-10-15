@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { and, eq, isNull } from "drizzle-orm";
 import { FolderKanbanIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -8,22 +7,14 @@ import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { formatDate, formatPercent } from "@/lib/format";
 import { markdownToText } from "@/lib/markdown";
-import { db } from "@/server/db/client";
-import { projects } from "@/server/db/schema";
+import { listProjects } from "@/server/modules/projects/service";
 import type { PanelContext } from "@/server/page-context";
 
-/** Client-role landing page: their shared projects with progress. */
+/** Client-role landing page: their shared projects with progress (when shared). */
 export async function ClientPortalHome({ ctx }: { ctx: PanelContext }) {
   const { t, fmt, locale, actor, href } = ctx;
-  const list = actor.user.clientId
-    ? await db.query.projects.findMany({
-        where: and(
-          eq(projects.clientId, actor.user.clientId),
-          eq(projects.portalEnabled, true),
-          isNull(projects.archivedAt),
-        ),
-      })
-    : [];
+  // Access (own client's portal projects) and share flags are applied by the service.
+  const list = await listProjects(actor);
   return (
     <>
       <PageHeader title={t.panel.portalWelcome} description={t.panel.portalSubtitle} />
@@ -43,7 +34,7 @@ export async function ClientPortalHome({ ctx }: { ctx: PanelContext }) {
                     {markdownToText(p.description, 200)}
                   </p>
                 )}
-                {p.shareProgress && (
+                {p.progress != null && (
                   <div className="flex items-center gap-3">
                     <Progress value={p.progress} className="flex-1" />
                     <span className="text-sm font-bold">{formatPercent(p.progress, locale)}</span>

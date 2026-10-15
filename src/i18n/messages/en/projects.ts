@@ -68,6 +68,7 @@ export const projects: Record<keyof typeof fa, string> = {
   budgetUsed: "Budget used",
   daysLeft: "days left",
   overdueBy: "{n} days overdue",
+  dueTodayHint: "Due today",
   empty: "You haven't created any projects yet.",
   emptyHint: "Create your first project to connect time, tasks and contracts to it.",
   archive: "Archive",

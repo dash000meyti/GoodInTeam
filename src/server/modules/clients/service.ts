@@ -67,9 +67,18 @@ export function createClient(actor: Actor, input: z.output<typeof clientInput>) 
   return row;
 }
 
+/** Partial update — only the keys present in `input` change (`null` clears). */
 export function updateClient(actor: Actor, { id, ...input }: z.output<typeof updateClientInput>) {
   assertAdmin(actor);
-  const row = db.update(clients).set(input).where(eq(clients.id, id)).returning().get();
+  const patch = Object.fromEntries(
+    Object.entries(input).filter(([, v]) => v !== undefined),
+  ) as Partial<typeof input>;
+  const row = db
+    .update(clients)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(clients.id, id))
+    .returning()
+    .get();
   if (!row) throw notFound("Client");
   logActivity(actor, "client.update", "client", id, row.name);
   return row;
