@@ -9,6 +9,7 @@ import { logActivity } from "@/server/activity";
 import { verifyPassword } from "@/server/auth/password";
 import { rateLimit } from "@/server/auth/rate-limit";
 import { requestMeta } from "@/server/auth/request";
+import { safeNext } from "@/server/auth/safe-next";
 import { createSession, destroySession, getActor } from "@/server/auth/session";
 import { AppError } from "@/server/errors";
 import { localized } from "@/server/modules/users/localize";
@@ -21,13 +22,6 @@ import {
 } from "@/server/modules/users/service";
 import { loginInput, sessionHandleInput, setupInput } from "./schemas";
 import { currentSessionId, revokeOtherSessions, revokeSession } from "./sessions";
-
-/** Only allow same-site relative redirects (prevents open-redirects). */
-function safeNext(next: string | undefined, fallback: string) {
-  if (next && next.startsWith("/") && !next.startsWith("//") && !next.startsWith("/\\"))
-    return next;
-  return fallback;
-}
 
 export const login = definePublicAction(loginInput, async (input, { locale }) => {
   const meta = await requestMeta();
