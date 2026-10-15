@@ -5,9 +5,25 @@ import { AppError } from "./errors";
 import { createFirstOwner } from "./modules/auth/setup";
 import { hasOwner } from "./modules/users/service";
 
+/**
+ * Fail fast on a broken configuration (e.g. no APP_SECRET in production).
+ * When instrumentation's register() throws, Next.js logs it but keeps the
+ * server up answering 500s — so in production we exit and let the container
+ * restart policy surface the message instead.
+ */
+function checkEnv() {
+  try {
+    assertValidEnv();
+  } catch (err) {
+    if (process.env.NODE_ENV !== "production") throw err;
+    console.error(`[bootstrap] ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
+}
+
 /** Idempotent startup tasks. Safe to run on every boot. */
 export async function bootstrap() {
-  assertValidEnv(); // fail fast (e.g. no APP_SECRET in production) before serving anything
+  checkEnv();
   getDb(); // opens the DB and applies pending migrations
   const email = process.env.OWNER_EMAIL;
   const password = process.env.OWNER_PASSWORD;
