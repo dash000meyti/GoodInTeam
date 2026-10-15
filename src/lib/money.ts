@@ -17,10 +17,37 @@ export const currencies = {
 } as const;
 
 export type CurrencyCode = keyof typeof currencies;
-export const currencyCodes = Object.keys(currencies) as CurrencyCode[];
+export const currencyCodes = Object.keys(currencies) as [CurrencyCode, ...CurrencyCode[]];
 
+/** Own keys only — `"toString"` / `"__proto__"` are not currencies. */
 export function isCurrency(v: unknown): v is CurrencyCode {
-  return typeof v === "string" && v in currencies;
+  return typeof v === "string" && Object.hasOwn(currencies, v);
+}
+
+/**
+ * Normalize a typed number: Persian/Arabic-Indic digits → Latin, thousands
+ * separators (`,` `٬` `_` spaces, bidi marks) removed, Arabic decimal separator `٫` → `.`,
+ * Unicode minus `−` → `-`.
+ */
+export function normalizeNumberInput(input: string) {
+  return toLatinDigits(input)
+    .trim()
+    .replace(/[,\s٬_\u200C\u200E\u200F]/g, "")
+    .replace(/٫/g, ".")
+    .replace(/\u2212/g, "-");
+}
+
+const PLAIN_DECIMAL = /^-?(?:\d+(?:\.\d*)?|\.\d+)$/;
+
+/**
+ * Parse a plain decimal number as typed by a user ("12,500", "۱۲٬۵۰۰", "-3.5").
+ * Returns null for anything else — hex (`0x10`), exponents (`1e3`), `Infinity`, junk.
+ */
+export function parseDecimalInput(input: string): number | null {
+  const cleaned = normalizeNumberInput(input);
+  if (!PLAIN_DECIMAL.test(cleaned)) return null;
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
 }
 
 export function toMinor(amount: number, currency: CurrencyCode) {
@@ -33,11 +60,8 @@ export function fromMinor(minor: number, currency: CurrencyCode) {
 
 /** Parse user input like "1,250.50" or "۱٬۲۵۰" into minor units. */
 export function parseMoneyInput(input: string, currency: CurrencyCode): number | null {
-  const cleaned = toLatinDigits(input)
-    .replace(/[,\s٬_]/g, "")
-    .replace("٫", ".");
-  if (!/^-?\d*(\.\d+)?$/.test(cleaned) || cleaned === "" || cleaned === "-") return null;
-  return toMinor(Number.parseFloat(cleaned), currency);
+  const n = parseDecimalInput(input);
+  return n === null ? null : toMinor(n, currency);
 }
 
 export function formatMoney(
