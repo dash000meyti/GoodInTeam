@@ -13,8 +13,11 @@
   sign-in clears its (email, IP) bucket. Failures from one IP never lock the account out for
   other IPs. Each attempt reserves its slot before the password check, so parallel bursts can't
   exceed the limit.
-- Other rate limits: API 600/min per token, contact form, contract view/sign (in-memory, single
-  node; keys are namespaced and each namespace is capped so key floods can't exhaust memory).
+- API (`server/api/auth.ts`): the bearer token is verified first, then limited to 600/min **per
+  token id** (unverified token text never creates a bucket). Failed authentications are counted
+  per client IP (30/min → 429); a valid token is never blocked by other clients' failures.
+- Other rate limits: contact form, contract view/sign (in-memory, single node; keys are
+  namespaced and each namespace is capped so key floods can't exhaust memory).
 - Client IP (rate limits, sessions, audit log, signatures) comes from `TRUST_PROXY`
   (`server/auth/client-ip.ts`): `none` (default) uses the socket address and strips
   client-supplied `X-Forwarded-For`/`X-Real-IP`/`CF-Connecting-IP` in the proxy; `cloudflare`
