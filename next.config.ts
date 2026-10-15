@@ -21,6 +21,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Native module: must stay a runtime require, never bundled.
   serverExternalPackages: ["better-sqlite3"],
+  // Runtime data (SQLite DB, uploads) must never be copied into the build output
+  // (file tracing otherwise picks up ./data via DATA_DIR's default).
+  outputFileTracingExcludes: { "*": ["./data/**/*"], "/**": ["./data/**/*"] },
   experimental: {
     serverActions: { bodySizeLimit: "25mb" },
   },

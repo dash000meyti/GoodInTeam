@@ -8,6 +8,9 @@ import { calendarTools } from "@/server/modules/calendar/tools";
 import { clientsTools } from "@/server/modules/clients/tools";
 import { contractsTools } from "@/server/modules/contracts/tools";
 import { financeTools } from "@/server/modules/finance/tools";
+import { contentTools } from "@/server/modules/content/tools";
+import { leadsTools } from "@/server/modules/leads/tools";
+import { mediaTools } from "@/server/modules/media/tools";
 import { projectsTools } from "@/server/modules/projects/tools";
 import { timeTools } from "@/server/modules/time/tools";
 import { tasksTools } from "@/server/modules/tasks/tools";
@@ -38,6 +41,9 @@ export const tools: ToolDef[] = [
   ...calendarTools,
   ...vaultTools,
   ...docsTools,
+  ...contentTools,
+  ...leadsTools,
+  ...mediaTools,
 ];
 
 const byName = new Map(tools.map((t) => [t.name, t]));

@@ -37,7 +37,7 @@ pnpm dev                       # http://localhost:3000
 | `wip/finance`      | مالی: حساب‌ها، تراکنش، دسته‌ها، تراز طرف‌حساب، نرخ ارز، فاکتورها، صفحه عمومی فاکتور `/i/[token]`                                                                              | ✅ در `dev` ادغام شد (فیلدهای مشتری در `getInvoice`/`listInvoices` محدود شد)              |
 | `wip/calendar`     | تقویم ماه/هفته/روز/لیست شمسی، تعهدات، فید ICS                                                                                                                                 | ✅ در `dev` ادغام شد (سری‌های تکراری در پنل پروژه، `?event=<id>`، یادآور رخدادهای تکراری) |
 | `wip/vault-docs`   | گاوصندوق رمز zero-knowledge + مستندات/پایگاه دانش                                                                                                                             | ✅ در `dev` ادغام شد (`<bdi>` برای عنوان‌ها، تست e2e گاوصندوق: `pnpm test:e2e`)           |
-| `wip/site-cms-seo` | سایت عمومی (خانه، نمونه‌کار، بلاگ، آموزش، خدمات، تماس)، CMS در پنل، رسانه، سئو (sitemap/robots/RSS/llms.txt/OG/JSON-LD)                                                       | 🟡 آخرین کامیت WIP؛ نیمه‌تمام: به‌روزرسانی `docs/seo.md`، اعتبارسنجی نهایی                |
+| `wip/site-cms-seo` | سایت عمومی (خانه، نمونه‌کار، بلاگ، آموزش، خدمات، تماس)، CMS در پنل، رسانه، سئو (sitemap/robots/RSS/llms.txt/OG/JSON-LD)                                                       | ✅ در `dev` ادغام شد (اعتبارسنجی JSON-LD/sitemap/RSS/llms.txt/OG روی build تولیدی)        |
 
 ### ادغام شاخه‌های WIP (یکی‌یکی)
 

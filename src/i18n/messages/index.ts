@@ -22,6 +22,7 @@ import { finance as faFinance } from "./fa/finance";
 import { calendar as faCalendar } from "./fa/calendar";
 import { vault as faVault } from "./fa/vault";
 import { docs as faDocs } from "./fa/docs";
+import { content as faContent } from "./fa/content";
 import { auth as enAuth } from "./en/auth";
 import { common as enCommon } from "./en/common";
 import { nav as enNav } from "./en/nav";
@@ -39,6 +40,7 @@ import { finance as enFinance } from "./en/finance";
 import { calendar as enCalendar } from "./en/calendar";
 import { vault as enVault } from "./en/vault";
 import { docs as enDocs } from "./en/docs";
+import { content as enContent } from "./en/content";
 
 const fa = {
   common: faCommon,
@@ -58,6 +60,7 @@ const fa = {
   calendar: faCalendar,
   vault: faVault,
   docs: faDocs,
+  content: faContent,
 };
 
 type Source = typeof fa;
@@ -82,6 +85,7 @@ const en: Messages = {
   calendar: enCalendar,
   vault: enVault,
   docs: enDocs,
+  content: enContent,
 };
 
 export const messages: Record<Locale, Messages> = { fa, en };
