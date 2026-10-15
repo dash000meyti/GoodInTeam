@@ -15,7 +15,7 @@ tracking, calendar, tasks, projects, clients, finance, contracts, password vault
 docs) with a **client portal**, in one Next.js app backed by SQLite.
 
 Read this file fully before changing code. Deeper docs live in [`docs/`](docs/README.md).
-**Current status, unmerged `wip/*` branches and the prioritized fix list: [`docs/HANDOFF.md`](docs/HANDOFF.md).**
+**Current status, deployment checklist and next steps: [`docs/HANDOFF.md`](docs/HANDOFF.md).**
 
 ## Commands
 
