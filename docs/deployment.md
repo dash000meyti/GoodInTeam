@@ -19,7 +19,33 @@
 | `NEXT_PUBLIC_SITE_URL`                          | ✅       | `https://goodteam.ir`   | canonical URLs, sitemap, OG. Build arg too.                                                 |
 | `DATA_DIR`                                      |          | `/data`                 | set by the image                                                                            |
 | `APP_TIMEZONE`                                  |          | `Asia/Tehran`           | default for date math (overridable in settings)                                             |
+| `TRUST_PROXY`                                   |          | `xff:1`                 | where the client IP comes from: `none` (default), `cloudflare`, `xff:N` — see below         |
 | `OWNER_EMAIL` / `OWNER_PASSWORD` / `OWNER_NAME` |          |                         | bootstrap the owner on first boot (else visit `/setup`)                                     |
+
+The configuration is checked at boot: in production the server refuses to start without a real
+`APP_SECRET` (unset or the `.env.example` placeholder), and an invalid `TRUST_PROXY` always stops
+it — the log says what to fix.
+
+### Client IP (`TRUST_PROXY`)
+
+The client IP feeds login/contact/signing rate limits, the sessions list, the activity log and
+contract signatures. Headers such as `X-Forwarded-For` are set by whoever sends the request, so
+the app only trusts the header your own infrastructure controls:
+
+| Value        | Use when                                                                    | IP is read from                                    |
+| ------------ | --------------------------------------------------------------------------- | -------------------------------------------------- |
+| `none`       | default; clients reach the container directly (no reverse proxy)            | the TCP peer address (client headers are stripped) |
+| `xff:N`      | N reverse proxies (Caddy, Traefik, Nginx, a load balancer…) in front        | the N-th `X-Forwarded-For` entry from the right    |
+| `cloudflare` | the origin is reachable **only** through Cloudflare (firewall rule, Tunnel) | `CF-Connecting-IP`                                 |
+
+- One reverse proxy in front of the container (the usual Docker setup) → `TRUST_PROXY=xff:1`.
+  Make sure it **appends** the peer address — Caddy and Traefik do by default; for Nginx use
+  `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`.
+- Cloudflare in front of Caddy/Nginx: `cloudflare` (with the origin firewalled to Cloudflare), or
+  `xff:2` if Cloudflare → your proxy → app each append.
+- With `none` behind a proxy every request appears to come from the proxy's address, so all
+  clients share one rate-limit bucket. With a proxy-trusting value but no such proxy, clients can
+  forge their IP. An invalid value stops the server at boot.
 
 ## Options
 

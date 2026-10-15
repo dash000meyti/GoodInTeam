@@ -1,6 +1,7 @@
 import { actorFromRequest } from "@/server/api/auth";
-import { callTool, toolJsonSchema, toolsFor } from "@/server/api/registry";
+import { callTool, findTool, toolJsonSchema, toolsFor } from "@/server/api/registry";
 import { logActivity } from "@/server/activity";
+import type { Actor } from "@/server/auth/actor";
 import { AppError, httpStatus } from "@/server/errors";
 
 /**
@@ -10,7 +11,8 @@ import { AppError, httpStatus } from "@/server/errors";
  *   claude mcp add --transport http good-team https://<site>/api/mcp \
  *     --header "Authorization: Bearer gt_…"
  */
-const SUPPORTED = ["2025-11-25", "2025-06-18", "2025-03-26"];
+// 2025-03-26 is deliberately absent: it requires JSON-RPC batching, which we don't implement.
+const SUPPORTED = ["2025-11-25", "2025-06-18"];
 const SERVER_INFO = { name: "good-team", title: "Good Team", version: "1.0.0" };
 const INSTRUCTIONS =
   "Good Team is a private work OS: projects, clients, time tracking, tasks, calendar, finance, contracts, docs and website content. " +
@@ -25,31 +27,67 @@ interface JsonRpcRequest {
   params?: Record<string, unknown>;
 }
 
+/** JSON-RPC error codes used here (-32001 is our implementation-defined auth error). */
+const RPC = {
+  parseError: -32700,
+  invalidRequest: -32600,
+  methodNotFound: -32601,
+  invalidParams: -32602,
+  internalError: -32603,
+  unauthorized: -32001,
+} as const;
+
 const rpcResult = (id: JsonRpcId, result: unknown) => Response.json({ jsonrpc: "2.0", id, result });
-const rpcError = (id: JsonRpcId, code: number, message: string, status = 200) =>
-  Response.json({ jsonrpc: "2.0", id, error: { code, message } }, { status });
+const rpcError = (
+  id: JsonRpcId,
+  code: number,
+  message: string,
+  status = 200,
+  headers?: HeadersInit,
+) => Response.json({ jsonrpc: "2.0", id, error: { code, message } }, { status, headers });
+
+/**
+ * Authentication failures keep their HTTP status (401 / 429). Anything else
+ * that breaks while authenticating (e.g. the database) is a 500 — a server
+ * fault must not tell the client its credentials are wrong.
+ */
+function authErrorResponse(err: unknown) {
+  if (err instanceof AppError && (err.code === "unauthorized" || err.code === "rate_limited")) {
+    const headers: HeadersInit =
+      err.code === "unauthorized"
+        ? { "WWW-Authenticate": 'Bearer realm="good-team"' }
+        : { "Retry-After": "60" };
+    return rpcError(null, RPC.unauthorized, err.message, httpStatus[err.code], headers);
+  }
+  console.error("[mcp] authentication error", err);
+  return rpcError(null, RPC.internalError, "Internal error", 500);
+}
+
+/** A tool the actor may call — the same set `tools/list` returns. */
+function visibleTool(actor: Actor, name: string) {
+  const tool = findTool(name);
+  return tool && (!tool.roles || tool.roles.includes(actor.user.role)) ? tool : undefined;
+}
 
 export async function POST(req: Request) {
-  let actor;
+  let actor: Actor;
   try {
     actor = actorFromRequest(req);
   } catch (err) {
-    const e = err instanceof AppError ? err : new AppError("unauthorized", "Unauthorized");
-    return Response.json(
-      { jsonrpc: "2.0", id: null, error: { code: -32001, message: e.message } },
-      { status: httpStatus[e.code], headers: { "WWW-Authenticate": 'Bearer realm="good-team"' } },
-    );
+    return authErrorResponse(err);
   }
 
   let msg: JsonRpcRequest;
   try {
     msg = (await req.json()) as JsonRpcRequest;
   } catch {
-    return rpcError(null, -32700, "Parse error", 400);
+    return rpcError(null, RPC.parseError, "Parse error", 400);
   }
-  if (Array.isArray(msg)) return rpcError(null, -32600, "Batching is not supported", 400);
+  if (Array.isArray(msg)) {
+    return rpcError(null, RPC.invalidRequest, "Batching is not supported", 400);
+  }
   if (!msg || msg.jsonrpc !== "2.0" || typeof msg.method !== "string")
-    return rpcError(null, -32600, "Invalid request", 400);
+    return rpcError(null, RPC.invalidRequest, "Invalid request", 400);
 
   // Notifications (no id) are acknowledged with 202 and no body.
   if (msg.id === undefined || msg.method.startsWith("notifications/"))
@@ -84,7 +122,14 @@ export async function POST(req: Request) {
         })),
       });
     case "tools/call": {
-      const name = String(msg.params?.name ?? "");
+      const name = msg.params?.name;
+      if (typeof name !== "string" || !name) {
+        return rpcError(id, RPC.invalidParams, "Invalid params: `name` is required");
+      }
+      // Per the MCP spec an unknown tool is a protocol error (-32602), not a tool result.
+      if (!visibleTool(actor, name)) {
+        return rpcError(id, RPC.invalidParams, `Unknown tool: ${name}`);
+      }
       try {
         const data = await callTool(actor, name, msg.params?.arguments ?? {});
         logActivity(actor, `mcp.${name}`, "mcp", null);
@@ -103,7 +148,7 @@ export async function POST(req: Request) {
       }
     }
     default:
-      return rpcError(id, -32601, `Method not found: ${msg.method}`);
+      return rpcError(id, RPC.methodNotFound, `Method not found: ${msg.method}`);
   }
 }
 

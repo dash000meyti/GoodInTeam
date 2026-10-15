@@ -57,7 +57,7 @@ export function LoginForm() {
             type="button"
             onClick={() => setShow((s) => !s)}
             className="absolute inset-y-0 end-0 flex w-10 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground"
-            aria-label="toggle password visibility"
+            aria-label={show ? t.auth.hidePassword : t.auth.showPassword}
           >
             {show ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
           </button>

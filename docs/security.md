@@ -4,14 +4,37 @@
 
 - Passwords: **scrypt** (N=2^15, r=8, p=1, 64-byte key, per-user salt), constant-time compare,
   dummy hash on unknown emails (no user enumeration by timing).
-- Sessions: 256-bit random token in `gt_session` (httpOnly, SameSite=Lax, Secure on HTTPS);
-  only `sha256(token)` is stored. 30-day sliding expiry. Logout deletes the row.
-- Rate limiting: login 8/15min per email and 20/15min per IP; API 600/min per token
-  (in-memory, single node).
+- Sessions: 256-bit random token in `gt_session` (httpOnly, SameSite=Lax; Secure in production
+  when `NEXT_PUBLIC_SITE_URL` is https — one helper, `server/auth/cookie.ts`, is used both at
+  sign-in and by the proxy's sliding refresh); only `sha256(token)` is stored. 30-day sliding
+  expiry. Logout deletes the row.
+- Login throttling (`server/modules/auth/login-throttle.ts`): only **failed** attempts count —
+  8 per 15 min per (email, IP) pair and 20 per 15 min per IP across all emails. A successful
+  sign-in clears its (email, IP) bucket. Failures from one IP never lock the account out for
+  other IPs. Each attempt reserves its slot before the password check, so parallel bursts can't
+  exceed the limit.
+- API (`server/api/auth.ts`): the bearer token is verified first, then limited to 600/min **per
+  token id** (unverified token text never creates a bucket). Failed authentications are counted
+  per client IP (30/min → 429); a valid token is never blocked by other clients' failures.
+- Other rate limits: contact form, contract view/sign (in-memory, single node; keys are
+  namespaced and each namespace is capped so key floods can't exhaust memory).
+- Client IP (rate limits, sessions, audit log, signatures) comes from `TRUST_PROXY`
+  (`server/auth/client-ip.ts`): `none` (default) uses the socket address and strips
+  client-supplied `X-Forwarded-For`/`X-Real-IP`/`CF-Connecting-IP` in the proxy; `cloudflare`
+  trusts `CF-Connecting-IP`; `xff:N` takes the N-th `X-Forwarded-For` entry from the right. See
+  `deployment.md`.
+- Post-login redirects (`?next=`) go through `safeNext` (`server/auth/safe-next.ts`): ≤ 2000
+  chars, no control characters or backslashes, and the value must resolve to the same origin
+  with a single leading `/` — anything else falls back to the panel.
 - First run: `/setup` creates the owner and is disabled once an owner exists
-  (or bootstrap via `OWNER_EMAIL`/`OWNER_PASSWORD` env).
+  (or bootstrap via `OWNER_EMAIL`/`OWNER_PASSWORD` env). The owner check and the insert run in
+  one IMMEDIATE transaction (`createFirstOwner`), so concurrent submissions can't create two owners.
 - `src/proxy.ts` does only an _optimistic_ redirect for `/panel`; **real authorization happens
   in services** (`Actor` + role/ownership checks). Never rely on hiding UI.
+- The proxy runs on every path except `/_next/…`, `/media/…`, `public/` asset folders and the
+  exact root metadata files (`src/proxy.test.ts` pins the matcher). Paths that skipped it used to
+  reach `[locale]` with a bogus "locale" (`/apical` rendered the home page with 200); now unknown
+  prefixes such as `/de/…` are rewritten under `/fa` and end in the catch-all 404.
 
 ## Authorization
 
@@ -58,7 +81,13 @@ Helpers: `projectAccessWhere(actor)` (SQL filter), `assertProjectRead`, `assertA
 - Markdown: raw HTML is escaped unless content is owner-authored public content.
 - Uploads: stored outside the web root (`/data/uploads`), served through a route with
   content-type allow-list and `nosniff`.
-- Secrets only via env (`APP_SECRET`), never committed. `.env*` is git-ignored.
+- Secrets only via env (`APP_SECRET`), never committed. `.env*` is git-ignored. The
+  configuration is validated at boot (`assertValidEnv()` in `src/server/bootstrap.ts`, run from
+  `src/instrumentation.ts`): in production a missing/placeholder `APP_SECRET` (or an invalid
+  `TRUST_PROXY` anywhere) stops the server with a clear message instead of failing on the first
+  request that needs it.
+- `/api/health` only reports `{ ok, db }`; database errors are logged server-side, never
+  returned.
 
 ## Backups
 
