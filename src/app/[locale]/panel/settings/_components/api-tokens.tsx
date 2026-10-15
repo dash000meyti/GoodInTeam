@@ -101,7 +101,7 @@ export function CreateTokenDialog({ siteUrl }: { siteUrl: string }) {
               <DialogTitle>{s.newToken}</DialogTitle>
               <DialogDescription>{s.myTokensHint}</DialogDescription>
             </DialogHeader>
-            <form className="grid gap-5" action={form.submit}>
+            <form className="grid gap-5" onSubmit={form.submit}>
               <input
                 type="hidden"
                 name="scopes"

@@ -28,7 +28,7 @@ export function UpdateComposer({ projectId, locale }: { projectId: string; local
       </Button>
     );
   return (
-    <form action={form.submit} className="grid gap-4 rounded-xl border border-dashed p-4">
+    <form onSubmit={form.submit} className="grid gap-4 rounded-xl border border-dashed p-4">
       <input type="hidden" name="projectId" value={projectId} />
       <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
         <Field label={t.projects.updateTitle} error={form.errors.title?.[0]}>

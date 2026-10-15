@@ -54,7 +54,7 @@ export function InviteClientUser({ clientId }: { clientId: string }) {
             <CopyButton value={`${result.email}\n${result.tempPassword}`} />
           </div>
         ) : (
-          <form action={form.submit} className="grid gap-4">
+          <form onSubmit={form.submit} className="grid gap-4">
             <input type="hidden" name="clientId" value={clientId} />
             <Field label={t.common.name} error={form.errors.name?.[0]}>
               <Input name="name" required />

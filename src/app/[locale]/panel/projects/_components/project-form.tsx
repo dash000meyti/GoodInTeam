@@ -84,7 +84,7 @@ export function ProjectFormDialog({
         <DialogHeader>
           <DialogTitle>{isEdit ? p.edit : p.new}</DialogTitle>
         </DialogHeader>
-        <form action={form.submit} className="grid gap-5">
+        <form onSubmit={form.submit} className="grid gap-5">
           {isEdit && <input type="hidden" name="id" value={project.id} />}
           <div className="grid gap-5 sm:grid-cols-2">
             <Field

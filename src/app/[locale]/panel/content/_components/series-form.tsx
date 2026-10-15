@@ -61,7 +61,7 @@ export function SeriesFormDialog({
         <DialogHeader>
           <DialogTitle>{series ? c.editSeries : c.newSeries}</DialogTitle>
         </DialogHeader>
-        <form action={form.submit} className="grid gap-5 sm:grid-cols-2">
+        <form onSubmit={form.submit} className="grid gap-5 sm:grid-cols-2">
           {series && <input type="hidden" name="id" value={series.id} />}
           <Field
             label={c.fieldTitle}
@@ -192,7 +192,7 @@ export function TestimonialFormDialog({
         <DialogHeader>
           <DialogTitle>{item ? c.editTestimonial : c.newTestimonial}</DialogTitle>
         </DialogHeader>
-        <form action={form.submit} className="grid gap-5 sm:grid-cols-2">
+        <form onSubmit={form.submit} className="grid gap-5 sm:grid-cols-2">
           {item && <input type="hidden" name="id" value={item.id} />}
           <Field label={c.author} error={form.errors.author?.[0]} required>
             <Input name="author" defaultValue={item?.author} required autoFocus dir="auto" />

@@ -54,7 +54,7 @@ export function FormsSection({ t }: { t: Messages }) {
         title={d.input}
         previewClassName="block"
         code={`const form = useActionForm(createProjectAction, { successMessage: t.common.saved });
-<form action={form.submit}>
+<form onSubmit={form.submit}>
   <Field label={t.projects.name} hint="…" error={form.errors.name?.[0]} required htmlFor="name">
     <Input id="name" name="name" required />
   </Field>
@@ -154,7 +154,7 @@ export function OverlaysSection({ t }: { t: Messages }) {
   <DialogTrigger asChild><Button>…</Button></DialogTrigger>
   <DialogContent>
     <DialogHeader><DialogTitle>…</DialogTitle><DialogDescription>…</DialogDescription></DialogHeader>
-    <form action={form.submit}>… <DialogFooter>…</DialogFooter></form>
+    <form onSubmit={form.submit}>… <DialogFooter>…</DialogFooter></form>
   </DialogContent>
 </Dialog>`}
       >

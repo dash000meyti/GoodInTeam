@@ -189,7 +189,7 @@ export function ContractEditor({
 
   return (
     <form
-      action={form.submit}
+      onSubmit={form.submit}
       className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"
     >
       {initial.id && <input type="hidden" name="id" value={initial.id} />}

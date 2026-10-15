@@ -67,7 +67,7 @@ export function AccountFormDialog({
         <DialogHeader>
           <DialogTitle>{account ? f.editAccount : f.newAccount}</DialogTitle>
         </DialogHeader>
-        <form action={form.submit} className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={form.submit} className="grid gap-4 sm:grid-cols-2">
           {account && <input type="hidden" name="id" value={account.id} />}
           <Field
             label={f.accountName}

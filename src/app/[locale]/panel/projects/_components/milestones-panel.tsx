@@ -115,7 +115,7 @@ export function MilestonesPanel({
       {editable &&
         (adding ? (
           <form
-            action={form.submit}
+            onSubmit={form.submit}
             className="grid gap-4 rounded-xl border border-dashed p-4 sm:grid-cols-[1fr_180px_90px]"
           >
             <input type="hidden" name="projectId" value={projectId} />

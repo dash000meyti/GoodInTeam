@@ -25,13 +25,18 @@
 
 ```tsx
 const form = useActionForm(createThingAction, { successMessage: t.common.saved, onSuccess: () => setOpen(false) });
-<form action={form.submit}>
+<form onSubmit={form.submit}>
   <Field label={t.things.name} error={form.errors.name?.[0]}><Input name="name" /></Field>
   <SelectField name="status" options={…} />          {/* writes a hidden input */}
   <DatePicker name="dueDate" />                       {/* Jalali/Gregorian → "YYYY-MM-DD" */}
   <SwitchInput name="billable" defaultChecked />      {/* submits "true"/"false" */}
 </form>
 ```
+
+`form.submit` is an **`onSubmit`** handler, not a form `action`: React resets a form after an
+`action` runs, which would wipe the user's input when the server answers with a validation
+error. With `onSubmit` the values stay on error; after a success the form is reset to its
+defaults (like a successful action). `form.run(fdOrObject)` calls the action directly.
 
 Use `zOptString`, `zNullString`, `zBool`, `zOptNumber`, `zTags`… from `src/lib/zod-helpers.ts` so
 FormData strings parse correctly. `""` → `undefined` (create) or `null` (clear on update).

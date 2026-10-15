@@ -56,7 +56,7 @@ export function AccountForm({
   });
 
   return (
-    <form action={form.submit}>
+    <form onSubmit={form.submit}>
       <SettingsCard
         icon={UserRoundIcon}
         title={s.personalInfo}
@@ -184,7 +184,7 @@ export function PasswordForm({ email }: { email: string }) {
   });
 
   return (
-    <form ref={ref} action={form.submit}>
+    <form ref={ref} onSubmit={form.submit}>
       <SettingsCard
         icon={KeyRoundIcon}
         title={s.passwordTitle}

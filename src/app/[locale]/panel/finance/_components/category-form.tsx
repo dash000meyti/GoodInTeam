@@ -60,7 +60,7 @@ export function CategoryFormDialog({
         <DialogHeader>
           <DialogTitle>{category ? f.editCategory : f.newCategory}</DialogTitle>
         </DialogHeader>
-        <form action={form.submit} className="grid gap-4">
+        <form onSubmit={form.submit} className="grid gap-4">
           {category && <input type="hidden" name="id" value={category.id} />}
           <Field label={f.categoryName} htmlFor="cat-name" error={form.errors.name?.[0]} required>
             <Input id="cat-name" name="name" defaultValue={category?.name} required autoFocus />

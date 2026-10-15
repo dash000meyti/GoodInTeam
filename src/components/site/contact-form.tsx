@@ -99,7 +99,12 @@ export function ContactForm({
   return (
     <form
       noValidate
-      action={(fd) =>
+      // onSubmit (not `action`): a form action resets the form, which would wipe the
+      // visitor's message when the server returns a validation error.
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (pending) return;
+        const fd = new FormData(e.currentTarget);
         start(async () => {
           setMessage(null);
           const res = await submitContactAction(fd);
@@ -110,8 +115,8 @@ export function ContactForm({
             setErrors(res.error.fieldErrors ?? {});
             setMessage(res.error.message);
           }
-        })
-      }
+        });
+      }}
       className="grid gap-5 sm:grid-cols-2"
     >
       {source && <input type="hidden" name="source" value={source} />}
