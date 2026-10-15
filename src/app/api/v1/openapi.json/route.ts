@@ -24,9 +24,12 @@ export async function GET() {
               "application/json": { schema: { type: "object", properties: { data: {} } } },
             },
           },
+          "400": { description: "Malformed JSON body" },
           "401": { description: "Missing/invalid token" },
           "403": { description: "Forbidden (role or read-only token)" },
+          "404": { description: "Unknown tool" },
           "422": { description: "Validation error" },
+          "429": { description: "Rate limited" },
         },
       },
     };

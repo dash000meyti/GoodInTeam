@@ -35,7 +35,25 @@ curl -s -X POST https://YOUR-DOMAIN/api/v1/tools/projects_list \
 ```
 
 Errors: `{ "error": { "code": "validation" | "unauthorized" | "forbidden" | "not_found" | …, "message", "fieldErrors"? } }`
-with matching HTTP status (422, 401, 403, 404…).
+with matching HTTP status (422, 401, 403, 404…). An empty body counts as `{}`; a body that isn't
+valid JSON is rejected with `400 { "error": { "code": "bad_request", "message": "Malformed JSON body" } }`
+(the tool does not run).
+
+## Rate limits
+
+- 600 requests/min **per token** (counted only after the token is verified) → `429`.
+- 30 failed authentications/min per client IP → `429` (valid tokens are never blocked by others'
+  failures). The client IP is taken according to `TRUST_PROXY` (see `deployment.md`).
+
+## MCP specifics
+
+- Protocol versions `2025-11-25` (default) and `2025-06-18`. `2025-03-26` is not offered because
+  it requires JSON-RPC batching, which this server doesn't implement (batches get `-32600`).
+- Calling a tool that doesn't exist (or isn't available to your role — it's not in `tools/list`
+  either) returns the JSON-RPC error `-32602` (invalid params). Errors _inside_ a tool (validation,
+  forbidden, not found…) come back as a normal result with `isError: true`.
+- Authentication failures: HTTP `401` (with `WWW-Authenticate`) or `429`, JSON-RPC code `-32001`.
+  A server-side failure while authenticating is HTTP `500` / `-32603`, never a `401`.
 
 ## Conventions for tool authors
 
