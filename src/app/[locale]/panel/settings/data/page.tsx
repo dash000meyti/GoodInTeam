@@ -83,13 +83,13 @@ export default async function DataSettingsPage() {
         }
       >
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div className="space-y-1 rounded-xl bg-muted/50 p-3">
+          <div className="min-w-0 space-y-1 rounded-xl bg-muted/50 p-3">
             <dt className="text-xs font-semibold text-muted-foreground">{s.dataDir}</dt>
             <dd className="truncate font-mono text-xs" dir="ltr" title={stats.dataDir}>
               {stats.dataDir}
             </dd>
           </div>
-          <div className="space-y-1 rounded-xl bg-muted/50 p-3">
+          <div className="min-w-0 space-y-1 rounded-xl bg-muted/50 p-3">
             <dt className="text-xs font-semibold text-muted-foreground">{s.engine}</dt>
             <dd className="font-mono text-xs" dir="ltr">
               SQLite {stats.sqlite.version} · {stats.sqlite.journalMode.toUpperCase()} ·{" "}

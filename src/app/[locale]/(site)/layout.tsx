@@ -38,7 +38,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/[locale]">)
           {t.common.skipToContent}
         </a>
         <SiteHeader locale={locale} t={t} />
-        <main id="main" className="min-h-[60dvh]">
+        <main id="main" className="min-h-[60dvh] overflow-x-clip">
           {children}
         </main>
         <SiteFooter locale={locale} t={t} />

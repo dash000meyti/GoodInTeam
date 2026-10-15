@@ -102,11 +102,13 @@ function SwitchLink({
 }) {
   const target = locales.find((l) => l !== current)!;
   const href = useSwitchHref(target, staticPaths);
+  // Plain <a>: switching locale swaps <html lang/dir> and fonts (a full page load), and a
+  // <Link> prefetch across root params 404s in Next 16.4's segment cache.
   return (
-    <Link href={href} hrefLang={target} lang={target} aria-label={ariaLabel} className={className}>
+    <a href={href} hrefLang={target} lang={target} aria-label={ariaLabel} className={className}>
       <LanguagesIcon className="size-4" />
       <span>{label}</span>
-    </Link>
+    </a>
   );
 }
 
@@ -121,7 +123,7 @@ export function LanguageToggle(props: {
   return (
     <Suspense
       fallback={
-        <Link
+        <a
           href={localePath(target, "/")}
           hrefLang={target}
           lang={target}
@@ -130,7 +132,7 @@ export function LanguageToggle(props: {
         >
           <LanguagesIcon className="size-4" />
           <span>{props.label}</span>
-        </Link>
+        </a>
       }
     >
       <SwitchLink {...props} />

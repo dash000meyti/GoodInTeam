@@ -25,8 +25,18 @@ export function LiteYouTube({
   notice: string;
 }) {
   const [active, setActive] = useState(false);
+  // YouTube's thumbnail host is blocked on some networks (e.g. in Iran): fetch it only after the
+  // page has loaded so a hanging request never keeps the page "loading". A post cover is local.
+  const [showThumb, setShowThumb] = useState(!!poster);
+  useEffect(() => {
+    if (poster) return;
+    const show = () => setShowThumb(true);
+    if (document.readyState === "complete") return show();
+    window.addEventListener("load", show, { once: true });
+    return () => window.removeEventListener("load", show);
+  }, [poster]);
   return (
-    <div className="relative aspect-video overflow-hidden rounded-3xl bg-grey-900 shadow-card">
+    <div className="relative aspect-video overflow-hidden rounded-3xl bg-gradient-to-br from-grey-800 to-grey-900 shadow-card">
       {active ? (
         <iframe
           src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(id)}?autoplay=1&rel=0&modestbranding=1`}
@@ -43,14 +53,16 @@ export function LiteYouTube({
           aria-label={`${playLabel}: ${title}`}
           className="group absolute inset-0 cursor-pointer"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- static thumbnail, no JS */}
-          <img
-            src={poster || `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`}
-            alt=""
-            loading="eager"
-            decoding="async"
-            className="absolute inset-0 size-full object-cover opacity-80 transition-opacity group-hover:opacity-95"
-          />
+          {showThumb && (
+            // eslint-disable-next-line @next/next/no-img-element -- static thumbnail
+            <img
+              src={poster || `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`}
+              alt=""
+              decoding="async"
+              onError={(e) => (e.currentTarget.style.display = "none")}
+              className="absolute inset-0 size-full object-cover opacity-80 transition-opacity group-hover:opacity-95"
+            />
+          )}
           <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
           <span className="absolute inset-0 flex items-center justify-center">
             <span className="flex size-20 items-center justify-center rounded-full bg-white/95 text-grey-900 shadow-dialog transition-transform group-hover:scale-110">

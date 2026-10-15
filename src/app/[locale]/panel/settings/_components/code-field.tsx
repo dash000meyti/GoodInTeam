@@ -16,7 +16,7 @@ export function CodeField({
   emphasis?: boolean;
 }) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("min-w-0 space-y-1.5", className)}>
       {label && <p className="text-xs font-semibold text-muted-foreground">{label}</p>}
       <div
         className={cn(

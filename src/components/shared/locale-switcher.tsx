@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LanguagesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,9 +18,10 @@ function Items({ current }: { current: Locale }) {
   const { path } = stripLocale(usePathname());
   return locales.map((l) => (
     <DropdownMenuItem key={l} asChild className={l === current ? "font-bold" : undefined}>
-      <Link href={localePath(l, path)} hrefLang={l} lang={l}>
+      {/* Plain <a>: a locale switch is a full page load (<html lang/dir>, fonts). */}
+      <a href={localePath(l, path)} hrefLang={l} lang={l}>
         {localeMeta[l].label}
-      </Link>
+      </a>
     </DropdownMenuItem>
   ));
 }
@@ -40,9 +40,9 @@ export function LocaleSwitcher() {
         <Suspense
           fallback={locales.map((l) => (
             <DropdownMenuItem key={l} asChild>
-              <Link href={localePath(l, "/")} hrefLang={l} lang={l}>
+              <a href={localePath(l, "/")} hrefLang={l} lang={l}>
                 {localeMeta[l].label}
-              </Link>
+              </a>
             </DropdownMenuItem>
           ))}
         >

@@ -140,7 +140,7 @@ export default async function DocPage({ params }: PageProps<"/[locale]/panel/doc
       )}
 
       <div className={cn("grid gap-8", toc.length >= 2 && "2xl:grid-cols-[minmax(0,1fr)_13rem]")}>
-        <Card className="p-6 sm:p-10">
+        <Card className="min-w-0 p-6 sm:p-10">
           {hasContent ? (
             <div
               className="prose-gt doc-prose"

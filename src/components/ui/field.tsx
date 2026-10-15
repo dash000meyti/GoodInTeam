@@ -102,7 +102,8 @@ function Field({
         role={group ? "group" : undefined}
         aria-labelledby={group ? labelId : undefined}
         aria-describedby={group ? messageId : undefined}
-        className={cn("grid gap-2", className)}
+        // min-w-0: as a grid/flex item, long unbreakable values (URLs, slugs) must not widen the page.
+        className={cn("grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2", className)}
       >
         {label && (
           <Label id={labelId} htmlFor={labelFor}>
