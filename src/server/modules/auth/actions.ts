@@ -14,14 +14,10 @@ import { createSession, destroySession, getActor } from "@/server/auth/session";
 import { AppError } from "@/server/errors";
 import { localized } from "@/server/modules/users/localize";
 import { changePasswordInput } from "@/server/modules/users/schemas";
-import {
-  changePassword,
-  createUser,
-  findUserByEmail,
-  hasOwner,
-} from "@/server/modules/users/service";
+import { changePassword, findUserByEmail } from "@/server/modules/users/service";
 import { beginLoginAttempt } from "./login-throttle";
 import { loginInput, sessionHandleInput, setupInput } from "./schemas";
+import { createFirstOwner } from "./setup";
 import { currentSessionId, revokeOtherSessions, revokeSession } from "./sessions";
 
 export const login = definePublicAction(loginInput, async (input, { locale }) => {
@@ -49,9 +45,8 @@ export const login = definePublicAction(loginInput, async (input, { locale }) =>
 });
 
 export const setupOwner = definePublicAction(setupInput, async (input, { locale }) => {
-  if (hasOwner()) throw new AppError("forbidden", "Setup already completed");
   const meta = await requestMeta();
-  const user = await createUser({ ...input, role: "owner", locale });
+  const user = await createFirstOwner({ ...input, locale });
   await createSession(user.id, meta);
   redirect(localePath(locale, "/panel"));
 });
