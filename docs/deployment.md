@@ -22,6 +22,10 @@
 | `TRUST_PROXY`                                   |          | `xff:1`                 | where the client IP comes from: `none` (default), `cloudflare`, `xff:N` — see below         |
 | `OWNER_EMAIL` / `OWNER_PASSWORD` / `OWNER_NAME` |          |                         | bootstrap the owner on first boot (else visit `/setup`)                                     |
 
+The configuration is checked at boot: in production the server refuses to start without a real
+`APP_SECRET` (unset or the `.env.example` placeholder), and an invalid `TRUST_PROXY` always stops
+it — the log says what to fix.
+
 ### Client IP (`TRUST_PROXY`)
 
 The client IP feeds login/contact/signing rate limits, the sessions list, the activity log and

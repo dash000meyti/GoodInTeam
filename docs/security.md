@@ -73,7 +73,13 @@ Helpers: `projectAccessWhere(actor)` (SQL filter), `assertProjectRead`, `assertA
 - Markdown: raw HTML is escaped unless content is owner-authored public content.
 - Uploads: stored outside the web root (`/data/uploads`), served through a route with
   content-type allow-list and `nosniff`.
-- Secrets only via env (`APP_SECRET`), never committed. `.env*` is git-ignored.
+- Secrets only via env (`APP_SECRET`), never committed. `.env*` is git-ignored. The
+  configuration is validated at boot (`assertValidEnv()` in `src/server/bootstrap.ts`, run from
+  `src/instrumentation.ts`): in production a missing/placeholder `APP_SECRET` (or an invalid
+  `TRUST_PROXY` anywhere) stops the server with a clear message instead of failing on the first
+  request that needs it.
+- `/api/health` only reports `{ ok, db }`; database errors are logged server-side, never
+  returned.
 
 ## Backups
 

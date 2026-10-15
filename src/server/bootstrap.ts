@@ -1,4 +1,5 @@
 import "server-only";
+import { assertValidEnv } from "@/lib/env";
 import { getDb } from "./db/client";
 import { AppError } from "./errors";
 import { createFirstOwner } from "./modules/auth/setup";
@@ -6,6 +7,7 @@ import { hasOwner } from "./modules/users/service";
 
 /** Idempotent startup tasks. Safe to run on every boot. */
 export async function bootstrap() {
+  assertValidEnv(); // fail fast (e.g. no APP_SECRET in production) before serving anything
   getDb(); // opens the DB and applies pending migrations
   const email = process.env.OWNER_EMAIL;
   const password = process.env.OWNER_PASSWORD;
