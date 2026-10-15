@@ -4,6 +4,8 @@ import * as React from "react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
+import { FieldContextReset } from "@/components/ui/field";
 
 function Dialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -43,6 +45,7 @@ function DialogContent({
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & { showCloseButton?: boolean }) {
+  const t = useT();
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
@@ -54,14 +57,14 @@ function DialogContent({
         )}
         {...props}
       >
-        {children}
+        <FieldContextReset>{children}</FieldContextReset>
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute end-4 top-4 rounded-md p-1 opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus:outline-hidden disabled:pointer-events-none [&_svg]:size-4"
+            className="absolute end-4 top-4 rounded-md p-1 opacity-70 transition-opacity outline-none hover:bg-accent hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/40 disabled:pointer-events-none [&_svg]:size-4"
           >
             <XIcon />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t.common.close}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>

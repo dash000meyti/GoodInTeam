@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronLeftIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CrumbsNav } from "./crumbs-nav";
 
 export interface Crumb {
   label: string;
@@ -35,23 +36,22 @@ export function PageHeader({
       <div className="min-w-0 space-y-2">
         <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
         {crumbs && crumbs.length > 0 && (
-          <nav
-            aria-label="breadcrumb"
-            className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
-          >
+          <CrumbsNav>
             {crumbs.map((c, i) => (
               <span key={i} className="flex items-center gap-2">
-                {i > 0 && <span className="size-1 rounded-full bg-grey-500" />}
+                {i > 0 && <span aria-hidden className="size-1 rounded-full bg-grey-500" />}
                 {c.href ? (
                   <Link href={c.href} className="hover:text-foreground hover:underline">
                     {c.label}
                   </Link>
                 ) : (
-                  <span className="text-foreground/70">{c.label}</span>
+                  <span aria-current="page" className="text-foreground/70">
+                    {c.label}
+                  </span>
                 )}
               </span>
             ))}
-          </nav>
+          </CrumbsNav>
         )}
         {description && <p className="max-w-2xl text-sm text-muted-foreground">{description}</p>}
       </div>

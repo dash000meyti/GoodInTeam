@@ -7,8 +7,9 @@ import { enUS } from "date-fns/locale";
 import { faIR } from "date-fns-jalali/locale";
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useFieldControl } from "@/components/ui/field";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useI18n } from "@/i18n/client";
+import { useI18n, useT } from "@/i18n/client";
 import { toPersianDigits } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ export function toDateValue(d: Date) {
 /**
  * Calendar-aware date picker: Jalali (Solar Hijri) for `fa`, Gregorian for `en`.
  * Always emits a Gregorian "YYYY-MM-DD" string — via `onChange` and, when
- * `name` is set, a hidden input so it works inside <form action>.
+ * `name` is set, a hidden input so it works inside a plain <form>.
  */
 export function DatePicker({
   name,
@@ -48,6 +49,15 @@ export function DatePicker({
   id?: string;
 }) {
   const { locale, dir } = useI18n();
+  const t = useT();
+  // Inside a <Field>: the label names the trigger; hint/error describe it.
+  // (aria-required is not allowed on a button, so it is left out.)
+  const field = useFieldControl({ id });
+  const triggerA11y = {
+    id: field.id,
+    "aria-describedby": field["aria-describedby"],
+    "aria-invalid": field["aria-invalid"],
+  };
   const jalali = locale === "fa";
   const lib = (jalali ? j : g) as typeof j;
   // Gregorian formatting needs date-fns' own enUS (date-fns-jalali's enUS has Jalali month names).
@@ -87,15 +97,16 @@ export function DatePicker({
       <div className={cn("relative", className)}>
         <PopoverTrigger asChild>
           <Button
-            id={id}
+            {...triggerA11y}
             type="button"
             variant="outline"
             className={cn(
               "h-10 w-full justify-start rounded-lg px-3 font-normal",
+              clearable && selected && "pe-9",
               !selected && "text-muted-foreground",
             )}
           >
-            <CalendarIcon className="text-muted-foreground" />
+            <CalendarIcon className="text-muted-foreground" aria-hidden />
             {selected ? fmt(selected, "d MMMM yyyy") : (placeholder ?? "—")}
           </Button>
         </PopoverTrigger>
@@ -103,53 +114,65 @@ export function DatePicker({
           <button
             type="button"
             onClick={() => set(null)}
-            className="absolute inset-y-0 end-2 my-auto flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent"
-            aria-label="clear"
+            className="absolute inset-y-0 end-2 my-auto flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            aria-label={t.common.clear}
           >
-            <XIcon className="size-3.5" />
+            <XIcon className="size-3.5" aria-hidden />
           </button>
         )}
       </div>
-      <PopoverContent className="w-auto p-3" align="start">
+      <PopoverContent className="w-auto p-3" align="start" aria-label={t.common.chooseDate}>
         <div className="mb-2 flex items-center justify-between">
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
+            aria-label={t.common.previousMonth}
             onClick={() => setMonth(lib.addMonths(month, -1))}
           >
-            <Prev />
+            <Prev aria-hidden />
           </Button>
-          <span className="text-sm font-bold">{fmt(month, "MMMM yyyy")}</span>
+          <span className="text-sm font-bold" aria-live="polite">
+            {fmt(month, "MMMM yyyy")}
+          </span>
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
+            aria-label={t.common.nextMonth}
             onClick={() => setMonth(lib.addMonths(month, 1))}
           >
-            <Next />
+            <Next aria-hidden />
           </Button>
         </div>
         <div className="grid grid-cols-7 gap-1 text-center">
+          {/* Day buttons carry the full date as their name, so the short weekday row is visual. */}
           {weekdayLabels.map((w, i) => (
-            <span key={i} className="py-1 text-[11px] font-semibold text-muted-foreground">
+            <span
+              key={i}
+              aria-hidden
+              className="py-1 text-[11px] font-semibold text-muted-foreground"
+            >
               {w}
             </span>
           ))}
           {days.map((d) => {
             const inMonth = lib.isSameMonth(d, month);
-            const isSel = selected && lib.isSameDay(d, selected);
+            const isSel = !!selected && lib.isSameDay(d, selected);
             const isToday = lib.isToday(d);
             return (
               <button
                 key={d.toISOString()}
                 type="button"
+                aria-label={fmt(d, "EEEE d MMMM yyyy")}
+                aria-pressed={isSel}
+                aria-current={isToday ? "date" : undefined}
                 onClick={() => {
                   set(d);
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex size-9 cursor-pointer items-center justify-center rounded-lg text-sm transition-colors hover:bg-accent",
+                  "flex size-9 cursor-pointer items-center justify-center rounded-lg text-sm transition-colors outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/40",
                   !inMonth && "text-muted-foreground/50",
                   isToday && !isSel && "font-bold text-primary",
                   isSel && "bg-primary font-bold text-primary-foreground hover:bg-primary-dark",
@@ -171,7 +194,7 @@ export function DatePicker({
               setOpen(false);
             }}
           >
-            {locale === "fa" ? "امروز" : "Today"}
+            {t.common.today}
           </Button>
         </div>
       </PopoverContent>

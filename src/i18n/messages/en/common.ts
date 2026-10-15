@@ -88,4 +88,10 @@ export const common: Record<keyof typeof fa, string> = {
   colorPreset: "Primary color",
   commandPalette: "Commands",
   commandHint: "to search and run commands",
+  clear: "Clear",
+  breadcrumb: "Breadcrumb",
+  pagination: "Pagination",
+  chooseDate: "Choose a date",
+  previousMonth: "Previous month",
+  nextMonth: "Next month",
 };

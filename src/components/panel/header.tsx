@@ -27,11 +27,17 @@ export function PanelHeader({ slot }: { slot?: ReactNode }) {
       <button
         type="button"
         onClick={() => setPaletteOpen(true)}
-        className="flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-muted/70 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted sm:min-w-56"
+        // The text is hidden on phones, so name the button explicitly.
+        aria-label={t.common.search}
+        aria-haspopup="dialog"
+        aria-keyshortcuts="Meta+K Control+K"
+        className="flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-muted/70 px-3 text-sm text-muted-foreground transition-colors outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/40 sm:min-w-56"
       >
-        <SearchIcon className="size-4" />
-        <span className="hidden sm:inline">{t.common.searchPlaceholder}</span>
-        <Kbd className="ms-auto hidden sm:inline-flex" dir="ltr">
+        <SearchIcon className="size-4" aria-hidden />
+        <span className="hidden sm:inline" aria-hidden>
+          {t.common.searchPlaceholder}
+        </span>
+        <Kbd className="ms-auto hidden sm:inline-flex" dir="ltr" aria-hidden>
           ⌘K
         </Kbd>
       </button>

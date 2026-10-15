@@ -4,6 +4,8 @@ import * as React from "react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import { XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
+import { FieldContextReset } from "@/components/ui/field";
 
 function Sheet(props: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -46,6 +48,7 @@ function SheetContent({
   side?: "top" | "end" | "bottom" | "start";
   showCloseButton?: boolean;
 }) {
+  const t = useT();
   return (
     <SheetPrimitive.Portal>
       <SheetOverlay />
@@ -65,11 +68,11 @@ function SheetContent({
         )}
         {...props}
       >
-        {children}
+        <FieldContextReset>{children}</FieldContextReset>
         {showCloseButton && (
-          <SheetPrimitive.Close className="absolute end-4 top-4 rounded-md p-1 opacity-70 transition-opacity hover:bg-accent hover:opacity-100 focus:outline-hidden">
+          <SheetPrimitive.Close className="absolute end-4 top-4 rounded-md p-1 opacity-70 transition-opacity outline-none hover:bg-accent hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/40">
             <XIcon className="size-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t.common.close}</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Content>

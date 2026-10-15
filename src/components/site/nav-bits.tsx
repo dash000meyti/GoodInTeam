@@ -59,7 +59,7 @@ export function Pagination({
   const btn =
     "inline-flex h-10 items-center gap-1.5 rounded-full border border-border px-4 text-sm font-semibold transition-colors hover:border-foreground/30";
   return (
-    <nav className="mt-14 flex items-center justify-between gap-4" aria-label="pagination">
+    <nav className="mt-14 flex items-center justify-between gap-4" aria-label={t.common.pagination}>
       {page > 1 ? (
         <Link href={hrefFor(page - 1)} rel="prev" className={btn}>
           <ChevronRightIcon className="size-4 ltr:rotate-180" />
