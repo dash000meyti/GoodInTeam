@@ -4,7 +4,7 @@ import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/shared/theme-controls";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
-import { HeaderShell, LanguageToggle, MobileMenu, NavLinks, type NavItem } from "./header-client";
+import { HeaderShell, LanguageMenu, MobileMenu, NavLinks, type NavItem } from "./header-client";
 
 export const siteSections = [
   { path: "/work", key: "work" },
@@ -19,7 +19,7 @@ export const staticSitePaths = ["/", ...siteSections.map((s) => s.path), "/conta
 
 /**
  * Public header — a server component; only the scroll state, active link,
- * language target and mobile menu are tiny client islands.
+ * language menu and mobile menu are client islands.
  */
 export function SiteHeader({ locale, t }: { locale: Locale; t: Messages }) {
   const items: NavItem[] = siteSections.map((s) => ({
@@ -27,8 +27,6 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Messages }) {
     section: s.path,
     label: t.nav[s.key],
   }));
-  const toggleCls =
-    "inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground";
   return (
     <HeaderShell>
       <div className="mx-auto flex h-full max-w-7xl items-center gap-4 px-4 sm:px-6">
@@ -46,13 +44,7 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Messages }) {
           <NavLinks items={items} />
         </nav>
         <div className="ms-auto flex items-center gap-1 md:ms-0">
-          <LanguageToggle
-            current={locale}
-            label={t.site.switchLanguage}
-            ariaLabel={t.site.switchLanguageLabel}
-            staticPaths={staticSitePaths}
-            className={`${toggleCls} hidden sm:inline-flex`}
-          />
+          <LanguageMenu current={locale} label={t.common.language} staticPaths={staticSitePaths} />
           <ThemeToggle />
           <Link
             href={localePath(locale, "/contact")}
@@ -75,13 +67,6 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Messages }) {
               ))}
             </nav>
             <div className="mt-8 flex items-center gap-2 border-t border-dashed pt-6">
-              <LanguageToggle
-                current={locale}
-                label={t.site.switchLanguage}
-                ariaLabel={t.site.switchLanguageLabel}
-                staticPaths={staticSitePaths}
-                className={`${toggleCls} border`}
-              />
               <Link
                 href={localePath(locale, "/contact")}
                 className="ms-auto inline-flex h-11 items-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground"

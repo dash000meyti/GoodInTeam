@@ -3,8 +3,15 @@
 import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LanguagesIcon, MenuIcon, XIcon } from "lucide-react";
-import { localePath, locales, stripLocale, type Locale } from "@/i18n/config";
+import { CheckIcon, LanguagesIcon, MenuIcon, XIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { localeMeta, localePath, locales, stripLocale, type Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { useAlternates } from "./alternates";
 
@@ -87,56 +94,75 @@ function useSwitchHref(target: Locale, staticPaths: string[]) {
   return localePath(target, staticPaths.includes(section) ? section : "/");
 }
 
-function SwitchLink({
+function LanguageItems({ current, staticPaths }: { current: Locale; staticPaths: string[] }) {
+  return locales.map((l) => (
+    <LanguageItem key={l} locale={l} current={current} staticPaths={staticPaths} />
+  ));
+}
+
+function LanguageItem({
+  locale,
+  current,
+  staticPaths,
+}: {
+  locale: Locale;
+  current: Locale;
+  staticPaths: string[];
+}) {
+  const href = useSwitchHref(locale, staticPaths);
+  const active = locale === current;
+  return (
+    <DropdownMenuItem asChild className={cn("justify-between gap-6", active && "font-bold")}>
+      {/* Plain <a>: switching locale swaps <html lang/dir> and fonts (a full page load), and a
+          <Link> prefetch across root params 404s in Next 16.4's segment cache. */}
+      <a href={href} hrefLang={locale} lang={locale} aria-current={active ? "true" : undefined}>
+        {localeMeta[locale].label}
+        {active && <CheckIcon className="size-4 text-primary" />}
+      </a>
+    </DropdownMenuItem>
+  );
+}
+
+/** Language picker: an icon button (same look as the theme toggle) with a dropdown. */
+export function LanguageMenu({
   current,
   label,
-  ariaLabel,
   staticPaths,
   className,
 }: {
   current: Locale;
   label: string;
-  ariaLabel: string;
   staticPaths: string[];
   className?: string;
 }) {
-  const target = locales.find((l) => l !== current)!;
-  const href = useSwitchHref(target, staticPaths);
-  // Plain <a>: switching locale swaps <html lang/dir> and fonts (a full page load), and a
-  // <Link> prefetch across root params 404s in Next 16.4's segment cache.
   return (
-    <a href={href} hrefLang={target} lang={target} aria-label={ariaLabel} className={className}>
-      <LanguagesIcon className="size-4" />
-      <span>{label}</span>
-    </a>
-  );
-}
-
-export function LanguageToggle(props: {
-  current: Locale;
-  label: string;
-  ariaLabel: string;
-  staticPaths: string[];
-  className?: string;
-}) {
-  const target = locales.find((l) => l !== props.current)!;
-  return (
-    <Suspense
-      fallback={
-        <a
-          href={localePath(target, "/")}
-          hrefLang={target}
-          lang={target}
-          aria-label={props.ariaLabel}
-          className={props.className}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn("rounded-full", className)}
+          aria-label={label}
+          title={label}
         >
-          <LanguagesIcon className="size-4" />
-          <span>{props.label}</span>
-        </a>
-      }
-    >
-      <SwitchLink {...props} />
-    </Suspense>
+          <LanguagesIcon className="size-[18px]" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-36">
+        {/* usePathname() is URL data → inside <Suspense> (Cache Components). */}
+        <Suspense
+          fallback={locales.map((l) => (
+            <DropdownMenuItem key={l} asChild>
+              <a href={localePath(l, "/")} hrefLang={l} lang={l}>
+                {localeMeta[l].label}
+              </a>
+            </DropdownMenuItem>
+          ))}
+        >
+          <LanguageItems current={current} staticPaths={staticPaths} />
+        </Suspense>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

@@ -120,8 +120,6 @@ export const site: Record<keyof typeof fa, string> = {
   llms: "AI guide (llms.txt)",
   sitemap: "Sitemap",
   apiDocs: "API & MCP",
-  switchLanguage: "فارسی",
-  switchLanguageLabel: "Switch language to Persian",
 
   breadcrumbHome: "Home",
   featured: "Featured",

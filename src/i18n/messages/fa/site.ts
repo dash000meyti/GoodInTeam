@@ -130,8 +130,6 @@ export const site = {
   llms: "راهنمای هوش مصنوعی (llms.txt)",
   sitemap: "نقشه سایت",
   apiDocs: "API و MCP",
-  switchLanguage: "English",
-  switchLanguageLabel: "تغییر زبان به انگلیسی",
 
   // ── Common section bits ──
   breadcrumbHome: "خانه",

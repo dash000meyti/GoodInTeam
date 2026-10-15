@@ -46,7 +46,8 @@ One `posts` table; `type` decides the URL (`postPath()` in `src/lib/content.ts`)
 otherwise to a **standalone tutorial**. Slugs keep Persian letters (`slugify`); URLs are
 percent-encoded in links/canonicals and decoded in route params.
 
-Translations share `translationKey`. The language toggle and `hreflang` alternates point to
+Translations share `translationKey`. The header language menu (icon button + dropdown, next to
+the theme toggle) and `hreflang` alternates point to
 the translation; without one, the toggle falls back to the section index.
 
 ### Status & scheduling
