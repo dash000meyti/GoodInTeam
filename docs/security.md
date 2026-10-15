@@ -6,8 +6,21 @@
   dummy hash on unknown emails (no user enumeration by timing).
 - Sessions: 256-bit random token in `gt_session` (httpOnly, SameSite=Lax, Secure on HTTPS);
   only `sha256(token)` is stored. 30-day sliding expiry. Logout deletes the row.
-- Rate limiting: login 8/15min per email and 20/15min per IP; API 600/min per token
-  (in-memory, single node).
+- Login throttling (`server/modules/auth/login-throttle.ts`): only **failed** attempts count —
+  8 per 15 min per (email, IP) pair and 20 per 15 min per IP across all emails. A successful
+  sign-in clears its (email, IP) bucket. Failures from one IP never lock the account out for
+  other IPs. Each attempt reserves its slot before the password check, so parallel bursts can't
+  exceed the limit.
+- Other rate limits: API 600/min per token, contact form, contract view/sign (in-memory, single
+  node; keys are namespaced and each namespace is capped so key floods can't exhaust memory).
+- Client IP (rate limits, sessions, audit log, signatures) comes from `TRUST_PROXY`
+  (`server/auth/client-ip.ts`): `none` (default) uses the socket address and strips
+  client-supplied `X-Forwarded-For`/`X-Real-IP`/`CF-Connecting-IP` in the proxy; `cloudflare`
+  trusts `CF-Connecting-IP`; `xff:N` takes the N-th `X-Forwarded-For` entry from the right. See
+  `deployment.md`.
+- Post-login redirects (`?next=`) go through `safeNext` (`server/auth/safe-next.ts`): ≤ 2000
+  chars, no control characters or backslashes, and the value must resolve to the same origin
+  with a single leading `/` — anything else falls back to the panel.
 - First run: `/setup` creates the owner and is disabled once an owner exists
   (or bootstrap via `OWNER_EMAIL`/`OWNER_PASSWORD` env).
 - `src/proxy.ts` does only an _optimistic_ redirect for `/panel`; **real authorization happens
