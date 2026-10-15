@@ -36,7 +36,7 @@ pnpm dev                       # http://localhost:3000
 | `dev`              | پایه + پروژه‌ها/مشتری‌ها + **قراردادها و امضا** + **زمان‌سنجی، کارها، یادآورها، اعلان‌ها، jobها** + **تنظیمات، کاربران، توکن API، بکاپ، صفحه سیستم طراحی** + API/MCP + Docker | ✅ تست‌شده (`pnpm check` و `pnpm build` سبز، ۱۳۶ تست)                                     |
 | `wip/finance`      | مالی: حساب‌ها، تراکنش، دسته‌ها، تراز طرف‌حساب، نرخ ارز، فاکتورها، صفحه عمومی فاکتور `/i/[token]`                                                                              | ✅ در `dev` ادغام شد (فیلدهای مشتری در `getInvoice`/`listInvoices` محدود شد)              |
 | `wip/calendar`     | تقویم ماه/هفته/روز/لیست شمسی، تعهدات، فید ICS                                                                                                                                 | ✅ در `dev` ادغام شد (سری‌های تکراری در پنل پروژه، `?event=<id>`، یادآور رخدادهای تکراری) |
-| `wip/vault-docs`   | گاوصندوق رمز zero-knowledge + مستندات/پایگاه دانش                                                                                                                             | 🟡 آخرین کامیت WIP؛ نیمه‌تمام: `<bdi>` در عنوان‌ها، تست Playwright گاوصندوق               |
+| `wip/vault-docs`   | گاوصندوق رمز zero-knowledge + مستندات/پایگاه دانش                                                                                                                             | ✅ در `dev` ادغام شد (`<bdi>` برای عنوان‌ها، تست e2e گاوصندوق: `pnpm test:e2e`)           |
 | `wip/site-cms-seo` | سایت عمومی (خانه، نمونه‌کار، بلاگ، آموزش، خدمات، تماس)، CMS در پنل، رسانه، سئو (sitemap/robots/RSS/llms.txt/OG/JSON-LD)                                                       | 🟡 آخرین کامیت WIP؛ نیمه‌تمام: به‌روزرسانی `docs/seo.md`، اعتبارسنجی نهایی                |
 
 ### ادغام شاخه‌های WIP (یکی‌یکی)
@@ -58,7 +58,7 @@ git merge origin/wip/finance        # بعد: calendar، vault-docs، site-cms-s
    - `panel/contracts/_components/project-contracts-panel.tsx` → `ProjectContractsPanel` ✅ در dev
    - `panel/finance/_components/project-finance-panel.tsx` → `ProjectFinancePanel` ✅ در dev
    - `panel/calendar/_components/project-events-panel.tsx` → `ProjectEventsPanel` ✅ در dev
-   - `panel/docs/_components/project-docs-panel.tsx` (بعد از ادغام vault-docs)
+   - `panel/docs/_components/project-docs-panel.tsx` → `ProjectDocsPanel` ✅ در dev
 2. ✅ **Job فاکتورهای سررسیدگذشته**: `invoice-overdue` (هر ساعت) در `src/server/jobs/index.ts` ثبت شد.
 3. **هر پوشه صفحه پنل یک `loading.tsx`** داشته باشد (`export { default } from "../loading";`) — اعتبارسنجی instant navigation در Next 16.4.
 4. **AGENTS.md** را با این قوانین به‌روز کنید: loading.tsx برای هر صفحه پنل؛ خطاهای دامنه با کلید + `localized()` در actionها؛ به‌روزرسانی مثال‌ها در `/panel/design-system`؛ کشتن پروسه‌ها فقط با پورت.

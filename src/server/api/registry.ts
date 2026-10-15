@@ -14,6 +14,8 @@ import { tasksTools } from "@/server/modules/tasks/tools";
 import { notificationsTools } from "@/server/modules/notifications/tools";
 import { settingsTools } from "@/server/modules/settings/tools";
 import { usersTools } from "@/server/modules/users/tools";
+import { docsTools } from "@/server/modules/docs/tools";
+import { vaultTools } from "@/server/modules/vault/tools";
 import { systemTools } from "./system-tools";
 
 /**
@@ -34,6 +36,8 @@ export const tools: ToolDef[] = [
   ...apiTokensTools,
   ...financeTools,
   ...calendarTools,
+  ...vaultTools,
+  ...docsTools,
 ];
 
 const byName = new Map(tools.map((t) => [t.name, t]));

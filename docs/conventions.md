@@ -59,6 +59,11 @@ FormData strings parse correctly. `""` → `undefined` (create) or `null` (clear
 - Unit tests with Vitest: `*.test.ts` next to the code (pure logic: tz, money, parsing,
   recurrence, permissions). `vi.mock("server-only", () => ({}))` when importing server modules.
 - `pnpm build` is part of the check — it validates rendering rules.
+- Browser end-to-end tests with Playwright: `e2e/*.spec.ts`, run with `pnpm test:e2e` against a
+  running app with the demo data (`pnpm db:reset && pnpm db:seed && pnpm dev`; `BASE_URL` to
+  target another host, `CHROMIUM_PATH` to use a local Chromium instead of `playwright install`).
+  Use them for flows unit tests can't prove (e.g. `e2e/vault.spec.ts`: no plaintext ever leaves
+  the browser). Clean up any data the test creates.
 
 ## Commits
 
