@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { defaultLocale, isLocale } from "@/i18n/config";
 import { sanitizeForwardingHeaders } from "@/server/auth/client-ip";
+import { SESSION_COOKIE, SESSION_DAYS, sessionCookieOptions } from "@/server/auth/cookie";
 
 /**
  * Edge of the app (runs before every matched request):
@@ -14,8 +15,6 @@ import { sanitizeForwardingHeaders } from "@/server/auth/client-ip";
  *    `x-forwarded-for`/`x-real-ip`/`cf-connecting-ip` are dropped so server
  *    code only ever sees the socket address (see server/auth/client-ip.ts).
  */
-const SESSION_COOKIE = "gt_session";
-
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const headers = sanitizeForwardingHeaders(req.headers);
@@ -68,11 +67,8 @@ export function proxy(req: NextRequest) {
   // Sliding session: keep the cookie alive while the panel is in use.
   if (isPanel && session) {
     res.cookies.set(SESSION_COOKIE, session, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: req.nextUrl.protocol === "https:",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30,
+      ...sessionCookieOptions(),
+      maxAge: SESSION_DAYS * 24 * 60 * 60,
     });
   }
   return res;

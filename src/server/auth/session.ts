@@ -7,13 +7,12 @@ import { and, eq, gt } from "drizzle-orm";
 import { db } from "@/server/db/client";
 import { sessions, users, type UserRole } from "@/server/db/schema";
 import { newToken } from "@/lib/ids";
-import { env } from "@/lib/env";
 import { localePath, type Locale } from "@/i18n/config";
+import { SESSION_COOKIE, SESSION_DAYS, sessionCookieOptions } from "./cookie";
 import { sha256 } from "./crypto";
 import type { Actor, SessionUser } from "./actor";
 
-export const SESSION_COOKIE = "gt_session";
-const SESSION_DAYS = 30;
+export { SESSION_COOKIE };
 const RENEW_WHEN_DAYS_LEFT = 15;
 const DAY = 86_400_000;
 const SEEN_THROTTLE_MS = 5 * 60_000;
@@ -35,13 +34,7 @@ export async function createSession(
     })
     .run();
   db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, userId)).run();
-  (await cookies()).set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: env.isProd && env.siteUrl.startsWith("https"),
-    sameSite: "lax",
-    path: "/",
-    expires: expiresAt,
-  });
+  (await cookies()).set(SESSION_COOKIE, token, { ...sessionCookieOptions(), expires: expiresAt });
 }
 
 export async function destroySession() {

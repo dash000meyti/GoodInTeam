@@ -4,8 +4,10 @@
 
 - Passwords: **scrypt** (N=2^15, r=8, p=1, 64-byte key, per-user salt), constant-time compare,
   dummy hash on unknown emails (no user enumeration by timing).
-- Sessions: 256-bit random token in `gt_session` (httpOnly, SameSite=Lax, Secure on HTTPS);
-  only `sha256(token)` is stored. 30-day sliding expiry. Logout deletes the row.
+- Sessions: 256-bit random token in `gt_session` (httpOnly, SameSite=Lax; Secure in production
+  when `NEXT_PUBLIC_SITE_URL` is https — one helper, `server/auth/cookie.ts`, is used both at
+  sign-in and by the proxy's sliding refresh); only `sha256(token)` is stored. 30-day sliding
+  expiry. Logout deletes the row.
 - Login throttling (`server/modules/auth/login-throttle.ts`): only **failed** attempts count —
   8 per 15 min per (email, IP) pair and 20 per 15 min per IP across all emails. A successful
   sign-in clears its (email, IP) bucket. Failures from one IP never lock the account out for
