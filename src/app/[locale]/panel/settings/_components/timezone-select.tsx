@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckIcon, ChevronsUpDownIcon, ClockIcon, GlobeIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useFieldControl } from "@/components/ui/field";
 import {
   Command,
   CommandEmpty,
@@ -49,6 +50,8 @@ export function TimezoneSelect({ name, defaultValue }: { name: string; defaultVa
   const [value, setValue] = useState(defaultValue);
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState<number | null>(null);
+  // Inside a <Field>: its label names this combobox.
+  const fieldProps = useFieldControl({});
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- start the clock on the client only
@@ -79,6 +82,7 @@ export function TimezoneSelect({ name, defaultValue }: { name: string; defaultVa
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
+            {...fieldProps}
             type="button"
             variant="outline"
             role="combobox"

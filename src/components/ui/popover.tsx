@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Popover as PopoverPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
+import { FieldContextReset } from "@/components/ui/field";
 
 function Popover(props: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
@@ -16,6 +17,7 @@ function PopoverContent({
   className,
   align = "center",
   sideOffset = 6,
+  children,
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
@@ -29,7 +31,10 @@ function PopoverContent({
           className,
         )}
         {...props}
-      />
+      >
+        {/* A popover opened from a field's control must not inherit that field's ids. */}
+        <FieldContextReset>{children}</FieldContextReset>
+      </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   );
 }

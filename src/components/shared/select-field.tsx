@@ -18,7 +18,7 @@ export interface SelectOption {
 }
 
 /**
- * Select that works inside <form action> (writes a hidden input) and supports
+ * Select that works inside a plain <form> (writes a hidden input) and supports
  * an explicit "none" option (submitted as "").
  */
 export function SelectField({

@@ -148,7 +148,7 @@ export function InviteMemberDialog() {
                 />
               </Field>
             </div>
-            <Field label={s.role}>
+            <Field label={s.role} group>
               <div role="radiogroup" className="grid gap-3 sm:grid-cols-2">
                 {(["member", "admin"] as const).map((r) => (
                   <button

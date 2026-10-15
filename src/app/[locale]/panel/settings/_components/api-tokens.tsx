@@ -123,7 +123,7 @@ export function CreateTokenDialog({ siteUrl }: { siteUrl: string }) {
                   autoFocus
                 />
               </Field>
-              <Field label={s.access}>
+              <Field label={s.access} group>
                 <div role="radiogroup" className="grid gap-3 sm:grid-cols-2">
                   {(["read", "write"] as const).map((a) => (
                     <button

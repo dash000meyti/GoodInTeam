@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { renderMarkdownAction } from "@/server/modules/markdown/actions";
 
 /**
- * Markdown textarea with a server-rendered preview tab. Works in <form action>
+ * Markdown textarea with a server-rendered preview tab. Works in a plain <form>
  * (submits `name`) or controlled via value/onChange.
  */
 export function MarkdownEditor({

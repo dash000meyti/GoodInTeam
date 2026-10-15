@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 
 /**
- * Switch for <form action>: always submits "true"/"false"
+ * Switch for plain <form>s: always submits "true"/"false"
  * (an unchecked checkbox would be missing from FormData).
  */
 export function SwitchInput({
