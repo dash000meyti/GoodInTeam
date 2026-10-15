@@ -87,4 +87,54 @@ describe("rrule", () => {
       nextOccurrence("FREQ=DAILY;COUNT=1", at(2026, 10, 14), at(2026, 10, 14, 12), TZ),
     ).toBeNull();
   });
+
+  it("reads a DATE UNTIL as the end of that day in the app timezone", () => {
+    const r = parseRRule("FREQ=DAILY;UNTIL=20261020", TZ)!;
+    // 23:59:59 Tehran (UTC+3:30) = 20:29:59Z the same day.
+    expect(r.until!.toISOString()).toBe("2026-10-20T20:29:59.000Z");
+    const list = expandRRule(
+      "FREQ=DAILY;UNTIL=20261020",
+      at(2026, 10, 18, 22),
+      at(2026, 10, 1),
+      at(2026, 11, 1),
+      TZ,
+    );
+    expect(list.map(ymd)).toEqual(["2026-10-18 22:00", "2026-10-19 22:00", "2026-10-20 22:00"]);
+    // A UTC instant stays exact; a floating local time is read in tz.
+    expect(parseRRule("FREQ=DAILY;UNTIL=20261020T120000Z", TZ)!.until!.toISOString()).toBe(
+      "2026-10-20T12:00:00.000Z",
+    );
+    expect(parseRRule("FREQ=DAILY;UNTIL=20261020T120000", TZ)!.until!.toISOString()).toBe(
+      "2026-10-20T08:30:00.000Z",
+    );
+  });
+
+  it("honours WKST for bi-weekly rules", () => {
+    // RFC 5545 example: every other week on TU,SU from Tue 1997-08-05, 4 times.
+    const dt = zonedTimeToUtc(1997, 8, 5, 9, 0, "UTC");
+    const mo = expandRRule(
+      "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=MO",
+      dt,
+      dt,
+      new Date(Date.UTC(1998, 0, 1)),
+      "UTC",
+    );
+    const su = expandRRule(
+      "FREQ=WEEKLY;INTERVAL=2;COUNT=4;BYDAY=TU,SU;WKST=SU",
+      dt,
+      dt,
+      new Date(Date.UTC(1998, 0, 1)),
+      "UTC",
+    );
+    const day = (d: Date) => d.toISOString().slice(0, 10);
+    expect(mo.map(day)).toEqual(["1997-08-05", "1997-08-10", "1997-08-19", "1997-08-24"]);
+    expect(su.map(day)).toEqual(["1997-08-05", "1997-08-17", "1997-08-19", "1997-08-31"]);
+    expect(formatRRule(parseRRule("FREQ=WEEKLY;WKST=SU")!)).toBe("FREQ=WEEKLY;WKST=SU");
+  });
+
+  it("keeps DTSTART seconds so the first occurrence isn't skipped", () => {
+    const dt = new Date(at(2026, 10, 14).getTime() + 30_500);
+    const list = expandRRule("FREQ=DAILY;COUNT=2", dt, at(2026, 10, 1), at(2026, 11, 1), TZ);
+    expect(list.map((d) => d.getTime() - dt.getTime())).toEqual([0, 86_400_000]);
+  });
 });

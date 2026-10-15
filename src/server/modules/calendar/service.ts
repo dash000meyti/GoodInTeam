@@ -289,9 +289,10 @@ function mergeTiming(input: UpdateEventInput, row: CalendarEvent, tz: string): T
   );
 }
 
-function normalizeRecurrence(value: string | null | undefined) {
+/** Canonical RRULE text; a DATE UNTIL is stored as the end of that day in `tz` (UTC). */
+function normalizeRecurrence(value: string | null | undefined, tz: string) {
   if (value == null) return value;
-  const rule = parseRRule(value);
+  const rule = parseRRule(value, tz);
   return rule ? formatRRule(rule) : null;
 }
 
@@ -804,7 +805,7 @@ function eventValues(
       promisedAt: input.promisedAt ? new Date(parseWhen(input.promisedAt, tz).ms) : null,
     }),
     ...(input.color !== undefined && { color: input.color }),
-    ...(input.recurrence !== undefined && { recurrence: normalizeRecurrence(input.recurrence) }),
+    ...(input.recurrence !== undefined && { recurrence: normalizeRecurrence(input.recurrence, tz) }),
     ...(input.remindMinutesBefore !== undefined && {
       remindMinutesBefore: input.remindMinutesBefore,
     }),

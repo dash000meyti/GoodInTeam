@@ -10,6 +10,7 @@
  *   BYDAY/BYMONTHDAY are shifted by that day difference (`shiftRRuleDays`).
  */
 import { formatRRule, parseRRule, type RRule } from "@/lib/rrule";
+import { zonedParts } from "@/lib/tz";
 
 export interface IcsEvent {
   uid: string;
@@ -125,13 +126,18 @@ export function shiftRRuleDays(rule: RRule, days: number): RRule {
  */
 export function rruleForIcs(
   rrule: string | null | undefined,
-  opts: { allDay: boolean; dayShift?: number },
+  opts: { allDay: boolean; dayShift?: number; tz?: string },
 ) {
   if (!rrule) return null;
-  const parsed = parseRRule(rrule);
+  const parsed = parseRRule(rrule, opts.tz);
   if (!parsed) return null;
   let text = formatRRule(opts.allDay ? parsed : shiftRRuleDays(parsed, opts.dayShift ?? 0));
-  if (opts.allDay) text = text.replace(/UNTIL=(\d{8})T\d{6}Z/, "UNTIL=$1");
+  if (opts.allDay && parsed.until) {
+    // All-day events use DATE values: the local calendar day of UNTIL.
+    const p = zonedParts(parsed.until, opts.tz ?? "UTC");
+    const day = `${p.year}${String(p.month).padStart(2, "0")}${String(p.day).padStart(2, "0")}`;
+    text = text.replace(/UNTIL=\d{8}T\d{6}Z/, `UNTIL=${day}`);
+  }
   return text;
 }
 

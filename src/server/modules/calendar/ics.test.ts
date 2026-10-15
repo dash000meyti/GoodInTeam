@@ -76,6 +76,13 @@ describe("rrule for ics", () => {
     expect(rruleForIcs("FREQ=DAILY;UNTIL=20261020", { allDay: false })).toBe(
       "FREQ=DAILY;UNTIL=20261020T235959Z",
     );
+    // With the app timezone, a DATE UNTIL means the end of that local day.
+    expect(rruleForIcs("FREQ=DAILY;UNTIL=20261020", { allDay: false, tz: "Asia/Tehran" })).toBe(
+      "FREQ=DAILY;UNTIL=20261020T202959Z",
+    );
+    expect(rruleForIcs("FREQ=DAILY;UNTIL=20261020", { allDay: true, tz: "America/New_York" })).toBe(
+      "FREQ=DAILY;UNTIL=20261020",
+    );
     expect(rruleForIcs("garbage", { allDay: false })).toBeNull();
     expect(rruleForIcs(null, { allDay: false })).toBeNull();
   });

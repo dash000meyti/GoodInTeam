@@ -148,7 +148,7 @@ type RRuleMessages = Pick<
 
 /** Human summary of an RRULE ("Weekly on Saturday", "هر ماه، ۵ بار"). */
 export function rruleSummary(rule: string, t: RRuleMessages, locale: Locale, tz: string) {
-  const r = parseRRule(rule);
+  const r = parseRRule(rule, tz);
   if (!r) return rule;
   const n = digits(r.interval, locale);
   const one = r.interval === 1;

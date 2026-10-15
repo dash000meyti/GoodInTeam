@@ -19,7 +19,7 @@ export function nextTaskOccurrence(
   opts: { now: number; tz: string },
 ): { dueAt: Date | null; remindAt: Date | null } | null {
   if (!task.recurrence) return null;
-  const rule = parseRRule(task.recurrence);
+  const rule = parseRRule(task.recurrence, opts.tz);
   if (!rule) return null;
   const today = startOfDay(opts.now, opts.tz);
   const anchor = task.dueAt ?? task.remindAt ?? today;

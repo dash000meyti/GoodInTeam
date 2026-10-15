@@ -183,7 +183,7 @@ export function eventToIcs(row: EventRow, tz: string, opts: { panelUrl?: string 
       ...base,
       startDate: first,
       endDateExclusive: addDaysKey(last < first ? first : last, 1),
-      rrule: rruleForIcs(row.recurrence, { allDay: true }),
+      rrule: rruleForIcs(row.recurrence, { allDay: true, tz }),
     };
   }
   // A UTC DTSTART may fall on the previous/next calendar date than the local start.
@@ -192,7 +192,7 @@ export function eventToIcs(row: EventRow, tz: string, opts: { panelUrl?: string 
     ...base,
     start: row.startAt,
     end: row.endAt,
-    rrule: rruleForIcs(row.recurrence, { allDay: false, dayShift }),
+    rrule: rruleForIcs(row.recurrence, { allDay: false, dayShift, tz }),
   };
 }
 
