@@ -184,6 +184,29 @@ describe("recurrence & timing", () => {
     expect(items[0]!.end - items[0]!.start).toBe(15 * 60_000);
   });
 
+  it("lists one entry per recurring series on the project panel", () => {
+    svc.createEvent(owner, {
+      title: "Weekly P1 sync",
+      kind: "meeting",
+      allDay: false,
+      visibleToClient: true,
+      date: "2026-10-17",
+      startTime: "10:00",
+      endTime: "11:00",
+      recurrence: "FREQ=WEEKLY",
+      projectId: ids.p1,
+    });
+    const { upcoming, past } = svc.listProjectEvents(owner, ids.p1!, {
+      now: Date.parse("2026-11-20T00:00:00Z"),
+    });
+    expect(upcoming.filter((i) => i.title === "Weekly P1 sync")).toHaveLength(1);
+    expect(past.filter((i) => i.title === "Weekly P1 sync")).toHaveLength(1);
+    // The latest past occurrence comes first.
+    expect(new Date(past.find((i) => i.title === "Weekly P1 sync")!.start).toISOString()).toBe(
+      "2026-11-14T06:30:00.000Z",
+    );
+  });
+
   it("stores all-day multi-day events with an inclusive last day", () => {
     const row = svc.createEvent(owner, {
       title: "Retreat",

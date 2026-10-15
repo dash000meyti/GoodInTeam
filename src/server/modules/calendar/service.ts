@@ -698,11 +698,14 @@ export function listProjectEvents(
     past.push(...eventItems(viewer, row, now - 365 * DAY_MS, now, tz));
   }
   const live = new Set(upcoming.map((i) => i.key));
+  // One entry per series: the next occurrence ahead, the latest one behind.
+  const firstPerEvent = (list: CalendarItem[]) => {
+    const seen = new Set<string>();
+    return list.filter((i) => !seen.has(i.id) && !!seen.add(i.id));
+  };
   return {
-    upcoming: sortItems(upcoming).slice(0, limit),
-    past: sortItems(past.filter((i) => !live.has(i.key)))
-      .reverse()
-      .slice(0, limit),
+    upcoming: firstPerEvent(sortItems(upcoming)).slice(0, limit),
+    past: firstPerEvent(sortItems(past.filter((i) => !live.has(i.key))).reverse()).slice(0, limit),
   };
 }
 

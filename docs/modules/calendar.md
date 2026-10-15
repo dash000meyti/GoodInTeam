@@ -128,8 +128,8 @@ import { ProjectEventsPanel } from "@/app/[locale]/panel/calendar/_components/pr
 <ProjectEventsPanel projectId={project.id} ctx={ctx} clientView={isClient} />;
 ```
 
-Async server component: upcoming (next 120 days, recurring expanded) and recent events of the
-project, with Join buttons. `clientView` is forced for client users.
+Async server component: upcoming (next 120 days) and recent events of the project, with Join
+buttons; a recurring series shows only its next / latest occurrence (with its repeat rule). `clientView` is forced for client users.
 
 ## Reminders
 
