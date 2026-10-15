@@ -51,7 +51,13 @@ export default async function RootLayout({ children }: LayoutProps<"/[locale]">)
   if (!isLocale(locale)) notFound();
   const { dir } = localeMeta[locale];
   return (
-    <html lang={locale} dir={dir} className={fontVariables} suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={dir}
+      className={fontVariables}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
         <InlineScript html={presetInitScript} />
       </head>

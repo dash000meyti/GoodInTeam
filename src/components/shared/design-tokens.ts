@@ -136,8 +136,8 @@ export const statusTokens: ColorToken[] = [
 export const chartTokens: ColorToken[] = [
   { name: "chart-1", tw: "chart-1", light: "var(--primary)", dark: "var(--primary)" },
   { name: "chart-2", tw: "chart-2", light: "#8e33ff", dark: "#8e33ff" },
-  { name: "chart-3", tw: "chart-3", light: "#00b8d9", dark: "#00b8d9" },
-  { name: "chart-4", tw: "chart-4", light: "#ffab00", dark: "#ffab00" },
+  { name: "chart-3", tw: "chart-3", light: "#0086a8", dark: "#00b8d9" },
+  { name: "chart-4", tw: "chart-4", light: "#c27a00", dark: "#ffab00" },
   { name: "chart-5", tw: "chart-5", light: "#ff5630", dark: "#ff5630" },
 ];
 

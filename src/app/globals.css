@@ -140,8 +140,9 @@
 
   --chart-1: var(--primary);
   --chart-2: #8e33ff;
-  --chart-3: #00b8d9;
-  --chart-4: #ffab00;
+  /* chart-3/4 are darkened in light mode for ≥3:1 contrast on white (dataviz check) */
+  --chart-3: #0086a8;
+  --chart-4: #c27a00;
   --chart-5: #ff5630;
 
   --sidebar: #ffffff;
@@ -180,6 +181,9 @@
   --input: rgb(145 158 171 / 0.24);
 
   --warning-foreground: #1c252e;
+
+  --chart-3: #00b8d9;
+  --chart-4: #ffab00;
 
   --sidebar: #141a21;
   --sidebar-foreground: #919eab;
@@ -417,7 +421,11 @@
 .prose-gt li {
   color: color-mix(in oklab, var(--foreground) 86%, transparent);
 }
-.prose-gt a {
+.prose-gt :is(h1, h2, h3, h4) > a {
+  color: inherit;
+  text-decoration: none;
+}
+.prose-gt a:not(:is(h1, h2, h3, h4) > a) {
   color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 4px;
