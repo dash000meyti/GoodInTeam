@@ -77,10 +77,17 @@ export function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Everything except: Next internals, uploaded media, metadata files served
-     * from the app root, and static assets. API routes are included so the
-     * forwarding-header cleanup above applies to them as well.
+     * Everything except Next internals (`/_next/…`), files under the
+     * directories served outside `[locale]` (`/media/…` uploads, `public/brand`,
+     * `public/fonts`) and the exact metadata files at the app root.
+     *
+     * Exclusions must be exact (trailing `/` or `$`): any path that skips the
+     * proxy is routed straight to `[locale]` with its first segment as the
+     * "locale" — `/apical` or `/x.png` used to render the Persian home page
+     * with a 200. Through the proxy, unknown prefixes (`/de/…`) are rewritten
+     * to `/fa/de/…` and end in the (site) catch-all → 404. API routes are
+     * included for the forwarding-header cleanup above.
      */
-    "/((?!_next/static|_next/image|media|brand|icon|apple-icon|robots\\.txt|sitemap\\.xml|llms\\.txt|llms-full\\.txt|manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|css|js|map)$).*)",
+    "/((?!_next/|media/|brand/|fonts/|icon\\.svg$|robots\\.txt$|sitemap\\.xml$|llms\\.txt$|llms-full\\.txt$|manifest\\.webmanifest$).*)",
   ],
 };

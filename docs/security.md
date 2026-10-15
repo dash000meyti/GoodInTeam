@@ -27,9 +27,14 @@
   chars, no control characters or backslashes, and the value must resolve to the same origin
   with a single leading `/` — anything else falls back to the panel.
 - First run: `/setup` creates the owner and is disabled once an owner exists
-  (or bootstrap via `OWNER_EMAIL`/`OWNER_PASSWORD` env).
+  (or bootstrap via `OWNER_EMAIL`/`OWNER_PASSWORD` env). The owner check and the insert run in
+  one IMMEDIATE transaction (`createFirstOwner`), so concurrent submissions can't create two owners.
 - `src/proxy.ts` does only an _optimistic_ redirect for `/panel`; **real authorization happens
   in services** (`Actor` + role/ownership checks). Never rely on hiding UI.
+- The proxy runs on every path except `/_next/…`, `/media/…`, `public/` asset folders and the
+  exact root metadata files (`src/proxy.test.ts` pins the matcher). Paths that skipped it used to
+  reach `[locale]` with a bogus "locale" (`/apical` rendered the home page with 200); now unknown
+  prefixes such as `/de/…` are rewritten under `/fa` and end in the catch-all 404.
 
 ## Authorization
 
