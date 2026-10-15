@@ -26,6 +26,9 @@ const nextConfig: NextConfig = {
   outputFileTracingExcludes: { "*": ["./data/**/*"], "/**": ["./data/**/*"] },
   experimental: {
     serverActions: { bodySizeLimit: "25mb" },
+    // src/proxy.ts runs on every app path and Next buffers the body for it;
+    // keep this ≥ the upload limit or media uploads (≤ 20 MB) get truncated.
+    proxyClientMaxBodySize: "25mb",
   },
   images: {
     formats: ["image/avif", "image/webp"],
