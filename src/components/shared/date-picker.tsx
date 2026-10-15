@@ -9,6 +9,7 @@ import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon, XIcon } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useI18n } from "@/i18n/client";
+import { toPersianDigits } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /** "YYYY-MM-DD" (Gregorian, calendar-day, no timezone) ⇄ local Date at noon. */
@@ -49,7 +50,12 @@ export function DatePicker({
   const { locale, dir } = useI18n();
   const jalali = locale === "fa";
   const lib = (jalali ? j : g) as typeof j;
-  const loc = jalali ? faIR : enUS;
+  // Gregorian formatting needs date-fns' own enUS (date-fns-jalali's enUS has Jalali month names).
+  const loc = (jalali ? faIR : enUS) as typeof faIR;
+  const fmt = (d: Date, pattern: string) => {
+    const s = lib.format(d, pattern, { locale: loc });
+    return jalali ? toPersianDigits(s) : s;
+  };
   const weekStartsOn = jalali ? 6 : 1;
 
   const [inner, setInner] = useState<string | null>(defaultValue ?? null);
@@ -64,7 +70,7 @@ export function DatePicker({
     return lib.eachDayOfInterval({ start, end });
   }, [lib, month, weekStartsOn]);
 
-  const weekdayLabels = days.slice(0, 7).map((d) => lib.format(d, "EEEEEE", { locale: loc }));
+  const weekdayLabels = days.slice(0, 7).map((d) => fmt(d, "EEEEEE"));
 
   const set = (d: Date | null) => {
     const v = d ? toDateValue(d) : null;
@@ -90,7 +96,7 @@ export function DatePicker({
             )}
           >
             <CalendarIcon className="text-muted-foreground" />
-            {selected ? lib.format(selected, "d MMMM yyyy", { locale: loc }) : (placeholder ?? "—")}
+            {selected ? fmt(selected, "d MMMM yyyy") : (placeholder ?? "—")}
           </Button>
         </PopoverTrigger>
         {clearable && selected && (
@@ -114,9 +120,7 @@ export function DatePicker({
           >
             <Prev />
           </Button>
-          <span className="text-sm font-bold">
-            {lib.format(month, "MMMM yyyy", { locale: loc })}
-          </span>
+          <span className="text-sm font-bold">{fmt(month, "MMMM yyyy")}</span>
           <Button
             type="button"
             variant="ghost"
@@ -151,7 +155,7 @@ export function DatePicker({
                   isSel && "bg-primary font-bold text-primary-foreground hover:bg-primary-dark",
                 )}
               >
-                {lib.format(d, "d", { locale: loc })}
+                {fmt(d, "d")}
               </button>
             );
           })}

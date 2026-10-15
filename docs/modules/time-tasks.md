@@ -132,12 +132,12 @@ runtime only, never during `next build`; state on `globalThis` so dev reloads do
 double-start; timers are `unref`'d; each run is error-isolated and never overlaps itself).
 Set `JOBS_DISABLED=1` to turn jobs off.
 
-| Job                   | Every  | What                                                                                                                                                            |
-| --------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `task-reminders`      | 1 min  | open tasks with `remind_at ≤ now` and `reminded_at` null → notify `assignee ?? created_by` (href `/panel/tasks?task=<id>`), set `reminded_at`                   |
-| `event-reminders`     | 1 min  | **non-recurring** events with `remind_minutes_before` where `start − minutes ≤ now`, not reminded, not canceled/done/missed, started < 6 h ago → notify creator |
-| `long-running-timers` | 15 min | running timers older than 10 h → one notification per entry                                                                                                     |
-| `invoice-overdue`     | 1 h    | `markOverdueInvoices()` — sent/viewed/partial invoices past their due day become `overdue` (see `docs/modules/finance.md`)                                      |
+| Job                   | Every  | What                                                                                                                                                                   |
+| --------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `task-reminders`      | 1 min  | open tasks with `remind_at ≤ now` and `reminded_at` null → notify `assignee ?? created_by` (href `/panel/tasks?task=<id>`), set `reminded_at`                          |
+| `event-reminders`     | 1 min  | `runEventReminders()` from the calendar service — one-off **and recurring** events (once per occurrence, tracked by `remindedAt`) → notify creator, link `?event=<id>` |
+| `long-running-timers` | 15 min | running timers older than 10 h → one notification per entry                                                                                                            |
+| `invoice-overdue`     | 1 h    | `markOverdueInvoices()` — sent/viewed/partial invoices past their due day become `overdue` (see `docs/modules/finance.md`)                                             |
 
 Notification texts use the recipient's locale (`users.locale`).
 
@@ -151,8 +151,6 @@ registerJob("invoice-overdue", 60 * 60_000, () => markOverdueInvoices());
 `registerJob(name, everyMs, fn)` may also be called at runtime (late registrations are scheduled
 immediately; re-registering a name replaces it). Jobs must be idempotent and quick; use
 `runJob(name)` to trigger one manually and `listJobs()` for diagnostics.
-
-TODO: recurring event reminders (expand the RRULE and remember the last reminded occurrence).
 
 ## Access rules
 

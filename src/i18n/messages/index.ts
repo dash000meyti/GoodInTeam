@@ -19,6 +19,7 @@ import { notifications as faNotifications } from "./fa/notifications";
 import { settings as faSettings } from "./fa/settings";
 import { designSystem as faDesignSystem } from "./fa/designSystem";
 import { finance as faFinance } from "./fa/finance";
+import { calendar as faCalendar } from "./fa/calendar";
 import { auth as enAuth } from "./en/auth";
 import { common as enCommon } from "./en/common";
 import { nav as enNav } from "./en/nav";
@@ -33,6 +34,7 @@ import { notifications as enNotifications } from "./en/notifications";
 import { settings as enSettings } from "./en/settings";
 import { designSystem as enDesignSystem } from "./en/designSystem";
 import { finance as enFinance } from "./en/finance";
+import { calendar as enCalendar } from "./en/calendar";
 
 const fa = {
   common: faCommon,
@@ -49,6 +51,7 @@ const fa = {
   settings: faSettings,
   designSystem: faDesignSystem,
   finance: faFinance,
+  calendar: faCalendar,
 };
 
 type Source = typeof fa;
@@ -70,6 +73,7 @@ const en: Messages = {
   settings: enSettings,
   designSystem: enDesignSystem,
   finance: enFinance,
+  calendar: enCalendar,
 };
 
 export const messages: Record<Locale, Messages> = { fa, en };

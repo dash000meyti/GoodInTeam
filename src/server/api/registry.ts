@@ -4,6 +4,7 @@ import type { Actor } from "@/server/auth/actor";
 import { AppError } from "@/server/errors";
 import type { ToolDef } from "./define-tool";
 import { apiTokensTools } from "@/server/modules/api-tokens/tools";
+import { calendarTools } from "@/server/modules/calendar/tools";
 import { clientsTools } from "@/server/modules/clients/tools";
 import { contractsTools } from "@/server/modules/contracts/tools";
 import { financeTools } from "@/server/modules/finance/tools";
@@ -32,6 +33,7 @@ export const tools: ToolDef[] = [
   ...usersTools,
   ...apiTokensTools,
   ...financeTools,
+  ...calendarTools,
 ];
 
 const byName = new Map(tools.map((t) => [t.name, t]));
