@@ -44,6 +44,53 @@ and returns `null` without access. Which tabs a viewer gets:
 - `projectAccessWhere(actor)` is the single SQL filter used everywhere (other modules should use
   it to scope project-linked data).
 
+### Field visibility (`projectView`)
+
+`listProjects` / `getProject` (and therefore pages, REST and MCP) run every row through
+`projectView(actor, row)` so the redaction happens **server-side**, not just in the UI:
+
+| Field                                            | owner/admin | member                         | client                    |
+| ------------------------------------------------ | ----------- | ------------------------------ | ------------------------- |
+| `budgetMinor`, `hourlyRateMinor`, `shareToken`   | ✓           | `null`                         | `null`                    |
+| `members[].hourlyCostMinor`                      | ✓           | `null`                         | — (`members: []`)         |
+| `client` (contact details, tax id, notes)        | full row    | `{ id, name, color, logoUrl }` | same as member            |
+| `progress`, milestones                           | ✓           | ✓                              | only with `shareProgress` |
+| `trackedMs` / `stats.trackedMs`, `estimateHours` | ✓           | ✓                              | only with `shareTime`     |
+| `repoUrl`, `tags`                                | ✓           | ✓                              | `null` / `[]`             |
+| `stats.money` (income/expense)                   | ✓           | `[]`                           | `[]`                      |
+
+Hidden values are `null` (or empty), so UI code checks `progress != null` / `trackedMs != null`
+instead of re-implementing the share flags.
+
+The staff dashboard (`src/server/modules/dashboard/service.ts`) is scoped the same way: projects
+via `projectAccessWhere`, tasks via `taskAccessWhere` (members: tasks of their projects + their
+own/assigned personal tasks), events via `listCalendarItems` (access rules + recurring series
+expanded to their next occurrences). Money, contracts and leads are admin-only.
+
+## Update semantics
+
+- Create and update have **separate schemas**. Never build an update schema with
+  `createSchema.partial()`: in zod 4 `.partial()` still applies `.default()`s, so a partial update
+  (e.g. a milestone status toggle) would silently reset `visibleToClient`, `status`, `currency`…
+- Update schemas have no defaults; the service writes **only the keys present** in the input:
+  - key absent / `undefined` → untouched;
+  - `""` (form) or `null` (JSON) → cleared, for nullable fields (`startDate`, `dueDate`, `budget`,
+    `hourlyRate`, `estimateHours`, `clientId`, `description`, URLs). Helpers: `zNullDay`,
+    `zNullNumber[Of]`, `zNullString` from `src/lib/zod-helpers.ts`.
+- Money inputs are major units parsed with the shared decimal parser (Persian digits and thousands
+  separators OK; `0x10`, `1e3`, `Infinity` rejected) and converted with the new `currency`, or the
+  project's current one. Changing only the currency keeps the major-unit amounts.
+- Currencies must be one of `currencyCodes` (`zCurrency`). Dates must be real calendar days
+  (`YYYY-MM-DD`, stored as the start of that day in the app timezone) or ISO date-times.
+- The slug only changes when the name changes; a milestone update can't move it to another project.
+
+## Due dates
+
+A project due date is a calendar day: it is **overdue only after that day ends** in the app
+timezone (`isOverdue` / `daysUntil` in `src/lib/due.ts`), never from 00:00 of the due day. The
+detail page shows "N days left", "Due today" or "N days overdue". Tasks follow the same rule for
+all-day due dates; timed task due dates are overdue once the time has passed.
+
 ## Progress
 
 `progress_mode`:
