@@ -57,6 +57,24 @@ function escapeHtml(s: string) {
     .replace(/"/g, "&quot;");
 }
 
+const SAFE_SCHEMES = new Set(["http", "https", "mailto", "tel"]);
+
+/**
+ * Link/image targets allowed in rendered Markdown: http(s), mailto, tel,
+ * relative paths, queries and fragments. Anything else (`javascript:`,
+ * `data:`, `vbscript:`…) returns null. Control characters and whitespace are
+ * ignored when detecting the scheme, as browsers do (`java\tscript:`).
+ */
+export function safeUrl(href: string | null | undefined, { images = false } = {}) {
+  const raw = (href ?? "").trim();
+  const compact = raw.replace(/[\u0000-\u0020\u007f-\u009f]/g, "");
+  if (!compact) return null;
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(compact)?.[1]?.toLowerCase();
+  if (!scheme) return raw;
+  if (images) return scheme === "http" || scheme === "https" ? raw : null;
+  return SAFE_SCHEMES.has(scheme) ? raw : null;
+}
+
 export interface Heading {
   depth: number;
   text: string;
@@ -89,13 +107,17 @@ export async function renderMarkdown(md: string, opts: { allowHtml?: boolean } =
           themes: { light: "github-light", dark: "github-dark" },
         });
       },
-      link({ href, title, tokens }: Tokens.Link) {
+      link({ href: rawHref, title, tokens }: Tokens.Link) {
         const text = this.parser.parseInline(tokens);
+        const href = safeUrl(rawHref);
+        if (href == null) return text;
         const external = /^https?:\/\//.test(href);
         const t = title ? ` title="${escapeHtml(title)}"` : "";
         return `<a href="${escapeHtml(href)}"${t}${external ? ' target="_blank" rel="noopener noreferrer"' : ""}>${text}</a>`;
       },
-      image({ href, title, text }: Tokens.Image) {
+      image({ href: rawHref, title, text }: Tokens.Image) {
+        const href = safeUrl(rawHref, { images: true });
+        if (href == null) return escapeHtml(text);
         const t = title ? ` title="${escapeHtml(title)}"` : "";
         return `<img src="${escapeHtml(href)}" alt="${escapeHtml(text)}"${t} loading="lazy" decoding="async" />`;
       },
