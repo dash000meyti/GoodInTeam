@@ -43,9 +43,9 @@ describe("mergeFieldControlProps", () => {
   });
 
   it("combines aria-describedby with the control's own", () => {
-    expect(
-      mergeFieldControlProps(ctx, { "aria-describedby": "own" })["aria-describedby"],
-    ).toBe("own f1-message");
+    expect(mergeFieldControlProps(ctx, { "aria-describedby": "own" })["aria-describedby"]).toBe(
+      "own f1-message",
+    );
   });
 
   it("omits aria-describedby when there is no hint or error", () => {

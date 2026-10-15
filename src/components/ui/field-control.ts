@@ -56,12 +56,7 @@ export function mergeFieldControlProps<P extends object>(
   if (describedBy) out["aria-describedby"] = describedBy;
   if (props["aria-invalid"] === undefined && ctx.invalid) out["aria-invalid"] = true;
   // The visual "*" is aria-hidden; announce it unless the control is natively `required`.
-  if (
-    kind === "control" &&
-    ctx.required &&
-    !props.required &&
-    props["aria-required"] === undefined
-  )
+  if (kind === "control" && ctx.required && !props.required && props["aria-required"] === undefined)
     out["aria-required"] = true;
   return out;
 }

@@ -104,7 +104,7 @@ export function MilestonesPanel({
                     variant="ghost"
                     size="icon-sm"
                     disabled={pending}
-                    className="opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 data-[state=open]:opacity-100"
+                    className="opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 pointer-coarse:opacity-100"
                     aria-label={`${t.common.delete}: ${m.title}`}
                   >
                     <Trash2Icon className="text-destructive" />

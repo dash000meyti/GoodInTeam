@@ -178,7 +178,7 @@ export function SidebarSkeleton() {
   return (
     <aside
       aria-hidden
-      className="sticky top-0 hidden h-dvh w-[280px] shrink-0 flex-col gap-3 border-e border-dashed border-sidebar-border bg-sidebar p-5 lg:flex in-data-sidebar-collapsed:w-[88px]"
+      className="sticky top-0 hidden h-dvh w-[280px] shrink-0 flex-col gap-3 border-e border-dashed border-sidebar-border bg-sidebar p-5 in-data-sidebar-collapsed:w-[88px] lg:flex"
     >
       <div className="h-8 w-32 max-w-full animate-pulse rounded-lg bg-grey-500/12" />
       {Array.from({ length: 9 }).map((_, i) => (
