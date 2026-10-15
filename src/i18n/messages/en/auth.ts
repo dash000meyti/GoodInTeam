@@ -15,4 +15,6 @@ export const auth: Record<keyof typeof fa, string> = {
   passwordHint: "At least 10 characters. A long, memorable passphrase is best.",
   backToSite: "Back to site",
   clientHint: "Are you a client? Sign in with the email you were invited with.",
+  showPassword: "Show password",
+  hidePassword: "Hide password",
 };
