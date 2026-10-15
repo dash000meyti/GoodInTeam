@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
 import { connection } from "next/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { localePath } from "@/i18n/config";
@@ -20,9 +21,10 @@ async function SetupHint() {
   return (
     <Link
       href={localePath(locale, "/setup")}
-      className="block rounded-xl border border-dashed border-primary/50 bg-primary/8 p-4 text-sm font-semibold text-primary-dark dark:text-primary-light"
+      className="flex items-center gap-2 rounded-xl border border-dashed border-primary/50 bg-primary/8 p-4 text-sm font-semibold text-primary-dark dark:text-primary-light"
     >
-      {getMessages(locale).auth.setupTitle} →
+      {getMessages(locale).auth.setupTitle}
+      <ArrowRightIcon aria-hidden className="size-4 shrink-0 rtl:rotate-180" />
     </Link>
   );
 }
