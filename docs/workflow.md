@@ -31,8 +31,13 @@ then release.
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes/PRs to `dev` and `main`: install → lint → typecheck →
-unit tests → production build. `release.yml` builds & pushes the Docker image on `main`.
+`.github/workflows/ci.yml` runs on pushes/PRs to `dev` and `main`, in two parallel jobs:
+
+- **check**: install → lint → typecheck → unit tests → production build;
+- **e2e**: fresh demo DB (`db:reset` + `db:seed`) → production build → `pnpm start` →
+  Playwright browser tests (`pnpm test:e2e`); on failure the traces and server log are uploaded.
+
+`release.yml` builds & pushes the Docker image on `main`.
 
 ## For AI agents
 

@@ -28,3 +28,37 @@ jobs:
       - run: pnpm build
         env:
           NEXT_PUBLIC_SITE_URL: https://example.com
+
+  e2e:
+    name: Browser tests (Playwright)
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      DATA_DIR: ./data
+      APP_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+      APP_TIMEZONE: Asia/Tehran
+      JOBS_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm db:reset && pnpm db:seed
+      - run: pnpm build
+      - name: Start the app
+        run: |
+          pnpm start > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3000/api/health && exit 0; sleep 1; done
+          cat server.log; exit 1
+      - run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright
+          path: |
+            test-results/
+            server.log
