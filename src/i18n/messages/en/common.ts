@@ -9,6 +9,7 @@ export const common: Record<keyof typeof fa, string> = {
   cancel: "Cancel",
   close: "Close",
   delete: "Delete",
+  remove: "Remove",
   deleteConfirmTitle: "Delete this item?",
   deleteConfirmBody: "This action cannot be undone.",
   edit: "Edit",

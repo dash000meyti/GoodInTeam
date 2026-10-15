@@ -96,6 +96,7 @@ function TagsInput({
   placeholder?: string;
   ltr?: boolean;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState("");
   const add = (raw: string) => {
     const parts = raw
@@ -117,7 +118,7 @@ function TagsInput({
           {tag}
           <button
             type="button"
-            aria-label="remove"
+            aria-label={`${t.common.remove} ${tag}`}
             onClick={() => onChange(value.filter((x) => x !== tag))}
             className="cursor-pointer text-muted-foreground hover:text-destructive"
           >

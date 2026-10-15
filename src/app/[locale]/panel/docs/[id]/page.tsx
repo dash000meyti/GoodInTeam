@@ -55,7 +55,7 @@ export default async function DocPage({ params }: PageProps<"/[locale]/panel/doc
       <style>{PAGE_CSS}</style>
 
       <nav
-        aria-label="breadcrumb"
+        aria-label={t.common.breadcrumb}
         className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
       >
         <Link href={href("/panel/docs")} className="hover:text-foreground hover:underline">

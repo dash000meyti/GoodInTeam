@@ -4,6 +4,7 @@ import { PanelHeader } from "@/components/panel/header";
 import { PanelUIProvider } from "@/components/panel/panel-ui";
 import { sidebarInitScript } from "@/components/panel/panel-prefs";
 import { InlineScript } from "@/components/shared/inline-script";
+import { InteractiveProviders } from "@/components/shared/interactive-providers";
 import {
   HeaderSlotSkeleton,
   SessionHeaderSlot,
@@ -28,28 +29,30 @@ export default async function PanelLayout({ children }: LayoutProps<"/[locale]/p
     <I18nProvider locale={locale} messages={getMessages(locale)}>
       {/* Before paint: collapsed-sidebar cookie → <html data-sidebar-collapsed> (skeleton width). */}
       <InlineScript html={sidebarInitScript} />
-      <PanelUIProvider>
-        <div className="flex min-h-dvh bg-background">
-          <Suspense fallback={<SidebarSkeleton />}>
-            <SessionSidebar />
-          </Suspense>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <PanelHeader
-              slot={
-                <Suspense fallback={<HeaderSlotSkeleton />}>
-                  <SessionHeaderSlot />
-                </Suspense>
-              }
-            />
-            <main
-              id="main"
-              className="mx-auto w-full max-w-[1400px] flex-1 px-4 pt-4 pb-20 sm:px-6 lg:px-10"
-            >
-              {children}
-            </main>
+      <InteractiveProviders>
+        <PanelUIProvider>
+          <div className="flex min-h-dvh bg-background">
+            <Suspense fallback={<SidebarSkeleton />}>
+              <SessionSidebar />
+            </Suspense>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <PanelHeader
+                slot={
+                  <Suspense fallback={<HeaderSlotSkeleton />}>
+                    <SessionHeaderSlot />
+                  </Suspense>
+                }
+              />
+              <main
+                id="main"
+                className="mx-auto w-full max-w-[1400px] flex-1 px-4 pt-4 pb-20 sm:px-6 lg:px-10"
+              >
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
-      </PanelUIProvider>
+        </PanelUIProvider>
+      </InteractiveProviders>
     </I18nProvider>
   );
 }

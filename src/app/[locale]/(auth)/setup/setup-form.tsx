@@ -17,15 +17,18 @@ export function SetupForm() {
   return (
     <form
       className="grid gap-5"
-      action={(fd) =>
+      // onSubmit (not action=): keep typed values when the server rejects them.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         start(async () => {
           const res = await setupOwner(fd);
           if (res && !res.ok) {
             setMessage(res.error.message);
             setErrors(res.error.fieldErrors ?? {});
           }
-        })
-      }
+        });
+      }}
     >
       <Field label={t.auth.name} htmlFor="name" error={errors.name?.[0]}>
         <Input id="name" name="name" autoComplete="name" required />

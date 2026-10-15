@@ -14,6 +14,7 @@ import {
 import { LogoMark } from "@/components/brand/logo";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InteractiveProviders } from "@/components/shared/interactive-providers";
 import { LocaleSwitcher } from "@/components/shared/locale-switcher";
 import { ThemeToggle } from "@/components/shared/theme-controls";
 import { ContractDocument } from "@/components/contracts/contract-document";
@@ -59,16 +60,18 @@ export default async function SignPage({ params }: PageProps<"/[locale]/sign/[to
   const locale = await getLocale();
   return (
     <I18nProvider locale={locale} messages={pickMessages(locale, ["common", "contracts"])}>
-      <ContractPrintStyles />
-      <div className="relative min-h-dvh bg-muted/40 print:bg-white">
-        <div
-          aria-hidden
-          className="bg-dots mask-fade-b absolute inset-x-0 top-0 h-80 print:hidden"
-        />
-        <Suspense fallback={<SignSkeleton />}>
-          <SignView params={params} locale={locale} />
-        </Suspense>
-      </div>
+      <InteractiveProviders>
+        <ContractPrintStyles />
+        <div className="relative min-h-dvh bg-muted/40 print:bg-white">
+          <div
+            aria-hidden
+            className="bg-dots mask-fade-b absolute inset-x-0 top-0 h-80 print:hidden"
+          />
+          <Suspense fallback={<SignSkeleton />}>
+            <SignView params={params} locale={locale} />
+          </Suspense>
+        </div>
+      </InteractiveProviders>
     </I18nProvider>
   );
 }

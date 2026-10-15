@@ -7,6 +7,7 @@ export const common = {
   cancel: "انصراف",
   close: "بستن",
   delete: "حذف",
+  remove: "برداشتن",
   deleteConfirmTitle: "از حذف مطمئن هستید؟",
   deleteConfirmBody: "این کار قابل بازگشت نیست.",
   edit: "ویرایش",

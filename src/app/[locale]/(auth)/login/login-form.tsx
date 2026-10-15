@@ -19,7 +19,10 @@ export function LoginForm() {
   return (
     <form
       className="grid gap-5"
-      action={(fd) =>
+      // onSubmit (not action=): React resets forms after an action, which would clear the email.
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         start(async () => {
           setError(null);
           const res = await login({
@@ -28,8 +31,8 @@ export function LoginForm() {
             next,
           });
           if (res && !res.ok) setError(res.error.message);
-        })
-      }
+        });
+      }}
     >
       <Field label={t.auth.email} htmlFor="email">
         <Input

@@ -2,6 +2,7 @@ import "server-only";
 import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { format } from "@/i18n/format-message";
+import { getT } from "@/i18n/server";
 import type { Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
 import { cn } from "@/lib/utils";
@@ -9,16 +10,20 @@ import { breadcrumbLd, JsonLd } from "./json-ld";
 import { fmtNum } from "./ui";
 
 /** Visible breadcrumb trail + BreadcrumbList JSON-LD. Paths are locale-prefixed already. */
-export function Breadcrumbs({
+export async function Breadcrumbs({
   items,
   className,
 }: {
   items: { name: string; path: string }[];
   className?: string;
 }) {
+  const t = await getT();
   return (
     <>
-      <nav aria-label="breadcrumb" className={cn("text-sm text-muted-foreground", className)}>
+      <nav
+        aria-label={t.common.breadcrumb}
+        className={cn("text-sm text-muted-foreground", className)}
+      >
         <ol className="flex flex-wrap items-center gap-1.5">
           {items.map((it, i) => (
             <li key={it.path} className="flex min-w-0 items-center gap-1.5">
