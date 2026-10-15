@@ -3,6 +3,8 @@ import type { projects as fa } from "../fa/projects";
 export const projects: Record<keyof typeof fa, string> = {
   title: "Projects",
   subtitle: "All projects, progress, budgets and what your client can see.",
+  subtitleClient: "Your projects and where they stand.",
+  emptyClient: "No projects have been shared with you yet.",
   new: "New project",
   edit: "Edit project",
   name: "Project name",

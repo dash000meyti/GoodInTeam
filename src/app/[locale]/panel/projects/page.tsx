@@ -10,7 +10,7 @@ import { isOverdue } from "@/lib/due";
 import { formatDate, formatHours, formatPercent } from "@/lib/format";
 import { markdownToText } from "@/lib/markdown";
 import { cn } from "@/lib/utils";
-import { isAdmin } from "@/server/auth/actor";
+import { isAdmin, isStaff } from "@/server/auth/actor";
 import { clientOptions } from "@/server/modules/clients/service";
 import { listProjects } from "@/server/modules/projects/service";
 import { panelContext } from "@/server/page-context";
@@ -21,6 +21,7 @@ export default async function ProjectsPage() {
   const { actor, t, fmt, href, locale, now, tz } = await panelContext();
   const list = await listProjects(actor);
   const admin = isAdmin(actor);
+  const staff = isStaff(actor);
   const clients = admin ? clientOptions(actor) : [];
   const p = t.projects;
 
@@ -39,7 +40,7 @@ export default async function ProjectsPage() {
     <>
       <PageHeader
         title={p.title}
-        description={p.subtitle}
+        description={staff ? p.subtitle : p.subtitleClient}
         crumbs={[{ label: t.nav.dashboard, href: href("/panel") }, { label: p.title }]}
         actions={newButton}
       />
@@ -47,7 +48,7 @@ export default async function ProjectsPage() {
         <EmptyState
           icon={FolderKanbanIcon}
           title={p.empty}
-          description={p.emptyHint}
+          description={staff ? p.emptyHint : p.emptyClient}
           action={newButton}
         />
       ) : (
