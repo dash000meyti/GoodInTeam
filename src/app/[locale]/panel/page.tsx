@@ -105,7 +105,7 @@ async function StaffDashboard({ ctx }: { ctx: PanelContext }) {
         ) : (
           <StatCard
             label={t.panel.activeProjects}
-            value={formatNumber(d.activeProjects.length, locale)}
+            value={formatNumber(d.activeProjectCount, locale)}
             icon={TrendingDownIcon}
             tone="warning"
           />
@@ -168,7 +168,8 @@ async function StaffDashboard({ ctx }: { ctx: PanelContext }) {
             ) : (
               <ul className="space-y-3">
                 {d.dueToday.map((task) => {
-                  const late = task.dueAt && task.dueAt.getTime() < ctx.now;
+                  // All-day tasks become overdue after their day ends, timed ones after the time.
+                  const late = task.overdue;
                   return (
                     <li key={task.id} className="flex items-start gap-3">
                       <ColorDot color={task.project?.color} className="mt-1.5" />
@@ -246,15 +247,15 @@ async function StaffDashboard({ ctx }: { ctx: PanelContext }) {
             ) : (
               <ul className="space-y-4">
                 {d.upcoming.map((ev) => (
-                  <li key={ev.id} className="flex gap-3">
+                  <li key={ev.key} className="flex gap-3">
                     <div
                       className="w-1 shrink-0 rounded-full"
-                      style={{ backgroundColor: ev.color ?? ev.project?.color ?? "var(--primary)" }}
+                      style={{ backgroundColor: ev.color }}
                     />
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{ev.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {ev.allDay ? formatDate(ev.startAt, fmt) : formatDateTime(ev.startAt, fmt)}
+                        {ev.allDay ? formatDate(ev.start, fmt) : formatDateTime(ev.start, fmt)}
                         {ev.client?.name ? ` · ${ev.client.name}` : ""}
                       </p>
                     </div>
