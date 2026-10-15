@@ -66,6 +66,7 @@ export const projects = {
   budgetUsed: "بودجه مصرف‌شده",
   daysLeft: "روز باقی‌مانده",
   overdueBy: "{n} روز تأخیر",
+  dueTodayHint: "سررسید امروز",
   empty: "هنوز پروژه‌ای نساخته‌اید.",
   emptyHint: "اولین پروژه را بسازید تا زمان، کارها و قراردادها را به آن وصل کنید.",
   archive: "بایگانی",

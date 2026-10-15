@@ -16,8 +16,9 @@ import { ColorDot } from "@/components/shared/color-dot";
 import { Markdown } from "@/components/shared/markdown";
 import { PageHeader } from "@/components/panel/page-header";
 import { StatCard } from "@/components/panel/stat-card";
+import { daysUntil } from "@/lib/due";
 import { env } from "@/lib/env";
-import { formatDate, formatDateTime, formatHours, formatPercent } from "@/lib/format";
+import { formatDate, formatDateTime, formatHours, formatNumber, formatPercent } from "@/lib/format";
 import { formatMoney } from "@/lib/money";
 import { toDateInputValue } from "@/lib/tz";
 import { isAdmin, isStaff } from "@/server/auth/actor";
@@ -34,6 +35,7 @@ import { ProjectTasksPanel } from "../../tasks/_components/project-tasks-panel";
 import { ProjectTimePanel } from "../../time/_components/project-time-panel";
 import { MilestonesPanel } from "../_components/milestones-panel";
 import { ProjectActions } from "../_components/project-actions";
+import type { ProjectFormValues } from "../_components/project-form";
 import { ProjectStatusBadge } from "../_components/project-status-badge";
 import { ShareLinkCard } from "../_components/share-link-card";
 import { UpdateComposer } from "../_components/update-composer";
@@ -57,7 +59,9 @@ export default async function ProjectPage({
   const admin = isAdmin(actor);
   const staff = isStaff(actor);
   const isClient = !staff;
-  const showProgress = staff || project.shareProgress;
+  // The service nulls `progress` (and empties milestones) when it isn't shared with a client.
+  const progress = project.progress;
+  const showProgress = progress != null;
   // Tabs per role: staff see every module; clients only what the project shares.
   const tabs = {
     overview: true,
@@ -75,14 +79,41 @@ export default async function ProjectPage({
   const requested = first((await searchParams).tab);
   const activeTab: Tab =
     requested && requested in tabs && tabs[requested as Tab] ? (requested as Tab) : "overview";
-  const daysLeft = project.dueDate
-    ? Math.ceil((project.dueDate.getTime() - ctx.now) / 86_400_000)
-    : null;
+  // Calendar days in the app timezone: 0 = due today (not overdue until the day ends).
+  const daysLeft = project.dueDate ? daysUntil(project.dueDate, ctx.now, tz) : null;
+  const dueHint =
+    daysLeft == null
+      ? undefined
+      : daysLeft > 0
+        ? `${formatNumber(daysLeft, locale)} ${p.daysLeft}`
+        : daysLeft === 0
+          ? p.dueTodayHint
+          : p.overdueBy.replace("{n}", formatNumber(-daysLeft, locale));
 
-  const formValues = {
-    ...project,
+  const formValues: ProjectFormValues = {
+    id: project.id,
+    name: project.name,
+    clientId: project.clientId,
+    description: project.description,
+    status: project.status,
+    color: project.color,
     startDate: project.startDate ? toDateInputValue(project.startDate, tz) : null,
     dueDate: project.dueDate ? toDateInputValue(project.dueDate, tz) : null,
+    billingType: project.billingType,
+    currency: project.currency,
+    budgetMinor: project.budgetMinor,
+    hourlyRateMinor: project.hourlyRateMinor,
+    estimateHours: project.estimateHours,
+    progress: progress ?? 0,
+    progressMode: project.progressMode,
+    websiteUrl: project.websiteUrl,
+    repoUrl: project.repoUrl,
+    portalEnabled: project.portalEnabled,
+    shareProgress: project.shareProgress,
+    shareTime: project.shareTime,
+    shareTasks: project.shareTasks,
+    shareFinance: project.shareFinance,
+    shareDocs: project.shareDocs,
   };
 
   return (
@@ -109,11 +140,11 @@ export default async function ProjectPage({
       />
 
       <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        {showProgress && (
+        {progress != null && (
           <Card className="gap-3 p-6">
             <p className="text-sm font-semibold text-muted-foreground">{p.progress}</p>
-            <p className="text-2xl font-extrabold">{formatPercent(project.progress, locale)}</p>
-            <Progress value={project.progress} />
+            <p className="text-2xl font-extrabold">{formatPercent(progress, locale)}</p>
+            <Progress value={progress} />
           </Card>
         )}
         {stats.trackedMs != null && (
@@ -131,13 +162,7 @@ export default async function ProjectPage({
           <StatCard
             label={p.dueDate}
             value={formatDate(project.dueDate, fmt)}
-            hint={
-              daysLeft != null
-                ? daysLeft >= 0
-                  ? `${daysLeft} ${p.daysLeft}`
-                  : p.overdueBy.replace("{n}", String(-daysLeft))
-                : undefined
-            }
+            hint={dueHint}
             icon={CalendarIcon}
             tone={daysLeft != null && daysLeft < 0 ? "destructive" : "warning"}
           />

@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { clientKinds } from "@/server/db/schema";
-import { zId, zNullString, zOptString, zTags } from "@/lib/zod-helpers";
+import { zCurrency, zId, zNullString, zOptString, zTags } from "@/lib/zod-helpers";
 
+/** Create input. Don't derive the update schema from it (`.partial()` keeps defaults). */
 export const clientInput = z.object({
   name: z.string().trim().min(1).max(200),
   kind: z.enum(clientKinds).default("company"),
@@ -12,12 +13,26 @@ export const clientInput = z.object({
   taxId: zNullString(100),
   notes: zNullString(10_000),
   color: zNullString(16),
-  defaultCurrency: z.string().max(8).default("IRT"),
+  defaultCurrency: zCurrency.default("IRT"),
   tags: zTags.optional(),
 });
 export type ClientInput = z.input<typeof clientInput>;
 
-export const updateClientInput = clientInput.partial().extend({ id: zId });
+/** Partial update: absent = untouched, "" / null clears nullable fields. No defaults. */
+export const updateClientInput = z.object({
+  id: zId,
+  name: z.string().trim().min(1).max(200).optional(),
+  kind: z.enum(clientKinds).optional(),
+  email: zNullString(200),
+  phone: zNullString(50),
+  website: zNullString(500),
+  address: zNullString(1000),
+  taxId: zNullString(100),
+  notes: zNullString(10_000),
+  color: zNullString(16),
+  defaultCurrency: zCurrency.optional(),
+  tags: zTags.optional(),
+});
 
 export const inviteClientUserInput = z.object({
   clientId: zId,

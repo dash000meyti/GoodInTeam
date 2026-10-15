@@ -6,8 +6,10 @@ import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { ColorDot } from "@/components/shared/color-dot";
+import { isOverdue } from "@/lib/due";
 import { formatDate, formatHours, formatPercent } from "@/lib/format";
 import { markdownToText } from "@/lib/markdown";
+import { cn } from "@/lib/utils";
 import { isAdmin } from "@/server/auth/actor";
 import { clientOptions } from "@/server/modules/clients/service";
 import { listProjects } from "@/server/modules/projects/service";
@@ -16,7 +18,7 @@ import { ProjectFormDialog } from "./_components/project-form";
 import { ProjectStatusBadge } from "./_components/project-status-badge";
 
 export default async function ProjectsPage() {
-  const { actor, t, fmt, href, locale, now } = await panelContext();
+  const { actor, t, fmt, href, locale, now, tz } = await panelContext();
   const list = await listProjects(actor);
   const admin = isAdmin(actor);
   const clients = admin ? clientOptions(actor) : [];
@@ -51,7 +53,9 @@ export default async function ProjectsPage() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {list.map((proj) => {
-            const late = proj.dueDate && proj.dueDate.getTime() < now && proj.status === "active";
+            // A due day is overdue only after it ends (app timezone), not from 00:00.
+            const late =
+              proj.status === "active" && isOverdue(proj.dueDate, { allDay: true, now, tz });
             return (
               <Link key={proj.id} href={href(`/panel/projects/${proj.id}`)} className="group">
                 <Card className="relative h-full gap-4 overflow-hidden p-6 transition-shadow group-hover:shadow-dropdown">
@@ -77,29 +81,43 @@ export default async function ProjectsPage() {
                       {markdownToText(proj.description, 200)}
                     </p>
                   )}
-                  <div className="mt-auto space-y-2">
-                    <div className="flex items-center justify-between text-xs font-semibold">
-                      <span className="text-muted-foreground">{p.progress}</span>
-                      <span>{formatPercent(proj.progress, locale)}</span>
+                  {/* progress / trackedMs are null when the client portal doesn't share them */}
+                  {proj.progress != null && (
+                    <div className="mt-auto space-y-2">
+                      <div className="flex items-center justify-between text-xs font-semibold">
+                        <span className="text-muted-foreground">{p.progress}</span>
+                        <span>{formatPercent(proj.progress, locale)}</span>
+                      </div>
+                      <Progress
+                        value={proj.progress}
+                        indicatorClassName="bg-[var(--c)]"
+                        style={{ "--c": proj.color } as React.CSSProperties}
+                      />
                     </div>
-                    <Progress
-                      value={proj.progress}
-                      indicatorClassName="bg-[var(--c)]"
-                      style={{ "--c": proj.color } as React.CSSProperties}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between border-t border-dashed pt-3 text-xs text-muted-foreground">
-                    <span>
-                      {p.timeSpent}:{" "}
-                      <b className="text-foreground">{formatHours(proj.trackedMs, locale)}</b>{" "}
-                      {t.common.hours}
-                    </span>
-                    {proj.dueDate && (
-                      <span className={late ? "font-bold text-destructive" : undefined}>
-                        {formatDate(proj.dueDate, fmt)}
-                      </span>
-                    )}
-                  </div>
+                  )}
+                  {(proj.trackedMs != null || proj.dueDate) && (
+                    <div
+                      className={cn(
+                        "flex items-center justify-between border-t border-dashed pt-3 text-xs text-muted-foreground",
+                        proj.progress == null && "mt-auto",
+                      )}
+                    >
+                      {proj.trackedMs != null ? (
+                        <span>
+                          {p.timeSpent}:{" "}
+                          <b className="text-foreground">{formatHours(proj.trackedMs, locale)}</b>{" "}
+                          {t.common.hours}
+                        </span>
+                      ) : (
+                        <span />
+                      )}
+                      {proj.dueDate && (
+                        <span className={late ? "font-bold text-destructive" : undefined}>
+                          {formatDate(proj.dueDate, fmt)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </Card>
               </Link>
             );
