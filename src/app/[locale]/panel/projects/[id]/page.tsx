@@ -24,7 +24,14 @@ import { isAdmin, isStaff } from "@/server/auth/actor";
 import { AppError } from "@/server/errors";
 import { clientOptions } from "@/server/modules/clients/service";
 import { getProject } from "@/server/modules/projects/service";
+import { canAccessContracts } from "@/server/modules/contracts/service";
 import { panelContext } from "@/server/page-context";
+import { ProjectEventsPanel } from "../../calendar/_components/project-events-panel";
+import { ProjectContractsPanel } from "../../contracts/_components/project-contracts-panel";
+import { ProjectDocsPanel } from "../../docs/_components/project-docs-panel";
+import { ProjectFinancePanel } from "../../finance/_components/project-finance-panel";
+import { ProjectTasksPanel } from "../../tasks/_components/project-tasks-panel";
+import { ProjectTimePanel } from "../../time/_components/project-time-panel";
 import { MilestonesPanel } from "../_components/milestones-panel";
 import { ProjectActions } from "../_components/project-actions";
 import { ProjectStatusBadge } from "../_components/project-status-badge";
@@ -32,7 +39,12 @@ import { ShareLinkCard } from "../_components/share-link-card";
 import { UpdateComposer } from "../_components/update-composer";
 import { kindLabels } from "../_components/update-kinds";
 
-export default async function ProjectPage({ params }: PageProps<"/[locale]/panel/projects/[id]">) {
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+
+export default async function ProjectPage({
+  params,
+  searchParams,
+}: PageProps<"/[locale]/panel/projects/[id]">) {
   const { id } = await params;
   const ctx = await panelContext();
   const { actor, t, fmt, href, locale, tz } = ctx;
@@ -46,6 +58,23 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/panel
   const staff = isStaff(actor);
   const isClient = !staff;
   const showProgress = staff || project.shareProgress;
+  // Tabs per role: staff see every module; clients only what the project shares.
+  const tabs = {
+    overview: true,
+    milestones: showProgress,
+    updates: true,
+    tasks: staff || project.shareTasks,
+    time: staff || project.shareTime,
+    calendar: true,
+    contracts: canAccessContracts(actor),
+    finance: admin || (isClient && project.shareFinance),
+    docs: staff || project.shareDocs,
+    portal: admin,
+  } satisfies Record<string, boolean>;
+  type Tab = keyof typeof tabs;
+  const requested = first((await searchParams).tab);
+  const activeTab: Tab =
+    requested && requested in tabs && tabs[requested as Tab] ? (requested as Tab) : "overview";
   const daysLeft = project.dueDate
     ? Math.ceil((project.dueDate.getTime() - ctx.now) / 86_400_000)
     : null;
@@ -124,12 +153,18 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/panel
         )}
       </div>
 
-      <Tabs defaultValue="overview" className="mt-8">
-        <TabsList>
+      <Tabs defaultValue={activeTab} className="mt-8">
+        <TabsList className="max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="overview">{p.overview}</TabsTrigger>
-          {showProgress && <TabsTrigger value="milestones">{p.milestones}</TabsTrigger>}
+          {tabs.milestones && <TabsTrigger value="milestones">{p.milestones}</TabsTrigger>}
           <TabsTrigger value="updates">{p.updates}</TabsTrigger>
-          {admin && <TabsTrigger value="portal">{p.portal}</TabsTrigger>}
+          {tabs.tasks && <TabsTrigger value="tasks">{p.tabTasks}</TabsTrigger>}
+          {tabs.time && <TabsTrigger value="time">{p.tabTime}</TabsTrigger>}
+          <TabsTrigger value="calendar">{p.tabCalendar}</TabsTrigger>
+          {tabs.contracts && <TabsTrigger value="contracts">{p.tabContracts}</TabsTrigger>}
+          {tabs.finance && <TabsTrigger value="finance">{p.tabFinance}</TabsTrigger>}
+          {tabs.docs && <TabsTrigger value="docs">{p.tabDocs}</TabsTrigger>}
+          {tabs.portal && <TabsTrigger value="portal">{p.portal}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="overview">
@@ -228,38 +263,74 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/panel
             ) : (
               <ol className="space-y-4">
                 {updates.map((u) => (
-                  <Card key={u.id} className="gap-3 p-6">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge
-                        variant={
-                          u.kind === "release"
-                            ? "success"
-                            : u.kind === "issue"
-                              ? "destructive"
-                              : u.kind === "request"
-                                ? "warning"
-                                : "info"
-                        }
-                      >
-                        {kindLabels[locale][u.kind]}
-                      </Badge>
-                      <h3 className="font-bold">{u.title}</h3>
-                      {staff && !u.visibleToClient && (
-                        <Badge variant="neutral">{t.common.draft}</Badge>
-                      )}
-                      <span className="ms-auto text-xs text-muted-foreground">
-                        {u.author?.name} · {formatDateTime(u.createdAt, fmt)}
-                      </span>
-                    </div>
-                    {u.bodyMd && <Markdown source={u.bodyMd} className="text-[15px]" />}
-                  </Card>
+                  <li key={u.id}>
+                    <Card className="gap-3 p-6">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge
+                          variant={
+                            u.kind === "release"
+                              ? "success"
+                              : u.kind === "issue"
+                                ? "destructive"
+                                : u.kind === "request"
+                                  ? "warning"
+                                  : "info"
+                          }
+                        >
+                          {kindLabels[locale][u.kind]}
+                        </Badge>
+                        <h3 className="font-bold">{u.title}</h3>
+                        {staff && !u.visibleToClient && (
+                          <Badge variant="neutral">{t.common.draft}</Badge>
+                        )}
+                        <span className="ms-auto text-xs text-muted-foreground">
+                          {u.author?.name} · {formatDateTime(u.createdAt, fmt)}
+                        </span>
+                      </div>
+                      {u.bodyMd && <Markdown source={u.bodyMd} className="text-[15px]" />}
+                    </Card>
+                  </li>
                 ))}
               </ol>
             )}
           </div>
         </TabsContent>
 
-        {admin && (
+        {tabs.tasks && (
+          <TabsContent value="tasks">
+            <ProjectTasksPanel projectId={project.id} ctx={ctx} clientView={isClient} />
+          </TabsContent>
+        )}
+
+        {tabs.time && (
+          <TabsContent value="time">
+            <ProjectTimePanel projectId={project.id} ctx={ctx} clientView={isClient} />
+          </TabsContent>
+        )}
+
+        <TabsContent value="calendar">
+          <ProjectEventsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
+        </TabsContent>
+
+        {tabs.contracts && (
+          <TabsContent value="contracts">
+            <ProjectContractsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
+          </TabsContent>
+        )}
+
+        {tabs.finance && (
+          <TabsContent value="finance">
+            <ProjectFinancePanel projectId={project.id} ctx={ctx} clientView={isClient} />
+          </TabsContent>
+        )}
+
+        {tabs.docs && (
+          <TabsContent value="docs">
+            <ProjectDocsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
+          </TabsContent>
+        )}
+
+        {tabs.portal && (
           <TabsContent value="portal">
             <div className="grid gap-6 lg:grid-cols-2">
               <Card>
@@ -318,7 +389,6 @@ export default async function ProjectPage({ params }: PageProps<"/[locale]/panel
           </TabsContent>
         )}
       </Tabs>
-      {isClient && null}
     </>
   );
 }

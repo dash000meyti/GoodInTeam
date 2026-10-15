@@ -25,9 +25,17 @@ pnpm check               # lint + typecheck + unit tests — run before every co
 pnpm build               # production build (also validates Cache Components rules)
 pnpm db:generate         # after editing src/server/db/schema/* → creates a migration in drizzle/
 pnpm db:reset && pnpm db:seed   # fresh local DB with demo data (owner@goodteam.local / goodteam-demo-pass)
+pnpm test:e2e            # Playwright browser tests (e2e/) against a running dev server with demo data
+node scripts/shots.mjs   # screenshots of pages (fa/en, --dark, --mobile) for visual QA
 ```
 
 Migrations are applied automatically when the server starts (`src/instrumentation.ts`).
+
+- **Stop a server by its port**, never by process name: `lsof -ti tcp:3000 | xargs kill`
+  (`pkill node`/`pkill next` also kills other servers, editors and tools on the machine).
+- **Stop `pnpm dev` before `git merge`/`rebase`/`checkout`.** Turbopack's persistent dev cache can
+  capture files mid-merge (with conflict markers) and keep failing after they're fixed; if that
+  happens, `rm -rf .next/dev` and restart.
 
 ## Git workflow (important)
 
@@ -88,9 +96,15 @@ docs/                      # architecture, conventions, data model, design syste
      `panelContext()` or a `'use cache'` function.
    - After a mutation in a server action call `refresh()` (panel data) or `updateTag(tag)` (cached
      public content). Route handlers use `revalidateTag(tag, "max")`.
+   - **Every panel route folder has a `loading.tsx`** (`<PageSkeleton />` or a layout-matching
+     skeleton). Next 16.4 validates instant navigations; a missing boundary blocks the route.
 4. **i18n:** never hard-code UI strings. Add keys to `src/i18n/messages/fa/<ns>.ts` (source of
    truth) **and** `en/<ns>.ts`, register new namespaces in `messages/index.ts`. Server:
    `getT()`/`panelContext().t`; client: `useT()`.
+   **Business-rule errors** carry a stable key: throw the module's error class (e.g.
+   `FinanceError("invoiceNotPayable", "amount")`, English text for API/MCP callers) and let the
+   module's server actions re-localize it via a `localized(() => svc.x(...))` wrapper
+   (`finance/errors.ts`, `users/localize.ts`). Never build user-facing error text in a service.
 5. **RTL first:** use logical utilities only — `ms-/me-/ps-/pe-/start-/end-/text-start/border-s`.
    Never `ml-/mr-/pl-/pr-/left-/right-` for layout. Directional icons get `rtl:rotate-180`.
 6. **Dates:** store UTC instants (`timestamp_ms`). Render with `formatDate(…, ctx.fmt)` (Jalali
@@ -103,7 +117,9 @@ docs/                      # architecture, conventions, data model, design syste
    Log important mutations with `logActivity()`.
 9. **UI:** compose from `components/ui` + `components/shared` + `components/panel`. Follow the
    Minimals look (soft surfaces, `shadow-card`, `rounded-2xl` cards, `Badge` soft variants).
-   Every list needs an `EmptyState`; every page a `PageHeader`.
+   Every list needs an `EmptyState`; every page a `PageHeader`. When you add or change a
+   component in `components/ui` / `components/shared`, update its example in the living catalog
+   `/panel/design-system` (`panel/design-system/_components/sections/*`).
 10. **Keep docs in sync:** when you add a module/feature, update `docs/modules/<module>.md` and
     the relevant section of `docs/`. Expose new capabilities as tools in `tools.ts`.
 
@@ -117,5 +133,10 @@ docs/                      # architecture, conventions, data model, design syste
 6. i18n namespace `src/i18n/messages/{fa,en}/<m>.ts` + register in `messages/index.ts`.
 7. Pages in `src/app/[locale]/panel/<m>/` (server components; client islands in `_components/`).
 8. Nav entry in `src/components/panel/nav-config.ts` (roles!).
-9. Unit tests for pure logic (`*.test.ts` next to the file), `pnpm check`, `pnpm build`.
-10. Docs: `docs/modules/<m>.md`.
+9. `loading.tsx` in every route folder of the module.
+10. A project-scoped panel (`_components/project-<m>-panel.tsx`, `({ projectId, ctx, clientView })`,
+    returns `null` without access) and a tab on `panel/projects/[id]/page.tsx` if the module has
+    per-project data; gate client visibility with a `projects.share*` flag.
+11. Unit tests for pure logic (`*.test.ts` next to the file); a Playwright test in `e2e/` for
+    flows only a browser can prove. `pnpm check`, `pnpm build`.
+12. Docs: `docs/modules/<m>.md`.

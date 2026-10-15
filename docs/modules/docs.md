@@ -23,8 +23,8 @@ src/i18n/messages/{fa,en}/docs.ts
 
 ## Visibility
 
-| `visibility` | Who can read                                                                                                                                                  |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visibility` | Who can read                                                                                                                                                   |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `private`    | only the author (`created_by`) — admins and the owner included                                                                                                 |
 | `team`       | all staff (owner, admin, member)                                                                                                                               |
 | `client`     | all staff + portal users of the **linked client** (`client_id`), or of the linked **project's** client when that project has `portal_enabled` and `share_docs` |
@@ -75,7 +75,7 @@ ranges for `<mark>` highlighting.
 
 ```tsx
 import { ProjectDocsPanel } from "@/app/[locale]/panel/docs/_components/project-docs-panel";
-<ProjectDocsPanel projectId={project.id} ctx={ctx} clientView={!isStaff(ctx.actor)} />
+<ProjectDocsPanel projectId={project.id} ctx={ctx} clientView={!isStaff(ctx.actor)} />;
 ```
 
 Lists the project's pages nested (respecting visibility; `clientView` limits the list to `client`

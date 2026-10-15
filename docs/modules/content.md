@@ -34,13 +34,13 @@ public/fonts/og/*.ttf                static TTF instances for OG images (OFL fon
 
 One `posts` table; `type` decides the URL (`postPath()` in `src/lib/content.ts`):
 
-| type                       | URL                                                 | Notes                                                    |
-| -------------------------- | --------------------------------------------------- | -------------------------------------------------------- |
-| `article`, `vlog`, `note`  | `/blog/<slug>`                                      | one URL namespace — slugs unique across the three types  |
-| `work`                     | `/work/<slug>`                                      | `meta`: client, year, role, stack, links, metrics, gallery |
-| `tutorial`                 | `/learn/<series>/<slug>` or `/learn/<slug>`         | lesson of a course (`series`) or standalone              |
-| `service`                  | `/services/<slug>`                                  | `meta.icon` (lucide name), `meta.faq` → FAQPage          |
-| `page`                     | `/about` (slug `about`)                             | about page body + profile settings                       |
+| type                      | URL                                         | Notes                                                      |
+| ------------------------- | ------------------------------------------- | ---------------------------------------------------------- |
+| `article`, `vlog`, `note` | `/blog/<slug>`                              | one URL namespace — slugs unique across the three types    |
+| `work`                    | `/work/<slug>`                              | `meta`: client, year, role, stack, links, metrics, gallery |
+| `tutorial`                | `/learn/<series>/<slug>` or `/learn/<slug>` | lesson of a course (`series`) or standalone                |
+| `service`                 | `/services/<slug>`                          | `meta.icon` (lucide name), `meta.faq` → FAQPage            |
+| `page`                    | `/about` (slug `about`)                     | about page body + profile settings                         |
 
 `/learn/<slug>` resolves to a **course landing** when a published series has that slug,
 otherwise to a **standalone tutorial**. Slugs keep Persian letters (`slugify`); URLs are

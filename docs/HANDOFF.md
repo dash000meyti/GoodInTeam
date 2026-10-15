@@ -52,7 +52,7 @@ git merge origin/wip/finance        # بعد: calendar، vault-docs، site-cms-s
 
 ## ۳. کارهای یکپارچه‌سازی باقی‌مانده
 
-1. **تب‌های صفحه جزئیات پروژه** (`src/app/[locale]/panel/projects/[id]/page.tsx`): این کامپوننت‌ها آماده‌اند و باید به‌صورت تب اضافه شوند (همه `({ projectId, ctx, clientView })` می‌گیرند و اگر کاربر دسترسی نداشته باشد `null` برمی‌گردانند):
+1. ✅ **تب‌های صفحه جزئیات پروژه** (`src/app/[locale]/panel/projects/[id]/page.tsx`): این کامپوننت‌ها آماده‌اند و باید به‌صورت تب اضافه شوند (همه `({ projectId, ctx, clientView })` می‌گیرند و اگر کاربر دسترسی نداشته باشد `null` برمی‌گردانند):
    - `panel/time/_components/project-time-panel.tsx` → `ProjectTimePanel` ✅ در dev
    - `panel/tasks/_components/project-tasks-panel.tsx` → `ProjectTasksPanel` ✅ در dev
    - `panel/contracts/_components/project-contracts-panel.tsx` → `ProjectContractsPanel` ✅ در dev
@@ -60,9 +60,9 @@ git merge origin/wip/finance        # بعد: calendar، vault-docs، site-cms-s
    - `panel/calendar/_components/project-events-panel.tsx` → `ProjectEventsPanel` ✅ در dev
    - `panel/docs/_components/project-docs-panel.tsx` → `ProjectDocsPanel` ✅ در dev
 2. ✅ **Job فاکتورهای سررسیدگذشته**: `invoice-overdue` (هر ساعت) در `src/server/jobs/index.ts` ثبت شد.
-3. **هر پوشه صفحه پنل یک `loading.tsx`** داشته باشد (`export { default } from "../loading";`) — اعتبارسنجی instant navigation در Next 16.4.
-4. **AGENTS.md** را با این قوانین به‌روز کنید: loading.tsx برای هر صفحه پنل؛ خطاهای دامنه با کلید + `localized()` در actionها؛ به‌روزرسانی مثال‌ها در `/panel/design-system`؛ کشتن پروسه‌ها فقط با پورت.
-5. وضعیت‌های `docs/roadmap.md` را به‌روز کنید.
+3. ✅ **هر پوشه صفحه پنل یک `loading.tsx`** داشته باشد (`export { default } from "../loading";`) — اعتبارسنجی instant navigation در Next 16.4.
+4. ✅ **AGENTS.md** را با این قوانین به‌روز کنید: loading.tsx برای هر صفحه پنل؛ خطاهای دامنه با کلید + `localized()` در actionها؛ به‌روزرسانی مثال‌ها در `/panel/design-system`؛ کشتن پروسه‌ها فقط با پورت.
+5. ✅ وضعیت‌های `docs/roadmap.md` را به‌روز کنید.
 
 ## ۴. یافته‌های بازبینی کد پایه (اولویت‌بندی‌شده)
 
@@ -102,7 +102,7 @@ git merge origin/wip/finance        # بعد: calendar، vault-docs، site-cms-s
 - [ ] rate limiter API با متن توکن احرازنشده کلید می‌خورد → اول توکن را verify کنید.
 - [ ] دسترس‌پذیری: نام‌های دسترسی DatePicker، دکمه جستجوی هدر در موبایل، رشته‌های انگلیسی ثابت در dialog/sheet («Close»)، ارقام لاتین در DatePicker فارسی، کنتراست عنوان گروه‌های سایدبار، فلش `→` در RTL صفحه ورود.
 - [ ] ⌘K با کیبورد فارسی کار نمی‌کند (`e.code === "KeyK"`)؛ فلش وضعیت سایدبار جمع‌شده هنگام لود.
-- [ ] تب‌های صفحه پروژه در موبایل overflow دارند؛ لیست به‌روزرسانی‌ها `<ol>` بدون `<li>`.
+- [x] ✅ تب‌های صفحه پروژه در موبایل overflow دارند؛ لیست به‌روزرسانی‌ها `<ol>` بدون `<li>`.
 - [x] ✅ پیشرفت (progress bar) در RTL از سمت اشتباه پر می‌شد.
 - [x] ✅ رنگ‌های chart-3/4 کنتراست کم داشتند.
 

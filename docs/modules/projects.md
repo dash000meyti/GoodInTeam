@@ -8,12 +8,32 @@ This is the **reference implementation** — copy its structure for new modules.
 src/server/modules/projects/{schemas,service,actions,tools}.ts
 src/server/modules/clients/{schemas,service,actions,tools}.ts
 src/app/[locale]/panel/projects/page.tsx            list (cards)
-src/app/[locale]/panel/projects/[id]/page.tsx       detail (tabs: overview, milestones, updates, portal)
+src/app/[locale]/panel/projects/[id]/page.tsx       detail (tabs, `?tab=<name>` deep link — see below)
 src/app/[locale]/panel/projects/_components/*       client islands (form dialog, milestones, composer…)
 src/app/[locale]/panel/clients/{page,[id]/page}.tsx
 src/app/[locale]/p/[token]/page.tsx                 public status page (no auth, token-gated)
 src/i18n/messages/{fa,en}/{projects,clients}.ts
 ```
+
+## Detail page tabs
+
+`overview · milestones · updates · tasks · time · calendar · contracts · finance · docs · portal`.
+Each module tab renders that module's project panel (`<Module>Panel({ projectId, ctx, clientView })`
+from `panel/<module>/_components/project-<module>-panel.tsx`), which does its own authorization
+and returns `null` without access. Which tabs a viewer gets:
+
+| Tab        | Staff (owner/admin/member) | Client (portal)                    |
+| ---------- | -------------------------- | ---------------------------------- |
+| milestones | ✓                          | `shareProgress`                    |
+| tasks      | ✓                          | `shareTasks` (visible tasks only)  |
+| time       | ✓ (money for admins)       | `shareTime` (no rates/user names)  |
+| calendar   | ✓                          | ✓ (events `visibleToClient`)       |
+| contracts  | owner/admin                | ✓ (sent documents of their client) |
+| finance    | owner/admin                | `shareFinance` (their invoices)    |
+| docs       | ✓                          | `shareDocs` (`client` pages)       |
+| portal     | owner/admin                | —                                  |
+
+`?tab=<name>` opens a tab directly (ignored when the viewer can't see it).
 
 ## Access
 
