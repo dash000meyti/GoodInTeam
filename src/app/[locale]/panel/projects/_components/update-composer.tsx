@@ -10,7 +10,7 @@ import { SelectField } from "@/components/shared/select-field";
 import { SwitchInput } from "@/components/shared/switch-input";
 import { useActionForm } from "@/components/shared/use-action-form";
 import { useT } from "@/i18n/client";
-import { projectUpdateKinds } from "@/server/db/schema/projects";
+import { projectUpdateKinds } from "@/server/db/enums";
 import { addProjectUpdateAction } from "@/server/modules/projects/actions";
 import { kindLabels } from "./update-kinds";
 

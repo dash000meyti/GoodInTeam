@@ -38,7 +38,7 @@ import { formatDuration } from "@/lib/format";
 import { rrulePresets } from "@/lib/rrule";
 import { toDateInputValue, toTimeInputValue } from "@/lib/tz";
 import { cn } from "@/lib/utils";
-import { taskStatuses } from "@/server/db/schema/work";
+import { taskStatuses } from "@/server/db/enums";
 import {
   addSubtaskAction,
   completeTaskAction,

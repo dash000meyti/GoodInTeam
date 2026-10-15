@@ -18,7 +18,7 @@ import { SelectField } from "@/components/shared/select-field";
 import { useActionForm } from "@/components/shared/use-action-form";
 import { useLocale, useT } from "@/i18n/client";
 import { currencies, currencyCodes } from "@/lib/money";
-import { accountKinds } from "@/server/db/schema/finance";
+import { accountKinds } from "@/server/db/enums";
 import { createAccountAction, updateAccountAction } from "@/server/modules/finance/actions";
 import { ColorPicker } from "../../projects/_components/color-picker";
 import { accountKindIcons } from "./account-icons";

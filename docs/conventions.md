@@ -6,6 +6,9 @@
 - File names: `kebab-case.tsx`. Components: `PascalCase`. Hooks: `useXxx`.
 - Server-only modules start with `import "server-only";`. Client components start with
   `"use client";`. Never import `@/server/*` (except `actions.ts` and types) from client code.
+- Enum lists (statuses, kinds, roles …) live in the dependency-free `@/server/db/enums`; client
+  code imports them from there. Importing values from `@/server/db/schema/*` drags drizzle-orm
+  (~500 KB) into the browser bundle — `src/server/db/enums.test.ts` fails if a client module does.
 - Path alias: `@/` → `src/`.
 - Formatting: Prettier (`pnpm format`), Tailwind classes sorted by the prettier plugin.
 

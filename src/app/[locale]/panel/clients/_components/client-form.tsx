@@ -18,7 +18,7 @@ import { SelectField } from "@/components/shared/select-field";
 import { useActionForm } from "@/components/shared/use-action-form";
 import { useT } from "@/i18n/client";
 import { currencyCodes } from "@/lib/money";
-import { clientKinds } from "@/server/db/schema/crm";
+import { clientKinds } from "@/server/db/enums";
 import { createClientAction, updateClientAction } from "@/server/modules/clients/actions";
 import { ColorPicker } from "../../projects/_components/color-picker";
 

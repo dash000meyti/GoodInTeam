@@ -10,20 +10,23 @@ import {
 import { bool, createdAt, json, money, pk, timestamp, updatedAt } from "./_columns";
 import { users } from "./auth";
 import { clients } from "./crm";
+import {
+  projectStatuses,
+  billingTypes,
+  progressModes,
+  milestoneStatuses,
+  projectUpdateKinds,
+} from "../enums";
 
-export const projectStatuses = [
-  "lead",
-  "planning",
-  "active",
-  "paused",
-  "completed",
-  "canceled",
-  "archived",
-] as const;
-export type ProjectStatus = (typeof projectStatuses)[number];
-
-export const billingTypes = ["hourly", "fixed", "retainer", "internal"] as const;
-export const progressModes = ["manual", "milestones", "tasks"] as const;
+// Enum lists live in the dependency-free `../enums` (safe for client bundles).
+export {
+  projectStatuses,
+  billingTypes,
+  progressModes,
+  milestoneStatuses,
+  projectUpdateKinds,
+  type ProjectStatus,
+} from "../enums";
 
 export const projects = sqliteTable(
   "projects",
@@ -91,8 +94,6 @@ export const projectMembers = sqliteTable(
   (t) => [primaryKey({ columns: [t.projectId, t.userId] })],
 );
 
-export const milestoneStatuses = ["planned", "in_progress", "done"] as const;
-
 export const milestones = sqliteTable(
   "milestones",
   {
@@ -114,8 +115,6 @@ export const milestones = sqliteTable(
   },
   (t) => [index("milestones_project_idx").on(t.projectId)],
 );
-
-export const projectUpdateKinds = ["update", "release", "issue", "request", "note"] as const;
 
 /** Status feed shown to the client ("what happened this week"). */
 export const projectUpdates = sqliteTable(

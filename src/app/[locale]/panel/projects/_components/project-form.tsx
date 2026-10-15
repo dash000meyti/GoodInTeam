@@ -22,7 +22,7 @@ import { useActionForm } from "@/components/shared/use-action-form";
 import { localePath } from "@/i18n/config";
 import { useLocale, useT } from "@/i18n/client";
 import { currencyCodes, fromMinor, isCurrency } from "@/lib/money";
-import { billingTypes, progressModes, projectStatuses } from "@/server/db/schema/projects";
+import { billingTypes, progressModes, projectStatuses } from "@/server/db/enums";
 import { createProjectAction, updateProjectAction } from "@/server/modules/projects/actions";
 import { ColorPicker } from "./color-picker";
 

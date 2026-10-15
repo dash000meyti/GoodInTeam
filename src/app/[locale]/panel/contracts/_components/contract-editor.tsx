@@ -27,7 +27,7 @@ import { localePath } from "@/i18n/config";
 import { format } from "@/i18n/format-message";
 import { useLocale, useT } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
-import { contractKinds } from "@/server/db/schema/contracts";
+import { contractKinds } from "@/server/db/enums";
 import {
   applyTemplateAction,
   createContractAction,

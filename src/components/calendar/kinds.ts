@@ -17,7 +17,7 @@ import {
   TargetIcon,
   UsersIcon,
 } from "lucide-react";
-import { eventKinds, type EventKind } from "@/server/db/schema/work";
+import { eventKinds, type EventKind } from "@/server/db/enums";
 import type { CalendarItem, CalendarSource } from "./types";
 
 export { eventKinds };
