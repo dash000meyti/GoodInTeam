@@ -123,7 +123,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/[locale]
   const t = getMessages(locale);
   const s = t.site;
   return (
-    <section className="relative -mt-16 overflow-hidden pt-16">
+    <section className="relative isolate">
       <div
         aria-hidden
         className="bg-grid mask-fade-b absolute inset-0 -z-10 h-[32rem] opacity-70"

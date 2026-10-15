@@ -103,8 +103,13 @@ async function WorkDetail({ locale, t, slug }: { locale: Locale; t: Messages; sl
         })}
       />
       {/* Hero */}
-      <header className="relative -mt-16 overflow-hidden pt-16">
-        <div aria-hidden className="bg-grid mask-fade-b absolute inset-0 -z-10 opacity-70" />
+      <header className="relative isolate">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
+        >
+          <div aria-hidden className="bg-grid mask-fade-b absolute inset-0 -z-10 opacity-70" />
+        </div>
         <Container className="pt-10 sm:pt-14">
           <Breadcrumbs
             items={[

@@ -57,13 +57,18 @@ export default async function HomePage() {
   return (
     <>
       {/* ── Hero ── */}
-      <section className="relative isolate -mt-16 overflow-hidden pt-16">
-        <div aria-hidden className="bg-grid mask-radial absolute inset-0 -z-10 opacity-80" />
+      <section className="relative isolate">
         <div
           aria-hidden
-          className="gt-glow start-[10%] -top-48 -z-10 h-[28rem] w-[28rem] bg-primary/20"
-        />
-        <div aria-hidden className="gt-glow end-[5%] top-24 -z-10 h-80 w-80 bg-violet/15" />
+          className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
+        >
+          <div aria-hidden className="bg-grid mask-radial absolute inset-0 -z-10 opacity-80" />
+          <div
+            aria-hidden
+            className="gt-glow start-[10%] -top-48 -z-10 h-[28rem] w-[28rem] bg-primary/20"
+          />
+          <div aria-hidden className="gt-glow end-[5%] top-24 -z-10 h-80 w-80 bg-violet/15" />
+        </div>
         <Container className="grid items-center gap-12 pt-10 pb-16 sm:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8 lg:pt-20 lg:pb-24">
           <div className="gt-rise flex flex-col items-start gap-7">
             <Suspense fallback={<AvailabilityBadgeSkeleton />}>

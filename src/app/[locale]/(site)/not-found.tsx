@@ -16,12 +16,17 @@ export default async function SiteNotFound() {
     { href: "/contact", label: t.nav.contact, icon: MailIcon },
   ];
   return (
-    <section className="relative isolate -mt-16 overflow-hidden pt-16">
-      <div aria-hidden className="bg-grid mask-radial absolute inset-0 -z-10" />
+    <section className="relative isolate">
       <div
         aria-hidden
-        className="gt-glow start-1/2 top-10 -z-10 h-72 w-[36rem] -translate-x-1/2 bg-primary/20 rtl:translate-x-1/2"
-      />
+        className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
+      >
+        <div aria-hidden className="bg-grid mask-radial absolute inset-0 -z-10" />
+        <div
+          aria-hidden
+          className="gt-glow start-1/2 top-10 -z-10 h-72 w-[36rem] -translate-x-1/2 bg-primary/20 rtl:translate-x-1/2"
+        />
+      </div>
       <Container className="flex min-h-[70dvh] flex-col items-center justify-center gap-6 py-20 text-center">
         <span className="rounded-full border border-border bg-background/70 px-3 py-1 text-xs font-bold text-muted-foreground">
           {t.site.notFoundEyebrow}

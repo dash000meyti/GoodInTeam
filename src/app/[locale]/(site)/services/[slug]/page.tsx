@@ -83,9 +83,14 @@ async function ServiceDetail({ locale, t, slug }: { locale: Locale; t: Messages;
           },
         }}
       />
-      <section className="relative -mt-16 overflow-hidden pt-16">
-        <div aria-hidden className="bg-grid mask-fade-b absolute inset-0 -z-10 opacity-70" />
-        <div aria-hidden className="gt-glow end-[15%] -top-40 -z-10 size-96 bg-primary/20" />
+      <section className="relative isolate">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
+        >
+          <div aria-hidden className="bg-grid mask-fade-b absolute inset-0 -z-10 opacity-70" />
+          <div aria-hidden className="gt-glow end-[15%] -top-40 -z-10 size-96 bg-primary/20" />
+        </div>
         <Container className="pt-10 pb-14 sm:pt-14">
           <Breadcrumbs
             items={[

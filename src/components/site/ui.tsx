@@ -148,12 +148,17 @@ export function PageHero({
   className?: string;
 }) {
   return (
-    <section className={cn("relative -mt-16 overflow-hidden pt-16", className)}>
-      <div aria-hidden className="bg-grid mask-fade-b absolute inset-0 -z-10 opacity-70" />
+    <section className={cn("relative isolate", className)}>
       <div
         aria-hidden
-        className="gt-glow start-1/2 -top-40 -z-10 h-80 w-[36rem] -translate-x-1/2 bg-primary/15 rtl:translate-x-1/2"
-      />
+        className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
+      >
+        <div aria-hidden className="bg-grid mask-fade-b absolute inset-0 -z-10 opacity-70" />
+        <div
+          aria-hidden
+          className="gt-glow start-1/2 -top-40 -z-10 h-80 w-[36rem] -translate-x-1/2 bg-primary/15 rtl:translate-x-1/2"
+        />
+      </div>
       <Container className="pt-14 pb-10 sm:pt-20 sm:pb-14">
         {crumbs && <div className="mb-8">{crumbs}</div>}
         <div className="max-w-3xl space-y-5">
