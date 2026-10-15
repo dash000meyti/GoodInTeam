@@ -33,6 +33,15 @@ const form = useActionForm(createThingAction, { successMessage: t.common.saved, 
 Use `zOptString`, `zNullString`, `zBool`, `zOptNumber`, `zTags`… from `src/lib/zod-helpers.ts` so
 FormData strings parse correctly. `""` → `undefined` (create) or `null` (clear on update).
 
+- Numbers: `zOptNumber` / `zOptInt` / `zOptNumberOf(z.number().min(0))` accept Persian/Arabic
+  digits and thousands separators (`۱۲٬۵۰۰`) and reject hex, exponents and junk; for updates use
+  `zNullNumber` / `zNullNumberOf(...)` (absent = untouched, `""`/`null` = clear).
+- Days: `zOptDay` (create) / `zNullDay` (update) — a real `YYYY-MM-DD` or ISO date-time.
+- Currencies: `zCurrency` (trimmed, upper-cased, one of `currencyCodes`).
+- **Never build an update schema with `.partial()` of a create schema** — zod 4 still applies
+  `.default()`s inside `partial()`, so a partial update would reset untouched fields. Write a
+  separate update schema without defaults, and have the service write only the keys it got.
+
 ## Dates & time
 
 - Store UTC instants (`integer` ms → `Date`). Day-precision values are stored as the start of

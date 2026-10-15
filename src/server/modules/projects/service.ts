@@ -540,8 +540,18 @@ export function deleteProjectUpdate(actor: Actor, id: string) {
 /** Public status page data (no auth; token-gated). */
 export async function getPublicProjectByToken(token: string) {
   if (!token || token.length < 16) return null;
+  // Unauthenticated page: load only what it renders (no budget, rates, notes…).
   const project = await db.query.projects.findFirst({
     where: eq(projects.shareToken, token),
+    columns: {
+      id: true,
+      name: true,
+      color: true,
+      status: true,
+      progress: true,
+      dueDate: true,
+      shareProgress: true,
+    },
     with: { client: { columns: { name: true, logoUrl: true } } },
   });
   if (!project) return null;
