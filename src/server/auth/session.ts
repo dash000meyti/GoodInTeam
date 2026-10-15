@@ -61,8 +61,9 @@ export async function destroySession() {
 export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!token) return null;
-  // Partial Prefetching resolves cookies() while prerendering the App Shell, but
-  // session validity depends on the current time → keep it request-time only.
+  // Session checks compare against the current time; with Partial Prefetching
+  // sync clock reads are not allowed in the runtime-prefetch stage, so wait
+  // for the actual request (everything below is request-time anyway).
   await connection();
   const id = sha256(token);
   const now = new Date();

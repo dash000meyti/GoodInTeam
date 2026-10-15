@@ -84,6 +84,7 @@ export const vault: Record<keyof typeof fa, string> = {
   tabItems: "Items",
   tabGenerator: "Generator",
   tabSettings: "Security & backup",
+  tabSettingsShort: "Security",
   newItem: "New item",
   searchPlaceholder: "Search titles, URLs, usernames…",
   allTypes: "All",

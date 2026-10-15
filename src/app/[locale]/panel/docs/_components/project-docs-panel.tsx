@@ -81,8 +81,8 @@ export async function ProjectDocsPanel({
                 <span className="flex w-6 shrink-0 justify-center text-lg leading-none">
                   {r.icon ?? <FileTextIcon className="size-4 text-muted-foreground" />}
                 </span>
-                <span className="min-w-0 flex-1 truncate font-semibold" dir="auto">
-                  {r.title}
+                <span className="min-w-0 flex-1 truncate font-semibold">
+                  <bdi>{r.title}</bdi>
                 </span>
                 {staffUi && (
                   <VisibilityBadge

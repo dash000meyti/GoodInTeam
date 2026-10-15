@@ -95,11 +95,8 @@ export default async function DocPage({ params }: PageProps<"/[locale]/panel/doc
             {doc.icon ?? <FileTextIcon className="size-7 text-muted-foreground" />}
           </span>
           <div className="min-w-0 space-y-2">
-            <h1
-              className="text-2xl font-extrabold tracking-tight break-words sm:text-3xl"
-              dir="auto"
-            >
-              {doc.title}
+            <h1 className="text-2xl font-extrabold tracking-tight break-words sm:text-3xl">
+              <bdi>{doc.title}</bdi>
             </h1>
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {staff ? (
@@ -146,7 +143,11 @@ export default async function DocPage({ params }: PageProps<"/[locale]/panel/doc
       <div className={cn("grid gap-8", toc.length >= 2 && "2xl:grid-cols-[minmax(0,1fr)_13rem]")}>
         <Card className="p-6 sm:p-10">
           {hasContent ? (
-            <div className="prose-gt doc-prose" dangerouslySetInnerHTML={{ __html: html }} />
+            <div
+              className="prose-gt doc-prose"
+              dir="auto"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
           ) : (
             <EmptyState
               icon={PencilLineIcon}

@@ -72,9 +72,7 @@ function SearchResults({ ctx, q }: { ctx: PanelContext; q: string }) {
   return (
     <Card className="gap-0 py-0">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 border-b border-dashed py-5">
-        <CardTitle className="text-base" dir="auto">
-          {format(d.searchResults, { q })}
-        </CardTitle>
+        <CardTitle className="text-base">{format(d.searchResults, { q: `\u2068${q}\u2069` })}</CardTitle>
         <div className="flex items-center gap-2">
           <Badge variant="neutral">
             {format(d.resultsCount, { n: formatNumber(results.length, locale) })}
@@ -108,8 +106,10 @@ function SearchResults({ ctx, q }: { ctx: PanelContext; q: string }) {
                 </span>
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-bold" dir="auto">
-                      <Highlighted text={r.title} ranges={r.titleRanges} />
+                    <p className="font-bold">
+                      <bdi>
+                        <Highlighted text={r.title} ranges={r.titleRanges} />
+                      </bdi>
                     </p>
                     {staff && <VisibilityBadge visibility={r.visibility} t={d} />}
                     {r.projectName && <Badge variant="outline">{r.projectName}</Badge>}
@@ -149,7 +149,21 @@ function StaffHome({ ctx, newButton }: { ctx: PanelContext; newButton: React.Rea
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+      <div className="flex flex-wrap gap-2 sm:hidden">
+        <Badge variant="default" className="px-2 py-1">
+          <BookOpenIcon /> {d.statPages}: {n(stats.total)}
+        </Badge>
+        <Badge variant="info" className="px-2 py-1">
+          <UsersIcon /> {d.statTeam}: {n(stats.team)}
+        </Badge>
+        <Badge variant="violet" className="px-2 py-1">
+          <Share2Icon /> {d.statClient}: {n(stats.client)}
+        </Badge>
+        <Badge variant="warning" className="px-2 py-1">
+          <LockIcon /> {d.statPrivate}: {n(stats.private)}
+        </Badge>
+      </div>
+      <div className="hidden gap-4 sm:grid sm:grid-cols-2 2xl:grid-cols-4">
         <StatCard label={d.statPages} value={n(stats.total)} icon={BookOpenIcon} tone="primary" />
         <StatCard label={d.statTeam} value={n(stats.team)} icon={UsersIcon} tone="info" />
         <StatCard label={d.statClient} value={n(stats.client)} icon={Share2Icon} tone="violet" />
@@ -171,8 +185,8 @@ function StaffHome({ ctx, newButton }: { ctx: PanelContext; newButton: React.Rea
                     {r.icon ?? <FileTextIcon className="size-4 text-muted-foreground" />}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold" dir="auto">
-                      {r.title}
+                    <p className="truncate font-semibold">
+                      <bdi>{r.title}</bdi>
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {[r.updatedByName, formatRelative(r.updatedAt, fmt, now), r.projectName]
@@ -202,8 +216,8 @@ function StaffHome({ ctx, newButton }: { ctx: PanelContext; newButton: React.Rea
                     </span>
                     <VisibilityBadge visibility={r.visibility} t={d} />
                   </div>
-                  <p className="font-bold group-hover:text-primary" dir="auto">
-                    {r.title}
+                  <p className="font-bold group-hover:text-primary">
+                    <bdi>{r.title}</bdi>
                   </p>
                   <p className="mt-auto text-xs text-muted-foreground">
                     {[

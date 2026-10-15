@@ -337,9 +337,6 @@ export function DocEditor({
             mono={false}
             placeholder={d.contentPlaceholder}
           />
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground sm:hidden">
-            {status}
-          </p>
         </Card>
 
         <Card className="h-fit gap-5 p-5 xl:sticky xl:top-24">
@@ -442,6 +439,15 @@ export function DocEditor({
             </p>
           )}
         </Card>
+      </div>
+
+      {/* Phones: keep save within reach while scrolling a long page. */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur sm:hidden dark:bg-card/95">
+        <div className="min-w-0 flex-1">{status}</div>
+        <Button onClick={save} disabled={pending}>
+          {pending ? <Loader2Icon className="animate-spin" /> : <SaveIcon />}
+          {t.common.save}
+        </Button>
       </div>
     </>
   );

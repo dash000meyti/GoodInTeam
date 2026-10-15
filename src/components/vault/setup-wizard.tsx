@@ -12,7 +12,8 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useT } from "@/i18n/client";
+import { useLocale, useT } from "@/i18n/client";
+import { formatNumber } from "@/lib/format";
 import { createVaultKeys, type MasterWrap, type RecoveryWrap } from "@/lib/vault-crypto";
 import { cn } from "@/lib/utils";
 import { setupVaultAction } from "@/server/modules/vault/actions";
@@ -31,10 +32,17 @@ interface GeneratedKeys {
 }
 
 export function Stepper({ steps, current }: { steps: string[]; current: number }) {
+  const locale = useLocale();
   return (
     <ol className="flex items-center gap-2">
       {steps.map((label, i) => (
-        <li key={label} className="flex min-w-0 flex-1 items-center gap-2">
+        <li
+          key={label}
+          className={cn(
+            "flex min-w-0 items-center gap-2 sm:flex-1",
+            i === current ? "flex-[3]" : "flex-1",
+          )}
+        >
           <span
             className={cn(
               "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors",
@@ -45,18 +53,17 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
             )}
             aria-current={i === current ? "step" : undefined}
           >
-            {i + 1}
+            {formatNumber(i + 1, locale)}
           </span>
           <span
             className={cn(
               "truncate text-xs font-semibold sm:text-sm",
-              i === current ? "text-foreground" : "text-muted-foreground",
-              i !== current && "hidden sm:inline",
+              i === current ? "text-foreground" : "hidden text-muted-foreground sm:inline",
             )}
           >
             {label}
           </span>
-          {i < steps.length - 1 && <span className="h-px flex-1 bg-border" aria-hidden />}
+          {i < steps.length - 1 && <span className="h-px min-w-3 flex-1 bg-border" aria-hidden />}
         </li>
       ))}
     </ol>

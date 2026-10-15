@@ -35,9 +35,8 @@ export default async function DocsArchivePage() {
                   <Link
                     href={href(`/panel/docs/${r.id}`)}
                     className="block truncate font-semibold hover:text-primary"
-                    dir="auto"
                   >
-                    {r.title}
+                    <bdi>{r.title}</bdi>
                   </Link>
                   <p className="text-xs text-muted-foreground">
                     {r.archivedAt &&

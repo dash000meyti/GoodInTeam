@@ -85,6 +85,7 @@ export const vault = {
   tabItems: "آیتم‌ها",
   tabGenerator: "سازنده رمز",
   tabSettings: "امنیت و پشتیبان",
+  tabSettingsShort: "امنیت",
   newItem: "آیتم جدید",
   searchPlaceholder: "جستجو در عنوان، آدرس، نام کاربری…",
   allTypes: "همه",

@@ -110,6 +110,7 @@ export function DocsSidebar({
               canEdit={canEdit}
               archivedCount={archivedCount}
               onNavigate={() => setOpen(false)}
+              inSheet
             />
           </SheetContent>
         </Sheet>
@@ -165,11 +166,14 @@ function TreePanel({
   canEdit,
   archivedCount,
   onNavigate,
+  inSheet = false,
 }: {
   items: DocTreeItem[];
   canEdit: boolean;
   archivedCount: number;
   onNavigate?: () => void;
+  /** Rendered in the mobile drawer: leave room for its close button. */
+  inSheet?: boolean;
 }) {
   const t = useT();
   const d = t.docs;
@@ -449,7 +453,7 @@ function TreePanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="space-y-3 border-b border-dashed p-4">
-        <div className="flex items-center justify-between gap-2">
+        <div className={cn("flex items-center justify-between gap-2", inSheet && "pe-10")}>
           <Link
             href={localePath(locale, "/panel/docs")}
             onClick={onNavigate}

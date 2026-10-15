@@ -42,7 +42,7 @@ import { useLocale, useT } from "@/i18n/client";
 import { formatNumber, type FormatOptions } from "@/lib/format";
 import { decryptItem, isVaultCryptoAvailable } from "@/lib/vault-crypto";
 import { cn } from "@/lib/utils";
-import { ItemCard } from "./item-card";
+import { ItemRow } from "./item-row";
 import { ItemDetail, type LinkOption } from "./item-detail";
 import { ItemFormDialog, type ItemFormTarget } from "./item-form";
 import {
@@ -290,7 +290,7 @@ function VaultWorkspace({
       />
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="max-w-full overflow-x-auto">
+        <TabsList className="max-w-full overflow-x-auto max-sm:w-full max-sm:[&_svg]:hidden">
           <TabsTrigger value="items">
             <KeyRoundIcon /> {v.tabItems}
             {entries && (
@@ -303,16 +303,20 @@ function VaultWorkspace({
             <WandSparklesIcon /> {v.tabGenerator}
           </TabsTrigger>
           <TabsTrigger value="settings">
-            <SlidersHorizontalIcon /> {v.tabSettings}
+            <SlidersHorizontalIcon />
+            <span className="sm:hidden">{v.tabSettingsShort}</span>
+            <span className="hidden sm:inline">{v.tabSettings}</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="items" className="mt-3 space-y-6">
           {entries === null ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label={v.decrypting}>
-              {Array.from({ length: Math.min(Math.max(items.length, 3), 9) }).map((_, i) => (
-                <Skeleton key={i} className="h-[76px] rounded-2xl" />
-              ))}
+            <div className="grid gap-6 xl:grid-cols-2" aria-label={v.decrypting}>
+              {Array.from({ length: Math.min(Math.max(Math.ceil(items.length / 2), 2), 4) }).map(
+                (_, i) => (
+                  <Skeleton key={i} className="h-44 rounded-2xl" />
+                ),
+              )}
             </div>
           ) : entries.length === 0 ? (
             <EmptyState
@@ -430,37 +434,41 @@ function VaultWorkspace({
                   }
                 />
               ) : (
-                groups.map(({ type, items: list }) => {
-                  const Icon = TYPE_ICONS[type];
-                  return (
-                    <section
-                      key={type}
-                      aria-labelledby={`vault-group-${type}`}
-                      className="space-y-3"
-                    >
-                      <h3
-                        id={`vault-group-${type}`}
-                        className="flex items-center gap-2 text-sm font-bold text-muted-foreground"
+                <div className="columns-1 gap-6 xl:columns-2">
+                  {groups.map(({ type, items: list }) => {
+                    const Icon = TYPE_ICONS[type];
+                    return (
+                      <section
+                        key={type}
+                        aria-labelledby={`vault-group-${type}`}
+                        className="mb-6 break-inside-avoid overflow-hidden rounded-2xl bg-card shadow-card dark:border dark:border-border"
                       >
-                        <Icon className="size-4" /> {v[`type_${type}`]}
-                        <Badge variant="neutral">{formatNumber(list.length, locale)}</Badge>
-                      </h3>
-                      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                        {list.map((e) => (
-                          <ItemCard
-                            key={e.id}
-                            entry={e}
-                            project={e.projectId ? projectMap.get(e.projectId) : null}
-                            onOpen={() => {
-                              setSelectedId(e.id);
-                              setDetailOpen(true);
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </section>
-                  );
-                })
+                        <h3
+                          id={`vault-group-${type}`}
+                          className="flex items-center gap-2 border-b border-dashed px-4 py-3 text-sm font-bold"
+                        >
+                          <Icon className="size-4 text-muted-foreground" /> {v[`type_${type}`]}
+                          <Badge variant="neutral" className="ms-auto">
+                            {formatNumber(list.length, locale)}
+                          </Badge>
+                        </h3>
+                        <ul className="divide-y divide-dashed">
+                          {list.map((e) => (
+                            <ItemRow
+                              key={e.id}
+                              entry={e}
+                              project={e.projectId ? projectMap.get(e.projectId) : null}
+                              onOpen={() => {
+                                setSelectedId(e.id);
+                                setDetailOpen(true);
+                              }}
+                            />
+                          ))}
+                        </ul>
+                      </section>
+                    );
+                  })}
+                </div>
               )}
             </>
           )}

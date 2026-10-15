@@ -327,8 +327,8 @@ export function ItemDetail({
                   <Icon className="size-6" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <SheetTitle className="truncate text-lg" dir="auto">
-                    {p ? p.title || v.untitled : v.unreadable}
+                  <SheetTitle className="truncate text-lg">
+                    <bdi>{p ? p.title || v.untitled : v.unreadable}</bdi>
                   </SheetTitle>
                   <SheetDescription className="flex flex-wrap items-center gap-1.5">
                     <span>{v[`type_${type}`]}</span>
