@@ -39,4 +39,7 @@ export const panel = {
   role_admin: "مدیر",
   role_member: "عضو تیم",
   role_client: "مشتری",
+  collapseSidebar: "جمع کردن نوار کناری",
+  expandSidebar: "باز کردن نوار کناری",
+  mainNav: "منوی اصلی",
 } as const satisfies Record<string, string>;
