@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { defaultLocale, isLocale } from "@/i18n/config";
+import { sanitizeForwardingHeaders } from "@/server/auth/client-ip";
 
 /**
  * Edge of the app (runs before every matched request):
@@ -9,11 +10,19 @@ import { defaultLocale, isLocale } from "@/i18n/config";
  * 3. Optimistic auth gate — `/panel/*` without a session cookie goes to /login.
  *    (Real authorization happens in the data layer, see server/auth.)
  * 4. Exposes `x-gt-locale` to server code (used by server actions).
+ * 5. Client IP hygiene — with `TRUST_PROXY=none` the client's own
+ *    `x-forwarded-for`/`x-real-ip`/`cf-connecting-ip` are dropped so server
+ *    code only ever sees the socket address (see server/auth/client-ip.ts).
  */
 const SESSION_COOKIE = "gt_session";
 
 export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
+  const headers = sanitizeForwardingHeaders(req.headers);
+
+  // API routes: no locale handling, only the forwarding-header cleanup.
+  if (pathname.startsWith("/api/")) return NextResponse.next({ request: { headers } });
+
   const first = pathname.split("/")[1] ?? "";
 
   // Generated metadata images (opengraph-image) carry the internal /fa prefix
@@ -32,7 +41,7 @@ export function proxy(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/api/md";
     url.search = `?locale=${locale}&path=${encodeURIComponent(pathNoLocale.slice(0, -3))}`;
-    return NextResponse.rewrite(url);
+    return NextResponse.rewrite(url, { request: { headers } });
   }
 
   const isPanel = pathNoLocale === "/panel" || pathNoLocale.startsWith("/panel/");
@@ -44,7 +53,6 @@ export function proxy(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const headers = new Headers(req.headers);
   headers.set("x-gt-locale", locale);
   headers.set("x-gt-pathname", pathname);
 
@@ -73,9 +81,10 @@ export function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Everything except: API routes, Next internals, uploaded media, metadata
-     * files served from the app root, and static assets.
+     * Everything except: Next internals, uploaded media, metadata files served
+     * from the app root, and static assets. API routes are included so the
+     * forwarding-header cleanup above applies to them as well.
      */
-    "/((?!api|_next/static|_next/image|media|brand|icon|apple-icon|robots\\.txt|sitemap\\.xml|llms\\.txt|llms-full\\.txt|manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|css|js|map)$).*)",
+    "/((?!_next/static|_next/image|media|brand|icon|apple-icon|robots\\.txt|sitemap\\.xml|llms\\.txt|llms-full\\.txt|manifest\\.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2?|css|js|map)$).*)",
   ],
 };
