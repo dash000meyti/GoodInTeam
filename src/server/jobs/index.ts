@@ -1,4 +1,5 @@
 import "server-only";
+import { markOverdueInvoices } from "@/server/modules/finance/invoices";
 import { runEventReminders, runLongRunningCheck, runTaskReminders } from "./reminders";
 import { registerJob, startScheduler } from "./scheduler";
 
@@ -25,6 +26,9 @@ export function startJobs() {
   });
   registerJob("long-running-timers", 15 * MINUTE, () => {
     runLongRunningCheck();
+  });
+  registerJob("invoice-overdue", 60 * MINUTE, () => {
+    markOverdueInvoices();
   });
   startScheduler();
 }

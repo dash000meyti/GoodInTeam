@@ -34,7 +34,7 @@ pnpm dev                       # http://localhost:3000
 | شاخه               | محتوا                                                                                                                                                                         | وضعیت                                                                                                         |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `dev`              | پایه + پروژه‌ها/مشتری‌ها + **قراردادها و امضا** + **زمان‌سنجی، کارها، یادآورها، اعلان‌ها، jobها** + **تنظیمات، کاربران، توکن API، بکاپ، صفحه سیستم طراحی** + API/MCP + Docker | ✅ تست‌شده (`pnpm check` و `pnpm build` سبز، ۱۳۶ تست)                                                         |
-| `wip/finance`      | مالی: حساب‌ها، تراکنش، دسته‌ها، تراز طرف‌حساب، نرخ ارز، فاکتورها، صفحه عمومی فاکتور `/i/[token]`                                                                              | 🟡 تقریباً کامل (۴ کامیت تمیز)؛ آخرین کار نیمه‌تمام: محدود کردن فیلدهای `getInvoice` برای نقش مشتری           |
+| `wip/finance`      | مالی: حساب‌ها، تراکنش، دسته‌ها، تراز طرف‌حساب، نرخ ارز، فاکتورها، صفحه عمومی فاکتور `/i/[token]`                                                                              | ✅ در `dev` ادغام شد (فیلدهای مشتری در `getInvoice`/`listInvoices` محدود شد)                                  |
 | `wip/calendar`     | تقویم ماه/هفته/روز/لیست شمسی، تعهدات، فید ICS                                                                                                                                 | 🟡 آخرین کامیت WIP؛ نیمه‌تمام: نمایش فقط رخداد بعدی برای سری‌های تکراری در پنل پروژه + پشتیبانی `?event=<id>` |
 | `wip/vault-docs`   | گاوصندوق رمز zero-knowledge + مستندات/پایگاه دانش                                                                                                                             | 🟡 آخرین کامیت WIP؛ نیمه‌تمام: `<bdi>` در عنوان‌ها، تست Playwright گاوصندوق                                   |
 | `wip/site-cms-seo` | سایت عمومی (خانه، نمونه‌کار، بلاگ، آموزش، خدمات، تماس)، CMS در پنل، رسانه، سئو (sitemap/robots/RSS/llms.txt/OG/JSON-LD)                                                       | 🟡 آخرین کامیت WIP؛ نیمه‌تمام: به‌روزرسانی `docs/seo.md`، اعتبارسنجی نهایی                                    |
@@ -56,10 +56,10 @@ git merge origin/wip/finance        # بعد: calendar، vault-docs، site-cms-s
    - `panel/time/_components/project-time-panel.tsx` → `ProjectTimePanel` ✅ در dev
    - `panel/tasks/_components/project-tasks-panel.tsx` → `ProjectTasksPanel` ✅ در dev
    - `panel/contracts/_components/project-contracts-panel.tsx` → `ProjectContractsPanel` ✅ در dev
-   - `panel/finance/_components/project-finance-panel.tsx` (بعد از ادغام finance)
+   - `panel/finance/_components/project-finance-panel.tsx` → `ProjectFinancePanel` ✅ در dev
    - `panel/calendar/_components/project-events-panel.tsx` (بعد از ادغام calendar)
    - `panel/docs/_components/project-docs-panel.tsx` (بعد از ادغام vault-docs)
-2. **Job فاکتورهای سررسیدگذشته**: `markOverdueInvoices` از سرویس finance را با `registerJob` در `src/server/jobs` ثبت کنید.
+2. ✅ **Job فاکتورهای سررسیدگذشته**: `invoice-overdue` (هر ساعت) در `src/server/jobs/index.ts` ثبت شد.
 3. **هر پوشه صفحه پنل یک `loading.tsx`** داشته باشد (`export { default } from "../loading";`) — اعتبارسنجی instant navigation در Next 16.4.
 4. **AGENTS.md** را با این قوانین به‌روز کنید: loading.tsx برای هر صفحه پنل؛ خطاهای دامنه با کلید + `localized()` در actionها؛ به‌روزرسانی مثال‌ها در `/panel/design-system`؛ کشتن پروسه‌ها فقط با پورت.
 5. وضعیت‌های `docs/roadmap.md` را به‌روز کنید.
