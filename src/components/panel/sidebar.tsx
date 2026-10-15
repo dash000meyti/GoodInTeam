@@ -31,11 +31,12 @@ function NavList({
   const { locale, dir } = useI18n();
   const t = useT();
   return (
-    <nav className="flex flex-col gap-5 px-3 pb-6">
+    <nav aria-label={t.panel.mainNav} className="flex flex-col gap-5 px-3 pb-6">
       {navForRole(role).map((group) => (
         <div key={group.label} className="flex flex-col gap-0.5">
           {!collapsed && (
-            <p className="px-3 pt-1 pb-2 text-[11px] font-bold tracking-wide text-muted-foreground/80 uppercase">
+            // Full muted-foreground: 4.9:1 (light) / 6.4:1 (dark) on the sidebar — WCAG AA.
+            <p className="px-3 pt-1 pb-2 text-[11px] font-bold tracking-wide text-muted-foreground uppercase">
               {t.nav[group.label]}
             </p>
           )}
@@ -48,13 +49,20 @@ function NavList({
                 href={localePath(locale, item.href)}
                 onClick={onNavigate}
                 data-active={active || undefined}
+                aria-current={active ? "page" : undefined}
+                // Collapsed: icon only — the tooltip is not a name, so label the link itself.
+                aria-label={collapsed ? t.nav[item.label] : undefined}
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-accent hover:text-foreground",
                   "data-[active]:bg-sidebar-accent data-[active]:font-bold data-[active]:text-sidebar-accent-foreground",
                   collapsed && "justify-center px-0 py-2.5",
                 )}
               >
-                <Icon className="size-[20px] shrink-0" strokeWidth={active ? 2.2 : 1.8} />
+                <Icon
+                  className="size-[20px] shrink-0"
+                  strokeWidth={active ? 2.2 : 1.8}
+                  aria-hidden
+                />
                 {!collapsed && <span className="truncate">{t.nav[item.label]}</span>}
               </Link>
             );
@@ -93,9 +101,19 @@ function Brand({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-/** Desktop sidebar (sticky) + mobile drawer. */
-export function PanelSidebar({ role }: { role: UserRole }) {
-  const { collapsed, toggleCollapsed, mobileOpen, setMobileOpen } = usePanelUI();
+/**
+ * Desktop sidebar (sticky) + mobile drawer. `defaultCollapsed` is the preference cookie read
+ * on the server, so the first paint already has the right width (no expanded → collapsed flash).
+ */
+export function PanelSidebar({
+  role,
+  defaultCollapsed = false,
+}: {
+  role: UserRole;
+  defaultCollapsed?: boolean;
+}) {
+  const { collapsedPref, setCollapsed, mobileOpen, setMobileOpen } = usePanelUI();
+  const collapsed = collapsedPref ?? defaultCollapsed;
   const t = useT();
   const locale = useLocale();
   return (
@@ -110,9 +128,10 @@ export function PanelSidebar({ role }: { role: UserRole }) {
         <Brand collapsed={collapsed} />
         <button
           type="button"
-          onClick={toggleCollapsed}
-          aria-label="collapse sidebar"
-          className="absolute -end-3.5 top-5 z-10 flex size-7 cursor-pointer items-center justify-center rounded-full border border-dashed border-sidebar-border bg-background text-muted-foreground shadow-sm hover:text-foreground"
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? t.panel.expandSidebar : t.panel.collapseSidebar}
+          aria-expanded={!collapsed}
+          className="absolute -end-3.5 top-5 z-10 flex size-7 cursor-pointer items-center justify-center rounded-full border border-dashed border-sidebar-border bg-background text-muted-foreground shadow-sm outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40"
         >
           <ChevronsLeftIcon
             className={cn(
@@ -151,10 +170,17 @@ export function PanelSidebar({ role }: { role: UserRole }) {
   );
 }
 
+/**
+ * Streaming placeholder. Its width follows `<html data-sidebar-collapsed>`, set before
+ * paint by `sidebarInitScript` (panel layout) from the same cookie.
+ */
 export function SidebarSkeleton() {
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[280px] shrink-0 flex-col gap-3 border-e border-dashed border-sidebar-border bg-sidebar p-5 lg:flex">
-      <div className="h-8 w-32 animate-pulse rounded-lg bg-grey-500/12" />
+    <aside
+      aria-hidden
+      className="sticky top-0 hidden h-dvh w-[280px] shrink-0 flex-col gap-3 border-e border-dashed border-sidebar-border bg-sidebar p-5 in-data-sidebar-collapsed:w-[88px] lg:flex"
+    >
+      <div className="h-8 w-32 max-w-full animate-pulse rounded-lg bg-grey-500/12" />
       {Array.from({ length: 9 }).map((_, i) => (
         <div key={i} className="h-9 animate-pulse rounded-lg bg-grey-500/8" />
       ))}

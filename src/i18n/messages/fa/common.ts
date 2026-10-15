@@ -86,4 +86,10 @@ export const common = {
   colorPreset: "رنگ اصلی",
   commandPalette: "فرمان‌ها",
   commandHint: "برای جستجو و فرمان‌ها",
+  clear: "پاک کردن",
+  breadcrumb: "مسیر صفحه",
+  pagination: "صفحه‌بندی",
+  chooseDate: "انتخاب تاریخ",
+  previousMonth: "ماه قبل",
+  nextMonth: "ماه بعد",
 } as const satisfies Record<string, string>;

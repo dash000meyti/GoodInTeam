@@ -41,7 +41,7 @@ export function BusinessForm({ values }: { values: BusinessValues }) {
   const symbol = isCurrency(currency) ? currencies[currency].symbol[locale] : currency;
 
   return (
-    <form action={form.submit} onChange={() => setDirty(true)} className="space-y-6" noValidate>
+    <form onSubmit={form.submit} onChange={() => setDirty(true)} className="space-y-6" noValidate>
       <SettingsCard icon={CoinsIcon} title={s.moneyAndTime}>
         <div className="grid gap-5 md:grid-cols-2">
           <Field label={s.baseCurrency} hint={s.baseCurrencyHint} error={e.baseCurrency?.[0]}>

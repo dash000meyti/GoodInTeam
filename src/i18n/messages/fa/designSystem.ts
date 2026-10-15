@@ -99,7 +99,7 @@ export const designSystem = {
 
   sec_forms: "فرم‌ها",
   sec_formsDesc:
-    "Field برچسب، راهنما و خطا را کنار هم می‌گذارد. SelectField، SwitchInput و DatePicker مستقیم در ‎<form action>‎ کار می‌کنند.",
+    "Field برچسب، راهنما و خطا را کنار هم می‌گذارد و خودش آن‌ها را به کنترل وصل می‌کند (id، aria-describedby و aria-invalid) — نیازی به htmlFor/id نیست. SelectField، SwitchInput و DatePicker ورودی پنهان می‌نویسند و در هر ‎<form onSubmit={form.submit}>‎ کار می‌کنند.",
   input: "ورودی متن",
   textarea: "متن چندخطی",
   select: "انتخاب",

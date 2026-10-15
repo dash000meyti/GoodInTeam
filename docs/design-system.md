@@ -46,20 +46,20 @@ Applied before first paint by an inline script (no flash).
 | `Button`                                                                                                        | variants: `default` (primary + glow on hover), `inherit` (Minimals black), `soft`, `outline`, `secondary`, `ghost`, `link`, `destructive`; sizes `sm/default/lg/icon/icon-sm/icon-lg` |
 | `Badge`                                                                                                         | soft by default: `default/success/warning/info/violet/destructive/neutral/outline/solid`                                                                                              |
 | `Card` (+Header/Title/Description/Action/Content/Footer)                                                        | `rounded-2xl shadow-card`                                                                                                                                                             |
-| `Input`, `Textarea`, `Label`, `Field`                                                                           | `Field` = label + control + hint/error                                                                                                                                                |
+| `Input`, `Textarea`, `Label`, `Field`                                                                           | `Field` = label + control + hint/error, auto-wired (see [Forms & accessibility](#forms--accessibility))                                                                               |
 | `Select`, `Checkbox`, `RadioGroup`, `Switch`, `ToggleGroup`                                                     | Radix, RTL-aware                                                                                                                                                                      |
-| `Dialog`, `Sheet`, `AlertDialog`, `Popover`, `Tooltip`, `DropdownMenu`, `Command`                               | overlays; `Sheet side` is logical: `start` / `end` / `top` / `bottom`                                                                                                                 |
+| `Dialog`, `Sheet`, `AlertDialog`, `Popover`, `Tooltip`, `DropdownMenu`, `Command`                               | overlays; `Sheet side` is logical: `start` / `end` / `top` / `bottom`; close button label is `t.common.close`                                                                         |
 | `Tabs`, `Accordion`, `Collapsible`, `Table`, `Progress`, `Skeleton`, `ScrollArea`, `Avatar`, `Kbd`, `Separator` |                                                                                                                                                                                       |
 | `ChartContainer`, `ChartTooltip(Content)`, `ChartLegend(Content)`                                               | shadcn-style Recharts wrappers; config key → `--color-<key>`                                                                                                                          |
 
 | Shared (`components/shared`)                                          |                                                                                                                                                                           |
 | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DatePicker`                                                          | Jalali (fa) / Gregorian (en), emits `YYYY-MM-DD`, form-friendly                                                                                                           |
+| `DatePicker`                                                          | Jalali (fa, Persian digits) / Gregorian (en), emits `YYYY-MM-DD`, form-friendly; named month/day buttons; wires to its `Field`                                            |
 | `SelectField`                                                         | Select + hidden input + optional "none"                                                                                                                                   |
 | `SwitchInput`                                                         | Switch that submits `"true"/"false"`                                                                                                                                      |
 | `ConfirmDialog`, `CopyButton`, `ColorDot`, `LiveDuration`, `Markdown` |                                                                                                                                                                           |
 | `MarkdownEditor`                                                      | textarea + server-rendered preview (Shiki), form-friendly                                                                                                                 |
-| `useActionForm`, `useAction`                                          | server-action wiring with toasts + field errors                                                                                                                           |
+| `useActionForm`, `useAction`                                          | server-action wiring with toasts + field errors; `<form onSubmit={form.submit}>` (keeps input on validation errors)                                                       |
 | `ThemeToggle`, `AppearanceMenu`, `usePreset`, `LocaleSwitcher`        | `usePreset()` stays in sync across components                                                                                                                             |
 | `design-tokens.ts`                                                    | tokens as data: `presetScales`, `presetStyle(p)`, `surfaceTokens`, `statusTokens`, `chartTokens`, `greyScale` — verified against `globals.css` by `design-tokens.test.ts` |
 
@@ -69,6 +69,32 @@ Applied before first paint by an inline script (no flash).
 | `EmptyState`               | every empty list                                                    |
 | `StatCard`                 | KPI tiles (`tone`: primary/info/warning/violet/destructive/success) |
 | `nav-config.ts`            | sidebar + ⌘K palette source of truth (with role filters)            |
+| `panel-prefs.ts`           | ⌘K matcher (layout-independent) + collapsed-sidebar cookie helpers  |
+
+## Forms & accessibility
+
+- **Field wiring is automatic.** `<Field label hint error required>` generates ids (`useId`) and
+  passes them to its control through context: `Input`, `Textarea`, `SelectTrigger`/`SelectField`,
+  `DatePicker` (and `TimezoneSelect`) get `id`, `aria-describedby` (hint/error), `aria-invalid`
+  and `aria-required`; the label gets `htmlFor`. No `htmlFor`/`id` needed — explicit ones still win.
+- **One Field = one control.** Two id-taking controls in one Field would share an id; split them.
+- **Groups**: `RadioGroup`, `ToggleGroup` and the color swatch picker are labelled with
+  `aria-labelledby` (a `<label for>` can't name a group). For an ad-hoc group of buttons, use
+  `<Field label="…" group>` (wrapper becomes `role="group"`).
+- **Custom controls**: spread `useFieldControl({ id, …props })` on the focusable element
+  (`"group"` as 2nd argument for groups). Popover/Dialog/Sheet content resets the context.
+- **Forms** submit with `onSubmit={form.submit}` (never `action=`): React resets a form after an
+  action, which would wipe input on a server validation error.
+- **Icon-only buttons** always get an `aria-label` from i18n — no hard-coded English in
+  `components/*`.
+- **Row actions revealed on hover** must also show on `focus-visible`, `group-focus-within` and
+  touch (`pointer-coarse:opacity-100`) — see the milestone list.
+- **Small muted text** (sidebar group titles, captions) uses full `text-muted-foreground`
+  (4.9:1 light / 6.4:1 dark); `/80` and lighter fail WCAG AA.
+- **Keyboard shortcuts** match layout-independently (`isCommandPaletteShortcut`: Latin `e.key`,
+  else `e.code`) so ⌘K works on a Persian keyboard.
+- **Client-only preferences** that change layout (collapsed sidebar) live in a cookie read on the
+  server inside `<Suspense>`, plus an `InlineScript` before paint — never `localStorage` + effect.
 
 ## RTL rules
 
@@ -81,7 +107,7 @@ Applied before first paint by an inline script (no flash).
 
 - **Panel page**: `PageHeader` → KPI row (`StatCard` grid) → content `Card`s → `EmptyState` when empty.
 - **Create/edit**: `Dialog` with a form (≤ 12 fields) or a dedicated page for long editors.
-- **Destructive**: always `ConfirmDialog`.
+- **Destructive**: always `ConfirmDialog` (including small row actions).
 - **Status**: `Badge` soft variants; colors consistent per status across modules.
 - **Motion**: CSS transitions/keyframes only on the public site (`animate-float`, `animate-marquee`,
   `animate-dash`); respect `prefers-reduced-motion` (handled globally).

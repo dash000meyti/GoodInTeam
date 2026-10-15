@@ -115,7 +115,7 @@ export function InviteMemberDialog() {
             </DialogFooter>
           </>
         ) : (
-          <form action={form.submit} className="grid gap-4">
+          <form onSubmit={form.submit} className="grid gap-4">
             <input type="hidden" name="role" value={role} />
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
@@ -148,7 +148,7 @@ export function InviteMemberDialog() {
                 />
               </Field>
             </div>
-            <Field label={s.role}>
+            <Field label={s.role} group>
               <div role="radiogroup" className="grid gap-3 sm:grid-cols-2">
                 {(["member", "admin"] as const).map((r) => (
                   <button

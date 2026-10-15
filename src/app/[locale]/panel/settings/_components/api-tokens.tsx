@@ -101,7 +101,7 @@ export function CreateTokenDialog({ siteUrl }: { siteUrl: string }) {
               <DialogTitle>{s.newToken}</DialogTitle>
               <DialogDescription>{s.myTokensHint}</DialogDescription>
             </DialogHeader>
-            <form className="grid gap-5" action={form.submit}>
+            <form className="grid gap-5" onSubmit={form.submit}>
               <input
                 type="hidden"
                 name="scopes"
@@ -123,7 +123,7 @@ export function CreateTokenDialog({ siteUrl }: { siteUrl: string }) {
                   autoFocus
                 />
               </Field>
-              <Field label={s.access}>
+              <Field label={s.access} group>
                 <div role="radiogroup" className="grid gap-3 sm:grid-cols-2">
                   {(["read", "write"] as const).map((a) => (
                     <button

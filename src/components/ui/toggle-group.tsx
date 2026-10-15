@@ -3,11 +3,14 @@
 import * as React from "react";
 import { ToggleGroup as ToggleGroupPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
+import { useFieldControl } from "@/components/ui/field";
 
 function ToggleGroup({
   className,
   ...props
 }: React.ComponentProps<typeof ToggleGroupPrimitive.Root>) {
+  // Inside a <Field>: labelled by the field's label (aria-labelledby), not by id.
+  const fieldProps = useFieldControl(props, "group");
   return (
     <ToggleGroupPrimitive.Root
       data-slot="toggle-group"
@@ -15,7 +18,7 @@ function ToggleGroup({
         "inline-flex w-fit items-center gap-1 rounded-xl border border-border p-1",
         className,
       )}
-      {...props}
+      {...fieldProps}
     />
   );
 }

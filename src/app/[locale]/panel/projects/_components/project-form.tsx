@@ -22,7 +22,7 @@ import { useActionForm } from "@/components/shared/use-action-form";
 import { localePath } from "@/i18n/config";
 import { useLocale, useT } from "@/i18n/client";
 import { currencyCodes, fromMinor, isCurrency } from "@/lib/money";
-import { billingTypes, progressModes, projectStatuses } from "@/server/db/schema/projects";
+import { billingTypes, progressModes, projectStatuses } from "@/server/db/enums";
 import { createProjectAction, updateProjectAction } from "@/server/modules/projects/actions";
 import { ColorPicker } from "./color-picker";
 
@@ -84,7 +84,7 @@ export function ProjectFormDialog({
         <DialogHeader>
           <DialogTitle>{isEdit ? p.edit : p.new}</DialogTitle>
         </DialogHeader>
-        <form action={form.submit} className="grid gap-5">
+        <form onSubmit={form.submit} className="grid gap-5">
           {isEdit && <input type="hidden" name="id" value={project.id} />}
           <div className="grid gap-5 sm:grid-cols-2">
             <Field

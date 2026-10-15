@@ -4,6 +4,7 @@ import * as React from "react";
 import { Select as SelectPrimitive } from "radix-ui";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFieldControl } from "@/components/ui/field";
 
 function Select(props: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
@@ -23,6 +24,8 @@ function SelectTrigger({
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & { size?: "sm" | "default" }) {
+  // Inside a <Field>: the field's label names the trigger (combobox).
+  const fieldProps = useFieldControl(props);
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
@@ -31,7 +34,7 @@ function SelectTrigger({
         "flex w-full items-center justify-between gap-2 rounded-lg border border-input bg-transparent px-3 py-2 text-sm whitespace-nowrap transition-[color,box-shadow,border-color] outline-none hover:border-foreground/40 focus-visible:border-foreground disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive data-[placeholder]:text-muted-foreground data-[size=default]:h-10 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground",
         className,
       )}
-      {...props}
+      {...fieldProps}
     >
       {children}
       <SelectPrimitive.Icon asChild>

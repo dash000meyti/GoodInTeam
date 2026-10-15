@@ -40,4 +40,7 @@ export const panel: Record<keyof typeof fa, string> = {
   role_admin: "Admin",
   role_member: "Team member",
   role_client: "Client",
+  collapseSidebar: "Collapse sidebar",
+  expandSidebar: "Expand sidebar",
+  mainNav: "Main menu",
 };

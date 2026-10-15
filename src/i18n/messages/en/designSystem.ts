@@ -100,7 +100,7 @@ export const designSystem: Record<keyof typeof fa, string> = {
 
   sec_forms: "Forms",
   sec_formsDesc:
-    "Field pairs a label, hint and error. SelectField, SwitchInput and DatePicker work directly inside <form action>.",
+    "Field pairs a label, hint and error and wires them to its control (id, aria-describedby, aria-invalid) — no htmlFor/id needed. SelectField, SwitchInput and DatePicker write hidden inputs, so they work in any <form onSubmit={form.submit}>.",
   input: "Text input",
   textarea: "Textarea",
   select: "Select",

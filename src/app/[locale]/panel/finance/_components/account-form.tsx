@@ -18,7 +18,7 @@ import { SelectField } from "@/components/shared/select-field";
 import { useActionForm } from "@/components/shared/use-action-form";
 import { useLocale, useT } from "@/i18n/client";
 import { currencies, currencyCodes } from "@/lib/money";
-import { accountKinds } from "@/server/db/schema/finance";
+import { accountKinds } from "@/server/db/enums";
 import { createAccountAction, updateAccountAction } from "@/server/modules/finance/actions";
 import { ColorPicker } from "../../projects/_components/color-picker";
 import { accountKindIcons } from "./account-icons";
@@ -67,7 +67,7 @@ export function AccountFormDialog({
         <DialogHeader>
           <DialogTitle>{account ? f.editAccount : f.newAccount}</DialogTitle>
         </DialogHeader>
-        <form action={form.submit} className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={form.submit} className="grid gap-4 sm:grid-cols-2">
           {account && <input type="hidden" name="id" value={account.id} />}
           <Field
             label={f.accountName}

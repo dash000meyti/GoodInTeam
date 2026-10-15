@@ -95,7 +95,7 @@ export function PaymentDialog({
             </Button>
           </div>
         ) : (
-          <form action={form.submit} className="grid gap-4">
+          <form onSubmit={form.submit} className="grid gap-4">
             <input type="hidden" name="invoiceId" value={invoiceId} />
             <Field
               label={`${f.paymentAmount} (${currency})`}

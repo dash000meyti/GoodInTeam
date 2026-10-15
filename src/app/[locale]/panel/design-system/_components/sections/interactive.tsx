@@ -54,19 +54,22 @@ export function FormsSection({ t }: { t: Messages }) {
         title={d.input}
         previewClassName="block"
         code={`const form = useActionForm(createProjectAction, { successMessage: t.common.saved });
-<form action={form.submit}>
-  <Field label={t.projects.name} hint="…" error={form.errors.name?.[0]} required htmlFor="name">
-    <Input id="name" name="name" required />
+// onSubmit (not action): input survives a server validation error
+<form onSubmit={form.submit}>
+  <Field label={t.projects.name} hint="…" error={form.errors.name?.[0]} required>
+    <Input name="name" required />
   </Field>
 </form>
+// Field → label htmlFor + control id (useId), hint/error → aria-describedby.
+// An explicit htmlFor="x" + <Input id="x"> still works.
 // Numbers, emails, URLs, code → dir="ltr"`}
       >
         <div className="grid gap-4">
-          <Field label={d.f_projectName} hint={d.f_projectNameHint} htmlFor="ds-name" required>
-            <Input id="ds-name" placeholder={d.f_projectNamePh} />
+          <Field label={d.f_projectName} hint={d.f_projectNameHint} required>
+            <Input placeholder={d.f_projectNamePh} />
           </Field>
-          <Field label={d.f_email} htmlFor="ds-email">
-            <Input id="ds-email" type="email" dir="ltr" placeholder="hello@goodteam.ir" />
+          <Field label={d.f_email}>
+            <Input type="email" dir="ltr" placeholder="hello@goodteam.ir" />
           </Field>
         </div>
       </Example>
@@ -74,36 +77,42 @@ export function FormsSection({ t }: { t: Messages }) {
         title={d.fieldError}
         previewClassName="block"
         code={`<Field label="Email" error={form.errors.email?.[0]}>
-  <Input name="email" aria-invalid={!!form.errors.email} />
-</Field>`}
+  <Input name="email" />   {/* aria-invalid + aria-describedby come from Field */}
+</Field>
+// Custom single-value control? spread useFieldControl({ id }) on it.
+// A group of buttons/checkboxes that is not one control → <Field label="…" group>`}
       >
         <div className="grid gap-4">
-          <Field label={d.f_projectName} error={d.f_required} htmlFor="ds-err">
-            <Input id="ds-err" aria-invalid />
+          <Field label={d.f_projectName} error={d.f_required}>
+            <Input />
           </Field>
-          <Field label={d.f_notes} htmlFor="ds-notes">
-            <Textarea id="ds-notes" rows={2} placeholder={d.f_notesPh} />
+          <Field label={d.f_notes}>
+            <Textarea rows={2} placeholder={d.f_notesPh} />
           </Field>
         </div>
       </Example>
       <Example
         title={d.select}
         code={`import { SelectField } from "@/components/shared/select-field";
-<SelectField
-  name="status"                 // writes a hidden input for <form action>
-  defaultValue="active"
-  noneLabel="—"                 // optional "none" option → submits ""
-  options={statuses.map((s) => ({ value: s, label: t.projects[\`status_\${s}\`] }))}
-/>`}
+<Field label={t.common.status}>
+  <SelectField
+    name="status"               // writes a hidden input (FormData)
+    defaultValue="active"
+    noneLabel="—"               // optional "none" option → submits ""
+    options={statuses.map((s) => ({ value: s, label: t.projects[\`status_\${s}\`] }))}
+  />
+</Field>`}
       >
         <SelectDemo />
       </Example>
       <Example
         title={`${d.checkbox} · ${d.radio}`}
         code={`<Label><Checkbox name="billable" defaultChecked /> Billable</Label>
-<RadioGroup name="billing" defaultValue="hourly">
-  <Label><RadioGroupItem value="hourly" /> Hourly</Label>
-</RadioGroup>`}
+<Field label="Billing">         {/* RadioGroup/ToggleGroup → aria-labelledby */}
+  <RadioGroup name="billing" defaultValue="hourly">
+    <Label><RadioGroupItem value="hourly" /> Hourly</Label>
+  </RadioGroup>
+</Field>`}
       >
         <ChoiceDemo />
       </Example>
@@ -129,8 +138,11 @@ export function FormsSection({ t }: { t: Messages }) {
         description={d.datePickerHint}
         className="lg:col-span-2"
         code={`import { DatePicker } from "@/components/shared/date-picker";
-<DatePicker name="dueDate" defaultValue={toDateInputValue(task.dueAt, tz)} />
-// server: fromDateInput(input.dueDate, undefined, appTimezone())`}
+<Field label={t.tasks.dueDate}>   {/* names the trigger button */}
+  <DatePicker name="dueDate" defaultValue={toDateInputValue(task.dueAt, tz)} />
+</Field>
+// server: fromDateInput(input.dueDate, undefined, appTimezone())
+// Persian digits for fa; every day button is named with its full date.`}
       >
         <DatePickerDemo />
       </Example>
@@ -154,7 +166,7 @@ export function OverlaysSection({ t }: { t: Messages }) {
   <DialogTrigger asChild><Button>…</Button></DialogTrigger>
   <DialogContent>
     <DialogHeader><DialogTitle>…</DialogTitle><DialogDescription>…</DialogDescription></DialogHeader>
-    <form action={form.submit}>… <DialogFooter>…</DialogFooter></form>
+    <form onSubmit={form.submit}>… <DialogFooter>…</DialogFooter></form>
   </DialogContent>
 </Dialog>`}
       >

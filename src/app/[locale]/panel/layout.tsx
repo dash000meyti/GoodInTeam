@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { PanelHeader } from "@/components/panel/header";
 import { PanelUIProvider } from "@/components/panel/panel-ui";
+import { sidebarInitScript } from "@/components/panel/panel-prefs";
+import { InlineScript } from "@/components/shared/inline-script";
 import {
   HeaderSlotSkeleton,
   SessionHeaderSlot,
@@ -24,6 +26,8 @@ export default async function PanelLayout({ children }: LayoutProps<"/[locale]/p
   const locale = await getLocale();
   return (
     <I18nProvider locale={locale} messages={getMessages(locale)}>
+      {/* Before paint: collapsed-sidebar cookie → <html data-sidebar-collapsed> (skeleton width). */}
+      <InlineScript html={sidebarInitScript} />
       <PanelUIProvider>
         <div className="flex min-h-dvh bg-background">
           <Suspense fallback={<SidebarSkeleton />}>

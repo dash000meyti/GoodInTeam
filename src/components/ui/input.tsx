@@ -1,7 +1,14 @@
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useFieldControl } from "@/components/ui/field";
 
+/** Text input. Inside a `<Field>` it picks up the label's id, hint/error and invalid state. */
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  const wired = useFieldControl(props);
+  // A hidden input is never what the label names.
+  const fieldProps = type === "hidden" ? props : wired;
   return (
     <input
       type={type}
@@ -12,7 +19,7 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
         "aria-invalid:border-destructive aria-invalid:ring-destructive/20",
         className,
       )}
-      {...props}
+      {...fieldProps}
     />
   );
 }

@@ -1,16 +1,10 @@
 import { index, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { bool, createdAt, json, pk, timestamp, updatedAt } from "./_columns";
 import { clients } from "./crm";
+import { userRoles, type ApiTokenScope } from "../enums";
 
-/**
- * Roles:
- * - owner:  you. Full access to everything.
- * - admin:  trusted teammate with full access except owner-only settings.
- * - member: teammate; sees projects they are a member of, tracks own time.
- * - client: customer portal user; sees only their client's shared data.
- */
-export const userRoles = ["owner", "admin", "member", "client"] as const;
-export type UserRole = (typeof userRoles)[number];
+// Enum lists live in the dependency-free `../enums` (safe for client bundles).
+export { userRoles, apiTokenScopes, type UserRole, type ApiTokenScope } from "../enums";
 
 export const users = sqliteTable(
   "users",
@@ -51,9 +45,6 @@ export const sessions = sqliteTable(
   },
   (t) => [index("sessions_user_idx").on(t.userId)],
 );
-
-export const apiTokenScopes = ["read", "write", "admin"] as const;
-export type ApiTokenScope = (typeof apiTokenScopes)[number];
 
 /** Personal access tokens for the REST API and the MCP endpoint (AI agents). */
 export const apiTokens = sqliteTable(

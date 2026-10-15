@@ -3,22 +3,20 @@ import { bool, createdAt, json, money, pk, timestamp, updatedAt } from "./_colum
 import { users } from "./auth";
 import { clients } from "./crm";
 import { projects } from "./projects";
+import { taskStatuses, timeEntrySources, eventKinds, eventStatuses } from "../enums";
+
+// Enum lists live in the dependency-free `../enums` (safe for client bundles).
+export {
+  taskStatuses,
+  taskPriorities,
+  timeEntrySources,
+  eventKinds,
+  eventStatuses,
+  type TaskStatus,
+  type EventKind,
+} from "../enums";
 
 // ─── Tasks / to-dos / reminders ────────────────────────────────────────────
-
-export const taskStatuses = [
-  "inbox",
-  "todo",
-  "in_progress",
-  "waiting",
-  "someday",
-  "done",
-  "canceled",
-] as const;
-export type TaskStatus = (typeof taskStatuses)[number];
-
-/** 0 none · 1 low · 2 medium · 3 high · 4 urgent */
-export const taskPriorities = [0, 1, 2, 3, 4] as const;
 
 export const tasks = sqliteTable(
   "tasks",
@@ -57,8 +55,6 @@ export const tasks = sqliteTable(
 
 // ─── Time tracking ─────────────────────────────────────────────────────────
 
-export const timeEntrySources = ["timer", "manual", "api", "import"] as const;
-
 /**
  * A time entry with endedAt = null is a RUNNING timer. Multiple timers can run
  * at the same time (e.g. two projects in parallel) — by design.
@@ -93,19 +89,6 @@ export const timeEntries = sqliteTable(
 );
 
 // ─── Calendar ─────────────────────────────────────────────────────────────
-
-export const eventKinds = [
-  "meeting",
-  "commitment",
-  "deadline",
-  "focus",
-  "reminder",
-  "personal",
-  "other",
-] as const;
-export type EventKind = (typeof eventKinds)[number];
-
-export const eventStatuses = ["tentative", "confirmed", "done", "missed", "canceled"] as const;
 
 export const events = sqliteTable(
   "events",

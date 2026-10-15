@@ -84,7 +84,7 @@ export function RateFormDialog({
             {format(f.rateHint, { currency, base: baseSymbol })}
           </DialogDescription>
         </DialogHeader>
-        <form action={form.submit} className="grid gap-4">
+        <form onSubmit={form.submit} className="grid gap-4">
           {rate && <input type="hidden" name="id" value={rate.id} />}
           <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
             <Field label={t.common.currency} error={form.errors.currency?.[0]}>

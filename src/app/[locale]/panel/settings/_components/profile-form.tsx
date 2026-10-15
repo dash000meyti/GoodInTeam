@@ -78,7 +78,7 @@ export function ProfileForm({ values }: { values: ProfileValues }) {
   const displayName = preview.name[pl] || preview.brand[pl];
 
   return (
-    <form action={form.submit} onChange={onChange} className="space-y-6" noValidate>
+    <form onSubmit={form.submit} onChange={onChange} className="space-y-6" noValidate>
       {/* Live preview */}
       <div className="overflow-hidden rounded-2xl border border-dashed bg-muted/30">
         <div className="flex items-center justify-between gap-3 border-b border-dashed px-4 py-2.5">

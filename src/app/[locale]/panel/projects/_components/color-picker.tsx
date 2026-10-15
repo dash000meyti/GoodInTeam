@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFieldControl } from "@/components/ui/field";
 
 export const palette = [
   "#00A76F",
@@ -30,14 +31,17 @@ export function ColorPicker({
   onChange?: (c: string) => void;
 }) {
   const [value, setValue] = useState(defaultValue);
+  // Inside a <Field>: the swatches form a group named by the field's label.
+  const groupProps = useFieldControl({}, "group");
   return (
-    <div className="flex flex-wrap gap-2">
+    <div role="group" className="flex flex-wrap gap-2" {...groupProps}>
       <input type="hidden" name={name} value={value} />
       {palette.map((c) => (
         <button
           key={c}
           type="button"
           aria-label={c}
+          aria-pressed={value.toLowerCase() === c.toLowerCase()}
           onClick={() => {
             setValue(c);
             onChange?.(c);

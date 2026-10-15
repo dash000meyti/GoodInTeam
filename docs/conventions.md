@@ -6,6 +6,9 @@
 - File names: `kebab-case.tsx`. Components: `PascalCase`. Hooks: `useXxx`.
 - Server-only modules start with `import "server-only";`. Client components start with
   `"use client";`. Never import `@/server/*` (except `actions.ts` and types) from client code.
+- Enum lists (statuses, kinds, roles …) live in the dependency-free `@/server/db/enums`; client
+  code imports them from there. Importing values from `@/server/db/schema/*` drags drizzle-orm
+  (~500 KB) into the browser bundle — `src/server/db/enums.test.ts` fails if a client module does.
 - Path alias: `@/` → `src/`.
 - Formatting: Prettier (`pnpm format`), Tailwind classes sorted by the prettier plugin.
 
@@ -22,13 +25,18 @@
 
 ```tsx
 const form = useActionForm(createThingAction, { successMessage: t.common.saved, onSuccess: () => setOpen(false) });
-<form action={form.submit}>
+<form onSubmit={form.submit}>
   <Field label={t.things.name} error={form.errors.name?.[0]}><Input name="name" /></Field>
   <SelectField name="status" options={…} />          {/* writes a hidden input */}
   <DatePicker name="dueDate" />                       {/* Jalali/Gregorian → "YYYY-MM-DD" */}
   <SwitchInput name="billable" defaultChecked />      {/* submits "true"/"false" */}
 </form>
 ```
+
+`form.submit` is an **`onSubmit`** handler, not a form `action`: React resets a form after an
+`action` runs, which would wipe the user's input when the server answers with a validation
+error. With `onSubmit` the values stay on error; after a success the form is reset to its
+defaults (like a successful action). `form.run(fdOrObject)` calls the action directly.
 
 Use `zOptString`, `zNullString`, `zBool`, `zOptNumber`, `zTags`… from `src/lib/zod-helpers.ts` so
 FormData strings parse correctly. `""` → `undefined` (create) or `null` (clear on update).

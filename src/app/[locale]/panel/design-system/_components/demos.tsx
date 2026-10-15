@@ -103,13 +103,16 @@ export function ChoiceDemo() {
           <Checkbox /> {d.f_visible}
         </Label>
       </div>
-      <RadioGroup defaultValue="hourly" aria-label={d.f_billing}>
-        {(["hourly", "fixed", "retainer"] as const).map((v) => (
-          <Label key={v} className="cursor-pointer">
-            <RadioGroupItem value={v} /> {d[`f_${v}`]}
-          </Label>
-        ))}
-      </RadioGroup>
+      {/* Inside a Field, the radio group is named by the field label (aria-labelledby). */}
+      <Field label={d.f_billing}>
+        <RadioGroup defaultValue="hourly">
+          {(["hourly", "fixed", "retainer"] as const).map((v) => (
+            <Label key={v} className="cursor-pointer">
+              <RadioGroupItem value={v} /> {d[`f_${v}`]}
+            </Label>
+          ))}
+        </RadioGroup>
+      </Field>
     </div>
   );
 }
@@ -149,9 +152,10 @@ export function DatePickerDemo() {
     <div className="grid w-full gap-4 sm:grid-cols-2">
       {(["fa", "en"] as const).map((l) => (
         <I18nProvider key={l} locale={l} messages={messages}>
-          <div dir={l === "fa" ? "rtl" : "ltr"} className="space-y-2">
-            <Label>{l === "fa" ? d.jalali : d.gregorian}</Label>
-            <DatePicker value={value} onChange={setValue} />
+          <div dir={l === "fa" ? "rtl" : "ltr"}>
+            <Field label={l === "fa" ? d.jalali : d.gregorian}>
+              <DatePicker value={value} onChange={setValue} />
+            </Field>
           </div>
         </I18nProvider>
       ))}

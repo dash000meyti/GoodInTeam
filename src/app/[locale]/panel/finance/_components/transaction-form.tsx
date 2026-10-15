@@ -174,7 +174,7 @@ export function TransactionFormDialog({
             </Button>
           </div>
         ) : (
-          <form action={form.submit} className="grid gap-4">
+          <form onSubmit={form.submit} className="grid gap-4">
             {isEdit && <input type="hidden" name="id" value={transaction.id} />}
             <input type="hidden" name="kind" value={s.kind} />
             <input type="hidden" name="status" value={s.pending ? "pending" : "cleared"} />

@@ -513,7 +513,7 @@ function EventForm({
             <Field label={c.description}>
               <MarkdownEditor name="description" defaultValue={init.description} rows={4} />
             </Field>
-            <Field label={c.color}>
+            <Field label={c.color} group>
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"

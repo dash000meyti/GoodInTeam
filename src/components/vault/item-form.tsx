@@ -169,7 +169,7 @@ function ItemForm({
 
       <div className="grid gap-5 sm:grid-cols-2">
         {!entry && (
-          <Field label={v.itemType} className="sm:col-span-2">
+          <Field label={v.itemType} className="sm:col-span-2" group>
             <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={v.itemType}>
               {VAULT_ITEM_TYPES.map((ty) => {
                 const Icon = TYPE_ICONS[ty];

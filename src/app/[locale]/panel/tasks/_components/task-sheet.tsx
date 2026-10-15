@@ -38,7 +38,7 @@ import { formatDuration } from "@/lib/format";
 import { rrulePresets } from "@/lib/rrule";
 import { toDateInputValue, toTimeInputValue } from "@/lib/tz";
 import { cn } from "@/lib/utils";
-import { taskStatuses } from "@/server/db/schema/work";
+import { taskStatuses } from "@/server/db/enums";
 import {
   addSubtaskAction,
   completeTaskAction,
@@ -207,7 +207,7 @@ function TaskEditor({
       </SheetHeader>
 
       <div className="flex-1 overflow-y-auto">
-        <form id="task-form" action={form.submit} className="grid gap-5 p-5">
+        <form id="task-form" onSubmit={form.submit} className="grid gap-5 p-5">
           <input type="hidden" name="id" value={detail.id} />
           <input type="hidden" name="recurrence" value={recurrence} />
           <Field error={err("title")}>

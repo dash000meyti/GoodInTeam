@@ -3,8 +3,10 @@ import { createdAt, pk, timestamp, updatedAt } from "./_columns";
 import { users } from "./auth";
 import { clients } from "./crm";
 import { projects } from "./projects";
+import { docVisibilities } from "../enums";
 
-export const docVisibilities = ["private", "team", "client"] as const;
+// Enum lists live in the dependency-free `../enums` (safe for client bundles).
+export { docVisibilities } from "../enums";
 
 /**
  * Internal documentation / knowledge base (tree of markdown pages).

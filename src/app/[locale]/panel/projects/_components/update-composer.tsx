@@ -10,7 +10,7 @@ import { SelectField } from "@/components/shared/select-field";
 import { SwitchInput } from "@/components/shared/switch-input";
 import { useActionForm } from "@/components/shared/use-action-form";
 import { useT } from "@/i18n/client";
-import { projectUpdateKinds } from "@/server/db/schema/projects";
+import { projectUpdateKinds } from "@/server/db/enums";
 import { addProjectUpdateAction } from "@/server/modules/projects/actions";
 import { kindLabels } from "./update-kinds";
 
@@ -28,7 +28,7 @@ export function UpdateComposer({ projectId, locale }: { projectId: string; local
       </Button>
     );
   return (
-    <form action={form.submit} className="grid gap-4 rounded-xl border border-dashed p-4">
+    <form onSubmit={form.submit} className="grid gap-4 rounded-xl border border-dashed p-4">
       <input type="hidden" name="projectId" value={projectId} />
       <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
         <Field label={t.projects.updateTitle} error={form.errors.title?.[0]}>

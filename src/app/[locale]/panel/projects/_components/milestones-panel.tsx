@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/shared/confirm-button";
 import { DatePicker } from "@/components/shared/date-picker";
 import { SwitchInput } from "@/components/shared/switch-input";
 import { useAction, useActionForm } from "@/components/shared/use-action-form";
@@ -96,15 +97,28 @@ export function MilestonesPanel({
             </div>
             {editable && !m.visibleToClient && <Badge variant="neutral">{t.common.optional}</Badge>}
             {editable && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="opacity-0 group-hover:opacity-100"
-                onClick={() => exec(deleteMilestoneAction({ id: m.id }))}
-                aria-label={t.common.delete}
-              >
-                <Trash2Icon className="text-destructive" />
-              </Button>
+              <ConfirmDialog
+                trigger={
+                  // Revealed on hover/keyboard focus with a fine pointer; always shown on touch.
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={pending}
+                    className="opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100 pointer-coarse:opacity-100"
+                    aria-label={`${t.common.delete}: ${m.title}`}
+                  >
+                    <Trash2Icon className="text-destructive" />
+                  </Button>
+                }
+                description={
+                  <>
+                    <span className="font-semibold text-foreground">{m.title}</span>
+                    <br />
+                    {t.common.deleteConfirmBody}
+                  </>
+                }
+                onConfirm={() => exec(deleteMilestoneAction({ id: m.id }))}
+              />
             )}
           </li>
         ))}
@@ -115,17 +129,17 @@ export function MilestonesPanel({
       {editable &&
         (adding ? (
           <form
-            action={form.submit}
+            onSubmit={form.submit}
             className="grid gap-4 rounded-xl border border-dashed p-4 sm:grid-cols-[1fr_180px_90px]"
           >
             <input type="hidden" name="projectId" value={projectId} />
             <Field label={t.common.title} error={form.errors.title?.[0]}>
               <Input name="title" required autoFocus />
             </Field>
-            <Field label={p.dueDate}>
+            <Field label={p.dueDate} error={form.errors.dueDate?.[0]}>
               <DatePicker name="dueDate" />
             </Field>
-            <Field label={p.weight}>
+            <Field label={p.weight} error={form.errors.weight?.[0]}>
               <Input name="weight" type="number" min={1} max={100} defaultValue={1} dir="ltr" />
             </Field>
             <label className="flex items-center gap-3 text-sm sm:col-span-2">

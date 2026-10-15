@@ -1,11 +1,14 @@
 import { index, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { createdAt, json, pk, timestamp, updatedAt } from "./_columns";
+import { clientKinds } from "../enums";
+
+// Enum lists live in the dependency-free `../enums` (safe for client bundles).
+export { clientKinds } from "../enums";
 
 /**
  * A client is any counterparty: a company, a team, or a person.
  * Used for projects, invoices, contracts, finance ledgers and the portal.
  */
-export const clientKinds = ["company", "team", "person"] as const;
 
 export const clients = sqliteTable(
   "clients",

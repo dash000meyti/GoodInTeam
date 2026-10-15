@@ -1,9 +1,17 @@
 "use client";
 
 import { createContext, use, useCallback, useEffect, useState, type ReactNode } from "react";
+import { isCommandPaletteShortcut, readSidebarCookie, sidebarCookie } from "./panel-prefs";
 
 interface PanelUI {
+  /** Collapsed desktop sidebar (false until read on the client — see `collapsedPref`). */
   collapsed: boolean;
+  /**
+   * The stored preference, `null` during SSR/hydration. The sidebar renders from the
+   * cookie value read on the server until this is known, so the first paint is right.
+   */
+  collapsedPref: boolean | null;
+  setCollapsed: (collapsed: boolean) => void;
   toggleCollapsed: () => void;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
@@ -12,24 +20,42 @@ interface PanelUI {
 }
 
 const Ctx = createContext<PanelUI | null>(null);
-const KEY = "gt-sidebar-collapsed";
+/** Pre-cookie storage key; migrated to the cookie on first load. */
+const LEGACY_KEY = "gt-sidebar-collapsed";
+
+function persist(collapsed: boolean) {
+  try {
+    document.cookie = sidebarCookie(collapsed);
+    document.documentElement.toggleAttribute("data-sidebar-collapsed", collapsed);
+    localStorage.removeItem(LEGACY_KEY);
+  } catch {}
+}
 
 /** Client-side UI state for the panel chrome (sidebar mode, mobile drawer, ⌘K). */
 export function PanelUIProvider({ children }: { children: ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsedPref, setPref] = useState<boolean | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
   useEffect(() => {
-    try {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate persisted preference
-      setCollapsed(localStorage.getItem(KEY) === "1");
-    } catch {}
+    let stored = readSidebarCookie(document.cookie);
+    if (stored === null) {
+      try {
+        if (localStorage.getItem(LEGACY_KEY) === "1") {
+          stored = true;
+          persist(true);
+        }
+      } catch {}
+    }
+    // Soft navigations into the panel skip the inline init script: keep the skeleton in sync.
+    document.documentElement.toggleAttribute("data-sidebar-collapsed", stored === true);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate persisted preference
+    setPref((p) => p ?? stored ?? false);
   }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      if (isCommandPaletteShortcut(e)) {
         e.preventDefault();
         setPaletteOpen((o) => !o);
       }
@@ -38,18 +64,31 @@ export function PanelUIProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const setCollapsed = useCallback((next: boolean) => {
+    persist(next);
+    setPref(next);
+  }, []);
+
   const toggleCollapsed = useCallback(() => {
-    setCollapsed((c) => {
-      try {
-        localStorage.setItem(KEY, c ? "0" : "1");
-      } catch {}
-      return !c;
+    setPref((c) => {
+      const next = !c;
+      persist(next);
+      return next;
     });
   }, []);
 
   return (
     <Ctx
-      value={{ collapsed, toggleCollapsed, mobileOpen, setMobileOpen, paletteOpen, setPaletteOpen }}
+      value={{
+        collapsed: collapsedPref ?? false,
+        collapsedPref,
+        setCollapsed,
+        toggleCollapsed,
+        mobileOpen,
+        setMobileOpen,
+        paletteOpen,
+        setPaletteOpen,
+      }}
     >
       {children}
     </Ctx>

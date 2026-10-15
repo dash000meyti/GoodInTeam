@@ -27,7 +27,7 @@ import { localePath } from "@/i18n/config";
 import { format } from "@/i18n/format-message";
 import { useLocale, useT } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
-import { contractKinds } from "@/server/db/schema/contracts";
+import { contractKinds } from "@/server/db/enums";
 import {
   applyTemplateAction,
   createContractAction,
@@ -189,7 +189,7 @@ export function ContractEditor({
 
   return (
     <form
-      action={form.submit}
+      onSubmit={form.submit}
       className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_340px]"
     >
       {initial.id && <input type="hidden" name="id" value={initial.id} />}

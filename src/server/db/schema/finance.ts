@@ -3,8 +3,17 @@ import { bool, createdAt, json, money, pk, timestamp, updatedAt } from "./_colum
 import { users } from "./auth";
 import { clients } from "./crm";
 import { projects } from "./projects";
+import { accountKinds, categoryKinds, transactionKinds, invoiceStatuses } from "../enums";
 
-export const accountKinds = ["bank", "cash", "card", "crypto", "wallet", "other"] as const;
+// Enum lists live in the dependency-free `../enums` (safe for client bundles).
+export {
+  accountKinds,
+  categoryKinds,
+  transactionKinds,
+  invoiceStatuses,
+  type TransactionKind,
+  type InvoiceStatus,
+} from "../enums";
 
 /** Where money lives (bank account, cash, crypto wallet …). One currency each. */
 export const accounts = sqliteTable("accounts", {
@@ -21,8 +30,6 @@ export const accounts = sqliteTable("accounts", {
   updatedAt: updatedAt(),
 });
 
-export const categoryKinds = ["income", "expense"] as const;
-
 export const categories = sqliteTable("finance_categories", {
   id: pk(),
   name: text("name").notNull(),
@@ -32,9 +39,6 @@ export const categories = sqliteTable("finance_categories", {
   parentId: text("parent_id"),
   createdAt: createdAt(),
 });
-
-export const transactionKinds = ["income", "expense", "transfer"] as const;
-export type TransactionKind = (typeof transactionKinds)[number];
 
 /**
  * Every money movement. `amountMinor` is always positive; `kind` gives the sign.
@@ -78,17 +82,6 @@ export const transactions = sqliteTable(
     index("tx_client_idx").on(t.clientId),
   ],
 );
-
-export const invoiceStatuses = [
-  "draft",
-  "sent",
-  "viewed",
-  "partial",
-  "paid",
-  "overdue",
-  "void",
-] as const;
-export type InvoiceStatus = (typeof invoiceStatuses)[number];
 
 export const invoices = sqliteTable(
   "invoices",

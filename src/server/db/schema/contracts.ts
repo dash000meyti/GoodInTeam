@@ -3,18 +3,10 @@ import { bool, createdAt, json, pk, timestamp, updatedAt } from "./_columns";
 import { users } from "./auth";
 import { clients } from "./crm";
 import { projects } from "./projects";
+import { contractKinds, contractStatuses, contractEventTypes } from "../enums";
 
-export const contractKinds = ["contract", "proposal", "nda", "approval", "change_request"] as const;
-export const contractStatuses = [
-  "draft",
-  "sent",
-  "viewed",
-  "signed",
-  "declined",
-  "void",
-  "expired",
-] as const;
-export type ContractStatus = (typeof contractStatuses)[number];
+// Enum lists live in the dependency-free `../enums` (safe for client bundles).
+export { contractKinds, contractStatuses, contractEventTypes, type ContractStatus } from "../enums";
 
 /**
  * Contracts, proposals and approvals sent to clients via a private link
@@ -79,17 +71,6 @@ export const contractSignatures = sqliteTable(
   },
   (t) => [index("contract_signatures_contract_idx").on(t.contractId)],
 );
-
-export const contractEventTypes = [
-  "created",
-  "updated",
-  "sent",
-  "viewed",
-  "signed",
-  "declined",
-  "voided",
-  "reminded",
-] as const;
 
 /** Immutable audit trail for each contract. */
 export const contractEvents = sqliteTable(

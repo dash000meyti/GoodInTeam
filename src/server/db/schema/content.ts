@@ -3,29 +3,10 @@ import { bool, createdAt, json, pk, timestamp, updatedAt } from "./_columns";
 import { users } from "./auth";
 import { clients } from "./crm";
 import { projects } from "./projects";
+import { postTypes, postStatuses, socialNetworks, leadStatuses } from "../enums";
 
-/**
- * Public content (CMS). One table for every publishable thing:
- * - article:  blog post
- * - tutorial: lesson (optionally part of a `series` = course)
- * - vlog:     video-first post (videoUrl)
- * - note:     short post / micro-blog (future: syndicated to X, etc.)
- * - work:     portfolio case study (`meta` holds client, year, stack, links…)
- * - service:  a service offering shown on the site
- * - page:     static page (about, uses, now…)
- * Translations of the same piece share `translationKey`.
- */
-export const postTypes = [
-  "article",
-  "tutorial",
-  "vlog",
-  "note",
-  "work",
-  "service",
-  "page",
-] as const;
-export type PostType = (typeof postTypes)[number];
-export const postStatuses = ["draft", "scheduled", "published", "archived"] as const;
+// Enum lists live in the dependency-free `../enums` (safe for client bundles).
+export { postTypes, postStatuses, socialNetworks, leadStatuses, type PostType } from "../enums";
 
 export interface WorkMeta {
   client?: string;
@@ -38,6 +19,17 @@ export interface WorkMeta {
   metrics?: { label: string; value: string }[];
 }
 
+/**
+ * Public content (CMS). One table for every publishable thing:
+ * - article:  blog post
+ * - tutorial: lesson (optionally part of a `series` = course)
+ * - vlog:     video-first post (videoUrl)
+ * - note:     short post / micro-blog (future: syndicated to X, etc.)
+ * - work:     portfolio case study (`meta` holds client, year, stack, links…)
+ * - service:  a service offering shown on the site
+ * - page:     static page (about, uses, now…)
+ * Translations of the same piece share `translationKey`.
+ */
 export const posts = sqliteTable(
   "posts",
   {
@@ -119,17 +111,6 @@ export const media = sqliteTable("media", {
   createdAt: createdAt(),
 });
 
-export const socialNetworks = [
-  "x",
-  "linkedin",
-  "telegram",
-  "instagram",
-  "mastodon",
-  "bluesky",
-  "threads",
-  "youtube",
-] as const;
-
 /**
  * POSSE (Publish on Own Site, Syndicate Elsewhere) — one row per copy of a
  * post on a social network. Integrations fill this in (see docs/roadmap.md).
@@ -156,8 +137,6 @@ export const syndications = sqliteTable(
   },
   (t) => [index("syndications_post_idx").on(t.postId)],
 );
-
-export const leadStatuses = ["new", "contacted", "qualified", "won", "lost", "spam"] as const;
 
 /** Contact-form submissions from the public site. */
 export const leads = sqliteTable(

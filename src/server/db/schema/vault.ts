@@ -3,6 +3,10 @@ import { bool, createdAt, pk, timestamp, updatedAt } from "./_columns";
 import { users } from "./auth";
 import { clients } from "./crm";
 import { projects } from "./projects";
+import { vaultItemTypes } from "../enums";
+
+// Enum lists live in the dependency-free `../enums` (safe for client bundles).
+export { vaultItemTypes } from "../enums";
 
 /**
  * Zero-knowledge vault. The server NEVER sees plaintext secrets or the master
@@ -26,18 +30,6 @@ export const vaultKeys = sqliteTable("vault_keys", {
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
-
-export const vaultItemTypes = [
-  "login",
-  "note",
-  "api_key",
-  "ssh_key",
-  "database",
-  "server",
-  "card",
-  "env",
-  "other",
-] as const;
 
 export const vaultItems = sqliteTable(
   "vault_items",
