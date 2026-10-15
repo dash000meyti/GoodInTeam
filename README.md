@@ -42,6 +42,8 @@ docker compose up -d --build
 
 ## 🧭 Docs
 
+- [`docs/HANDOFF.md`](docs/HANDOFF.md) — **current status, open branches and next steps (read first)**
+
 - [`AGENTS.md`](AGENTS.md) — rules & map for AI coding agents (start here)
 - [`docs/`](docs/README.md) — architecture, conventions, data model, design system, security, API/MCP, deployment, roadmap
 
