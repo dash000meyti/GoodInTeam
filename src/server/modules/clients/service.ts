@@ -1,7 +1,8 @@
 import "server-only";
-import { and, asc, count, eq, isNull, like, or } from "drizzle-orm";
+import { and, asc, count, eq, isNull } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import { clients, projects, users } from "@/server/db/schema";
 import { assertAdmin, type Actor } from "@/server/auth/actor";
 import { logActivity } from "@/server/activity";
@@ -20,9 +21,7 @@ export function listClients(actor: Actor, input: z.output<typeof listClientsInpu
   assertAdmin(actor);
   const where = and(
     input.includeArchived ? undefined : isNull(clients.archivedAt),
-    input.q
-      ? or(like(clients.name, `%${input.q}%`), like(clients.email, `%${input.q}%`))
-      : undefined,
+    textMatch(input.q, clients.name, clients.email),
   );
   const rows = db.select().from(clients).where(where).orderBy(asc(clients.name)).all();
   const counts = new Map(

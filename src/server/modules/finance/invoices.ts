@@ -9,7 +9,6 @@ import {
   inArray,
   isNotNull,
   isNull,
-  like,
   lt,
   ne,
   notInArray,
@@ -19,6 +18,7 @@ import {
 } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import {
   accounts,
   clients,
@@ -205,9 +205,7 @@ export function listInvoices(actor: Actor, input: z.output<typeof listInvoicesIn
         statusWhere,
         input.clientId ? eq(invoices.clientId, input.clientId) : undefined,
         input.projectId ? eq(invoices.projectId, input.projectId) : undefined,
-        input.q
-          ? or(like(invoices.number, `%${input.q}%`), like(clients.name, `%${input.q}%`))
-          : undefined,
+        textMatch(input.q, invoices.number, clients.name),
       ),
     )
     .orderBy(desc(invoices.issueDate), desc(invoices.number))

@@ -1,7 +1,8 @@
 import "server-only";
-import { and, asc, desc, eq, inArray, like, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import {
   posts,
   projects,
@@ -179,9 +180,7 @@ export function listPosts(actor: Actor, input: z.output<typeof listPostsInput> =
         input.type ? eq(posts.type, input.type) : undefined,
         input.locale ? eq(posts.locale, input.locale) : undefined,
         input.status ? eq(posts.status, input.status) : undefined,
-        input.q
-          ? or(like(posts.title, `%${input.q}%`), like(posts.slug, `%${input.q}%`))
-          : undefined,
+        textMatch(input.q, posts.title, posts.slug),
       ),
     )
     .orderBy(desc(posts.updatedAt))

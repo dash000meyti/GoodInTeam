@@ -2,8 +2,9 @@ import "server-only";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { and, desc, eq, like, or } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import { media, type Media } from "@/server/db/schema";
 import { assertAdmin, type Actor } from "@/server/auth/actor";
 import { logActivity } from "@/server/activity";
@@ -93,9 +94,7 @@ export function listMedia(
     .from(media)
     .where(
       and(
-        input.q
-          ? or(like(media.originalName, `%${input.q}%`), like(media.alt, `%${input.q}%`))
-          : undefined,
+        textMatch(input.q, media.originalName, media.alt),
         mimes ? or(...mimes.map((m) => eq(media.mime, m))) : undefined,
       ),
     )

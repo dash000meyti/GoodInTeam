@@ -18,6 +18,7 @@ import {
 } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import { projects, tasks, timeEntries, users, type TaskStatus } from "@/server/db/schema";
 import { assertStaff, isStaff, type Actor } from "@/server/auth/actor";
 import { logActivity } from "@/server/activity";
@@ -160,7 +161,7 @@ function filtersWhere(f: z.output<typeof listTasksInput>) {
       : undefined,
     f.priority != null ? eq(tasks.priority, f.priority) : undefined,
     f.tag ? sql`exists (select 1 from json_each(${tasks.tags}) where value = ${f.tag})` : undefined,
-    f.q ? or(like(tasks.title, `%${f.q}%`), like(tasks.notes, `%${f.q}%`)) : undefined,
+    textMatch(f.q, tasks.title, tasks.notes),
     f.includeSubtasks ? undefined : isNull(tasks.parentId),
   );
 }

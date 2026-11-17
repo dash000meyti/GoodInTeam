@@ -5,6 +5,7 @@ import Database from "better-sqlite3";
 import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import { env } from "@/lib/env";
+import { normalizeSearchText } from "@/lib/search-text";
 import * as schema from "./schema";
 
 export type DB = BetterSQLite3Database<typeof schema>;
@@ -24,6 +25,10 @@ function open() {
   sqlite.pragma("busy_timeout = 5000");
   sqlite.pragma("temp_store = MEMORY");
   sqlite.pragma("cache_size = -20000"); // ~20MB page cache
+  // Persian-aware search: `fa_norm(col) LIKE …` (see server/db/search.ts).
+  sqlite.function("fa_norm", { deterministic: true }, (v: unknown) =>
+    v == null ? null : normalizeSearchText(String(v)),
+  );
 
   const db = drizzle(sqlite, { schema });
   // Apply pending migrations on first connection (idempotent & fast).

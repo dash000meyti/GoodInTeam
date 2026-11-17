@@ -1,7 +1,8 @@
 import "server-only";
-import { and, desc, eq, like, or, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import { leads } from "@/server/db/schema";
 import { assertAdmin, type Actor } from "@/server/auth/actor";
 import { logActivity } from "@/server/activity";
@@ -54,14 +55,7 @@ export function listLeads(actor: Actor, input: z.output<typeof listLeadsInput> =
     .where(
       and(
         input.status ? eq(leads.status, input.status) : undefined,
-        input.q
-          ? or(
-              like(leads.name, `%${input.q}%`),
-              like(leads.email, `%${input.q}%`),
-              like(leads.company, `%${input.q}%`),
-              like(leads.message, `%${input.q}%`),
-            )
-          : undefined,
+        textMatch(input.q, leads.name, leads.email, leads.company, leads.message),
       ),
     )
     .orderBy(desc(leads.createdAt))

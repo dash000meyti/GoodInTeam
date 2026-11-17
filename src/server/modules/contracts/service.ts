@@ -10,7 +10,6 @@ import {
   inArray,
   isNotNull,
   isNull,
-  like,
   lte,
   ne,
   or,
@@ -19,6 +18,7 @@ import {
 } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import {
   clients,
   contractEvents,
@@ -342,7 +342,7 @@ export async function listContracts(
       templates ? undefined : statusWhere(input.status, now),
       input.clientId ? eq(contracts.clientId, input.clientId) : undefined,
       input.projectId ? eq(contracts.projectId, input.projectId) : undefined,
-      input.q ? like(contracts.title, `%${input.q}%`) : undefined,
+      textMatch(input.q, contracts.title),
     ),
     columns: { bodyMd: false },
     with: {

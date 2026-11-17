@@ -65,6 +65,15 @@ FormData strings parse correctly. `""` → `undefined` (create) or `null` (clear
 - Display: `formatMoney(minor, currency, locale, { compact })`.
 - Never sum different currencies together; group by currency.
 
+## Search
+
+- Text search in services uses `textMatch(q, ...columns)` (`server/db/search.ts`), never a raw
+  `like()`. It is Persian-aware on both sides: «علي»/«علی», «كد»/«کد», «می‌خواهم»/«میخواهم» and
+  «۱۴۰۵»/«1405» match, case is ignored and `%`/`_` in the query are literal. Stored text goes
+  through the SQLite function `fa_norm` (registered in `server/db/client.ts`); the query through
+  `normalizeSearchText` (`lib/search-text.ts`), the same rules the client filters use.
+- It returns `undefined` for an empty query, so it drops straight into `and(...)`.
+
 ## Errors
 
 - Services throw `AppError(code, message, fieldErrors?)` (`notFound()`, `forbidden()` helpers).

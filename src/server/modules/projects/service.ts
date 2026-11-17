@@ -1,7 +1,8 @@
 import "server-only";
-import { and, asc, desc, eq, inArray, isNull, like, ne, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, ne, sql, type SQL } from "drizzle-orm";
 import type { z } from "zod";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import {
   milestones,
   projectMembers,
@@ -198,9 +199,7 @@ export async function listProjects(actor: Actor, input: z.output<typeof listProj
     input.includeArchived ? undefined : isNull(projects.archivedAt),
     input.status ? eq(projects.status, input.status) : undefined,
     input.clientId ? eq(projects.clientId, input.clientId) : undefined,
-    input.q
-      ? or(like(projects.name, `%${input.q}%`), like(projects.description, `%${input.q}%`))
-      : undefined,
+    textMatch(input.q, projects.name, projects.description),
   );
   const rows = await db.query.projects.findMany({
     where,

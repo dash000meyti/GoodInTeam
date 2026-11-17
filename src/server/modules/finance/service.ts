@@ -8,7 +8,6 @@ import {
   gte,
   inArray,
   isNull,
-  like,
   lt,
   ne,
   or,
@@ -18,6 +17,7 @@ import {
 import { alias } from "drizzle-orm/sqlite-core";
 import type { z } from "zod";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import {
   accounts,
   categories,
@@ -422,17 +422,12 @@ function txWhere(input: ListTransactionsInput): SQL | undefined {
     input.status ? eq(transactions.status, input.status) : undefined,
     start ? gte(transactions.occurredAt, start) : undefined,
     end ? lt(transactions.occurredAt, end) : undefined,
-    q
+    textMatch(q, clients.name)
       ? or(
-          like(transactions.description, `%${q}%`),
-          like(transactions.counterparty, `%${q}%`),
-          like(transactions.tags, `%${q}%`),
+          textMatch(q, transactions.description, transactions.counterparty, transactions.tags),
           inArray(
             transactions.clientId,
-            db
-              .select({ id: clients.id })
-              .from(clients)
-              .where(like(clients.name, `%${q}%`)),
+            db.select({ id: clients.id }).from(clients).where(textMatch(q, clients.name)),
           ),
         )
       : undefined,

@@ -15,6 +15,7 @@ import {
   type SQL,
 } from "drizzle-orm";
 import { db } from "@/server/db/client";
+import { textMatch } from "@/server/db/search";
 import {
   clients,
   posts,
@@ -182,13 +183,7 @@ export async function listPublished(opts: ListOptions) {
     opts.year ? sql`json_extract(${posts.meta}, '$.year') = ${opts.year}` : undefined,
     opts.featured ? eq(posts.featured, true) : undefined,
     opts.standalone ? isNull(posts.seriesId) : undefined,
-    opts.q
-      ? or(
-          sql`${posts.title} like ${`%${opts.q}%`}`,
-          sql`${posts.excerpt} like ${`%${opts.q}%`}`,
-          sql`${posts.contentMd} like ${`%${opts.q}%`}`,
-        )
-      : undefined,
+    textMatch(opts.q, posts.title, posts.excerpt, posts.contentMd),
   );
   const total = db.select({ n: count() }).from(posts).where(where).get()?.n ?? 0;
   const pages = Math.max(1, Math.ceil(total / pageSize));
