@@ -88,7 +88,7 @@ export function TimeGridView({
                 <span
                   className={cn(
                     "text-xs font-semibold",
-                    today ? "text-primary" : "text-muted-foreground",
+                    today ? "text-primary-ink" : "text-muted-foreground",
                   )}
                 >
                   {weekdayName(key, cal.locale, single ? "long" : "short")}
@@ -127,7 +127,7 @@ export function TimeGridView({
               aria-label={format(c.createOn, { date: dateLabel(key, cal.locale) })}
               onClick={() => cal.openCreate({ date: key, allDay: true })}
               className={cn(
-                "cursor-pointer border-s border-dashed transition-colors outline-none hover:bg-primary/4 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset",
+                "cursor-pointer border-s border-dashed transition-colors outline-none hover:bg-primary/4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                 isWeekend(weekdayOfKey(key), cal.locale) && "bg-muted/25 dark:bg-muted/15",
               )}
               style={{ gridColumn: i + 2, gridRow: "1 / -1" }}
@@ -142,7 +142,7 @@ export function TimeGridView({
                   type="button"
                   aria-label={itemAriaLabel(item, cal, c)}
                   className={cn(
-                    "relative z-[1] my-0.5 flex min-w-0 cursor-pointer items-center overflow-hidden rounded-md border-s-[3px] px-1.5 text-start text-xs leading-5 font-semibold outline-none hover:brightness-95 focus-visible:ring-2 focus-visible:ring-primary/50 dark:hover:brightness-125",
+                    "relative z-[1] my-0.5 flex min-w-0 cursor-pointer items-center overflow-hidden rounded-md border-s-[3px] px-1.5 text-start text-xs leading-5 font-semibold outline-none hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring dark:hover:brightness-125",
                     seg.continuesBefore ? "ms-0 rounded-s-none" : "ms-1",
                     seg.continuesAfter ? "me-0 rounded-e-none" : "me-1",
                     muted && "opacity-60",
@@ -229,7 +229,7 @@ function DayColumn({
               endTime: `${pad((h + 1) % 24)}:${pad(half)}`,
             });
           }}
-          className="absolute inset-x-0 cursor-pointer border-t border-dashed border-border/80 outline-none after:pointer-events-none after:absolute after:inset-x-0 after:top-1/2 after:border-t after:border-dotted after:border-border/50 first:border-t-0 hover:bg-primary/4 focus-visible:bg-primary/8 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset"
+          className="absolute inset-x-0 cursor-pointer border-t border-dashed border-border/80 outline-none after:pointer-events-none after:absolute after:inset-x-0 after:top-1/2 after:border-t after:border-dotted after:border-border/50 first:border-t-0 hover:bg-primary/4 focus-visible:bg-primary/8 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
           style={{ top: h * HOUR, height: HOUR }}
         />
       ))}
@@ -245,7 +245,7 @@ function DayColumn({
               type="button"
               aria-label={itemAriaLabel(item, cal, c)}
               className={cn(
-                "@container absolute z-[1] flex cursor-pointer overflow-hidden rounded-md border-s-[3px] px-1.5 text-start text-xs leading-tight shadow-[0_0_0_1px_var(--background)] outline-none hover:z-[3] hover:brightness-95 focus-visible:z-[3] focus-visible:ring-2 focus-visible:ring-primary/50 dark:hover:brightness-125",
+                "@container absolute z-[1] flex cursor-pointer overflow-hidden rounded-md border-s-[3px] px-1.5 text-start text-xs leading-tight shadow-[0_0_0_1px_var(--background)] outline-none hover:z-[3] hover:brightness-95 focus-visible:z-[3] focus-visible:ring-2 focus-visible:ring-ring dark:hover:brightness-125",
                 compact ? "items-center gap-1.5 py-0" : "flex-col gap-0.5 py-1",
                 muted && "opacity-60",
               )}

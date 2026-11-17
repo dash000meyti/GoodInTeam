@@ -32,15 +32,15 @@ function Slider({
     >
       <SliderPrimitive.Track
         data-slot="slider-track"
-        className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-primary/16"
+        className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-grey-900/10 dark:bg-white/12"
       >
-        <SliderPrimitive.Range data-slot="slider-range" className="absolute h-full bg-primary" />
+        <SliderPrimitive.Range data-slot="slider-range" className="absolute h-full bg-primary shadow-[inset_0_0_0_1px_var(--primary-dark)]" />
       </SliderPrimitive.Track>
       {values.map((_, i) => (
         <SliderPrimitive.Thumb
           key={i}
           data-slot="slider-thumb"
-          className="block size-5 shrink-0 cursor-grab rounded-full border-2 border-primary bg-background shadow-card transition-shadow outline-none hover:ring-4 hover:ring-primary/16 focus-visible:ring-4 focus-visible:ring-primary/24 active:cursor-grabbing"
+          className="block size-5 shrink-0 cursor-grab rounded-full border-2 border-primary-ink bg-background shadow-card transition-shadow outline-none hover:ring-4 hover:ring-primary/16 focus-visible:ring-2 focus-visible:ring-ring active:cursor-grabbing"
         />
       ))}
     </SliderPrimitive.Root>

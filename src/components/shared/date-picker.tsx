@@ -114,7 +114,7 @@ export function DatePicker({
           <button
             type="button"
             onClick={() => set(null)}
-            className="absolute inset-y-0 end-2 my-auto flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/40"
+            className="absolute inset-y-0 end-2 my-auto flex size-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={t.common.clear}
           >
             <XIcon className="size-3.5" aria-hidden />
@@ -172,10 +172,10 @@ export function DatePicker({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex size-9 cursor-pointer items-center justify-center rounded-lg text-sm transition-colors outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                  "flex size-9 cursor-pointer items-center justify-center rounded-lg text-sm transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
                   !inMonth && "text-muted-foreground/50",
-                  isToday && !isSel && "font-bold text-primary",
-                  isSel && "bg-primary font-bold text-primary-foreground hover:bg-primary-dark",
+                  isToday && !isSel && "font-bold text-primary-ink",
+                  isSel && "bg-primary font-bold text-primary-foreground hover:bg-primary-hover",
                 )}
               >
                 {fmt(d, "d")}

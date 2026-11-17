@@ -28,7 +28,7 @@ export function CopyButton({
         setTimeout(() => setDone(false), 1500);
       }}
     >
-      {done ? <CheckIcon className="text-success" /> : <CopyIcon />}
+      {done ? <CheckIcon className="text-success-ink" /> : <CopyIcon />}
       {size !== "icon-sm" && (done ? t.common.copied : (label ?? t.common.copy))}
     </Button>
   );

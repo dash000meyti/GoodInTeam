@@ -171,7 +171,7 @@ export function LeadsBoard({ rows }: { rows: LeadRow[] }) {
                   <p className="text-xs font-bold text-muted-foreground">{c.leadContact}</p>
                   <a
                     href={`mailto:${open.email}`}
-                    className="flex items-center gap-2 hover:text-primary"
+                    className="flex items-center gap-2 hover:text-primary-ink"
                     dir="ltr"
                   >
                     <MailIcon className="size-4 text-muted-foreground" /> {open.email}
@@ -179,7 +179,7 @@ export function LeadsBoard({ rows }: { rows: LeadRow[] }) {
                   {open.phone && (
                     <a
                       href={`tel:${open.phone}`}
-                      className="flex items-center gap-2 hover:text-primary"
+                      className="flex items-center gap-2 hover:text-primary-ink"
                       dir="ltr"
                     >
                       <PhoneIcon className="size-4 text-muted-foreground" /> {open.phone}

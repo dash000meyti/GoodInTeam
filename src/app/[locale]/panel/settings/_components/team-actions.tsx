@@ -158,8 +158,8 @@ export function InviteMemberDialog() {
                     aria-checked={role === r}
                     onClick={() => setRole(r)}
                     className={cn(
-                      "flex cursor-pointer flex-col gap-1 rounded-xl border p-3 text-start transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40",
-                      role === r ? "border-primary bg-primary/6" : "hover:bg-accent",
+                      "flex cursor-pointer flex-col gap-1 rounded-xl border p-3 text-start transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      role === r ? "border-primary-ink bg-primary/6" : "hover:bg-accent",
                     )}
                   >
                     <span className="text-sm font-bold">{t.panel[`role_${r}`]}</span>

@@ -275,7 +275,7 @@ function VaultWorkspace({
         title={v.title}
         description={
           <span className="flex items-center gap-1.5">
-            <ShieldCheckIcon className="size-4 shrink-0 text-success" /> {v.autoLockHint}
+            <ShieldCheckIcon className="size-4 shrink-0 text-success-ink" /> {v.autoLockHint}
           </span>
         }
         crumbs={crumbs}
@@ -374,7 +374,7 @@ function VaultWorkspace({
                       aria-pressed={favOnly}
                       className="shrink-0"
                     >
-                      <StarIcon className={cn(favOnly && "fill-warning text-warning")} />
+                      <StarIcon className={cn(favOnly && "fill-warning text-warning-ink")} />
                       <span className="hidden sm:inline">{v.favoritesOnly}</span>
                     </Button>
                   </div>

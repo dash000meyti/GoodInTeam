@@ -100,7 +100,7 @@ export function ShareDialog({
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <CheckCircle2Icon className="size-5 text-success" />
+            <CheckCircle2Icon className="size-5 text-success-ink" />
             {mode === "remind" ? c.remindTitle : c.linkTitle}
           </DialogTitle>
           <DialogDescription>{mode === "remind" ? c.remindHint : c.linkHint}</DialogDescription>

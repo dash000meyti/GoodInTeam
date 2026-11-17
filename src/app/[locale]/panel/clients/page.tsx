@@ -55,7 +55,7 @@ export default async function ClientsPage() {
                   <TableCell>
                     <Link
                       href={href(`/panel/clients/${cl.id}`)}
-                      className="flex items-center gap-3 font-semibold hover:text-primary"
+                      className="flex items-center gap-3 font-semibold hover:text-primary-ink"
                     >
                       <Avatar className="size-9 rounded-xl">
                         <AvatarFallback

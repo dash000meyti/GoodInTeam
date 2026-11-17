@@ -191,7 +191,7 @@ function TaskEditor({
             <button
               type="button"
               onClick={() => onOpenTask(detail.parent!.id)}
-              className="inline-flex cursor-pointer items-center gap-1 font-semibold text-primary hover:underline"
+              className="inline-flex cursor-pointer items-center gap-1 font-semibold text-primary-ink hover:underline"
             >
               <CornerUpLeftIcon className="size-3 rtl:-scale-x-100" />
               {format(tk.parentTask, { title: detail.parent.title })}
@@ -393,7 +393,7 @@ function TaskEditor({
                         className={cn(
                           "flex size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-[5px] border-2 transition-colors",
                           done
-                            ? "border-primary bg-primary text-primary-foreground"
+                            ? "border-primary-ink bg-primary text-primary-foreground"
                             : "border-grey-500",
                         )}
                       >

@@ -457,9 +457,9 @@ function TreePanel({
           <Link
             href={localePath(locale, "/panel/docs")}
             onClick={onNavigate}
-            className="flex items-center gap-2 font-bold hover:text-primary"
+            className="flex items-center gap-2 font-bold hover:text-primary-ink"
           >
-            <BookOpenIcon className="size-4 text-primary" /> {d.title}
+            <BookOpenIcon className="size-4 text-primary-ink" /> {d.title}
           </Link>
           {canEdit && (
             <Button size="sm" variant="soft" asChild>

@@ -81,7 +81,7 @@ export function AgendaView({
               <span
                 className={cn(
                   "text-xs font-semibold",
-                  today ? "text-primary" : "text-muted-foreground",
+                  today ? "text-primary-ink" : "text-muted-foreground",
                 )}
               >
                 {weekdayName(g.key, cal.locale, "short")}
@@ -144,7 +144,7 @@ export function AgendaRow({
           type="button"
           aria-label={itemAriaLabel(item, cal, c)}
           className={cn(
-            "flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl text-start transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary/40",
+            "flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl text-start transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
             compact ? "p-1.5" : "p-2",
           )}
         >

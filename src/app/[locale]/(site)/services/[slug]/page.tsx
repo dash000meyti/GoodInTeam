@@ -112,7 +112,7 @@ async function ServiceDetail({ locale, t, slug }: { locale: Locale; t: Messages;
               )}
               <Link
                 href={withQuery(localePath(locale, "/contact"), { service: post.slug })}
-                className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-dark"
+                className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-hover"
               >
                 {s.ctaButton} <ArrowUpLeftIcon className="size-4 ltr:rotate-90" />
               </Link>
@@ -123,7 +123,7 @@ async function ServiceDetail({ locale, t, slug }: { locale: Locale; t: Messages;
                 <ul className="space-y-3">
                   {own.highlights.map((h) => (
                     <li key={h} className="flex items-start gap-3 text-sm font-semibold">
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary-ink">
                         <CheckIcon className="size-3.5" />
                       </span>
                       {h}
@@ -151,7 +151,7 @@ async function ServiceDetail({ locale, t, slug }: { locale: Locale; t: Messages;
                 href={postHref(locale, o)}
                 className="gt-lift flex items-center gap-4 rounded-2xl border border-border bg-card p-5"
               >
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary-ink">
                   <ServiceIcon name={o.meta.icon} className="size-5" />
                 </span>
                 <span className="min-w-0">

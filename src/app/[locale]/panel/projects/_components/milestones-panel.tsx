@@ -65,8 +65,8 @@ export function MilestonesPanel({
               onClick={() => exec(updateMilestoneAction({ id: m.id, status: next[m.status] }))}
               className={cn(
                 "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full border-2 bg-background transition-colors",
-                m.status === "done" && "border-primary bg-primary text-primary-foreground",
-                m.status === "in_progress" && "border-warning text-warning",
+                m.status === "done" && "border-primary-ink bg-primary text-primary-foreground",
+                m.status === "in_progress" && "border-warning text-warning-ink",
                 m.status === "planned" && "border-border text-muted-foreground",
                 editable && "cursor-pointer",
               )}

@@ -114,7 +114,7 @@ export default async function ContentPage({ searchParams }: PageProps<"/[locale]
                   <TableCell className="max-w-[28rem]">
                     <Link
                       href={href(`/panel/content/${p.id}`)}
-                      className="block truncate font-semibold hover:text-primary"
+                      className="block truncate font-semibold hover:text-primary-ink"
                       dir="auto"
                     >
                       {p.title}

@@ -263,7 +263,7 @@ export function InvoiceEditor({
                     key={n}
                     type="button"
                     onClick={() => setDueDate(addDaysTo(issueDate, n))}
-                    className="cursor-pointer rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-primary/12 hover:text-primary"
+                    className="cursor-pointer rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-primary/12 hover:text-primary-ink"
                   >
                     {format(f.dueInN, { n: formatNumber(n, locale) })}
                   </button>

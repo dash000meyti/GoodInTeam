@@ -26,7 +26,7 @@ export interface ContactFormLabels {
 }
 
 const field =
-  "h-12 w-full rounded-xl border border-input bg-background px-4 text-[15px] transition-colors outline-none placeholder:text-muted-foreground/70 hover:border-foreground/30 focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20 aria-invalid:border-destructive";
+  "h-12 w-full rounded-xl border border-input bg-background px-4 text-[15px] transition-colors outline-none placeholder:text-muted-foreground/70 hover:border-foreground/30 focus-visible:border-primary-ink focus-visible:ring-2 focus-visible:ring-ring aria-invalid:border-destructive";
 
 /**
  * Public contact form → submitContactAction (leads). No UI library: native
@@ -56,7 +56,7 @@ export function ContactForm({
         className="flex flex-col items-center gap-4 rounded-3xl border border-success/30 bg-success/5 px-6 py-16 text-center"
         role="status"
       >
-        <span className="flex size-16 items-center justify-center rounded-full bg-success/15 text-success">
+        <span className="flex size-16 items-center justify-center rounded-full bg-success/15 text-success-ink">
           <CheckCircle2Icon className="size-8" />
         </span>
         <h2 className="text-2xl font-black">{l.successTitle}</h2>
@@ -221,7 +221,7 @@ export function ContactForm({
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-8 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-dark disabled:opacity-60"
+          className="inline-flex h-12 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-primary px-8 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-hover disabled:opacity-60"
         >
           {pending ? (
             <Loader2Icon className="size-4 animate-spin" />

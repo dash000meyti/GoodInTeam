@@ -211,7 +211,7 @@ export function CalendarView({
                 aria-pressed={on}
                 onClick={() => toggle(s)}
                 className={cn(
-                  "inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                  "inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   on
                     ? "border-transparent bg-muted text-foreground hover:bg-muted/70"
                     : "border-dashed border-border text-muted-foreground hover:text-foreground",

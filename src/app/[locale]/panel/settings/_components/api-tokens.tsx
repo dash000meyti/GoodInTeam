@@ -133,15 +133,15 @@ export function CreateTokenDialog({ siteUrl }: { siteUrl: string }) {
                       aria-checked={access === a}
                       onClick={() => setAccess(a)}
                       className={cn(
-                        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-start transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40",
-                        access === a ? "border-primary bg-primary/6" : "hover:bg-accent",
+                        "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-start transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        access === a ? "border-primary-ink bg-primary/6" : "hover:bg-accent",
                       )}
                     >
                       <span
                         className={cn(
                           "flex size-9 shrink-0 items-center justify-center rounded-lg",
                           a === "read"
-                            ? "bg-info/12 text-info"
+                            ? "bg-info/12 text-info-ink"
                             : "bg-warning/16 text-[#b76e00] dark:text-warning",
                         )}
                       >

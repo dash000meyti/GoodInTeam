@@ -208,7 +208,7 @@ async function WorkDetail({ locale, t, slug }: { locale: Locale; t: Messages; sl
                   className="flex flex-col-reverse gap-1 rounded-2xl bg-primary/[0.06] p-6 ring-1 ring-primary/15"
                 >
                   <dt className="text-sm font-semibold text-muted-foreground">{x.label}</dt>
-                  <dd className="text-4xl font-black tracking-tight text-primary">{x.value}</dd>
+                  <dd className="text-4xl font-black tracking-tight text-primary-ink">{x.value}</dd>
                 </div>
               ))}
             </dl>

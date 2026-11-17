@@ -148,7 +148,7 @@ export function ItemDetails({ item, onClose }: { item: CalendarItem; onClose?: (
           <Row icon={FolderKanbanIcon}>
             <Link
               href={href(`/panel/projects/${item.project.id}`)}
-              className="inline-flex items-center gap-1.5 font-semibold hover:text-primary hover:underline"
+              className="inline-flex items-center gap-1.5 font-semibold hover:text-primary-ink hover:underline"
             >
               <ColorDot color={item.project.color} />
               {item.project.name}

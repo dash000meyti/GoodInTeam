@@ -83,7 +83,7 @@ export default async function CategoriesPage() {
                         <div className="min-w-0 flex-1">
                           <Link
                             href={href(`/panel/finance/transactions?categoryId=${c.id}`)}
-                            className="block truncate font-semibold hover:text-primary"
+                            className="block truncate font-semibold hover:text-primary-ink"
                           >
                             {c.name}
                           </Link>

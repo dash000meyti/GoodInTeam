@@ -121,7 +121,7 @@ export function ArrowLink({
     <Link
       href={href}
       className={cn(
-        "group inline-flex items-center gap-1 text-sm font-bold text-foreground transition-colors hover:text-primary",
+        "group inline-flex items-center gap-1 text-sm font-bold text-foreground transition-colors hover:text-primary-ink",
         className,
       )}
     >

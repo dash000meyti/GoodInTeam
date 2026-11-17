@@ -103,7 +103,7 @@ export function CopyLink({
       }}
       className={cn(
         "inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-border px-3 text-xs font-bold transition-colors hover:border-foreground/30",
-        done && "border-success/40 text-success",
+        done && "border-success/40 text-success-ink",
       )}
       aria-live="polite"
     >
@@ -165,7 +165,7 @@ export function Toc({
               className={cn(
                 "-ms-px block border-s-2 border-transparent py-1 text-sm leading-6 text-muted-foreground transition-colors hover:text-foreground",
                 h.depth > 2 ? "ps-6" : "ps-4",
-                active === h.id && "border-primary font-semibold text-foreground",
+                active === h.id && "border-primary-ink font-semibold text-foreground",
               )}
             >
               {h.text}

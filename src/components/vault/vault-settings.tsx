@@ -60,7 +60,7 @@ function SectionCard({
   title,
   description,
   children,
-  tone = "bg-primary/12 text-primary",
+  tone = "bg-primary/12 text-primary-ink",
 }: {
   icon: ReactNode;
   title: string;
@@ -513,7 +513,7 @@ function BackupCard({
       icon={<DownloadIcon className="size-5" />}
       title={v.backupTitle}
       description={v.backupBody}
-      tone="bg-info/12 text-info"
+      tone="bg-info/12 text-info-ink"
     >
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={exportBackup}>

@@ -84,7 +84,7 @@ export function MiniMonth({
                 "relative mx-auto flex size-8 items-center justify-center rounded-lg text-[13px] tabular-nums transition-colors hover:bg-accent",
                 !d.inMonth && "text-muted-foreground/50",
                 isSel && "bg-primary/10 font-semibold text-primary-dark dark:text-primary-light",
-                isToday && "bg-primary font-bold text-primary-foreground hover:bg-primary-dark",
+                isToday && "bg-primary font-bold text-primary-foreground hover:bg-primary-hover",
               )}
             >
               {dayNumber(d.key, cal.locale)}

@@ -242,7 +242,7 @@ export function SignForm({ target, idPrefix }: { target: SignTarget; idPrefix: s
         {pending ? c.submitting : target.requireSignature ? c.signButton : c.approveButton}
       </Button>
       <p className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
-        <ShieldCheckIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+        <ShieldCheckIcon className="mt-0.5 size-4 shrink-0 text-primary-ink" />
         {c.evidenceNote}
       </p>
       <DeclineDialog target={target} />

@@ -131,7 +131,7 @@ export function PanelSidebar({
           onClick={() => setCollapsed(!collapsed)}
           aria-label={collapsed ? t.panel.expandSidebar : t.panel.collapseSidebar}
           aria-expanded={!collapsed}
-          className="absolute -end-3.5 top-5 z-10 flex size-7 cursor-pointer items-center justify-center rounded-full border border-dashed border-sidebar-border bg-background text-muted-foreground shadow-sm outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/40"
+          className="absolute -end-3.5 top-5 z-10 flex size-7 cursor-pointer items-center justify-center rounded-full border border-dashed border-sidebar-border bg-background text-muted-foreground shadow-sm outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ChevronsLeftIcon
             className={cn(

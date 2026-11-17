@@ -288,7 +288,7 @@ export function TransactionFormDialog({
                         <button
                           type="button"
                           onClick={() => set("received", suggestion.major)}
-                          className="w-fit cursor-pointer text-start text-xs font-semibold text-primary hover:underline"
+                          className="w-fit cursor-pointer text-start text-xs font-semibold text-primary-ink hover:underline"
                         >
                           {format(f.fxSuggest, {
                             amount: formatMoney(suggestion.minor, toAccount.currency, locale),
@@ -377,7 +377,7 @@ export function TransactionFormDialog({
                         <button
                           type="button"
                           onClick={() => set("freeParty", !s.freeParty)}
-                          className="inline-flex cursor-pointer items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                          className="inline-flex cursor-pointer items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
                         >
                           {s.freeParty ? (
                             <UsersIcon className="size-3.5" />

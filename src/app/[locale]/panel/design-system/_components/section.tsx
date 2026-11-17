@@ -21,12 +21,12 @@ export function DsSection({
   return (
     <section id={id} data-ds-section className="scroll-mt-32 space-y-5 xl:scroll-mt-24">
       <header className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-ink">
           <Icon className="size-5" />
         </span>
         <div className="min-w-0 space-y-1">
           <h2 className="text-xl font-extrabold tracking-tight">
-            <a href={`#${id}`} className="hover:text-primary">
+            <a href={`#${id}`} className="hover:text-primary-ink">
               {title}
             </a>
           </h2>

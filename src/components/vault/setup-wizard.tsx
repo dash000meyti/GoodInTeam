@@ -48,7 +48,7 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
               "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors",
               i < current && "bg-primary text-primary-foreground",
               i === current &&
-                "bg-primary/16 text-primary-dark ring-2 ring-primary dark:text-primary-light",
+                "bg-primary/16 text-primary-dark ring-2 ring-primary-ink dark:text-primary-light",
               i > current && "bg-muted text-muted-foreground",
             )}
             aria-current={i === current ? "step" : undefined}
@@ -87,9 +87,9 @@ export function SetupWizard({ account }: { account: string }) {
       icon: ShieldCheckIcon,
       title: v.howTitle1,
       body: v.howBody1,
-      tone: "bg-primary/12 text-primary",
+      tone: "bg-primary/12 text-primary-ink",
     },
-    { icon: CloudOffIcon, title: v.howTitle2, body: v.howBody2, tone: "bg-info/12 text-info" },
+    { icon: CloudOffIcon, title: v.howTitle2, body: v.howBody2, tone: "bg-info/12 text-info-ink" },
     {
       icon: TriangleAlertIcon,
       title: v.howTitle3,
@@ -124,7 +124,7 @@ export function SetupWizard({ account }: { account: string }) {
   return (
     <Card className="mx-auto w-full max-w-2xl gap-8 p-6 sm:p-10">
       <div className="space-y-3 text-center">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/12 text-primary-ink">
           <KeyRoundIcon className="size-8" strokeWidth={1.5} />
         </div>
         <h2 className="text-xl font-extrabold">{v.setupTitle}</h2>

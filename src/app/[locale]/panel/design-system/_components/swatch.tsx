@@ -41,7 +41,7 @@ export function Swatch({
       }}
       title={format(t.designSystem.copyValue, { value: text })}
       className={cn(
-        "group flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border text-start transition-transform outline-none hover:-translate-y-0.5 focus-visible:ring-[3px] focus-visible:ring-ring/40",
+        "group flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border text-start transition-transform outline-none hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
       style={style}

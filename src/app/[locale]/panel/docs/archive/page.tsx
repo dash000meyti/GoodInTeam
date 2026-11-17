@@ -34,7 +34,7 @@ export default async function DocsArchivePage() {
                 <div className="min-w-0 flex-1">
                   <Link
                     href={href(`/panel/docs/${r.id}`)}
-                    className="block truncate font-semibold hover:text-primary"
+                    className="block truncate font-semibold hover:text-primary-ink"
                   >
                     <bdi>{r.title}</bdi>
                   </Link>

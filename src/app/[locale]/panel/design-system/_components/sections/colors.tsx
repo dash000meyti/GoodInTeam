@@ -2,11 +2,16 @@ import { PaletteIcon } from "lucide-react";
 import {
   chartTokens,
   greyScale,
+  inkTokens,
+  PRESET_SCOPE_CLASS,
   presetScales,
+  presetStyle,
   statusTokens,
   surfaceTokens,
 } from "@/components/shared/design-tokens";
+import type { CSSProperties } from "react";
 import { colorPresets } from "@/components/shared/theme";
+import { cn } from "@/lib/utils";
 import type { Messages } from "@/i18n/messages";
 import { CodeBlock } from "../example";
 import { DsSection, DsSubheading } from "../section";
@@ -16,9 +21,9 @@ const steps = ["lighter", "light", "main", "dark", "darker"] as const;
 
 /** Light value on the start half, dark on the end half (over the matching page color). */
 const split = (light: string, dark: string) =>
-  `linear-gradient(90deg, ${light} 0 50%, ${dark} 50% 100%), linear-gradient(90deg, #ffffff 0 50%, #141a21 50% 100%)`;
+  `linear-gradient(90deg, ${light} 0 50%, ${dark} 50% 100%), linear-gradient(90deg, #f3f3f3 0 50%, #161618 50% 100%)`;
 
-/** "rgb(145 158 171 / 0.08)" → "grey α8%" (the alpha greys are what matters). */
+/** "rgb(106 106 108 / 0.08)" → "grey α8%" (the alpha greys are what matters). */
 const short = (v: string) => {
   const m = /\/\s*([\d.]+)\)$/.exec(v);
   return m ? `grey α${Math.round(Number(m[1]) * 100)}%` : v;
@@ -29,11 +34,13 @@ const usage = `// Semantic tokens → Tailwind colors (light/dark + preset aware
 <p className="text-muted-foreground" />
 <span className="bg-primary/12 text-primary-dark dark:text-primary-light" /> // soft surface
 <div className="border border-dashed" />                                       // --border
-<span className="bg-success/16 text-[#118d57] dark:text-[#77ed8b]" />          // = <Badge variant="success">
+<span className="bg-success/16 text-success-ink" />                            // = <Badge variant="success">
+<a className="text-primary-ink" />  // text, links, icons use the -ink tokens (ESLint guard)
 
-// Re-skin a subtree with another preset (previews):
-import { presetStyle } from "@/components/shared/design-tokens";
-<div style={presetStyle("purple")}>…</div>`;
+// Re-skin a subtree with another preset (previews): always both, so the
+// var(--primary…)-derived tokens (ink, hover, ring, chart-1) follow it.
+import { PRESET_SCOPE_CLASS, presetStyle } from "@/components/shared/design-tokens";
+<div className={PRESET_SCOPE_CLASS} style={presetStyle("purple")}>…</div>`;
 
 export function ColorsSection({ t }: { t: Messages }) {
   const d = t.designSystem;
@@ -62,6 +69,26 @@ export function ColorsSection({ t }: { t: Messages }) {
                   copy={st === "main" ? "var(--primary)" : `var(--primary-${st})`}
                 />
               ))}
+            </div>
+          ))}
+        </div>
+        {/* Live previews: PRESET_SCOPE_CLASS + presetStyle re-derive ink, hover and ring per preset. */}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          {colorPresets.map((p) => (
+            <div
+              key={p}
+              className={cn(
+                PRESET_SCOPE_CLASS,
+                "flex items-center gap-2 rounded-xl border bg-card p-2.5",
+              )}
+              style={presetStyle(p) as CSSProperties}
+            >
+              <span className="inline-flex h-7 items-center rounded-md bg-primary px-2.5 font-mono text-xs font-bold text-primary-foreground ring-2 ring-ring ring-offset-2 ring-offset-card">
+                Aa
+              </span>
+              <span className="font-mono text-xs font-bold text-primary-ink" dir="ltr">
+                {p}
+              </span>
             </div>
           ))}
         </div>
@@ -94,6 +121,15 @@ export function ColorsSection({ t }: { t: Messages }) {
                 value={tok.light}
                 copy={`bg-${tok.tw}`}
                 tall
+              />
+            ))}
+            {inkTokens.map((tok) => (
+              <Swatch
+                key={tok.name}
+                color={`var(--${tok.name})`}
+                label={tok.name}
+                value={tok.light.startsWith("#") ? `${tok.light} · ${tok.dark}` : tok.light}
+                copy={`text-${tok.tw}`}
               />
             ))}
           </div>

@@ -45,14 +45,14 @@ export function ItemRow({
         <button
           type="button"
           onClick={onOpen}
-          className="flex w-full min-w-0 cursor-pointer items-center gap-1.5 text-start font-semibold outline-none after:absolute after:inset-0 focus-visible:after:ring-[3px] focus-visible:after:ring-ring/40 focus-visible:after:ring-inset"
+          className="flex w-full min-w-0 cursor-pointer items-center gap-1.5 text-start font-semibold outline-none after:absolute after:inset-0 focus-visible:after:ring-2 focus-visible:after:ring-ring focus-visible:after:ring-inset"
         >
           <span className="truncate">
             <bdi>{p ? p.title || v.untitled : v.unreadable}</bdi>
           </span>
           {entry.favorite && (
             <StarIcon
-              className="size-3.5 shrink-0 fill-warning text-warning"
+              className="size-3.5 shrink-0 fill-warning text-warning-ink"
               aria-label={v.favorite}
             />
           )}

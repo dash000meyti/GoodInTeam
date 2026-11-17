@@ -101,7 +101,7 @@ function WeekRow({
             <button
               type="button"
               tabIndex={-1}
-              className="absolute inset-0 cursor-pointer transition-colors outline-none hover:bg-primary/4 focus-visible:bg-primary/8 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset"
+              className="absolute inset-0 cursor-pointer transition-colors outline-none hover:bg-primary/4 focus-visible:bg-primary/8 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
               aria-label={format(c.createOn, { date: label })}
               onClick={() => cal.openCreate({ date: cell.key })}
             />
@@ -112,7 +112,7 @@ function WeekRow({
                 className={cn(
                   "pointer-events-auto flex size-7 items-center justify-center rounded-full text-[13px] font-bold tabular-nums transition-colors",
                   today
-                    ? "bg-primary text-primary-foreground hover:bg-primary-dark"
+                    ? "bg-primary text-primary-foreground hover:bg-primary-hover"
                     : cell.inMonth
                       ? "hover:bg-accent"
                       : "text-muted-foreground hover:bg-accent",
@@ -166,7 +166,7 @@ function SegmentChip({ seg }: { seg: SpanSegment<CalendarItem> }) {
         type="button"
         aria-label={itemAriaLabel(item, cal, t.calendar)}
         className={cn(
-          "relative z-[1] my-px flex min-w-0 cursor-pointer items-center gap-1 overflow-hidden rounded-md px-1.5 text-start text-[10.5px] leading-5 font-semibold outline-none focus-visible:ring-2 focus-visible:ring-primary/50 sm:text-xs",
+          "relative z-[1] my-px flex min-w-0 cursor-pointer items-center gap-1 overflow-hidden rounded-md px-1.5 text-start text-[10.5px] leading-5 font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-xs",
           seg.continuesBefore ? "ms-0 rounded-s-none" : "ms-1",
           seg.continuesAfter ? "me-0 rounded-e-none" : "me-1",
           bar ? "border-s-[3px] hover:brightness-95 dark:hover:brightness-125" : "hover:bg-accent",

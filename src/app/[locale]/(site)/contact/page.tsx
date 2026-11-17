@@ -87,9 +87,9 @@ async function DirectContact({ locale, t }: { locale: Locale; t: Messages }) {
           <li>
             <a
               href={`mailto:${p.email}`}
-              className="flex items-center gap-3 font-semibold hover:text-primary"
+              className="flex items-center gap-3 font-semibold hover:text-primary-ink"
             >
-              <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary-ink">
                 <MailIcon className="size-5" />
               </span>
               <span dir="ltr">{p.email}</span>
@@ -98,14 +98,14 @@ async function DirectContact({ locale, t }: { locale: Locale; t: Messages }) {
         )}
         {p.location[locale] && (
           <li className="flex items-center gap-3 font-semibold">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary-ink">
               <MapPinIcon className="size-5" />
             </span>
             {p.location[locale]}
           </li>
         )}
         <li className="flex items-center gap-3 font-semibold">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary-ink">
             <ClockIcon className="size-5" />
           </span>
           {t.site.responseTime}

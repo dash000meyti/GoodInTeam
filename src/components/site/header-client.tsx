@@ -117,7 +117,7 @@ function LanguageItem({
           <Link> prefetch across root params 404s in Next 16.4's segment cache. */}
       <a href={href} hrefLang={locale} lang={locale} aria-current={active ? "true" : undefined}>
         {localeMeta[locale].label}
-        {active && <CheckIcon className="size-4 text-primary" />}
+        {active && <CheckIcon className="size-4 text-primary-ink" />}
       </a>
     </DropdownMenuItem>
   );

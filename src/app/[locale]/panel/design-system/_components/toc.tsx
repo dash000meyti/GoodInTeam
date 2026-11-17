@@ -55,7 +55,7 @@ export function Toc({
         active === item.id &&
           (chip
             ? "border-solid border-primary/30 bg-primary/8 text-primary-dark dark:text-primary-light"
-            : "border-primary font-bold text-foreground"),
+            : "border-primary-ink font-bold text-foreground"),
       )}
     >
       {item.label}

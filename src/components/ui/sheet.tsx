@@ -70,7 +70,7 @@ function SheetContent({
       >
         <FieldContextReset>{children}</FieldContextReset>
         {showCloseButton && (
-          <SheetPrimitive.Close className="absolute end-4 top-4 rounded-md p-1 opacity-70 transition-opacity outline-none hover:bg-accent hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-[3px] focus-visible:ring-ring/40">
+          <SheetPrimitive.Close className="absolute end-4 top-4 rounded-md p-1 opacity-70 transition-opacity outline-none hover:bg-accent hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring">
             <XIcon className="size-4" />
             <span className="sr-only">{t.common.close}</span>
           </SheetPrimitive.Close>

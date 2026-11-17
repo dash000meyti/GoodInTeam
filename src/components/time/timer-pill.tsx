@@ -99,7 +99,7 @@ export function TimerPill({
           <button
             type="button"
             aria-label={format(tt.runningCount, { n: formatNumber(timers.length, locale) })}
-            className="flex h-9 cursor-pointer items-center gap-2 rounded-full bg-primary/12 px-3 text-sm font-bold text-primary-dark transition-colors outline-none hover:bg-primary/20 focus-visible:ring-[3px] focus-visible:ring-ring/40 dark:text-primary-light"
+            className="flex h-9 cursor-pointer items-center gap-2 rounded-full bg-primary/12 px-3 text-sm font-bold text-primary-dark transition-colors outline-none hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-ring dark:text-primary-light"
           >
             <PulseDot />
             {timers.length > 1 && (
@@ -128,7 +128,7 @@ export function TimerPill({
       >
         <div className="flex items-center justify-between gap-2 border-b border-dashed bg-primary/6 px-4 py-3">
           <div className="flex items-center gap-2">
-            <TimerIcon className="size-4 text-primary" />
+            <TimerIcon className="size-4 text-primary-ink" />
             <p className="text-sm font-bold">{tt.runningTimers}</p>
             {timers.length > 0 && (
               <span className="rounded-full bg-primary/16 px-2 text-xs font-bold text-primary-dark tabular-nums dark:text-primary-light">

@@ -177,7 +177,7 @@ function RunningCard({
         <div className="flex items-center gap-1">
           <Button
             size="icon-lg"
-            className="rounded-full bg-destructive/12 text-destructive shadow-none hover:bg-destructive hover:text-white hover:shadow-none"
+            className="rounded-full bg-destructive/12 text-destructive shadow-none hover:bg-destructive hover:text-destructive-foreground hover:shadow-none"
             onClick={onStop}
             disabled={busy}
             aria-label={tt.stop}

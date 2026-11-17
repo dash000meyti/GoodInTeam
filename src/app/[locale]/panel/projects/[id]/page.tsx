@@ -237,7 +237,7 @@ export default async function ProjectPage({
                     href={project.websiteUrl}
                     target="_blank"
                     rel="noopener"
-                    className="flex items-center gap-2 font-semibold text-primary hover:underline"
+                    className="flex items-center gap-2 font-semibold text-primary-ink hover:underline"
                   >
                     <GlobeIcon className="size-4" /> {p.websiteUrl}{" "}
                     <ExternalLinkIcon className="size-3" />
@@ -248,7 +248,7 @@ export default async function ProjectPage({
                     href={project.repoUrl}
                     target="_blank"
                     rel="noopener"
-                    className="flex items-center gap-2 font-semibold text-primary hover:underline"
+                    className="flex items-center gap-2 font-semibold text-primary-ink hover:underline"
                   >
                     <GitBranchIcon className="size-4" /> {p.repoUrl}{" "}
                     <ExternalLinkIcon className="size-3" />
@@ -403,7 +403,7 @@ export default async function ProjectPage({
                     <Link
                       href={href(`/p/${project.shareToken}`)}
                       target="_blank"
-                      className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+                      className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-ink hover:underline"
                     >
                       {t.common.open} <ExternalLinkIcon className="size-3" />
                     </Link>

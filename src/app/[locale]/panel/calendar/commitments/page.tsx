@@ -237,7 +237,7 @@ const groupMeta: Record<
     tone: "bg-warning/16 text-[#b76e00] dark:text-warning",
     badge: "warning",
   },
-  kept: { icon: CheckIcon, tone: "bg-success/12 text-success", badge: "success" },
+  kept: { icon: CheckIcon, tone: "bg-success/12 text-success-ink", badge: "success" },
   missed: { icon: XIcon, tone: "bg-grey-500/12 text-muted-foreground", badge: "neutral" },
 };
 
@@ -304,7 +304,7 @@ function CommitmentRow({ item, ctx }: { item: Item; ctx: PanelContext }) {
           "row-span-3 mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full sm:row-span-2",
           overdue && "bg-destructive/12 text-destructive",
           item.group === "upcoming" && "bg-warning/16 text-[#b76e00] dark:text-warning",
-          item.group === "kept" && "bg-success/12 text-success",
+          item.group === "kept" && "bg-success/12 text-success-ink",
           (item.group === "missed" || item.group === "canceled") &&
             "bg-grey-500/12 text-muted-foreground",
         )}

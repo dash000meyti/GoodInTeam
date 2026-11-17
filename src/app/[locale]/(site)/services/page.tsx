@@ -62,7 +62,7 @@ async function ServicesGrid({ locale, t }: { locale: Locale; t: Messages }) {
               className="bg-dots mask-radial absolute -end-16 -top-16 size-72 opacity-60"
             />
             <div className="relative flex items-center justify-between">
-              <span className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary ring-1 ring-primary/20">
+              <span className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary-ink ring-1 ring-primary/20">
                 <ServiceIcon name={svc.meta.icon} className="size-7" />
               </span>
               <span className="font-mono text-sm font-bold text-muted-foreground/50">
@@ -81,12 +81,12 @@ async function ServicesGrid({ locale, t }: { locale: Locale; t: Messages }) {
               <ul className="relative grid gap-2 sm:grid-cols-2">
                 {svc.highlights.map((h) => (
                   <li key={h} className="flex items-start gap-2 text-sm font-semibold">
-                    <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary" /> {h}
+                    <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary-ink" /> {h}
                   </li>
                 ))}
               </ul>
             )}
-            <span className="relative mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-bold text-primary">
+            <span className="relative mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-bold text-primary-ink">
               {t.site.viewDetails}
               <ArrowUpLeftIcon className="size-4 transition-transform group-hover:-translate-y-0.5 ltr:rotate-90" />
             </span>

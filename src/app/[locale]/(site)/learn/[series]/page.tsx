@@ -150,7 +150,7 @@ async function SeriesOrTutorial({
               {first && (
                 <Link
                   href={postHref(locale, first)}
-                  className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-dark"
+                  className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-hover"
                 >
                   <PlayIcon className="size-4 fill-current rtl:rotate-180" /> {s.startCourse}
                 </Link>
@@ -180,7 +180,7 @@ async function SeriesOrTutorial({
                 >
                   <dt className="text-xs text-muted-foreground">{f.k}</dt>
                   <dd className="flex items-center gap-1.5 text-base font-extrabold">
-                    <f.icon className="size-4 text-primary" /> {f.v}
+                    <f.icon className="size-4 text-primary-ink" /> {f.v}
                   </dd>
                 </div>
               ))}

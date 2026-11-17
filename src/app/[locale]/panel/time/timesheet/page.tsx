@@ -92,7 +92,7 @@ export default async function TimesheetPage({
               <Button
                 asChild
                 variant="ghost"
-                className="rounded-none border-x border-input px-3 aria-[current=page]:text-primary"
+                className="rounded-none border-x border-input px-3 aria-[current=page]:text-primary-ink"
               >
                 <Link href={link(null)} aria-current={isCurrent ? "page" : undefined}>
                   {tt.currentWeek}
@@ -112,7 +112,7 @@ export default async function TimesheetPage({
       <Card className="gap-0 overflow-hidden py-0">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-dashed px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-info/12 text-info">
+            <span className="flex size-10 items-center justify-center rounded-xl bg-info/12 text-info-ink">
               <CalendarRangeIcon className="size-5" />
             </span>
             <div>

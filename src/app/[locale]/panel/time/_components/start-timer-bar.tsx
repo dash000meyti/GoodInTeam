@@ -60,8 +60,8 @@ export function StartTimerBar({
           submit();
         }}
       >
-        <label className="flex min-w-0 flex-1 items-center gap-3 rounded-xl bg-muted/60 px-4 focus-within:ring-2 focus-within:ring-primary/30">
-          <PlayIcon className="size-4 shrink-0 fill-primary text-primary" />
+        <label className="flex min-w-0 flex-1 items-center gap-3 rounded-xl bg-muted/60 px-4 focus-within:ring-2 focus-within:ring-ring">
+          <PlayIcon className="size-4 shrink-0 fill-primary text-primary-ink" />
           <input
             ref={inputRef}
             value={description}

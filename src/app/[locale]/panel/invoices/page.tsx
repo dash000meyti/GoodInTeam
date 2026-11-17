@@ -201,7 +201,7 @@ export default async function InvoicesPage({
                         <TableCell>
                           <Link
                             href={href(`/panel/invoices/${inv.id}`)}
-                            className="font-mono font-bold hover:text-primary"
+                            className="font-mono font-bold hover:text-primary-ink"
                             dir="ltr"
                           >
                             {inv.number}

@@ -141,7 +141,7 @@ export async function ServicesBento({ locale, t }: { locale: Locale; t: Messages
                         className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/85 px-3 py-1.5 text-xs font-bold shadow-card backdrop-blur"
                         style={{ marginInlineEnd: j % 2 ? 20 : 0 }}
                       >
-                        <CheckIcon className="size-3.5 text-primary" />
+                        <CheckIcon className="size-3.5 text-primary-ink" />
                         {h}
                       </li>
                     ))}
@@ -149,7 +149,7 @@ export async function ServicesBento({ locale, t }: { locale: Locale; t: Messages
                 )}
               </>
             )}
-            <span className="relative flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary ring-1 ring-primary/20">
+            <span className="relative flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary-ink ring-1 ring-primary/20">
               <ServiceIcon name={svc.meta.icon} className="size-7" />
             </span>
             <h3 className="relative mt-auto pt-10 text-xl font-extrabold tracking-tight text-balance sm:text-2xl">
@@ -162,7 +162,7 @@ export async function ServicesBento({ locale, t }: { locale: Locale; t: Messages
                 {svc.excerpt}
               </p>
             )}
-            <span className="absolute end-6 top-7 flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
+            <span className="absolute end-6 top-7 flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all group-hover:border-primary-ink group-hover:bg-primary group-hover:text-primary-foreground">
               <ArrowUpLeftIcon className="size-4 ltr:rotate-90" />
             </span>
           </article>
@@ -205,7 +205,7 @@ export async function StatsStrip({ locale, t }: { locale: Locale; t: Messages })
           <dt className="text-sm font-semibold text-muted-foreground">{it.label}</dt>
           <dd className="text-4xl font-black tracking-tight tabular-nums sm:text-5xl">
             {fmtNum(it.v, locale)}
-            <span className="text-primary">+</span>
+            <span className="text-primary-ink">+</span>
           </dd>
         </div>
       ))}
@@ -277,7 +277,7 @@ export async function LatestPosts({ locale, t }: { locale: Locale; t: Messages }
             </span>
             <Link
               href={localePath(locale, `/learn/${encodeURIComponent(course.slug)}`)}
-              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-dark"
+              className="inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary-hover"
             >
               <PlayIcon className="size-3.5 fill-current rtl:rotate-180" />
               {t.site.courseCta}
@@ -367,7 +367,7 @@ export function CtaBand({
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link
               href={localePath(locale, "/contact")}
-              className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-dark"
+              className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-hover"
             >
               {t.site.ctaButton}
               <ArrowUpLeftIcon className="size-4 ltr:rotate-90" />

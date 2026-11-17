@@ -61,7 +61,7 @@ export function TotpCode({
             r={R}
             className={cn(
               "fill-none transition-[stroke-dashoffset] duration-1000 ease-linear",
-              urgent ? "stroke-destructive" : "stroke-primary",
+              urgent ? "stroke-destructive" : "stroke-primary-ink",
             )}
             strokeWidth="3"
             strokeLinecap="round"

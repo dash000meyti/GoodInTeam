@@ -71,9 +71,9 @@ export function ProjectTaskList({
           className="flex items-center gap-2 rounded-xl bg-muted/60 px-3"
         >
           {pending ? (
-            <Loader2Icon className="size-4 animate-spin text-primary" />
+            <Loader2Icon className="size-4 animate-spin text-primary-ink" />
           ) : (
-            <PlusIcon className="size-4 text-primary" />
+            <PlusIcon className="size-4 text-primary-ink" />
           )}
           <input
             value={title}
@@ -115,7 +115,7 @@ export function ProjectTaskList({
                 <Link
                   href={localePath(locale, `/panel/tasks?task=${task.id}`)}
                   className={cn(
-                    "group inline-flex items-center gap-1 text-sm font-semibold hover:text-primary",
+                    "group inline-flex items-center gap-1 text-sm font-semibold hover:text-primary-ink",
                     task.status === "done" && "text-muted-foreground line-through",
                   )}
                 >
@@ -138,7 +138,7 @@ export function ProjectTaskList({
             {!readOnly && task.visibleToClient && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <EyeIcon className="mt-1 size-4 text-info" aria-label={tk.visibleToClient} />
+                  <EyeIcon className="mt-1 size-4 text-info-ink" aria-label={tk.visibleToClient} />
                 </TooltipTrigger>
                 <TooltipContent>{tk.visibleToClient}</TooltipContent>
               </Tooltip>

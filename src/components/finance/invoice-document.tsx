@@ -288,7 +288,7 @@ export function InvoiceDocument({
           className={cn(
             "pointer-events-none absolute end-6 top-28 rotate-[-12deg] rounded-xl border-[3px] px-4 py-1 text-2xl font-black tracking-widest uppercase opacity-80 select-none sm:end-12 sm:top-32 sm:text-3xl",
             invoice.status === "paid"
-              ? "border-success text-success"
+              ? "border-success text-success-ink"
               : "border-destructive text-destructive",
           )}
         >

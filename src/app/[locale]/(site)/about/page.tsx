@@ -102,7 +102,7 @@ async function AboutIntro({ locale, t }: { locale: Locale; t: Messages }) {
               <div className="min-w-0">
                 <p className="text-xl font-black">{name || brand}</p>
                 {profile.headline[locale] && (
-                  <p className="mt-1 text-sm font-semibold text-primary">
+                  <p className="mt-1 text-sm font-semibold text-primary-ink">
                     {profile.headline[locale]}
                   </p>
                 )}
@@ -172,7 +172,7 @@ export default async function AboutPage() {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {values.map((v) => (
               <div key={v.title} className="rounded-3xl border border-border bg-card p-7">
-                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary-ink">
                   <v.icon className="size-6" />
                 </span>
                 <h3 className="mt-5 text-lg font-extrabold">{v.title}</h3>

@@ -184,7 +184,7 @@ function ItemForm({
                     className={cn(
                       "inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors",
                       active
-                        ? "border-primary bg-primary/10 text-primary-dark dark:text-primary-light"
+                        ? "border-primary-ink bg-primary/10 text-primary-dark dark:text-primary-light"
                         : "border-border text-muted-foreground hover:bg-accent",
                     )}
                   >
@@ -250,7 +250,7 @@ function ItemForm({
           )}
           <label className="flex cursor-pointer items-center justify-between gap-3 text-sm sm:col-span-2">
             <span className="flex items-center gap-2">
-              <StarIcon className={cn("size-4", favorite && "fill-warning text-warning")} />
+              <StarIcon className={cn("size-4", favorite && "fill-warning text-warning-ink")} />
               {v.addFavorite}
             </span>
             <Switch checked={favorite} onCheckedChange={setFavorite} />

@@ -41,7 +41,7 @@ export function EmojiPicker({
           aria-label={t.docs.chooseIcon}
           title={t.docs.chooseIcon}
           className={cn(
-            "flex size-14 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-dashed text-3xl transition-colors hover:border-primary hover:bg-primary/5",
+            "flex size-14 shrink-0 cursor-pointer items-center justify-center rounded-2xl border border-dashed text-3xl transition-colors hover:border-primary-ink hover:bg-primary/5",
             className,
           )}
         >
@@ -62,7 +62,7 @@ export function EmojiPicker({
               }}
               className={cn(
                 "flex size-8 cursor-pointer items-center justify-center rounded-lg text-xl transition-colors hover:bg-accent",
-                value === e && "bg-primary/12 ring-2 ring-primary",
+                value === e && "bg-primary/12 ring-2 ring-primary-ink",
               )}
             >
               {e}

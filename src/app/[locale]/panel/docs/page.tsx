@@ -218,7 +218,7 @@ function StaffHome({ ctx, newButton }: { ctx: PanelContext; newButton: React.Rea
                     </span>
                     <VisibilityBadge visibility={r.visibility} t={d} />
                   </div>
-                  <p className="font-bold group-hover:text-primary">
+                  <p className="font-bold group-hover:text-primary-ink">
                     <bdi>{r.title}</bdi>
                   </p>
                   <p className="mt-auto text-xs text-muted-foreground">
@@ -255,7 +255,7 @@ function PortalHome({ ctx }: { ctx: PanelContext }) {
             <span className="text-3xl leading-none">
               {r.icon ?? <FileTextIcon className="size-7 text-muted-foreground" />}
             </span>
-            <span className="font-bold group-hover:text-primary">
+            <span className="font-bold group-hover:text-primary-ink">
               <bdi>{r.title}</bdi>
             </span>
           </Link>

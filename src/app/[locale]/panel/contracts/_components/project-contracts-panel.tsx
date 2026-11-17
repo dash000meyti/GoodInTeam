@@ -40,7 +40,7 @@ export async function ProjectContractsPanel({
     <Card className="gap-4">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <FileSignatureIcon className="size-5 text-primary" /> {c.projectPanelTitle}
+          <FileSignatureIcon className="size-5 text-primary-ink" /> {c.projectPanelTitle}
         </CardTitle>
         {canCreate && (
           <CardAction>
@@ -74,7 +74,7 @@ export async function ProjectContractsPanel({
                 >
                   <div className="min-w-0 flex-1">
                     {link ? (
-                      <Link href={link} className="font-semibold hover:text-primary">
+                      <Link href={link} className="font-semibold hover:text-primary-ink">
                         {r.title}
                       </Link>
                     ) : (

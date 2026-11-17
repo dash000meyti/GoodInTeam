@@ -304,7 +304,7 @@ function EventForm({
                   aria-checked={active}
                   onClick={() => onKindChange(k)}
                   className={cn(
-                    "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40",
+                    "inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     active
                       ? "border-transparent text-foreground"
                       : "border-border text-muted-foreground hover:bg-accent hover:text-foreground",

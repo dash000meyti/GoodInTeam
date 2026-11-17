@@ -22,10 +22,10 @@ import type { HeaderNotification } from "@/server/modules/notifications/header";
 
 const kindStyle: Record<string, { icon: LucideIcon; tone: string }> = {
   task: { icon: CheckSquareIcon, tone: "bg-violet/12 text-violet" },
-  event: { icon: CalendarClockIcon, tone: "bg-info/12 text-info" },
+  event: { icon: CalendarClockIcon, tone: "bg-info/12 text-info-ink" },
   time: { icon: TimerIcon, tone: "bg-warning/16 text-[#b76e00] dark:text-warning" },
 };
-const fallbackStyle = { icon: BellIcon, tone: "bg-primary/12 text-primary" };
+const fallbackStyle = { icon: BellIcon, tone: "bg-primary/12 text-primary-ink" };
 
 type Permission = NotificationPermission | "unsupported";
 
@@ -81,7 +81,7 @@ export function NotificationsBell({
         >
           {unread ? <BellRingIcon className="size-[18px]" /> : <BellIcon className="size-[18px]" />}
           {unread > 0 && (
-            <span className="absolute -end-0.5 -top-0.5 flex h-[18px] min-w-[18px] animate-in items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-bold text-white tabular-nums ring-2 ring-background zoom-in-50">
+            <span className="absolute -end-0.5 -top-0.5 flex h-[18px] min-w-[18px] animate-in items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-bold text-destructive-foreground tabular-nums ring-2 ring-background zoom-in-50">
               {badge}
             </span>
           )}
@@ -110,7 +110,7 @@ export function NotificationsBell({
 
         {items.length === 0 ? (
           <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary-ink">
               <BellIcon className="size-6" strokeWidth={1.5} />
             </div>
             <p className="text-sm font-semibold">{n.empty}</p>

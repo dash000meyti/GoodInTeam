@@ -60,7 +60,7 @@ export default async function ClientLedgerPage({
       />
       <FinanceNav active="ledgers" href={href} t={f} />
       <p className="mb-4 flex items-start gap-2 text-xs leading-6 text-muted-foreground">
-        <InfoIcon className="mt-1 size-3.5 shrink-0 text-info" />
+        <InfoIcon className="mt-1 size-3.5 shrink-0 text-info-ink" />
         {f.ledgerHint}
       </p>
       <LedgerTotals totals={data.totals} ctx={ctx} />

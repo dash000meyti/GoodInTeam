@@ -237,7 +237,7 @@ export function DocEditor({
     </span>
   ) : (
     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-      <CheckIcon className="size-3.5 text-success" /> {d.allSaved}
+      <CheckIcon className="size-3.5 text-success-ink" /> {d.allSaved}
     </span>
   );
 
@@ -358,7 +358,7 @@ export function DocEditor({
                   className={cn(
                     "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-60",
                     active
-                      ? "border-primary bg-primary/6 ring-1 ring-primary"
+                      ? "border-primary-ink bg-primary/6 ring-1 ring-primary-ink"
                       : "border-border hover:bg-accent",
                   )}
                 >

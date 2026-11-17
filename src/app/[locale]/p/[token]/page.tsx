@@ -41,7 +41,7 @@ async function StatusView({ params }: { params: Promise<{ token: string }> }) {
         <Card className="gap-4 p-6">
           <div className="flex items-end justify-between">
             <span className="font-bold">{t.projects.progress}</span>
-            <span className="text-3xl font-black text-primary">
+            <span className="text-3xl font-black text-primary-ink">
               {formatPercent(project.progress, locale)}
             </span>
           </div>
@@ -51,9 +51,9 @@ async function StatusView({ params }: { params: Promise<{ token: string }> }) {
               {milestones.map((m) => (
                 <li key={m.id} className="flex items-center gap-3 text-sm">
                   {m.status === "done" ? (
-                    <CheckCircle2Icon className="size-5 text-primary" />
+                    <CheckCircle2Icon className="size-5 text-primary-ink" />
                   ) : m.status === "in_progress" ? (
-                    <TimerIcon className="size-5 text-warning" />
+                    <TimerIcon className="size-5 text-warning-ink" />
                   ) : (
                     <CircleDashedIcon className="size-5 text-muted-foreground" />
                   )}

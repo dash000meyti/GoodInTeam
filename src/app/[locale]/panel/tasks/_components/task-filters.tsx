@@ -85,7 +85,7 @@ export function TaskFilters({
             ...tags.map((tag) => ({
               value: tag,
               label: tag,
-              icon: <HashIcon className="size-3.5 text-info" />,
+              icon: <HashIcon className="size-3.5 text-info-ink" />,
             })),
           ]}
         />

@@ -49,7 +49,7 @@ export function DocToc({ headings, className }: { headings: TocHeading[]; classN
               className={cn(
                 "-ms-px block border-s-2 py-1 pe-2 leading-6 transition-colors",
                 active === h.id
-                  ? "border-primary font-semibold text-primary"
+                  ? "border-primary-ink font-semibold text-primary-ink"
                   : "border-transparent text-muted-foreground hover:text-foreground",
               )}
               style={{ paddingInlineStart: 12 + (h.depth - min) * 12 }}

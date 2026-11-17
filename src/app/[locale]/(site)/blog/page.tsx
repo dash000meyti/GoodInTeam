@@ -162,7 +162,7 @@ async function BlogList({
             <p className="text-lg font-bold">{t.site.emptyList}</p>
             <p className="text-sm text-muted-foreground">{t.site.emptyListHint}</p>
             {(type || tag || search) && (
-              <Link href={base} className="mt-2 text-sm font-bold text-primary hover:underline">
+              <Link href={base} className="mt-2 text-sm font-bold text-primary-ink hover:underline">
                 {t.site.clearFilters}
               </Link>
             )}
@@ -209,7 +209,7 @@ export default async function BlogPage({ searchParams }: PageProps<"/[locale]/bl
             name="q"
             aria-label={t.site.searchPlaceholder}
             placeholder={t.site.searchPlaceholder}
-            className="h-12 w-full rounded-full border border-input bg-background/80 ps-11 pe-4 text-[15px] shadow-card backdrop-blur outline-none focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20"
+            className="h-12 w-full rounded-full border border-input bg-background/80 ps-11 pe-4 text-[15px] shadow-card backdrop-blur outline-none focus-visible:border-primary-ink focus-visible:ring-2 focus-visible:ring-ring"
           />
         </form>
       </PageHero>

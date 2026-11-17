@@ -76,7 +76,7 @@ function Counter({ n, max }: { n: number; max: number }) {
         n > max
           ? "font-bold text-destructive"
           : n > max * 0.85
-            ? "text-warning"
+            ? "text-warning-ink"
             : "text-muted-foreground",
       )}
     >
@@ -187,7 +187,7 @@ function MediaPicker({ onPick }: { onPick: (m: { url: string; alt: string | null
                   onPick({ url: m.url, alt: m.alt });
                   setOpen(false);
                 }}
-                className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl border border-border bg-muted hover:ring-2 hover:ring-primary"
+                className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl border border-border bg-muted hover:ring-2 hover:ring-primary-ink"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- thumbnails of uploads */}
                 <img
@@ -342,11 +342,11 @@ export function PostEditor({ initial, ctx }: { initial: EditorPost; ctx: EditorC
               hint={
                 slugState && v.slug ? (
                   slugState.available ? (
-                    <span className="inline-flex items-center gap-1 text-success">
+                    <span className="inline-flex items-center gap-1 text-success-ink">
                       <CheckCircle2Icon className="size-3.5" /> {c.slugAvailable}
                     </span>
                   ) : (
-                    <span className="inline-flex flex-wrap items-center gap-1 text-warning">
+                    <span className="inline-flex flex-wrap items-center gap-1 text-warning-ink">
                       <TriangleAlertIcon className="size-3.5" /> {c.slugTaken}{" "}
                       <button
                         type="button"
@@ -778,7 +778,7 @@ export function PostEditor({ initial, ctx }: { initial: EditorPost; ctx: EditorC
                 href={initial.publicPath}
                 target="_blank"
                 rel="noopener"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-ink hover:underline"
               >
                 <ExternalLinkIcon className="size-4" /> {c.viewOnSite}
               </a>

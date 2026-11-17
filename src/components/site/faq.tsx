@@ -24,7 +24,7 @@ export function Faq({ items, title }: { items: { q: string; a: string }[]; title
       <div className="divide-y divide-dashed divide-border rounded-3xl border border-border bg-card">
         {items.map((f, i) => (
           <details key={i} className="gt-faq group" open={i === 0}>
-            <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-start text-base font-bold transition-colors hover:text-primary sm:text-lg">
+            <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-start text-base font-bold transition-colors hover:text-primary-ink sm:text-lg">
               {f.q}
               <span className="gt-faq-icon flex size-8 shrink-0 items-center justify-center rounded-full bg-muted transition-transform duration-300">
                 <PlusIcon className="size-4" />

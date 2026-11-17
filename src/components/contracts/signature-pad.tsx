@@ -212,7 +212,7 @@ export function SignaturePad({
       <div
         className={cn(
           "relative overflow-hidden rounded-xl border-2 border-dashed bg-white transition-colors",
-          invalid ? "border-destructive/60" : "border-grey-300 focus-within:border-primary",
+          invalid ? "border-destructive/60" : "border-grey-300 focus-within:border-primary-ink",
           disabled && "opacity-60",
         )}
         style={{ height }}

@@ -128,7 +128,7 @@ export default async function DataSettingsPage() {
           <ol className="space-y-3 text-sm">
             {[s.restoreStep1, s.restoreStep2, s.restoreStep3].map((step, i) => (
               <li key={i} className="flex gap-3">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/12 text-xs font-bold text-primary">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/12 text-xs font-bold text-primary-ink">
                   {num(i + 1)}
                 </span>
                 <span className="pt-0.5">{step}</span>

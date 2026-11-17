@@ -271,7 +271,7 @@ function DocumentsList({
                 <TableCell className="max-w-0">
                   <Link
                     href={href(`/panel/contracts/${r.id}`)}
-                    className="block truncate font-semibold group-hover:text-primary"
+                    className="block truncate font-semibold group-hover:text-primary-ink"
                   >
                     {r.title}
                   </Link>

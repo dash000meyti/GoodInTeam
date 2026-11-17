@@ -69,7 +69,7 @@ export default async function LedgersPage({
 
         <TabsContent value="parties" className="space-y-4">
           <p className="flex items-start gap-2 text-xs leading-6 text-muted-foreground">
-            <InfoIcon className="mt-1 size-3.5 shrink-0 text-info" />
+            <InfoIcon className="mt-1 size-3.5 shrink-0 text-info-ink" />
             {f.ledgerHint}
           </p>
           {parties.length === 0 ? (
@@ -150,7 +150,7 @@ export default async function LedgersPage({
 
         <TabsContent value="projects" className="space-y-4">
           <p className="flex items-start gap-2 text-xs leading-6 text-muted-foreground">
-            <InfoIcon className="mt-1 size-3.5 shrink-0 text-info" />
+            <InfoIcon className="mt-1 size-3.5 shrink-0 text-info-ink" />
             {f.projectLedgerHint}
           </p>
           {projectRows.length === 0 ? (
@@ -178,7 +178,7 @@ export default async function LedgersPage({
                         >
                           <ColorDot color={p.color} />
                           <span className="min-w-0">
-                            <span className="block max-w-56 truncate font-semibold group-hover:text-primary">
+                            <span className="block max-w-56 truncate font-semibold group-hover:text-primary-ink">
                               {p.name}
                             </span>
                             <span className="block text-xs text-muted-foreground">
@@ -238,7 +238,7 @@ function PartyName({
         </AvatarFallback>
       </Avatar>
       <span className="min-w-0">
-        <span className="block max-w-60 truncate font-semibold group-hover:text-primary">
+        <span className="block max-w-60 truncate font-semibold group-hover:text-primary-ink">
           {p.name}
         </span>
         <Badge variant="neutral" className="mt-0.5">

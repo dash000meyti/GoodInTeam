@@ -133,7 +133,7 @@ export function LedgerTables({
                       {l.invoiceId ? (
                         <Link
                           href={href(`/panel/invoices/${l.invoiceId}`)}
-                          className="hover:text-primary"
+                          className="hover:text-primary-ink"
                         >
                           {label(l)}
                         </Link>
@@ -208,7 +208,7 @@ export function LedgerTables({
                             {l.invoiceId ? (
                               <Link
                                 href={href(`/panel/invoices/${l.invoiceId}`)}
-                                className="hover:text-primary"
+                                className="hover:text-primary-ink"
                               >
                                 {label(l)}
                               </Link>

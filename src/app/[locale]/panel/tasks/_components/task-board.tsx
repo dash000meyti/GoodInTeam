@@ -27,9 +27,9 @@ import { PriorityFlag, TaskMeta } from "./task-bits";
 
 const columnStyle: Record<BoardColumn, { icon: LucideIcon; tone: string; bar: string }> = {
   todo: { icon: CircleDashedIcon, tone: "text-muted-foreground", bar: "bg-grey-500" },
-  in_progress: { icon: CircleDotIcon, tone: "text-info", bar: "bg-info" },
+  in_progress: { icon: CircleDotIcon, tone: "text-info-ink", bar: "bg-info" },
   waiting: { icon: HourglassIcon, tone: "text-violet", bar: "bg-violet" },
-  done: { icon: CheckCircle2Icon, tone: "text-success", bar: "bg-success" },
+  done: { icon: CheckCircle2Icon, tone: "text-success-ink", bar: "bg-success" },
 };
 
 interface Move {

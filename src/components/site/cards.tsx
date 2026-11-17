@@ -203,7 +203,7 @@ export function WorkCard({
         />
         {metric && (
           <div className="absolute end-4 bottom-4 rounded-2xl bg-background/85 px-4 py-2.5 shadow-dropdown backdrop-blur-md">
-            <p className="text-xl leading-none font-black tracking-tight text-primary">
+            <p className="text-xl leading-none font-black tracking-tight text-primary-ink">
               {metric.value}
             </p>
             <p className="mt-1 text-[11px] font-semibold text-muted-foreground">{metric.label}</p>
@@ -269,7 +269,7 @@ export function SeriesCard({
       )}
     >
       <div className="flex items-center gap-2">
-        <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+        <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-primary/12 text-primary-ink">
           <LayersIcon className="size-5" />
         </span>
         {s.level && (
@@ -328,7 +328,7 @@ export function TestimonialCard({
         className,
       )}
     >
-      <QuoteIcon className="size-8 text-primary/30" aria-hidden />
+      <QuoteIcon className="size-8 text-primary-ink/30" aria-hidden />
       {item.rating ? (
         <div className="flex gap-0.5" aria-label={`${item.rating}/5`}>
           {Array.from({ length: 5 }, (_, i) => (
@@ -336,7 +336,7 @@ export function TestimonialCard({
               key={i}
               className={cn(
                 "size-4",
-                i < item.rating! ? "fill-warning text-warning" : "text-grey-400",
+                i < item.rating! ? "fill-warning text-warning-ink" : "text-grey-400",
               )}
               aria-hidden
             />

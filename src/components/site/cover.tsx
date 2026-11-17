@@ -12,7 +12,15 @@ import { cn } from "@/lib/utils";
 
 const isLocal = (src: string) => /^\/(media|brand)\//.test(src);
 
-const palette = ["#00A76F", "#078DEE", "#8E33FF", "#FFAB00", "#FF5630", "#00B8D9", "#22C55E"];
+/** Good In palette (spec §3.3). `light` covers carry an ink icon, dark ones a white icon. */
+const palette = [
+  { color: "#FFC50D", light: true },
+  { color: "#1C1C1E", light: false },
+  { color: "#6A6A6C", light: false },
+  { color: "#FFDB66", light: true },
+  { color: "#48484A", light: false },
+  { color: "#B3B5B9", light: true },
+] as const;
 const kindIcons: Record<string, LucideIcon> = {
   article: FileTextIcon,
   tutorial: BookOpenIcon,
@@ -54,7 +62,7 @@ export function Cover({
   imgClassName?: string;
   aspect?: string;
 }) {
-  const color = pick(seed);
+  const { color, light } = pick(seed);
   const Icon = (kind && kindIcons[kind]) || SparklesIcon;
   return (
     <div className={cn("relative overflow-hidden bg-muted", aspect, className)}>
@@ -84,11 +92,18 @@ export function Cover({
           aria-hidden
           className={cn("absolute inset-0 flex items-center justify-center", imgClassName)}
           style={{
-            background: `radial-gradient(90% 80% at 85% 0%, rgb(255 255 255 / .28), transparent 55%), linear-gradient(135deg, ${color}, color-mix(in oklab, ${color} 45%, #0b1016))`,
+            background: `radial-gradient(90% 80% at 85% 0%, rgb(255 255 255 / .28), transparent 55%), linear-gradient(135deg, ${color}, color-mix(in oklab, ${color} ${light ? 78 : 60}%, #1c1c1e))`,
           }}
         >
           <div className="absolute inset-0 [background-image:linear-gradient(to_right,#fff_1px,transparent_1px),linear-gradient(to_bottom,#fff_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)] [background-size:32px_32px] opacity-[0.14]" />
-          <span className="relative flex size-16 items-center justify-center rounded-2xl bg-white/15 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] ring-1 ring-white/25 backdrop-blur-sm">
+          <span
+            className={cn(
+              "relative flex size-16 items-center justify-center rounded-2xl shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] ring-1",
+              light
+                ? "bg-[#1c1c1e]/10 text-[#1c1c1e] ring-[#1c1c1e]/15"
+                : "bg-white/15 text-white ring-white/25",
+            )}
+          >
             <Icon className="size-7" strokeWidth={1.75} />
           </span>
         </div>

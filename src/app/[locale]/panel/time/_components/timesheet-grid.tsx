@@ -57,7 +57,7 @@ export function TimesheetGrid({
     );
 
   const plus = (
-    <PlusIcon className="size-4 text-muted-foreground/0 transition-colors group-hover/cell:text-primary group-focus-visible/cell:text-primary" />
+    <PlusIcon className="size-4 text-muted-foreground/0 transition-colors group-hover/cell:text-primary-ink group-focus-visible/cell:text-primary-ink" />
   );
 
   return (
@@ -73,7 +73,7 @@ export function TimesheetGrid({
                 key={d.key}
                 className={cn(
                   "px-1 py-3 text-center text-xs font-semibold text-muted-foreground",
-                  d.today && "text-primary",
+                  d.today && "text-primary-ink",
                 )}
               >
                 <span className="block">{d.weekday}</span>
@@ -152,7 +152,7 @@ export function TimesheetGrid({
                 {v}
               </td>
             ))}
-            <td className="py-3 text-center font-mono text-base font-black text-primary tabular-nums">
+            <td className="py-3 text-center font-mono text-base font-black text-primary-ink tabular-nums">
               {total}
             </td>
           </tr>

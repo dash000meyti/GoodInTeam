@@ -240,7 +240,7 @@ function FieldView({ def, value }: { def: FieldDef; value: string }) {
               target="_blank"
               rel="noopener noreferrer"
               dir="ltr"
-              className="block text-start text-sm font-semibold break-all text-primary hover:underline"
+              className="block text-start text-sm font-semibold break-all text-primary-ink hover:underline"
             >
               {value}
             </a>
@@ -347,7 +347,7 @@ export function ItemDetail({
                     if (!res.ok) toast.error(res.error.message);
                   }}
                 >
-                  <StarIcon className={cn(entry.favorite && "fill-warning text-warning")} />
+                  <StarIcon className={cn(entry.favorite && "fill-warning text-warning-ink")} />
                 </Button>
               </div>
               {(project || client) && (

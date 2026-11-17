@@ -67,7 +67,7 @@ export function SignedCelebration({
       </div>
       <div className="relative flex flex-col items-center gap-3">
         <span
-          className="flex size-14 items-center justify-center rounded-full bg-success text-white"
+          className="flex size-14 items-center justify-center rounded-full bg-success text-success-foreground"
           style={{ animation: "gt-pop .5s ease-out both, gt-ring 1.4s ease-out .4s 2" }}
         >
           <CheckIcon className="size-7" strokeWidth={3} />

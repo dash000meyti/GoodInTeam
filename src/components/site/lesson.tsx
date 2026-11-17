@@ -59,7 +59,7 @@ export function LessonList({
                 compact
                   ? "px-2.5 py-2 text-sm hover:bg-muted"
                   : "border border-border bg-card p-4 hover:border-primary/40 sm:p-5",
-                current && (compact ? "bg-primary/10 font-bold text-primary" : "border-primary/50"),
+                current && (compact ? "bg-primary/10 font-bold text-primary-ink" : "border-primary/50"),
               )}
             >
               <span
@@ -69,7 +69,7 @@ export function LessonList({
                   current
                     ? "bg-primary text-primary-foreground"
                     : done
-                      ? "bg-success/15 text-success"
+                      ? "bg-success/15 text-success-ink"
                       : "bg-muted text-muted-foreground",
                 )}
               >
@@ -79,7 +79,7 @@ export function LessonList({
                 <span
                   className={cn(
                     "block leading-snug",
-                    compact ? "truncate" : "font-bold group-hover:text-primary",
+                    compact ? "truncate" : "font-bold group-hover:text-primary-ink",
                   )}
                 >
                   {l.title}
@@ -184,9 +184,9 @@ export async function LessonView({
               <div className="rounded-2xl border border-border bg-card p-4 lg:sticky lg:top-24">
                 <Link
                   href={localePath(locale, `/learn/${encodeURIComponent(series.slug)}`)}
-                  className="mb-3 flex items-center gap-2 px-2.5 text-sm font-extrabold hover:text-primary"
+                  className="mb-3 flex items-center gap-2 px-2.5 text-sm font-extrabold hover:text-primary-ink"
                 >
-                  <LayersIcon className="size-4 text-primary" />
+                  <LayersIcon className="size-4 text-primary-ink" />
                   <span className="truncate">{series.title}</span>
                 </Link>
                 <p className="mb-3 px-2.5 text-xs text-muted-foreground">
@@ -265,7 +265,7 @@ export async function LessonView({
                     </span>
                   </Link>
                 ) : (
-                  <p className="rounded-2xl border border-success/30 bg-success/5 p-6 text-center font-bold text-success">
+                  <p className="rounded-2xl border border-success/30 bg-success/5 p-6 text-center font-bold text-success-ink">
                     {s.courseFinished}
                   </p>
                 )}

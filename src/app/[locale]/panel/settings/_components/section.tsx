@@ -48,7 +48,7 @@ export function SettingsCard({
     <Card className={cn("gap-5", className)}>
       <CardHeader className="flex flex-wrap items-start gap-3">
         {Icon && (
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-ink">
             <Icon className="size-5" />
           </span>
         )}

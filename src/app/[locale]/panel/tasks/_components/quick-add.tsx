@@ -117,7 +117,7 @@ export function QuickAdd({
               tk[`priority_${tok.value}` as "priority_1"],
             );
           case "tag":
-            return chip(key, <HashIcon className="size-3 text-info" />, tok.value, "text-info");
+            return chip(key, <HashIcon className="size-3 text-info-ink" />, tok.value, "text-info-ink");
           case "project":
             return project
               ? chip(key, <ColorDot color={project.color} className="size-2" />, project.name)
@@ -130,13 +130,13 @@ export function QuickAdd({
           case "date":
             return chip(
               key,
-              <CalendarIcon className="size-3 text-primary" />,
+              <CalendarIcon className="size-3 text-primary-ink" />,
               formatDayLabel(new Date(`${tok.value}T12:00:00Z`), { ...fmt, timeZone: "UTC" }),
             );
           case "time":
             return chip(
               key,
-              <ClockIcon className="size-3 text-primary" />,
+              <ClockIcon className="size-3 text-primary-ink" />,
               <span dir="ltr">{locale === "fa" ? toPersianDigits(tok.value) : tok.value}</span>,
             );
         }
@@ -152,7 +152,7 @@ export function QuickAdd({
           submit();
         }}
       >
-        <PlusIcon className="size-5 shrink-0 text-primary" />
+        <PlusIcon className="size-5 shrink-0 text-primary-ink" />
         <input
           ref={ref}
           value={text}

@@ -361,7 +361,7 @@ export function ContractEditor({
         <Card className="gap-4 py-5">
           <CardHeader className="px-4 sm:px-6">
             <CardTitle className="flex items-center gap-2 text-base">
-              <BracesIcon className="size-4 text-primary" /> {c.placeholdersTitle}
+              <BracesIcon className="size-4 text-primary-ink" /> {c.placeholdersTitle}
             </CardTitle>
             <CardDescription>{c.placeholdersHint}</CardDescription>
           </CardHeader>
@@ -375,7 +375,7 @@ export function ContractEditor({
                     className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-start text-sm hover:bg-accent"
                   >
                     <span className="text-muted-foreground">{placeholderLabel(k, c)}</span>
-                    <code dir="ltr" className="font-mono text-xs text-primary">{`{{${k}}}`}</code>
+                    <code dir="ltr" className="font-mono text-xs text-primary-ink">{`{{${k}}}`}</code>
                   </button>
                 </li>
               ))}

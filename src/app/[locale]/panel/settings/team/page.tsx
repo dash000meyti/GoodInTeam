@@ -62,7 +62,7 @@ function UserLine({ u, ctx }: { u: UserRow; ctx: PanelContext }) {
               <Link
                 key={p.id}
                 href={href(`/panel/projects/${p.id}`)}
-                className="inline-flex max-w-40 items-center gap-1.5 rounded-md border border-dashed px-2 py-0.5 text-xs font-semibold transition-colors hover:border-primary/40 hover:text-primary"
+                className="inline-flex max-w-40 items-center gap-1.5 rounded-md border border-dashed px-2 py-0.5 text-xs font-semibold transition-colors hover:border-primary/40 hover:text-primary-ink"
               >
                 <ColorDot color={p.color} className="size-2" />
                 <span className="truncate">{p.name}</span>
@@ -102,7 +102,7 @@ function UserLine({ u, ctx }: { u: UserRow; ctx: PanelContext }) {
           <span>{s.neverSignedIn}</span>
         )}
         {u.activeSessions > 0 && (
-          <p className="text-success">
+          <p className="text-success-ink">
             {format(s.activeSessions, { n: formatNumber(u.activeSessions, fmt.locale) })}
           </p>
         )}
@@ -174,7 +174,7 @@ export default async function TeamSettingsPage() {
                   {g.client && (
                     <Link
                       href={href(`/panel/clients/${g.client.id}`)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
                     >
                       {s.openClient}
                       <ArrowUpRightIcon className="size-3.5 rtl:-scale-x-100" />

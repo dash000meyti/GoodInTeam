@@ -21,13 +21,13 @@ import { SMART_LISTS, type SmartListKey, type TaskGroup, type TaskView } from ".
 import { PriorityFlag, TaskCheck, TaskMeta } from "./task-bits";
 
 export const listIcons: Record<SmartListKey, { icon: LucideIcon; tone: string }> = {
-  inbox: { icon: InboxIcon, tone: "text-info" },
+  inbox: { icon: InboxIcon, tone: "text-info-ink" },
   today: { icon: SunIcon, tone: "text-[#b76e00] dark:text-warning" },
   upcoming: { icon: CalendarDaysIcon, tone: "text-destructive" },
-  anytime: { icon: LayersIcon, tone: "text-primary" },
+  anytime: { icon: LayersIcon, tone: "text-primary-ink" },
   waiting: { icon: HourglassIcon, tone: "text-violet" },
   someday: { icon: ArchiveIcon, tone: "text-muted-foreground" },
-  done: { icon: CheckCircle2Icon, tone: "text-success" },
+  done: { icon: CheckCircle2Icon, tone: "text-success-ink" },
 };
 
 /** Smart lists: vertical card on desktop, horizontally scrolling pills on mobile. */
@@ -133,7 +133,7 @@ function TaskRow({ task, onOpen }: { task: TaskView; onOpen: (id: string) => voi
       <button
         type="button"
         onClick={() => onOpen(task.id)}
-        className="min-w-0 flex-1 cursor-pointer space-y-1 rounded-md text-start outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+        className="min-w-0 flex-1 cursor-pointer space-y-1 rounded-md text-start outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span
           className={cn(

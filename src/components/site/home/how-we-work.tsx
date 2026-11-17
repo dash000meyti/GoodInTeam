@@ -29,25 +29,25 @@ const tabs: { key: TabKey; icon: LucideIcon }[] = [
 const tabCls: Record<TabKey, { label: string; icon: string; panel: string }> = {
   portal: {
     label:
-      "group-has-[#how-portal:checked]:border-border group-has-[#how-portal:checked]:bg-card group-has-[#how-portal:checked]:shadow-card group-has-[#how-portal:focus-visible]:ring-[3px] group-has-[#how-portal:focus-visible]:ring-ring/40",
+      "group-has-[#how-portal:checked]:border-border group-has-[#how-portal:checked]:bg-card group-has-[#how-portal:checked]:shadow-card group-has-[#how-portal:focus-visible]:ring-2 group-has-[#how-portal:focus-visible]:ring-ring",
     icon: "group-has-[#how-portal:checked]:bg-primary group-has-[#how-portal:checked]:text-primary-foreground",
     panel: "group-has-[#how-portal:checked]:grid",
   },
   progress: {
     label:
-      "group-has-[#how-progress:checked]:border-border group-has-[#how-progress:checked]:bg-card group-has-[#how-progress:checked]:shadow-card group-has-[#how-progress:focus-visible]:ring-[3px] group-has-[#how-progress:focus-visible]:ring-ring/40",
+      "group-has-[#how-progress:checked]:border-border group-has-[#how-progress:checked]:bg-card group-has-[#how-progress:checked]:shadow-card group-has-[#how-progress:focus-visible]:ring-2 group-has-[#how-progress:focus-visible]:ring-ring",
     icon: "group-has-[#how-progress:checked]:bg-primary group-has-[#how-progress:checked]:text-primary-foreground",
     panel: "group-has-[#how-progress:checked]:grid",
   },
   contracts: {
     label:
-      "group-has-[#how-contracts:checked]:border-border group-has-[#how-contracts:checked]:bg-card group-has-[#how-contracts:checked]:shadow-card group-has-[#how-contracts:focus-visible]:ring-[3px] group-has-[#how-contracts:focus-visible]:ring-ring/40",
+      "group-has-[#how-contracts:checked]:border-border group-has-[#how-contracts:checked]:bg-card group-has-[#how-contracts:checked]:shadow-card group-has-[#how-contracts:focus-visible]:ring-2 group-has-[#how-contracts:focus-visible]:ring-ring",
     icon: "group-has-[#how-contracts:checked]:bg-primary group-has-[#how-contracts:checked]:text-primary-foreground",
     panel: "group-has-[#how-contracts:checked]:grid",
   },
   invoices: {
     label:
-      "group-has-[#how-invoices:checked]:border-border group-has-[#how-invoices:checked]:bg-card group-has-[#how-invoices:checked]:shadow-card group-has-[#how-invoices:focus-visible]:ring-[3px] group-has-[#how-invoices:focus-visible]:ring-ring/40",
+      "group-has-[#how-invoices:checked]:border-border group-has-[#how-invoices:checked]:bg-card group-has-[#how-invoices:checked]:shadow-card group-has-[#how-invoices:focus-visible]:ring-2 group-has-[#how-invoices:focus-visible]:ring-ring",
     icon: "group-has-[#how-invoices:checked]:bg-primary group-has-[#how-invoices:checked]:text-primary-foreground",
     panel: "group-has-[#how-invoices:checked]:grid",
   },
@@ -92,7 +92,7 @@ function PortalMock({ t, n }: { t: Messages; n: (v: number | string) => string }
         <div className="min-w-0">
           <p className="text-xs font-semibold text-muted-foreground">{s.diagramProgress}</p>
           <p className="truncate text-base font-extrabold">{s.mockProject}</p>
-          <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-success">
+          <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-success-ink">
             <span className="gt-live size-2 rounded-full bg-success" /> {s.diagramLive}
           </span>
         </div>
@@ -106,8 +106,8 @@ function PortalMock({ t, n }: { t: Messages; n: (v: number | string) => string }
             <span
               className={cn(
                 "flex size-5 items-center justify-center rounded-full",
-                m.state === "done" && "bg-success text-white",
-                m.state === "doing" && "border-2 border-primary",
+                m.state === "done" && "bg-success text-success-foreground",
+                m.state === "doing" && "border-2 border-primary-ink",
                 m.state === "todo" && "border-2 border-grey-400",
               )}
             >
@@ -227,7 +227,7 @@ function InvoiceMock({ t, n }: { t: Messages; n: (v: number | string) => string 
       </ul>
       <div className="mt-3 flex items-center justify-between rounded-xl bg-primary/8 px-4 py-3">
         <span className="text-sm font-bold">{t.common.total}</span>
-        <span className="text-lg font-black text-primary tabular-nums">{n("53.5")}h</span>
+        <span className="text-lg font-black text-primary-ink tabular-nums">{n("53.5")}h</span>
       </div>
     </MockFrame>
   );
@@ -308,7 +308,7 @@ export function HowWeWork({ t, locale }: { t: Messages; locale: Locale }) {
                 <ul className="space-y-2.5">
                   {[1, 2, 3].map((p) => (
                     <li key={p} className="flex items-start gap-2.5 text-sm font-semibold">
-                      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary-ink">
                         <CheckIcon className="size-3" strokeWidth={3} />
                       </span>
                       {s[`tab${k}Point${p as 1 | 2 | 3}`]}

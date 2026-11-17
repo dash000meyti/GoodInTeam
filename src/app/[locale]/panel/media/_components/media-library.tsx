@@ -82,7 +82,7 @@ export function Uploader() {
       }}
       className={cn(
         "mb-6 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/30 px-6 py-10 text-center transition-colors hover:border-primary/50 hover:bg-primary/[0.03]",
-        drag && "border-primary bg-primary/5",
+        drag && "border-primary-ink bg-primary/5",
       )}
     >
       <input
@@ -94,7 +94,7 @@ export function Uploader() {
         onChange={(e) => e.target.files && upload(e.target.files)}
         disabled={pending}
       />
-      <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+      <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/12 text-primary-ink">
         {pending ? (
           <Loader2Icon className="size-6 animate-spin" />
         ) : (
@@ -154,7 +154,7 @@ function CopyUrl({ url }: { url: string }) {
         setTimeout(() => setDone(false), 1500);
       }}
     >
-      {done ? <CheckIcon className="text-success" /> : <CopyIcon />}
+      {done ? <CheckIcon className="text-success-ink" /> : <CopyIcon />}
     </Button>
   );
 }

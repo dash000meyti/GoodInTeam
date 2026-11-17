@@ -83,7 +83,7 @@ export default async function HomePage() {
             <div className="flex flex-wrap items-center gap-3">
               <Link
                 href={localePath(locale, "/contact")}
-                className="group inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-dark"
+                className="group inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-hover"
               >
                 {s.heroPrimaryCta}
                 <ArrowUpLeftIcon className="size-4 transition-transform group-hover:-translate-y-0.5 ltr:rotate-90" />
@@ -98,7 +98,7 @@ export default async function HomePage() {
             <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
               {[s.heroProof1, s.heroProof2, s.heroProof3].map((p) => (
                 <li key={p} className="inline-flex items-center gap-1.5">
-                  <CheckIcon className="size-4 text-primary" /> {p}
+                  <CheckIcon className="size-4 text-primary-ink" /> {p}
                 </li>
               ))}
             </ul>

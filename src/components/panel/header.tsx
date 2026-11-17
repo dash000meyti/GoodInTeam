@@ -31,7 +31,7 @@ export function PanelHeader({ slot }: { slot?: ReactNode }) {
         aria-label={t.common.search}
         aria-haspopup="dialog"
         aria-keyshortcuts="Meta+K Control+K"
-        className="flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-muted/70 px-3 text-sm text-muted-foreground transition-colors outline-none hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/40 sm:min-w-56"
+        className="flex h-9 cursor-pointer items-center gap-2 rounded-lg bg-muted/70 px-3 text-sm text-muted-foreground transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring sm:min-w-56"
       >
         <SearchIcon className="size-4" aria-hidden />
         <span className="hidden sm:inline" aria-hidden>

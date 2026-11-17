@@ -51,9 +51,9 @@ function Choice({
       aria-checked={selected}
       onClick={onSelect}
       className={cn(
-        "group relative flex cursor-pointer flex-col gap-3 rounded-2xl border-2 p-2 text-start transition-all outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40",
+        "group relative flex cursor-pointer flex-col gap-3 rounded-2xl border-2 p-2 text-start transition-all outline-none focus-visible:ring-2 focus-visible:ring-ring",
         selected
-          ? "border-primary shadow-primary"
+          ? "border-primary-ink shadow-primary"
           : "border-transparent bg-muted/40 hover:border-foreground/15",
       )}
     >
@@ -67,7 +67,7 @@ function Choice({
         <span
           className={cn(
             "flex size-5 items-center justify-center rounded-full border-2 transition-colors",
-            selected ? "border-primary bg-primary text-primary-foreground" : "border-grey-400",
+            selected ? "border-primary-ink bg-primary text-primary-foreground" : "border-grey-400",
           )}
         >
           {selected && <CheckIcon className="size-3" strokeWidth={3} />}

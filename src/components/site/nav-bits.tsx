@@ -110,7 +110,7 @@ export function PrevNext({
           <span className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground">
             <ChevronRightIcon className="size-3.5 ltr:rotate-180" /> {prevLabel}
           </span>
-          <span className="font-bold text-balance group-hover:text-primary">{prev.title}</span>
+          <span className="font-bold text-balance group-hover:text-primary-ink">{prev.title}</span>
         </Link>
       ) : (
         <span className="hidden sm:block" />
@@ -120,7 +120,7 @@ export function PrevNext({
           <span className="inline-flex items-center gap-1 text-xs font-bold text-muted-foreground">
             {nextLabel} <ChevronLeftIcon className="size-3.5 ltr:rotate-180" />
           </span>
-          <span className="font-bold text-balance group-hover:text-primary">{next.title}</span>
+          <span className="font-bold text-balance group-hover:text-primary-ink">{next.title}</span>
         </Link>
       ) : null}
     </nav>

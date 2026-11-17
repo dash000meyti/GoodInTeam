@@ -4,12 +4,12 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 const tones = {
-  primary: "bg-primary/12 text-primary",
-  info: "bg-info/12 text-info",
+  primary: "bg-primary/12 text-primary-ink",
+  info: "bg-info/12 text-info-ink",
   warning: "bg-warning/16 text-[#b76e00] dark:text-warning",
   violet: "bg-violet/12 text-violet",
   destructive: "bg-destructive/12 text-destructive",
-  success: "bg-success/12 text-success",
+  success: "bg-success/12 text-success-ink",
 } as const;
 
 /** KPI tile (Minimals "widget summary"). */

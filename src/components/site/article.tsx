@@ -110,7 +110,7 @@ export function Tldr({ text, label }: { text: string; label: string }) {
       aria-label={label}
       className="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary/[0.05] p-5 sm:p-6"
     >
-      <p className="mb-2 inline-flex items-center gap-1.5 text-xs font-black tracking-wide text-primary uppercase">
+      <p className="mb-2 inline-flex items-center gap-1.5 text-xs font-black tracking-wide text-primary-ink uppercase">
         <SparklesIcon className="size-3.5" /> {label}
       </p>
       <p className="text-[1.0625rem] leading-8 font-medium text-pretty">{text}</p>
@@ -199,7 +199,7 @@ export function Syndicated({
           href={l.url}
           rel="syndication noopener"
           target="_blank"
-          className="u-syndication inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 font-semibold transition-colors hover:text-primary"
+          className="u-syndication inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 font-semibold transition-colors hover:text-primary-ink"
         >
           <SocialGlyph network={l.network} className="size-3.5" />
           {socialLabels[l.network] ?? l.network}
@@ -247,12 +247,12 @@ export function AuthorBox({
       <div className="min-w-0 flex-1 space-y-2">
         <p className="text-xs font-bold text-muted-foreground">{t.site.writtenBy}</p>
         <p className="text-lg font-extrabold">
-          <Link href={localePath(locale, "/about")} rel="author" className="hover:text-primary">
+          <Link href={localePath(locale, "/about")} rel="author" className="hover:text-primary-ink">
             {name}
           </Link>
         </p>
         {profile.headline[locale] && (
-          <p className="text-sm font-semibold text-primary">{profile.headline[locale]}</p>
+          <p className="text-sm font-semibold text-primary-ink">{profile.headline[locale]}</p>
         )}
         {profile.bio[locale] && (
           <p className="text-sm leading-7 text-muted-foreground">{profile.bio[locale]}</p>

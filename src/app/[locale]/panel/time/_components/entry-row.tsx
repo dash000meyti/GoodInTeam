@@ -80,7 +80,7 @@ export function EntryRow({ entry, serverNow }: { entry: EntryRowView; serverNow:
       <button
         type="button"
         onClick={() => openEdit(entry.values)}
-        className="min-w-0 flex-1 cursor-pointer rounded-md text-start outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+        className="min-w-0 flex-1 cursor-pointer rounded-md text-start outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span
           className={cn(
@@ -138,7 +138,7 @@ export function EntryRow({ entry, serverNow }: { entry: EntryRowView; serverNow:
             <Button
               variant="ghost"
               size="icon-sm"
-              className="text-primary sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
+              className="text-primary-ink sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
               aria-label={tt.continue}
               disabled={pending}
               onClick={() => run(continueEntryAction({ id: entry.id }), tt.continued)}

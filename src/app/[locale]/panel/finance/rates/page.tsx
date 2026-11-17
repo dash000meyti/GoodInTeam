@@ -60,7 +60,7 @@ export default async function RatesPage() {
       <FinanceNav active="rates" href={href} t={f} />
 
       <div className="mb-6 flex items-start gap-3 rounded-2xl border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
-        <InfoIcon className="mt-0.5 size-4 shrink-0 text-info" />
+        <InfoIcon className="mt-0.5 size-4 shrink-0 text-info-ink" />
         <p>
           <b className="text-foreground">
             {f.baseCurrency}: {base} ({baseSymbol})

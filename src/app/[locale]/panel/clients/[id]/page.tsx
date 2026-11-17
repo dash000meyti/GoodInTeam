@@ -58,7 +58,7 @@ export default async function ClientPage({ params }: PageProps<"/[locale]/panel/
             {client.email && (
               <a
                 href={`mailto:${client.email}`}
-                className="flex items-center gap-2 hover:text-primary"
+                className="flex items-center gap-2 hover:text-primary-ink"
                 dir="ltr"
               >
                 <MailIcon className="size-4 text-muted-foreground" /> {client.email}
@@ -67,7 +67,7 @@ export default async function ClientPage({ params }: PageProps<"/[locale]/panel/
             {client.phone && (
               <a
                 href={`tel:${client.phone}`}
-                className="flex items-center gap-2 hover:text-primary"
+                className="flex items-center gap-2 hover:text-primary-ink"
                 dir="ltr"
               >
                 <PhoneIcon className="size-4 text-muted-foreground" /> {client.phone}
@@ -78,7 +78,7 @@ export default async function ClientPage({ params }: PageProps<"/[locale]/panel/
                 href={client.website}
                 target="_blank"
                 rel="noopener"
-                className="flex items-center gap-2 hover:text-primary"
+                className="flex items-center gap-2 hover:text-primary-ink"
                 dir="ltr"
               >
                 <GlobeIcon className="size-4 text-muted-foreground" /> {client.website}
@@ -105,7 +105,7 @@ export default async function ClientPage({ params }: PageProps<"/[locale]/panel/
                   <li key={p.id}>
                     <Link
                       href={href(`/panel/projects/${p.id}`)}
-                      className="flex items-center gap-4 py-3 hover:text-primary"
+                      className="flex items-center gap-4 py-3 hover:text-primary-ink"
                     >
                       <ColorDot color={p.color} />
                       <span className="flex-1 truncate font-semibold">{p.name}</span>

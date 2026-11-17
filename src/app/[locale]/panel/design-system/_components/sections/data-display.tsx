@@ -139,7 +139,7 @@ export function DataSection({ t, locale, now }: { t: Messages; locale: Locale; n
           <AvatarFallback className="rounded-xl bg-[#078DEE] text-white">AA</AvatarFallback>
         </Avatar>
         <span className="flex items-center gap-2">
-          {["#00A76F", "#078DEE", "#7635DC", "#FDA92D", "#FF5630"].map((c) => (
+          {["#FFC50D", "#00A76F", "#078DEE", "#7635DC", "#F76B15", "#CE2C31"].map((c) => (
             <ColorDot key={c} color={c} className="size-3" />
           ))}
         </span>

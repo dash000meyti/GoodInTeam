@@ -64,7 +64,7 @@ export default async function ContractPage({
           actions={
             <Link
               href={href(`/panel/contracts/${k.id}/edit`)}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-ink hover:underline"
             >
               <PencilIcon className="size-4" /> {c.editTemplate}
             </Link>
@@ -229,14 +229,14 @@ function DetailsCard({ ctx, d }: { ctx: PanelContext; d: Detail }) {
       <CardContent className="px-5">
         {k.client && (
           <Row label={c.fieldClient}>
-            <Link href={href(`/panel/clients/${k.client.id}`)} className="hover:text-primary">
+            <Link href={href(`/panel/clients/${k.client.id}`)} className="hover:text-primary-ink">
               {k.client.name}
             </Link>
           </Row>
         )}
         {k.project && (
           <Row label={c.fieldProject}>
-            <Link href={href(`/panel/projects/${k.project.id}`)} className="hover:text-primary">
+            <Link href={href(`/panel/projects/${k.project.id}`)} className="hover:text-primary-ink">
               {k.project.name}
             </Link>
           </Row>

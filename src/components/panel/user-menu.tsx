@@ -27,7 +27,7 @@ export function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="cursor-pointer rounded-full p-0.5 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/40"
+        className="cursor-pointer rounded-full p-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         aria-label={t.panel.profile}
       >
         <Avatar className="size-9 ring-2 ring-primary/30 ring-offset-2 ring-offset-background">
@@ -41,7 +41,7 @@ export function UserMenu({
           <span className="truncate text-xs font-normal" dir="ltr">
             {user.email}
           </span>
-          <span className="text-[11px] font-semibold text-primary">
+          <span className="text-[11px] font-semibold text-primary-ink">
             {t.panel[`role_${user.role}`]}
           </span>
         </DropdownMenuLabel>

@@ -188,7 +188,7 @@ export function ImportDialog({ trigger }: { trigger: ReactNode }) {
                         <td className="p-2">
                           <div className="flex flex-wrap gap-1">
                             {r.ok && r.warnings.length === 0 && (
-                              <CheckCircle2Icon className="size-4 text-success" />
+                              <CheckCircle2Icon className="size-4 text-success-ink" />
                             )}
                             {r.errors.map((e) => (
                               <Badge key={e} variant="destructive">

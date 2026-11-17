@@ -52,7 +52,7 @@ export async function ProjectEventsPanel({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <CalendarDaysIcon className="size-5 text-primary" /> {c.projectEvents}
+          <CalendarDaysIcon className="size-5 text-primary-ink" /> {c.projectEvents}
         </CardTitle>
         {!asClient && (
           <CardAction>

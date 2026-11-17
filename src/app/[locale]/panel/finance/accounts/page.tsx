@@ -122,7 +122,7 @@ export default async function AccountsPage({
                         <Icon className="size-5" />
                       </span>
                       <span className="min-w-0">
-                        <span className="block truncate font-bold group-hover:text-primary">
+                        <span className="block truncate font-bold group-hover:text-primary-ink">
                           {a.name}
                         </span>
                         <span className="block text-xs text-muted-foreground">

@@ -40,7 +40,7 @@ function Colored({ value }: { value: string }) {
         <span
           key={i}
           className={cn(
-            CHARSETS.digits.includes(c) && "text-info",
+            CHARSETS.digits.includes(c) && "text-info-ink",
             CHARSETS.symbols.includes(c) && "text-[#b76e00] dark:text-warning",
           )}
         >

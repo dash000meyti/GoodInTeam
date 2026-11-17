@@ -29,7 +29,7 @@ import { panelContext } from "@/server/page-context";
  * (hide panel chrome, sidebars and actions).
  */
 const PAGE_CSS = `.doc-prose :is(h1, h2, h3, h4) > a { color: inherit; text-decoration: none; }
-.doc-prose :is(h1, h2, h3, h4) > a:hover { color: var(--primary); }
+.doc-prose :is(h1, h2, h3, h4) > a:hover { color: var(--primary-ink); }
 @media print {
   body * { visibility: hidden !important; }
   #doc-print, #doc-print * { visibility: visible !important; }
@@ -181,7 +181,7 @@ export default async function DocPage({ params }: PageProps<"/[locale]/panel/doc
                 <Card className="h-full gap-2 p-5 transition-shadow group-hover:shadow-dropdown">
                   <div className="flex items-center gap-2">
                     <span className="text-xl leading-none">{c.icon ?? "📄"}</span>
-                    <span className="truncate font-bold group-hover:text-primary">
+                    <span className="truncate font-bold group-hover:text-primary-ink">
                       <bdi>{c.title}</bdi>
                     </span>
                   </div>

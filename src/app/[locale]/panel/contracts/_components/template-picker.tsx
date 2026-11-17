@@ -60,10 +60,10 @@ export function TemplatePicker({
           onClick={() => pick(tpl)}
           dir={tpl.locale === "fa" ? "rtl" : "ltr"}
           className={cn(
-            "flex w-full cursor-pointer items-start gap-3 rounded-xl border border-dashed p-4 text-start transition-colors hover:border-primary hover:bg-primary/5 disabled:cursor-wait disabled:opacity-60",
+            "flex w-full cursor-pointer items-start gap-3 rounded-xl border border-dashed p-4 text-start transition-colors hover:border-primary-ink hover:bg-primary/5 disabled:cursor-wait disabled:opacity-60",
           )}
         >
-          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
+          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary-ink">
             {busy === key ? (
               <Loader2Icon className="size-4 animate-spin" />
             ) : starter ? (

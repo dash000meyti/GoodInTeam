@@ -23,7 +23,7 @@ import type { TaskView } from "./lists";
 export const priorityTone: Record<number, string> = {
   4: "text-destructive",
   3: "text-[#b76e00] dark:text-warning",
-  2: "text-info",
+  2: "text-info-ink",
   1: "text-muted-foreground",
   0: "text-muted-foreground/50",
 };
@@ -128,8 +128,8 @@ export function TaskCheck({
         toggle();
       }}
       className={cn(
-        "relative flex size-[22px] shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-200 outline-none hover:scale-110 focus-visible:ring-[3px] focus-visible:ring-ring/40",
-        done ? "scale-110 border-primary bg-primary text-primary-foreground" : ringTone[priority],
+        "relative flex size-[22px] shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-200 outline-none hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring",
+        done ? "scale-110 border-primary-ink bg-primary text-primary-foreground" : ringTone[priority],
       )}
     >
       {checking && (
@@ -186,7 +186,7 @@ export function TaskMeta({ task, compact }: { task: TaskView; compact?: boolean 
     );
   for (const tag of task.tags.slice(0, 3))
     items.push(
-      <bdi key={`t-${tag}`} className="font-medium text-info">
+      <bdi key={`t-${tag}`} className="font-medium text-info-ink">
         #{tag}
       </bdi>,
     );

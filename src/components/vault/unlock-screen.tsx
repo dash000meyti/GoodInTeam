@@ -101,7 +101,7 @@ export function UnlockScreen({ account }: { account: string }) {
 
   const header = (icon: React.ReactNode, title: string, body: string) => (
     <div className="space-y-3 text-center">
-      <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+      <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/12 text-primary-ink">
         {icon}
       </div>
       <h2 className="text-xl font-extrabold">{title}</h2>

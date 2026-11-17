@@ -39,7 +39,7 @@ export async function ProjectDocsPanel({
     <Card className="gap-0 py-0">
       <CardHeader className="border-b border-dashed py-5">
         <CardTitle className="flex items-center gap-2 text-base">
-          <BookOpenIcon className="size-4 text-primary" /> {d.projectDocs}
+          <BookOpenIcon className="size-4 text-primary-ink" /> {d.projectDocs}
         </CardTitle>
         <CardDescription>{d.projectDocsHint}</CardDescription>
         {staffUi && (

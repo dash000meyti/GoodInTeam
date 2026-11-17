@@ -64,7 +64,7 @@ export default async function SecuritySettingsPage() {
                   className={cn(
                     "flex size-11 shrink-0 items-center justify-center rounded-xl",
                     session.current
-                      ? "bg-primary/12 text-primary"
+                      ? "bg-primary/12 text-primary-ink"
                       : "bg-muted text-muted-foreground",
                   )}
                 >

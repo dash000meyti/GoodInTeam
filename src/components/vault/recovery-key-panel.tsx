@@ -79,7 +79,7 @@ export function RecoveryKeyPanel({
       </div>
       <label
         htmlFor={id}
-        className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-sm font-semibold has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
+        className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-sm font-semibold has-[[data-state=checked]]:border-primary-ink has-[[data-state=checked]]:bg-primary/5"
       >
         <Checkbox
           id={id}

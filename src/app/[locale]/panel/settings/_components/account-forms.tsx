@@ -140,7 +140,7 @@ export function AccountForm({
                 <Label
                   key={l}
                   htmlFor={`acc-locale-${l}`}
-                  className="flex cursor-pointer items-center gap-3 rounded-xl border p-3 font-semibold transition-colors hover:bg-accent has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/6"
+                  className="flex cursor-pointer items-center gap-3 rounded-xl border p-3 font-semibold transition-colors hover:bg-accent has-[[data-state=checked]]:border-primary-ink has-[[data-state=checked]]:bg-primary/6"
                 >
                   <RadioGroupItem id={`acc-locale-${l}`} value={l} />
                   <span lang={l} dir={localeMeta[l].dir}>

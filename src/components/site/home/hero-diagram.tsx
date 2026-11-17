@@ -38,9 +38,9 @@ function Node({
   tone?: "primary" | "violet" | "info" | "warning";
 }) {
   const tones = {
-    primary: "bg-primary/12 text-primary",
+    primary: "bg-primary/12 text-primary-ink",
     violet: "bg-violet/12 text-violet",
-    info: "bg-info/12 text-info",
+    info: "bg-info/12 text-info-ink",
     warning: "bg-warning/16 text-[#b76e00] dark:text-warning",
   } as const;
   return (
@@ -191,7 +191,7 @@ export function HeroDiagram({ t, locale }: { t: Messages; locale: Locale }) {
       >
         <div className="flex items-center justify-between gap-2 text-[clamp(8px,1.9cqw,12px)] font-bold">
           <span className="truncate text-muted-foreground">{s.diagramProgress}</span>
-          <span className="text-primary">
+          <span className="text-primary-ink">
             {num(72)}
             {locale === "fa" ? "٪" : "%"}
           </span>
@@ -210,7 +210,7 @@ export function HeroDiagram({ t, locale }: { t: Messages; locale: Locale }) {
         className="absolute flex animate-float items-center gap-[1cqw] rounded-full border border-border bg-card/95 py-[0.8cqw] ps-[0.8cqw] pe-[2cqw] text-[clamp(8px,1.9cqw,12px)] font-bold shadow-dropdown backdrop-blur [animation-delay:-1.5s]"
         style={{ insetInlineEnd: "3%", top: "27%" }}
       >
-        <span className="flex size-[3.6cqw] items-center justify-center rounded-full bg-success text-white">
+        <span className="flex size-[3.6cqw] items-center justify-center rounded-full bg-success text-success-foreground">
           <CheckIcon className="size-[2.2cqw]" strokeWidth={3} />
         </span>
         {s.diagramTasks}

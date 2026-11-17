@@ -45,7 +45,7 @@ export default async function SiteNotFound() {
             <li key={l.href}>
               <Link
                 href={localePath(locale, l.href)}
-                className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-semibold transition-colors hover:border-primary/40 hover:text-primary"
+                className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-background px-4 text-sm font-semibold transition-colors hover:border-primary/40 hover:text-primary-ink"
               >
                 <l.icon className="size-4" />
                 {l.label}

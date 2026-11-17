@@ -256,7 +256,7 @@ function AccountsCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
                       <Icon className="size-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold group-hover:text-primary">
+                      <span className="block truncate text-sm font-semibold group-hover:text-primary-ink">
                         {a.name}
                       </span>
                       <span className="block text-xs text-muted-foreground">
@@ -339,7 +339,7 @@ function ReceivablesCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
                   >
                     <span className="min-w-0 flex-1">
                       <span className="flex items-center gap-2">
-                        <span className="truncate text-sm font-semibold group-hover:text-primary">
+                        <span className="truncate text-sm font-semibold group-hover:text-primary-ink">
                           {inv.clientName ?? inv.number}
                         </span>
                         <InvoiceStatusBadge status={inv.status} t={f} />
@@ -504,7 +504,7 @@ function ProfitabilityCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
                       >
                         <ColorDot color={p.color} />
                         <span className="min-w-0">
-                          <span className="block max-w-44 truncate font-semibold group-hover:text-primary">
+                          <span className="block max-w-44 truncate font-semibold group-hover:text-primary-ink">
                             {p.name}
                           </span>
                           <span className="block text-xs text-muted-foreground">
@@ -513,7 +513,7 @@ function ProfitabilityCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
                         </span>
                         {p.missing.length > 0 && (
                           <AlertTriangleIcon
-                            className="size-4 text-warning"
+                            className="size-4 text-warning-ink"
                             aria-label={format(f.missingRates, { list: p.missing.join(", ") })}
                           />
                         )}

@@ -37,7 +37,7 @@ export function InvoiceMiniList({
           >
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-semibold group-hover:text-primary" dir="ltr">
+                <span className="text-sm font-semibold group-hover:text-primary-ink" dir="ltr">
                   {inv.number}
                 </span>
                 <InvoiceStatusBadge status={inv.status} t={f} />
