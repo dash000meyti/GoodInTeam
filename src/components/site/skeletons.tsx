@@ -70,7 +70,8 @@ export function ArticleSkeleton({ guide }: { guide?: GuideLine }) {
       </FrameSection>
       <FrameSection strip={{ index: 2 }}>
         <FrameGrid cols="2-1">
-          <FrameCell className="space-y-3">
+          {/* at least a screen tall: the footer must not peek in and then jump away */}
+          <FrameCell className="min-h-svh space-y-3">
             {Array.from({ length: 10 }, (_, i) => (
               <Skeleton key={i} className={cn("h-4", i % 3 === 2 ? "w-2/3" : "w-full")} />
             ))}
