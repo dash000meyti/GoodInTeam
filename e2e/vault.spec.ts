@@ -93,6 +93,7 @@ test("vault keeps every secret in the browser", async ({ page }) => {
   }
 
   // ── Clean up ──────────────────────────────────────────────────────────────
-  await page.getByRole("tab", { name: "Security & backup" }).click();
+  // Phones show the short tab label.
+  await page.getByRole("tab", { name: /^Security( & backup)?$/ }).click();
   await eraseVault(page);
 });

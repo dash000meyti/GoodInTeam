@@ -70,7 +70,11 @@ test.describe("layout shift (390×844, 4× CPU)", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   for (const path of ["/", "/en"]) {
-    test(`CLS < 0.01 on ${path}`, async ({ page }) => {
+    test(`CLS < 0.01 on ${path}`, async ({ page, browserName }) => {
+      test.skip(
+        browserName !== "chromium",
+        "CDP CPU throttle and layout-shift entries: Chromium only",
+      );
       await throttle(page);
       await page.addInitScript(() => {
         const w = window as unknown as { __shifts: { value: number; sources: string[] }[] };
@@ -193,8 +197,9 @@ test.describe("@perf LCP (390×844, 4× CPU, 4G)", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   for (const path of ["/", "/en"]) {
-    test(`LCP is the hero h1 within 1.8s on ${path} @perf`, async ({ page }) => {
+    test(`LCP is the hero h1 within 1.8s on ${path} @perf`, async ({ page, browserName }) => {
       test.skip(!process.env.PERF, "timing check: run with PERF=1");
+      test.skip(browserName !== "chromium", "CDP throttling: Chromium only");
       await throttle(page, true);
       await page.addInitScript(() => {
         const w = window as unknown as { __lcp: { t: number; h1: boolean; tag: string } };

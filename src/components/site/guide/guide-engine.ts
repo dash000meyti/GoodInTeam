@@ -108,6 +108,8 @@ let on: Element | null = null;
 let open: Open | null = null;
 let tour: { list: Element[]; i: number } | null = null;
 let invoker: HTMLElement | null = null;
+/** An explicit request whose sprite is still on its way (its bubble opens on arrival). */
+let asked: Element | null = null;
 let after: (() => void) | null = null;
 let hov: Element | null = null;
 let chrome = { top: 0, dock: 0 };
@@ -412,7 +414,9 @@ function speakAt(el: Element, text: string, t?: { list: Element[]; i: number }) 
   root.hidden = false;
   if (small) hop();
   const ms = small ? 0 : goTo(el);
+  asked = el;
   later("say", ms, () => {
+    asked = null;
     if (t && tour !== t) return;
     if (!say(el, "explicit", text, { tour: !!t })) return;
     if (t) acts.next!.focus();
@@ -444,11 +448,15 @@ function markSeen(el: Element) {
 function activate(el: Element) {
   if (mode !== "auto" || el !== cand || tour) return;
   if (
-    open &&
-    (open.kind === "explicit" || open.kind === "spot" || (open.kind === "greet" && open.el === el))
+    asked ||
+    (open &&
+      (open.kind === "explicit" ||
+        open.kind === "spot" ||
+        (open.kind === "greet" && open.el === el)))
   ) {
-    // Never over an explicit bubble or a hovered spot; the first box speaks after its greeting.
-    if (open.kind === "greet") after = () => later("dw", 1200, () => activate(el));
+    // Never over an explicit bubble (or one whose sprite is still flying: both share the "say"
+    // timer) or a hovered spot; the first box speaks after its greeting.
+    if (!asked && open!.kind === "greet") after = () => later("dw", 1200, () => activate(el));
     else later("dw", 1500, () => activate(el));
     return;
   }
@@ -644,7 +652,7 @@ function halt() {
   close();
   hideBubble();
   band = [];
-  cand = active = hov = on = null;
+  cand = active = hov = on = asked = null;
   at = null;
   badge(false);
   flag("data-gone", !small);
@@ -780,9 +788,10 @@ const api: GuideApi = {
   compact: setCompact,
   rescan() {
     close();
+    stopT("say");
     tour = null;
     band = [];
-    cand = active = hov = on = null;
+    cand = active = hov = on = asked = null;
     badge(false);
     if (mode !== "auto") return void (root.hidden = true);
     io?.disconnect();

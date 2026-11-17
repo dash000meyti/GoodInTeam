@@ -94,7 +94,7 @@ test.describe("landmarks and names", () => {
 
 test.describe("menu bar geometry", () => {
   for (const vp of [DESKTOP, PHONE]) {
-    test(`header bottom equals --chrome-top at ${vp.width}px`, async ({ page }) => {
+    test(`header bottom equals --chrome-top at ${vp.width}px`, async ({ page, isMobile }) => {
       await page.setViewportSize(vp);
       await page.goto("/en");
       await settleBar(page);
@@ -106,7 +106,8 @@ test.describe("menu bar geometry", () => {
       }));
       expect(Number.isFinite(chromeTop)).toBe(true);
       expect(Math.abs(bottom - chromeTop)).toBeLessThanOrEqual(1);
-      expect(bottom).toBe(vp.width >= 768 ? 32 : 44);
+      // A coarse pointer keeps the 44px bar at any width (spec §5.2), e.g. an iPhone in this viewport.
+      expect(bottom).toBe(vp.width >= 768 && !isMobile ? 32 : 44);
     });
   }
 
@@ -122,6 +123,7 @@ test.describe("menu bar geometry", () => {
       await page.addInitScript(() => {
         const w = window as unknown as { __mbShift: number };
         w.__mbShift = 0;
+        // Only Chromium reports layout-shift entries; elsewhere the clock-width checks below carry the test.
         new PerformanceObserver((list) => {
           for (const e of list.getEntries() as unknown as {
             value: number;
