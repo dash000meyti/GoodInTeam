@@ -97,8 +97,22 @@ describe("/learn", () => {
 });
 
 describe("/services", () => {
-  it("each brand box: full header row plus 0–6 service cells", () => {
-    for (let n = 1; n <= 6; n++) filled(["full", ...ones(n)], 3);
+  it("each brand box: full header row plus 1–6 service cells (+ the ask cell when the lg row has room)", () => {
+    for (let n = 1; n <= 6; n++) {
+      const ask = n % 3 !== 0 ? 1 : 0;
+      const t = filled(["full", ...ones(n + ask)], 3);
+      // the ask cell never opens a new lg row
+      expect(packRows(["full", ...ones(n + ask)], 3, "lg").trailing).toBe(t.lg);
+      expect(Math.ceil((n + ask) / 3)).toBe(Math.ceil(n / 3));
+    }
+  });
+
+  it("the services skeleton: 1 cell, 2 at md, 3 at lg (a full first row)", () => {
+    expect(packRows(["full", undefined, undefined], 3, "md")).toEqual({ holes: 0, trailing: 0 });
+    expect(packRows(["full", undefined, undefined, undefined], 3, "lg")).toEqual({
+      holes: 0,
+      trailing: 0,
+    });
   });
 
   it("an empty brand: header row plus the full-row ask cell", () => {
