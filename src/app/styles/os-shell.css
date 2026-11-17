@@ -582,6 +582,10 @@
       background: none;
       box-shadow: none;
     }
+    /* the accent tile keeps its fill: its icon is re-toned to ink (#1c1c1e) */
+    .os-dock[data-tabbar="md"] .os-tile[data-variant="accent"] {
+      background: var(--primary);
+    }
     .os-dock[data-tabbar="md"] .os-dock-label {
       position: static;
       opacity: 1;
@@ -645,6 +649,9 @@
       block-size: 28px;
       background: none;
       box-shadow: none;
+    }
+    .os-dock[data-tabbar="lg"] .os-tile[data-variant="accent"] {
+      background: var(--primary);
     }
     .os-dock[data-tabbar="lg"] .os-dock-label {
       position: static;

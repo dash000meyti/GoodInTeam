@@ -434,18 +434,6 @@
     animation-delay: calc(var(--i, 0) * 40ms);
   }
 
-  /* ── Site dock, tab-bar mode (<768px) ──
-     TODO(foundation): os-shell.css clears every tile background in tab-bar
-     mode but keeps the accent tile's ink re-tone (--px-accent/--px-ink:
-     #1c1c1e), so the Contact icon turns ink-on-transparent (invisible in dark
-     mode). The site keeps its yellow CTA tile instead; the panel's lg tab bar
-     needs the same fix in os-shell.css. */
-  @media (width < 48rem) {
-    .os-dock[data-tabbar="md"] .os-tile[data-variant="accent"] {
-      background: var(--primary);
-    }
-  }
-
   /* ── Footer (§7.5) ── */
   .site-wordmark {
     display: flex;
