@@ -3,8 +3,13 @@ import { connection } from "next/server";
 import { AlternatesProvider } from "@/components/site/alternates";
 import { GuideMount } from "@/components/site/guide/guide-mount";
 import { JsonLd, organizationLd, personLd, websiteLd, type Thing } from "@/components/site/json-ld";
+import { Launchpad } from "@/components/site/launchpad";
+import { SiteChrome } from "@/components/site/site-chrome";
+import { SiteControlCenter } from "@/components/site/site-control-center";
+import { SiteDock } from "@/components/site/site-dock";
 import { SiteFooter } from "@/components/site/site-footer";
-import { SiteHeader } from "@/components/site/site-header";
+import { SiteMenuBar } from "@/components/site/site-header";
+import { Spotlight } from "@/components/site/spotlight";
 import { I18nProvider } from "@/i18n/client";
 import type { Locale } from "@/i18n/config";
 import { getLocale, getMessages, pickMessages } from "@/i18n/server";
@@ -23,8 +28,11 @@ async function SiteJsonLd({ locale }: { locale: Locale }) {
 }
 
 /**
- * Public website chrome. Header, footer and page shells are static
- * (prerendered per locale); DB-backed parts stream in behind <Suspense>.
+ * The public OS shell (spec §7.1). Menu bar, desktop, footer, dock and the
+ * native popovers are static (prerendered per locale); the availability and
+ * clock holes, the socials and the JSON-LD stream in behind <Suspense>.
+ * `.os-desktop` is the wallpaper and the guide's containing layer: never put
+ * transform, filter, contain, will-change or backdrop-filter on it (§6.2).
  */
 export default async function SiteLayout({ children }: LayoutProps<"/[locale]">) {
   const locale = await getLocale();
@@ -38,10 +46,9 @@ export default async function SiteLayout({ children }: LayoutProps<"/[locale]">)
         >
           {t.common.skipToContent}
         </a>
-        <SiteHeader locale={locale} t={t} />
-        {/* Desktop wallpaper + guide layer container: display:flow-root, never transformed (§6.2). */}
+        <SiteMenuBar locale={locale} t={t} />
         <div className="os-desktop">
-          <main id="main" className="min-h-[60dvh] overflow-x-clip">
+          <main id="main" className="overflow-x-clip">
             {children}
           </main>
           <SiteFooter locale={locale} t={t} />
@@ -49,6 +56,13 @@ export default async function SiteLayout({ children }: LayoutProps<"/[locale]">)
             <GuideMount locale={locale} />
           </Suspense>
         </div>
+        <SiteDock locale={locale} t={t} />
+        <Spotlight locale={locale} t={t} />
+        <SiteControlCenter locale={locale} t={t} />
+        <Launchpad locale={locale} t={t} />
+        <Suspense fallback={null}>
+          <SiteChrome />
+        </Suspense>
         <Suspense fallback={null}>
           <SiteJsonLd locale={locale} />
         </Suspense>

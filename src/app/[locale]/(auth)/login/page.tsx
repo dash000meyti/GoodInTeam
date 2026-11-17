@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 import { connection } from "next/server";
+import { PixelLogo } from "@/components/brand/pixel-logo";
+import { Window } from "@/components/shell/window";
 import { Skeleton } from "@/components/ui/skeleton";
 import { localePath } from "@/i18n/config";
 import { getLocale, getMessages } from "@/i18n/server";
@@ -29,20 +31,24 @@ async function SetupHint() {
   );
 }
 
+/** Sign in: one centred, elevated `Window` titled LOGIN on the desktop (spec §7.6). */
 export default async function LoginPage() {
   const t = getMessages(await getLocale());
   return (
-    <div className="grid gap-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-extrabold">{t.auth.loginTitle}</h1>
-        <p className="text-sm text-muted-foreground">{t.auth.clientHint}</p>
+    <Window path="LOGIN" elevated className="auth-window">
+      <div className="grid gap-7 p-6 sm:p-8">
+        <div className="space-y-3">
+          <PixelLogo suffix="TEAM" cell={3} />
+          <h1 className="text-2xl font-extrabold">{t.auth.loginTitle}</h1>
+          <p className="text-sm text-muted-foreground">{t.auth.clientHint}</p>
+        </div>
+        <Suspense fallback={null}>
+          <SetupHint />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-64" />}>
+          <LoginForm />
+        </Suspense>
       </div>
-      <Suspense fallback={null}>
-        <SetupHint />
-      </Suspense>
-      <Suspense fallback={<Skeleton className="h-64" />}>
-        <LoginForm />
-      </Suspense>
-    </div>
+    </Window>
   );
 }

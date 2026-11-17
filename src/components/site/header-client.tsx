@@ -1,91 +1,25 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
-import { CheckIcon, LanguagesIcon, MenuIcon, XIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { CheckIcon } from "lucide-react";
 import { localeMeta, localePath, locales, stripLocale, type Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 import { useAlternates } from "./alternates";
 
-/** Sticky header frame: becomes glassy once the page scrolls (one passive listener). */
-export function HeaderShell({ children }: { children: ReactNode }) {
-  const [scrolled, setScrolled] = useState(false);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-  return (
-    <header
-      data-scrolled={scrolled || undefined}
-      className="group/header data-scrolled:glass sticky top-0 z-50 h-16 border-b border-transparent transition-[background-color,border-color,backdrop-filter] duration-300 data-scrolled:border-border"
-    >
-      {children}
-    </header>
-  );
-}
+/**
+ * Language-switch helpers shared by the menu bar, Control Center and
+ * Launchpad. Switching locale is always a plain `<a href hrefLang lang>` (a
+ * full page load): it swaps `<html lang/dir>` and fonts, and a `<Link>`
+ * prefetch across root params 404s in Next 16.4's segment cache.
+ */
 
-export interface NavItem {
-  href: string;
-  /** Unprefixed section path used for the active state. */
-  section: string;
-  label: string;
-}
-
-function ActiveLinks({
-  items,
-  className,
-}: {
-  items: NavItem[];
-  className: (active: boolean) => string;
-}) {
-  // usePathname() is URL data → rendered inside <Suspense> (Cache Components).
-  const { path } = stripLocale(usePathname());
-  return items.map((it) => {
-    const active = path === it.section || path.startsWith(`${it.section}/`);
-    return (
-      <Link
-        key={it.href}
-        href={it.href}
-        aria-current={active ? "page" : undefined}
-        className={className(active)}
-      >
-        {it.label}
-      </Link>
-    );
-  });
-}
-
-export function NavLinks({ items }: { items: NavItem[] }) {
-  const cls = (active: boolean) =>
-    cn(
-      "relative rounded-full px-3.5 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground",
-      active && "bg-background text-foreground shadow-card dark:bg-card",
-    );
-  return (
-    <Suspense
-      fallback={items.map((it) => (
-        <Link key={it.href} href={it.href} className={cls(false)}>
-          {it.label}
-        </Link>
-      ))}
-    >
-      <ActiveLinks items={items} className={cls} />
-    </Suspense>
-  );
-}
-
-/** Target of the language toggle: translation (if registered) → same static path → section index. */
-function useSwitchHref(target: Locale, staticPaths: string[]) {
+/**
+ * Target of the language toggle: translation (if registered with
+ * `SetAlternates`) → same static path → section index. Reads the pathname,
+ * so callers render inside <Suspense>. Frozen export (spec §16 rule 4).
+ */
+export function useSwitchHref(target: Locale, staticPaths: string[]) {
   const alternates = useAlternates();
   const { path } = stripLocale(usePathname());
   if (alternates?.[target]) return alternates[target]!;
@@ -94,138 +28,89 @@ function useSwitchHref(target: Locale, staticPaths: string[]) {
   return localePath(target, staticPaths.includes(section) ? section : "/");
 }
 
-function LanguageItems({ current, staticPaths }: { current: Locale; staticPaths: string[] }) {
-  return locales.map((l) => (
-    <LanguageItem key={l} locale={l} current={current} staticPaths={staticPaths} />
-  ));
-}
+type LanguageVariant = "menu" | "chip";
+
+const ITEM_CLASS: Record<LanguageVariant, string> = {
+  menu: "os-menu-item justify-between gap-6",
+  chip: "os-chip",
+};
 
 function LanguageItem({
   locale,
   current,
   staticPaths,
+  variant,
 }: {
   locale: Locale;
   current: Locale;
   staticPaths: string[];
+  variant: LanguageVariant;
 }) {
   const href = useSwitchHref(locale, staticPaths);
+  return <LanguageLink locale={locale} current={current} href={href} variant={variant} />;
+}
+
+function LanguageLink({
+  locale,
+  current,
+  href,
+  variant,
+}: {
+  locale: Locale;
+  current: Locale;
+  href: string;
+  variant: LanguageVariant;
+}) {
   const active = locale === current;
   return (
-    <DropdownMenuItem asChild className={cn("justify-between gap-6", active && "font-bold")}>
-      {/* Plain <a>: switching locale swaps <html lang/dir> and fonts (a full page load), and a
-          <Link> prefetch across root params 404s in Next 16.4's segment cache. */}
-      <a href={href} hrefLang={locale} lang={locale} aria-current={active ? "true" : undefined}>
-        {localeMeta[locale].label}
-        {active && <CheckIcon className="size-4 text-primary-ink" />}
-      </a>
-    </DropdownMenuItem>
+    <a
+      href={href}
+      hrefLang={locale}
+      lang={locale}
+      aria-current={active ? "true" : undefined}
+      className={cn(ITEM_CLASS[variant], active && "font-bold")}
+    >
+      {localeMeta[locale].label}
+      {variant === "menu" && active && <CheckIcon aria-hidden className="size-4" />}
+    </a>
   );
-}
-
-/** Language picker: an icon button (same look as the theme toggle) with a dropdown. */
-export function LanguageMenu({
-  current,
-  label,
-  staticPaths,
-  className,
-}: {
-  current: Locale;
-  label: string;
-  staticPaths: string[];
-  className?: string;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className={cn("rounded-full", className)}
-          aria-label={label}
-          title={label}
-        >
-          <LanguagesIcon className="size-[18px]" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-36">
-        {/* usePathname() is URL data → inside <Suspense> (Cache Components). */}
-        <Suspense
-          fallback={locales.map((l) => (
-            <DropdownMenuItem key={l} asChild>
-              <a href={localePath(l, "/")} hrefLang={l} lang={l}>
-                {localeMeta[l].label}
-              </a>
-            </DropdownMenuItem>
-          ))}
-        >
-          <LanguageItems current={current} staticPaths={staticPaths} />
-        </Suspense>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function CloseOnNavigate({ onNavigate }: { onNavigate: () => void }) {
-  const pathname = usePathname();
-  const first = useRef(true);
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    onNavigate();
-  }, [pathname, onNavigate]);
-  return null;
 }
 
 /**
- * Mobile menu on the native Popover API (no dialog library): light dismiss,
- * Esc to close, top layer. Closes itself after a client-side navigation.
+ * One plain link per locale (menu rows or Control Center chips). The pathname
+ * is URL data, so the real targets render inside <Suspense>; the fallback
+ * links go to each locale's home.
  */
-export function MobileMenu({
-  label,
-  closeLabel,
-  children,
+export function LanguageItems({
+  current,
+  staticPaths,
+  variant = "menu",
 }: {
-  label: string;
-  closeLabel: string;
-  children: ReactNode;
+  current: Locale;
+  staticPaths: string[];
+  variant?: LanguageVariant;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const close = useCallback(() => ref.current?.hidePopover?.(), []);
   return (
-    <>
-      <button
-        type="button"
-        popoverTarget="site-mobile-menu"
-        aria-label={label}
-        className="inline-flex size-10 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-accent md:hidden"
-      >
-        <MenuIcon className="size-5" />
-      </button>
-      <div
-        id="site-mobile-menu"
-        ref={ref}
-        popover="auto"
-        className="gt-mobile-menu m-0 h-dvh max-h-none w-full max-w-none bg-background/95 p-0 text-foreground backdrop-blur-xl"
-      >
-        <div className="flex h-16 items-center justify-end px-4">
-          <button
-            type="button"
-            popoverTarget="site-mobile-menu"
-            popoverTargetAction="hide"
-            aria-label={closeLabel}
-            className="inline-flex size-10 cursor-pointer items-center justify-center rounded-full hover:bg-accent"
-          >
-            <XIcon className="size-5" />
-          </button>
-        </div>
-        <div className="px-6 pb-10">{children}</div>
-        <Suspense>
-          <CloseOnNavigate onNavigate={close} />
-        </Suspense>
-      </div>
-    </>
+    <Suspense
+      fallback={locales.map((l) => (
+        <LanguageLink
+          key={l}
+          locale={l}
+          current={current}
+          href={localePath(l, "/")}
+          variant={variant}
+        />
+      ))}
+    >
+      {locales.map((l) => (
+        <LanguageItem
+          key={l}
+          locale={l}
+          current={current}
+          staticPaths={staticPaths}
+          variant={variant}
+        />
+      ))}
+    </Suspense>
   );
 }

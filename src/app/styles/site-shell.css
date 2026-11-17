@@ -5,7 +5,501 @@
  * @keyframes at top level; never `:root {` or `.dark {` (use html {} and .dark .x);
  * no @apply dark:. To override a legacy .gt-* or .prose-gt rule, use a selector at
  * least one class more specific (globals.css imports partials first).
+ * No blur here: the menu bar and the dock (os-shell.css) are the only blurred
+ * surfaces (P5); every popover is opaque.
  */
 
 @layer components {
+  /* ── Menu bar items (§7.2) ── */
+  .os-mb-brand {
+    font-weight: 700;
+  }
+  /* Section links reserve their bold width, so the active state (700) never
+     shifts the bar when the pathname resolves after the fallback. */
+  .os-mb-item.os-mb-link {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+  }
+  .os-mb-link::after {
+    content: attr(data-label);
+    content: attr(data-label) / "";
+    block-size: 0;
+    overflow: hidden;
+    visibility: hidden;
+    font-weight: 700;
+    pointer-events: none;
+    user-select: none;
+  }
+  .os-mb-item.os-mb-lang {
+    min-inline-size: 28px;
+    justify-content: center;
+    padding-inline: 6px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .os-mb-item.os-mb-lang:lang(fa) {
+    font-family: var(--font-fa);
+    /* Vazirmatn sits high at line-height 1: centre «فا» optically. */
+    padding-block-start: 3px;
+  }
+  .os-mb-lang[aria-current] {
+    background: rgb(var(--grey-rgb) / 0.14);
+  }
+
+  /* Availability (hole A): a 6px square dot + a slot that stacks both labels. */
+  .os-mb-dot {
+    inline-size: 6px;
+    block-size: 6px;
+    flex-shrink: 0;
+  }
+  .os-mb-avail-label {
+    display: inline-grid;
+  }
+  .os-mb-avail-label > span {
+    grid-area: 1 / 1;
+  }
+  .os-mb-avail-label > span:not([data-on]) {
+    visibility: hidden;
+  }
+
+  /* Spotlight trigger: icon, plus a ⌘K hint at xl. */
+  .os-mb-kbd {
+    display: none;
+    font: 500 11px / 1 var(--font-sans);
+    color: var(--muted-foreground);
+    letter-spacing: 0.02em;
+  }
+  @media (width >= 80rem) {
+    .os-mb-item.os-mb-spotlight {
+      inline-size: auto;
+      padding-inline: 8px;
+      gap: 6px;
+    }
+    .os-mb-spotlight .os-mb-kbd {
+      display: inline;
+    }
+  }
+
+  /* Clock (hole B): margins only, never padding (its inline-size is fixed). */
+  .os-menubar .os-clock {
+    margin-inline: 6px 4px;
+    font-weight: 500;
+  }
+
+  /* ── Menus ── */
+  .os-menu-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px 6px;
+  }
+  .os-menu-card > p {
+    max-inline-size: 28ch;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+  .os-menu.os-menu-narrow {
+    min-inline-size: 168px;
+  }
+  /* Pixel icons in a highlighted (yellow) row turn ink, like the accent tile. */
+  :is(.os-popmenu, .os-spotlight) .os-menu-item:is(:hover, :focus-visible) {
+    --px-accent: #1c1c1e;
+    --px-ink: #1c1c1e;
+  }
+  .os-popmenu button.os-menu-item {
+    inline-size: 100%;
+    text-align: start;
+  }
+
+  /* ── Switch (native role=switch; §3.4 non-text states) ── */
+  .os-switch-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    inline-size: 100%;
+    cursor: pointer;
+    text-align: start;
+    outline: none;
+  }
+  .os-switch {
+    position: relative;
+    flex-shrink: 0;
+    inline-size: 32px;
+    block-size: 18px;
+    border-radius: 999px;
+    background: var(--color-grey-200);
+    box-shadow: inset 0 0 0 1px var(--color-grey-600);
+    transition: background-color 0.15s;
+  }
+  .dark .os-switch {
+    background: var(--color-grey-800);
+    box-shadow: inset 0 0 0 1px var(--color-grey-500);
+  }
+  .os-switch > span {
+    position: absolute;
+    inset-block-start: 2px;
+    inset-inline-start: 2px;
+    inline-size: 14px;
+    block-size: 14px;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0 0 1px var(--color-grey-600);
+    transition: translate 0.15s var(--ease-os);
+  }
+  [aria-checked="true"] > .os-switch {
+    background: var(--primary);
+    box-shadow: inset 0 0 0 1px var(--primary-dark);
+  }
+  [aria-checked="true"] > .os-switch > span {
+    translate: calc(14px * var(--dir)) 0;
+    background: #1c1c1e;
+    box-shadow: none;
+  }
+  .os-switch-row:focus-visible:not(.os-menu-item) .os-switch {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* ── Spotlight #os-spotlight (§7.3) ── */
+  .os-spotlight {
+    position: fixed;
+    inset: 18vh 0 auto;
+    margin: 0 auto;
+    inline-size: min(640px, 100vw - 32px);
+    max-block-size: calc(82dvh - 16px);
+    padding: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border-radius: 14px;
+    border: 1px solid rgb(var(--grey-rgb) / 0.2);
+    color: var(--popover-foreground);
+    background: color-mix(in oklab, var(--popover) 97%, transparent);
+    box-shadow: var(--shadow-dialog);
+    transition:
+      opacity 0.14s,
+      scale 0.14s var(--ease-os),
+      display 0.14s allow-discrete,
+      overlay 0.14s allow-discrete;
+  }
+  .os-spotlight:not(:popover-open) {
+    opacity: 0;
+    scale: 0.98;
+  }
+  /* A plain dim (never a blur, P5) so the field reads over busy pages. */
+  .os-spotlight::backdrop {
+    background: rgb(28 28 30 / 0.14);
+  }
+  .dark .os-spotlight::backdrop {
+    background: rgb(0 0 0 / 0.4);
+  }
+  @starting-style {
+    .os-spotlight:popover-open {
+      opacity: 0;
+      scale: 0.98;
+    }
+  }
+  .os-sl-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    block-size: 56px;
+    padding-inline: 18px;
+    border-block-end: 1px solid var(--frame-line);
+  }
+  .os-sl-form:focus-within {
+    box-shadow: inset 0 -2px 0 var(--ring);
+  }
+  .os-sl-input {
+    flex: 1;
+    min-inline-size: 0;
+    block-size: 100%;
+    border: 0;
+    background: transparent;
+    outline: none;
+    font-size: 20px;
+    font-weight: 500;
+  }
+  .os-sl-input::placeholder {
+    color: var(--muted-foreground);
+  }
+  .os-sl-input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .os-sl-hint {
+    padding: 10px 18px 2px;
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+  .os-sl-links {
+    padding: 2px 6px 8px;
+  }
+  .os-sl-links ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .os-sl-links li[hidden] {
+    display: none;
+  }
+  .os-sl-links .os-menu-item {
+    min-block-size: 40px;
+    font-weight: 500;
+  }
+  .os-sl-empty {
+    padding: 10px;
+    font-size: var(--menubar-fs);
+    color: var(--muted-foreground);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .os-spotlight {
+      transition: none;
+    }
+  }
+
+  /* ── Control Center #os-cc (§7.3): tiles ── */
+  .os-menu.os-cc {
+    inline-size: 320px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+  .os-cc:popover-open {
+    display: grid;
+  }
+  .os-cc-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-inline-size: 0;
+    padding: 10px;
+    border-radius: 10px;
+    background: var(--card);
+    box-shadow: inset 0 0 0 1px rgb(var(--grey-rgb) / 0.16);
+  }
+  .dark .os-cc-tile {
+    background: #2a2a2d;
+  }
+  .os-cc-title {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .os-cc-btn {
+    min-block-size: 32px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+    background: rgb(var(--grey-rgb) / 0.12);
+    cursor: pointer;
+    transition: background-color 0.12s;
+  }
+  .os-cc-btn:hover {
+    background: rgb(var(--grey-rgb) / 0.22);
+  }
+  .os-cc-btn:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+  .os-chip {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 28px;
+    padding-inline: 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgb(var(--grey-rgb) / 0.12);
+    transition: background-color 0.12s;
+  }
+  .os-chip:hover {
+    background: rgb(var(--grey-rgb) / 0.22);
+  }
+  .os-chip[aria-current] {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: inset 0 0 0 1px var(--primary-dark);
+  }
+  .os-chip:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+  @media (pointer: coarse) {
+    .os-chip,
+    .os-cc-btn {
+      min-block-size: 40px;
+    }
+  }
+
+  /* ── Launchpad #os-launchpad (§7.3): full screen, opaque ── */
+  .os-launchpad {
+    position: fixed;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100dvh;
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    color: var(--foreground);
+    background:
+      radial-gradient(var(--dots) 1px, transparent 1.5px) 0 0 / 12px 12px,
+      color-mix(in oklab, var(--background) 96%, transparent);
+    transition:
+      opacity 0.2s,
+      display 0.2s allow-discrete,
+      overlay 0.2s allow-discrete;
+  }
+  .os-launchpad:not(:popover-open) {
+    opacity: 0;
+  }
+  @starting-style {
+    .os-launchpad:popover-open {
+      opacity: 0;
+    }
+  }
+  .os-lp-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-inline-size: 560px;
+    margin-inline: auto;
+    padding: 4px var(--gutter) calc(32px + env(safe-area-inset-bottom));
+  }
+  .os-lp-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    block-size: 44px;
+    padding-inline-start: 4px;
+  }
+  .os-lp-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .os-lp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .os-lp-app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-block: 4px;
+    border-radius: 12px;
+    font-size: var(--menubar-fs);
+    font-weight: 500;
+    text-align: center;
+    outline: none;
+  }
+  .os-lp-app .os-tile {
+    inline-size: 64px;
+    block-size: 64px;
+    transition: scale 0.15s var(--ease-os);
+  }
+  .os-lp-app:active .os-tile {
+    scale: 0.94;
+  }
+  .os-lp-app:focus-visible .os-tile {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  .os-lp-settings {
+    display: grid;
+    gap: 8px;
+  }
+  @media (width >= 30rem) {
+    .os-lp-settings {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .os-launchpad:popover-open .gt-menu-item {
+    animation: gt-rise 0.4s var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+
+  /* ── Site dock, tab-bar mode (<768px) ──
+     TODO(foundation): os-shell.css clears every tile background in tab-bar
+     mode but keeps the accent tile's ink re-tone (--px-accent/--px-ink:
+     #1c1c1e), so the Contact icon turns ink-on-transparent (invisible in dark
+     mode). The site keeps its yellow CTA tile instead; the panel's lg tab bar
+     needs the same fix in os-shell.css. */
+  @media (width < 48rem) {
+    .os-dock[data-tabbar="md"] .os-tile[data-variant="accent"] {
+      background: var(--primary);
+    }
+  }
+
+  /* ── Footer (§7.5) ── */
+  .site-wordmark {
+    display: flex;
+    justify-content: center;
+    overflow: clip;
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      html:not([data-motion="reduce"]) .site-wordmark > .px-art {
+        animation: site-wordmark linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 80%;
+      }
+    }
+  }
+  .frame-cell.site-footer-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--muted-foreground);
+    padding-block-end: var(--dock-space);
+  }
+  @media (width >= 40rem) {
+    .frame-cell.site-footer-bar {
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+    }
+  }
+
+  /* ── Auth (§7.6): the desktop wallpaper behind one centred window ── */
+  .os-desktop.auth-desktop {
+    min-block-size: calc(100dvh - var(--chrome-top));
+  }
+  .auth-main {
+    display: grid;
+    place-items: center;
+    min-block-size: calc(100dvh - var(--chrome-top));
+    padding: 32px var(--gutter) 56px;
+  }
+  .os-win.auth-window {
+    inline-size: 100%;
+    max-inline-size: 440px;
+  }
+}
+
+@keyframes site-wordmark {
+  from {
+    translate: 0 56px;
+    opacity: 0.5;
+  }
+  to {
+    translate: 0 0;
+    opacity: 1;
+  }
 }
