@@ -126,7 +126,7 @@ function LaunchpadDialog({ role, onClose }: { role: UserRole; onClose: () => voi
         className="pm-launchpad flex flex-col gap-0 overflow-hidden p-0 max-lg:inset-0 max-lg:top-0 max-lg:left-0 max-lg:h-dvh max-lg:max-h-none max-lg:w-full max-lg:max-w-none max-lg:translate-x-0 max-lg:translate-y-0 max-lg:rounded-none lg:max-h-[min(760px,calc(100dvh-6rem))] lg:max-w-[880px]"
       >
         <DialogTitle className="sr-only">{t.common.launchpad}</DialogTitle>
-        <div className="border-b border-dashed px-4 pt-4 pb-3 pe-12 sm:px-6">
+        <div className="border-b border-dashed px-4 pe-12 pt-4 pb-3 sm:px-6">
           <label className="relative block max-w-md">
             <SearchIcon
               className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"

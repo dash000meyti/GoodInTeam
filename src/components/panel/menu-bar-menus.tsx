@@ -226,10 +226,7 @@ function AppMenuItems() {
         {t.panel.zoomWindow}
         <Maximize2Icon className="ms-auto opacity-70" aria-hidden />
       </MenubarCheckboxItem>
-      <MenubarItem
-        disabled={atDesktop}
-        onSelect={() => router.push(localePath(locale, "/panel"))}
-      >
+      <MenubarItem disabled={atDesktop} onSelect={() => router.push(localePath(locale, "/panel"))}>
         <XIcon aria-hidden />
         {t.panel.closeWindow}
       </MenubarItem>

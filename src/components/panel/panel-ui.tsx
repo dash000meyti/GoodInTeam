@@ -109,9 +109,7 @@ export function PanelUIProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx
-      value={{ shell, setShell, paletteOpen, setPaletteOpen, launchpadOpen, setLaunchpadOpen }}
-    >
+    <Ctx value={{ shell, setShell, paletteOpen, setPaletteOpen, launchpadOpen, setLaunchpadOpen }}>
       {children}
     </Ctx>
   );

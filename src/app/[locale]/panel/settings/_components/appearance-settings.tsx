@@ -2,7 +2,14 @@
 
 import { useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { useTheme } from "next-themes";
-import { AppWindowIcon, CheckIcon, MonitorIcon, MoonIcon, PaletteIcon, SunIcon } from "lucide-react";
+import {
+  AppWindowIcon,
+  CheckIcon,
+  MonitorIcon,
+  MoonIcon,
+  PaletteIcon,
+  SunIcon,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
@@ -142,7 +149,9 @@ export function DesktopMock({
                   d ? "bg-grey-800" : "bg-white shadow-sm",
                 )}
               >
-                <span className={cn("h-0.5 w-3/4 rounded-full", d ? "bg-grey-700" : "bg-grey-300")} />
+                <span
+                  className={cn("h-0.5 w-3/4 rounded-full", d ? "bg-grey-700" : "bg-grey-300")}
+                />
                 <span className={cn("h-0.5 rounded-full bg-primary", i ? "w-1/2" : "w-2/3")} />
               </span>
             ))}
@@ -162,7 +171,10 @@ export function DesktopMock({
           return (
             <span
               key={i}
-              className={cn("rounded-[2px]", i === 0 ? "bg-primary" : d ? "bg-grey-600" : "bg-grey-300")}
+              className={cn(
+                "rounded-[2px]",
+                i === 0 ? "bg-primary" : d ? "bg-grey-600" : "bg-grey-300",
+              )}
               style={{
                 width: big ? tile * 1.5 : near ? tile * 1.2 : tile,
                 height: big ? tile * 1.5 : near ? tile * 1.2 : tile,

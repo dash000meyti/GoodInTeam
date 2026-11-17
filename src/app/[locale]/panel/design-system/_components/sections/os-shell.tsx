@@ -104,16 +104,14 @@ export function OsShellSection({ t }: { t: Messages }) {
         ["tasks", CheckSquareIcon],
         ["projects", FolderKanbanIcon],
       ] as const
-    ).map(
-      ([key, Icon]): DockEntry => ({
-        kind: "link",
-        key,
-        href: "#os-shell",
-        label: t.nav[key],
-        variant: "brand",
-        icon: <Icon className="pm-dock-icon" strokeWidth={1.75} aria-hidden />,
-      }),
-    ),
+    ).map(([key, Icon]): DockEntry => ({
+      kind: "link",
+      key,
+      href: "#os-shell",
+      label: t.nav[key],
+      variant: "brand",
+      icon: <Icon className="pm-dock-icon" strokeWidth={1.75} aria-hidden />,
+    })),
     { kind: "sep", key: "s3" },
     {
       kind: "link",

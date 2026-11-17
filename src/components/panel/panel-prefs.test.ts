@@ -90,9 +90,9 @@ describe("shellInitScript", () => {
   });
 
   it("removes stale attributes when the cookie turns them off", () => {
-    expect(
-      run("gt-shell=48.1.0.0", { "data-dock-autohide": "", "data-window-wide": "" }),
-    ).toEqual({ "data-dock-size": "48" });
+    expect(run("gt-shell=48.1.0.0", { "data-dock-autohide": "", "data-window-wide": "" })).toEqual({
+      "data-dock-size": "48",
+    });
   });
 
   it("does nothing without a valid cookie", () => {

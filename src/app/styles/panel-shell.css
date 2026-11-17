@@ -279,7 +279,9 @@
     inset: 0;
     display: grid;
     place-items: center;
-    font: 700 10px/1 system-ui, sans-serif;
+    font:
+      700 10px/1 system-ui,
+      sans-serif;
     color: rgb(0 0 0 / 0.55);
     opacity: 0;
   }
@@ -301,9 +303,7 @@
         36px,
         min(
           var(--dock-pref),
-          calc(
-            (100vw - 2 * var(--gutter) - 12px - var(--dock-seps) * 17px) / var(--dock-n) - 8px
-          )
+          calc((100vw - 2 * var(--gutter) - 12px - var(--dock-seps) * 17px) / var(--dock-n) - 8px)
         )
       );
     }

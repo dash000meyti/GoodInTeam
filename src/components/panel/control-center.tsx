@@ -125,7 +125,9 @@ export function PresetSwatches({ className }: { className?: string }) {
             <span
               className={cn(
                 "flex size-6 items-center justify-center rounded-full transition-transform",
-                on ? "ring-2 ring-foreground/70 ring-offset-2 ring-offset-muted" : "hover:scale-110",
+                on
+                  ? "ring-2 ring-foreground/70 ring-offset-2 ring-offset-muted"
+                  : "hover:scale-110",
               )}
               style={{ backgroundColor: presetSwatches[p] }}
             >

@@ -426,7 +426,7 @@ export function MenubarDemo() {
     <MenuBarShell
       label={d.osShellMenubarDemo}
       // In the flow and opaque: the real menu bar is the page's only blurred bar.
-      className="relative top-auto z-0 w-full rounded-lg border [backdrop-filter:none] [-webkit-backdrop-filter:none] bg-background"
+      className="relative top-auto z-0 w-full rounded-lg border bg-background [backdrop-filter:none] [-webkit-backdrop-filter:none]"
       start={
         <Menubar dir={dir} loop>
           <MenubarMenu>
