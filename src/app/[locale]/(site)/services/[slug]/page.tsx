@@ -128,7 +128,7 @@ async function ServiceDetail({ locale, t, slug }: { locale: Locale; t: Messages;
             }
             eyebrow={
               <Link
-                href={localePath(locale, `/services#${brand.id}`)}
+                href={localePath(locale, "master" in brand ? `/services#${brand.id}` : brand.href)}
                 className="inline-flex items-center gap-2"
               >
                 <PixelIcon name={brand.icon} cell={1} />

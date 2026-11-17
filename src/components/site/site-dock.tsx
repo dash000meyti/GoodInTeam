@@ -11,7 +11,8 @@ import type { Messages } from "@/i18n/messages";
  * visible text and the accessible names (no aria-label). Icons: the Home mark
  * is 22px in the 28px tab-bar tile and 33px in the 48px dock tile; every
  * PixelIcon is cell 2 (24px). Reading pages (`[data-reading]`) get the 40px
- * dock through CSS.
+ * dock through CSS. The Studio and Code brand tiles open their landing pages
+ * and are active there (`section`).
  */
 export function SiteDock({ locale, t }: { locale: Locale; t: Messages }) {
   const href = (p: string) => localePath(locale, p);
@@ -75,7 +76,8 @@ export function SiteDock({ locale, t }: { locale: Locale; t: Messages }) {
     {
       kind: "link",
       key: "studio",
-      href: href("/services#studio"),
+      href: href("/studio"),
+      section: "/studio",
       label: t.nav.brandStudio,
       variant: "brand",
       icon: icon("studio"),
@@ -84,7 +86,8 @@ export function SiteDock({ locale, t }: { locale: Locale; t: Messages }) {
     {
       kind: "link",
       key: "code",
-      href: href("/services#code"),
+      href: href("/code"),
+      section: "/code",
       label: t.nav.brandCode,
       variant: "brand",
       icon: icon("code"),

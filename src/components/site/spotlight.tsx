@@ -19,8 +19,8 @@ export function Spotlight({ locale, t }: { locale: Locale; t: Messages }) {
     { href: "/blog", label: t.nav.blog, icon: "blog" },
     { href: "/learn", label: t.nav.learn, icon: "learn" },
     { href: "/about", label: t.nav.about, icon: "about" },
-    { href: "/services#studio", label: t.nav.brandStudio, icon: "studio" },
-    { href: "/services#code", label: t.nav.brandCode, icon: "code" },
+    { href: "/studio", label: t.nav.brandStudio, icon: "studio" },
+    { href: "/code", label: t.nav.brandCode, icon: "code" },
     { href: "/contact", label: t.nav.contact, icon: "contact" },
   ];
   return (

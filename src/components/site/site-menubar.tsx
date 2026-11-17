@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SearchIcon, SlidersHorizontalIcon } from "lucide-react";
 import { PixelAvatar, PixelIcon } from "@/components/brand/pixel-art";
 import { PixelLogo, PixelMark } from "@/components/brand/pixel-logo";
+import { brandById, subBrandIds } from "@/components/brand/brands";
 import { ThemeToggle } from "@/components/shell/appearance";
 import { ClockSkeleton } from "@/components/shell/os-clock";
 import {
@@ -32,8 +33,13 @@ export const siteSections = [
   { path: "/about", key: "about" },
 ] as const;
 
-/** Paths that exist in every locale (the language toggle keeps them as-is). */
-export const staticSitePaths = ["/", ...siteSections.map((s) => s.path), "/contact"];
+/** Paths that exist in every locale (the language toggle keeps them as-is), brand pages included. */
+export const staticSitePaths = [
+  "/",
+  ...siteSections.map((s) => s.path),
+  "/contact",
+  ...subBrandIds.map((id) => brandById(id).href),
+];
 
 /**
  * Short glyph of each locale for the language triggers (menu bar, login
@@ -89,11 +95,11 @@ function BrandMenu({ locale, t }: { locale: Locale; t: Messages }) {
           {t.nav.about}
         </Link>
         <div className={MENU_SEP_CLASS} />
-        <Link href={href("/services#studio")} className={MENU_ITEM_CLASS}>
+        <Link href={href("/studio")} className={MENU_ITEM_CLASS}>
           <PixelIcon name="studio" cell={2} />
           {t.nav.brandStudio}
         </Link>
-        <Link href={href("/services#code")} className={MENU_ITEM_CLASS}>
+        <Link href={href("/code")} className={MENU_ITEM_CLASS}>
           <PixelIcon name="code" cell={2} />
           {t.nav.brandCode}
         </Link>

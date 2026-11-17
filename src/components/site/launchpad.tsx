@@ -30,8 +30,8 @@ export function Launchpad({ locale, t }: { locale: Locale; t: Messages }) {
     { href: "/blog", label: t.nav.blog, icon: "blog" },
     { href: "/learn", label: t.nav.learn, icon: "learn" },
     { href: "/about", label: t.nav.about, icon: "about" },
-    { href: "/services#studio", label: t.nav.brandStudio, icon: "studio", variant: "brand" },
-    { href: "/services#code", label: t.nav.brandCode, icon: "code", variant: "brand" },
+    { href: "/studio", label: t.nav.brandStudio, icon: "studio", variant: "brand" },
+    { href: "/code", label: t.nav.brandCode, icon: "code", variant: "brand" },
     { href: "/login", label: t.common.signIn, icon: "sign-in", prefetch: false },
   ];
   const stagger = (i: number) => ({ "--i": i }) as CSSProperties;
