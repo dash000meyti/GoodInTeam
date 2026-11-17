@@ -5,7 +5,627 @@
  * @keyframes at top level; never `:root {` or `.dark {` (use html {} and .dark .x);
  * no @apply dark:. To override a legacy .gt-* or .prose-gt rule, use a selector at
  * least one class more specific (globals.css imports partials first).
+ *
+ * The engine (guide-engine.ts) writes --gx --gy (sprite), --bx --by (bubble)
+ * and --sx --sy --sw --sh (selection) relative to .os-desktop, plus data-*
+ * hooks on #gt-guide: data-move (walk|hop|drop|out), data-gone, data-perch,
+ * data-face, data-land, data-badge, data-sel, data-compact, data-input.
+ * Never transform / filter / contain / will-change on .gt-guide itself: in
+ * compact mode its sprite and bubble are position:fixed.
  */
 
 @layer components {
+  .gt-guide {
+    position: absolute;
+    inset: 0;
+    overflow: clip;
+    pointer-events: none;
+    z-index: 30;
+  }
+
+  /* ── sprite: nested x/y translates (arc flights), the button inside ── */
+  .gt-guide-x,
+  .gt-guide-y {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+  .gt-guide-x {
+    translate: var(--gx, 0) 0;
+  }
+  .gt-guide-y {
+    translate: 0 var(--gy, 0);
+    transition:
+      opacity 0.12s,
+      visibility 0.12s;
+  }
+  .gt-guide:is([data-gone], [data-move="out"]) .gt-guide-y {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .gt-guide[data-move="walk"] :is(.gt-guide-x, .gt-guide-y) {
+    transition:
+      translate var(--gd, 0.5s) var(--ease-out-expo),
+      opacity 0.12s;
+    will-change: translate;
+  }
+  .gt-guide[data-move="hop"] .gt-guide-x {
+    transition: translate var(--gd, 0.6s) cubic-bezier(0.45, 0, 0.55, 1);
+    will-change: translate;
+  }
+  .gt-guide[data-move="hop"] .gt-guide-y {
+    transition: translate var(--gd, 0.6s) cubic-bezier(0.3, -0.35, 0.5, 1);
+    will-change: translate;
+  }
+
+  .gt-guide-sprite {
+    --cell: 3px;
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    line-height: 0;
+    cursor: pointer;
+    pointer-events: auto;
+    transform-origin: 50% 100%;
+    transition: rotate 0.15s;
+  }
+  .gt-guide-sprite > svg {
+    position: relative;
+  }
+  .gt-guide-sprite:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* 1-row grey shadow when standing on a roof */
+  .gt-guide[data-perch="roof"]:not([data-compact]) .gt-guide-sprite::before {
+    content: "";
+    position: absolute;
+    inset-inline: calc(var(--cell) * 2);
+    bottom: 0;
+    block-size: var(--cell);
+    background: rgb(0 0 0 / 0.16);
+  }
+  .dark .gt-guide-sprite::before {
+    background: rgb(0 0 0 / 0.55);
+  }
+  /* facing the direction of travel flips only the art */
+  .gt-guide[data-face="l"] .gt-guide-sprite > svg {
+    scale: -1 1;
+  }
+  .gt-guide[data-move="hop"] .gt-guide-sprite {
+    rotate: var(--tilt, 0deg);
+  }
+  .gt-guide[data-move="drop"] .gt-guide-sprite {
+    animation: gt-guide-drop 0.4s steps(5) both;
+  }
+  .gt-guide[data-land] .gt-guide-sprite {
+    animation: gt-guide-land 0.12s steps(1);
+  }
+
+  /* 3-square pixel trail during arc hops (6/4/3px, .7/.45/.25), from the
+     sprite's centre backwards along the flight, clear of its body */
+  .gt-guide-trail {
+    position: absolute;
+    left: 21px;
+    top: 21px;
+  }
+  .gt-guide-trail > i {
+    --d: 32px;
+    --o: 0.7;
+    position: absolute;
+    inline-size: 6px;
+    block-size: 6px;
+    background: var(--brand-yellow);
+    opacity: 0;
+    translate: calc(var(--tdx, 0) * var(--d)) calc(var(--tdy, 0) * var(--d));
+  }
+  .gt-guide-trail > i:nth-child(2) {
+    --d: 42px;
+    --o: 0.45;
+    inline-size: 4px;
+    block-size: 4px;
+  }
+  .gt-guide-trail > i:nth-child(3) {
+    --d: 50px;
+    --o: 0.25;
+    inline-size: 3px;
+    block-size: 3px;
+  }
+  .gt-guide[data-move="hop"] .gt-guide-trail > i {
+    animation: gt-guide-trail var(--gd, 0.6s) steps(4) 40ms both;
+  }
+  .gt-guide[data-move="hop"] .gt-guide-trail > i:nth-child(2) {
+    animation-delay: 80ms;
+  }
+  .gt-guide[data-move="hop"] .gt-guide-trail > i:nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  /* the 6px yellow "!" badge: a line waits for the visitor */
+  .gt-guide-badge {
+    position: absolute;
+    inset-block-start: -4px;
+    inset-inline-end: -2px;
+    display: none;
+    inline-size: 6px;
+    block-size: 10px;
+    background:
+      linear-gradient(#1c1c1e 0 0) 2px 1px / 2px 4px no-repeat,
+      linear-gradient(#1c1c1e 0 0) 2px 7px / 2px 2px no-repeat,
+      #ffc50d;
+    box-shadow: 0 0 0 1px #1c1c1e;
+  }
+  .gt-guide[data-badge] .gt-guide-badge {
+    display: block;
+    animation: gt-guide-badge 0.36s steps(3);
+  }
+
+  /* ── bubble ── */
+  .gt-guide-bubble {
+    position: absolute;
+    left: 0;
+    top: 0;
+    translate: var(--bx, 0) var(--by, 0);
+    inline-size: max-content;
+    max-inline-size: 300px;
+    padding: 10px 12px;
+    border: 1px solid var(--frame-rail);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--popover) 97%, transparent);
+    box-shadow: var(--shadow-dropdown);
+    color: var(--popover-foreground);
+    font-size: 13.5px;
+    line-height: 1.6;
+    text-align: start;
+    unicode-bidi: plaintext;
+    pointer-events: auto;
+    transform-origin: 50% 100%;
+  }
+  html:lang(fa) .gt-guide-bubble {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .gt-guide-bubble[data-measure] {
+    visibility: hidden;
+  }
+  .gt-guide-bubble[data-open] {
+    animation: gt-guide-pop 0.14s var(--ease-os) both;
+  }
+  .gt-guide-bubble[data-tail="up"] {
+    transform-origin: 50% 0;
+  }
+  #gt-guide-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 2px;
+    color: var(--muted-foreground);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  #gt-guide-name::before {
+    content: "";
+    inline-size: 6px;
+    block-size: 6px;
+    background: var(--brand-yellow);
+    box-shadow: 0 0 0 1px rgb(28 28 30 / 0.35);
+  }
+  .gt-guide-text {
+    margin: 0;
+    text-wrap: pretty;
+  }
+  /* typing: three pixel dots, then a stepped wipe (mirrored in RTL) */
+  .gt-guide-bubble[data-phase="type"] .gt-guide-text {
+    color: transparent;
+    background:
+      linear-gradient(var(--muted-foreground) 0 0) 0 6px / 4px 4px no-repeat,
+      linear-gradient(var(--muted-foreground) 0 0) 8px 6px / 4px 4px no-repeat,
+      linear-gradient(var(--muted-foreground) 0 0) 16px 6px / 4px 4px no-repeat;
+    animation: gt-guide-dots 0.6s steps(1) infinite;
+  }
+  [dir="rtl"] .gt-guide-bubble[data-phase="type"] .gt-guide-text {
+    background-position-x:
+      right 0,
+      right 8px,
+      right 16px;
+  }
+  .gt-guide-bubble[data-phase="wipe"] .gt-guide-text {
+    animation: gt-guide-wipe 0.56s steps(8) both;
+  }
+  [dir="rtl"] .gt-guide-bubble[data-phase="wipe"] .gt-guide-text {
+    animation-name: gt-guide-wipe-rtl;
+  }
+
+  /* actions: explicit bubbles and tour steps only */
+  .gt-guide-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin-block-start: 8px;
+  }
+  .gt-guide-bubble:not(:is([data-kind="explicit"], [data-kind="tour"])) .gt-guide-actions {
+    display: none;
+  }
+  .gt-guide-actions > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: 28px;
+    padding-inline: 9px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s;
+  }
+  .gt-guide-actions > button[hidden] {
+    display: none;
+  }
+  .gt-guide-actions > button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+  .gt-guide-actions > .gt-guide-next {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  .gt-guide-actions > .gt-guide-next:hover {
+    background: var(--primary-hover, var(--primary));
+  }
+  .gt-guide-actions > :is(.gt-guide-end, .gt-guide-hide, .gt-guide-close) {
+    background: transparent;
+  }
+  .gt-guide-actions > .gt-guide-end {
+    border-color: var(--frame-rail);
+  }
+  .gt-guide-actions > :is(.gt-guide-end, .gt-guide-hide, .gt-guide-close):hover {
+    background: var(--accent);
+  }
+  .gt-guide-actions > :is(.gt-guide-hide, .gt-guide-close) {
+    color: var(--muted-foreground);
+  }
+  .gt-guide-actions > .gt-guide-hide {
+    padding-inline: 6px;
+  }
+  /* × sits in the bubble's top inline-end corner, beside the name row */
+  .gt-guide-actions > .gt-guide-close {
+    position: absolute;
+    inset-block-start: 4px;
+    inset-inline-end: 4px;
+    inline-size: 24px;
+    min-block-size: 24px;
+    padding: 0;
+    font-size: 17px;
+  }
+  .gt-guide-bubble:is([data-kind="explicit"], [data-kind="tour"]) #gt-guide-name {
+    padding-inline-end: 24px;
+  }
+
+  /* stepped 8px pixel tail: ::before draws the hairline, ::after the fill */
+  .gt-guide-bubble::before,
+  .gt-guide-bubble::after {
+    content: "";
+    position: absolute;
+    display: none;
+    pointer-events: none;
+  }
+  .gt-guide-bubble::before {
+    background: var(--frame-rail);
+  }
+  .gt-guide-bubble::after {
+    background: var(--popover);
+  }
+  .gt-guide-bubble:is([data-tail="down"], [data-tail="up"])::before,
+  .gt-guide-bubble:is([data-tail="down"], [data-tail="up"])::after,
+  .gt-guide-bubble[data-tail="side"]::before,
+  .gt-guide-bubble[data-tail="side"]::after {
+    display: block;
+  }
+  /* down (A, compact): at the inline-end bottom, above the sprite's head */
+  .gt-guide-bubble[data-tail="down"]::before {
+    top: 100%;
+    inset-inline-end: 27px;
+    inline-size: 10px;
+    block-size: 10px;
+    clip-path: polygon(
+      0 0,
+      10px 0,
+      10px 10px,
+      6px 10px,
+      6px 8px,
+      4px 8px,
+      4px 6px,
+      2px 6px,
+      2px 4px,
+      0 4px
+    );
+  }
+  .gt-guide-bubble[data-tail="down"]::after {
+    top: 100%;
+    inset-inline-end: 28px;
+    inline-size: 8px;
+    block-size: 9px;
+    clip-path: polygon(
+      0 0,
+      8px 0,
+      8px 9px,
+      6px 9px,
+      6px 7px,
+      4px 7px,
+      4px 5px,
+      2px 5px,
+      2px 3px,
+      0 3px
+    );
+  }
+  /* up (B under a roof sprite): at the inline-end top, pointing up at its feet */
+  .gt-guide-bubble[data-tail="up"]::before {
+    bottom: 100%;
+    inset-inline-end: 19px;
+    inline-size: 10px;
+    block-size: 10px;
+    scale: 1 -1;
+    clip-path: polygon(
+      0 0,
+      10px 0,
+      10px 10px,
+      6px 10px,
+      6px 8px,
+      4px 8px,
+      4px 6px,
+      2px 6px,
+      2px 4px,
+      0 4px
+    );
+  }
+  .gt-guide-bubble[data-tail="up"]::after {
+    bottom: 100%;
+    inset-inline-end: 20px;
+    inline-size: 8px;
+    block-size: 9px;
+    scale: 1 -1;
+    clip-path: polygon(
+      0 0,
+      8px 0,
+      8px 9px,
+      6px 9px,
+      6px 7px,
+      4px 7px,
+      4px 5px,
+      2px 5px,
+      2px 3px,
+      0 3px
+    );
+  }
+  /* side (B beside a rail sprite): from the inline-end edge near the top */
+  .gt-guide-bubble[data-tail="side"]::before {
+    top: 13px;
+    inset-inline-start: 100%;
+    inline-size: 10px;
+    block-size: 10px;
+    clip-path: polygon(
+      0 0,
+      10px 0,
+      10px 4px,
+      8px 4px,
+      8px 6px,
+      6px 6px,
+      6px 8px,
+      4px 8px,
+      4px 10px,
+      0 10px
+    );
+  }
+  .gt-guide-bubble[data-tail="side"]::after {
+    top: 14px;
+    inset-inline-start: 100%;
+    margin-inline-start: -1px;
+    inline-size: 9px;
+    block-size: 8px;
+    clip-path: polygon(
+      0 0,
+      9px 0,
+      9px 2px,
+      7px 2px,
+      7px 4px,
+      5px 4px,
+      5px 6px,
+      3px 6px,
+      3px 8px,
+      0 8px
+    );
+  }
+  [dir="rtl"] .gt-guide-bubble:is([data-tail="down"], [data-tail="side"])::before,
+  [dir="rtl"] .gt-guide-bubble:is([data-tail="down"], [data-tail="side"])::after {
+    scale: -1 1;
+  }
+  [dir="rtl"] .gt-guide-bubble[data-tail="up"]::before,
+  [dir="rtl"] .gt-guide-bubble[data-tail="up"]::after {
+    scale: -1 -1;
+  }
+
+  /* ── selection box around a spot (document-absolute) ── */
+  .gt-guide-sel {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: none;
+    inline-size: var(--sw, 0);
+    block-size: var(--sh, 0);
+    translate: var(--sx, 0) var(--sy, 0);
+    outline: 1.5px dashed var(--guide-line);
+    outline-offset: 6px;
+    background: rgb(var(--primary-rgb) / 0.06);
+  }
+  .gt-guide-sel::before {
+    content: "";
+    position: absolute;
+    inset: -9px;
+    background:
+      linear-gradient(var(--brand-yellow) 0 0) left 1px top 1px / 7px 7px no-repeat,
+      linear-gradient(var(--brand-yellow) 0 0) right 1px top 1px / 7px 7px no-repeat,
+      linear-gradient(var(--brand-yellow) 0 0) left 1px bottom 1px / 7px 7px no-repeat,
+      linear-gradient(var(--brand-yellow) 0 0) right 1px bottom 1px / 7px 7px no-repeat,
+      linear-gradient(#1c1c1e 0 0) left top / 9px 9px no-repeat,
+      linear-gradient(#1c1c1e 0 0) right top / 9px 9px no-repeat,
+      linear-gradient(#1c1c1e 0 0) left bottom / 9px 9px no-repeat,
+      linear-gradient(#1c1c1e 0 0) right bottom / 9px 9px no-repeat;
+  }
+  .gt-guide[data-sel]:not([data-compact]) .gt-guide-sel {
+    display: block;
+    animation: gt-guide-wiggle 0.48s steps(4);
+  }
+
+  /* ── compact mode (<1024px or a coarse pointer, D21): pinned above the dock ── */
+  .gt-guide[data-compact] :is(.gt-guide-x, .gt-guide-y) {
+    translate: none;
+    transition: none;
+    will-change: auto;
+  }
+  .gt-guide[data-compact] .gt-guide-sprite {
+    --cell: 2px;
+    position: fixed;
+    inset: auto;
+    inset-inline-end: 12px;
+    bottom: calc(var(--dock-space) + 8px);
+  }
+  .gt-guide[data-compact] .gt-guide-sprite[data-hop] {
+    animation: gt-guide-hop 0.18s steps(3) 2;
+  }
+  .gt-guide[data-compact] .gt-guide-bubble {
+    position: fixed;
+    inset: auto;
+    inset-inline-end: 12px;
+    bottom: calc(var(--dock-space) + 48px);
+    translate: none;
+    inline-size: min(300px, 100vw - 32px);
+    max-inline-size: none;
+  }
+  .gt-guide[data-compact] .gt-guide-bubble[data-tail="down"]::before {
+    inset-inline-end: 11px;
+  }
+  .gt-guide[data-compact] .gt-guide-bubble[data-tail="down"]::after {
+    inset-inline-end: 12px;
+  }
+  .gt-guide[data-compact] .gt-guide-trail {
+    display: none;
+  }
+  /* compact only: hidden under open menus and while typing (desktop keeps the explain bubble and the tour visible) */
+  html:has(:popover-open) .gt-guide[data-compact],
+  .gt-guide[data-compact][data-input] {
+    visibility: hidden;
+  }
+}
+
+/* Reduced motion (OS setting or the site switch): no walk, hop, trail, wipe,
+   typing dots or wiggle; the sprite only fades. pixel.css keeps a static frame. */
+@media (prefers-reduced-motion: reduce) {
+  @layer components {
+    .gt-guide *,
+    .gt-guide *::before,
+    .gt-guide *::after {
+      animation: none !important;
+    }
+    .gt-guide :is(.gt-guide-x, .gt-guide-y, .gt-guide-sprite) {
+      transition-property: opacity, visibility !important;
+    }
+  }
+}
+@layer components {
+  html[data-motion="reduce"] .gt-guide *,
+  html[data-motion="reduce"] .gt-guide *::before,
+  html[data-motion="reduce"] .gt-guide *::after {
+    animation: none !important;
+  }
+  html[data-motion="reduce"] .gt-guide :is(.gt-guide-x, .gt-guide-y, .gt-guide-sprite) {
+    transition-property: opacity, visibility !important;
+  }
+}
+
+@keyframes gt-guide-drop {
+  from {
+    translate: 0 -24px;
+    opacity: 0;
+  }
+  to {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
+@keyframes gt-guide-land {
+  from {
+    scale: 1.12 0.86;
+  }
+}
+@keyframes gt-guide-trail {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  60% {
+    opacity: var(--o);
+  }
+}
+@keyframes gt-guide-badge {
+  from {
+    translate: 0 4px;
+  }
+}
+@keyframes gt-guide-pop {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+@keyframes gt-guide-dots {
+  0% {
+    background-position-y: 2px, 6px, 6px;
+  }
+  33% {
+    background-position-y: 6px, 2px, 6px;
+  }
+  66% {
+    background-position-y: 6px, 6px, 2px;
+  }
+}
+@keyframes gt-guide-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@keyframes gt-guide-wipe-rtl {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+@keyframes gt-guide-wiggle {
+  25% {
+    scale: 1.015;
+  }
+  50% {
+    scale: 0.995;
+  }
+  75% {
+    scale: 1.005;
+  }
+}
+@keyframes gt-guide-hop {
+  50% {
+    translate: 0 -8px;
+  }
 }
