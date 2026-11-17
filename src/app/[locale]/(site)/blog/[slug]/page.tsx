@@ -8,20 +8,28 @@ import { SetAlternates } from "@/components/site/alternates";
 import {
   ArticleBody,
   ArticleHeader,
-  AuthorBox,
-  ShareBar,
+  AuthorShareRow,
   Syndicated,
   Tldr,
 } from "@/components/site/article";
 import { PostCard } from "@/components/site/cards";
 import { Cover } from "@/components/site/cover";
+import { FrameCell, FrameFiller, FrameGrid, FrameSection } from "@/components/site/frame";
 import { LiteYouTube, ViewTracker } from "@/components/site/islands";
 import { articleLd, JsonLd, videoLd, type Thing } from "@/components/site/json-ld";
 import { Breadcrumbs, PrevNext } from "@/components/site/nav-bits";
-import { decodeParam, homeCrumb, notFoundMetadata, withQuery } from "@/components/site/page-utils";
+import {
+  clampSay,
+  decodeParam,
+  fillers,
+  homeCrumb,
+  notFoundMetadata,
+  plainSpans,
+  withQuery,
+} from "@/components/site/page-utils";
 import { pageMetadata, postAlternates } from "@/components/site/seo";
 import { ArticleSkeleton } from "@/components/site/skeletons";
-import { Container } from "@/components/site/ui";
+import { DecorWindowCell, teamPath, TitleRow } from "@/components/site/ui";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
 import { getLocale, getMessages } from "@/i18n/server";
@@ -117,51 +125,80 @@ async function BlogPost({ locale, t, slug }: { locale: Locale; t: Messages; slug
     );
   }
 
+  const showCover = !!post.coverUrl && !yt && !isNote;
   return (
     <>
       <SetAlternates value={postAlternates(translations)} />
       <ViewTracker id={post.id} />
       <JsonLd data={ld} />
-      <article className="h-entry">
-        <Container className={isNote ? "max-w-3xl pt-10 sm:pt-14" : "max-w-5xl pt-10 sm:pt-14"}>
-          <ArticleHeader
-            post={post}
-            locale={locale}
-            t={t}
-            author={author}
-            crumbs={
-              <Breadcrumbs
-                items={[
-                  homeCrumb(locale),
-                  { name: s.blogTitle, path: localePath(locale, "/blog") },
-                  { name: post.title, path: href },
-                ]}
-              />
-            }
-          />
-          {!!post.tags.length && (
-            <ul className="mt-5 flex flex-wrap gap-2" aria-label={s.tags}>
-              {post.tags.map((tg) => (
-                <li key={tg}>
-                  <Link
-                    href={withQuery(localePath(locale, "/blog"), { tag: tg })}
-                    rel="tag"
-                    className="p-category rounded-md bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    #{tg}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-          {post.excerpt && !isNote && (
-            <div className="mt-8">
-              <Tldr text={post.excerpt} label={s.tldr} />
-            </div>
-          )}
-          {!isNote && (
-            <div className="mt-8">
-              {yt ? (
+      <article className="h-entry" data-reading="">
+        <FrameSection
+          id="top"
+          first
+          labelledBy="top-title"
+          guide={{ key: "post_detail", say: t.guide.post_detail }}
+          strip={{ index: 1, path: teamPath("BLOG", "POST") }}
+        >
+          <FrameGrid cols="2-1">
+            <ArticleHeader
+              post={post}
+              locale={locale}
+              t={t}
+              author={author}
+              crumbs={
+                <Breadcrumbs
+                  items={[
+                    homeCrumb(locale),
+                    { name: s.blogTitle, path: localePath(locale, "/blog") },
+                    { name: post.title, path: href },
+                  ]}
+                />
+              }
+            >
+              {!!post.tags.length && (
+                <ul className="flex flex-wrap gap-2" aria-label={s.tags}>
+                  {post.tags.map((tg) => (
+                    <li key={tg}>
+                      <Link
+                        href={withQuery(localePath(locale, "/blog"), { tag: tg })}
+                        rel="tag"
+                        className="p-category rounded-[6px] bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        #{tg}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </ArticleHeader>
+            <DecorWindowCell path="POST" icon="blog" always={showCover}>
+              {showCover ? (
+                <Cover
+                  src={post.coverUrl}
+                  alt={post.coverAlt ?? post.title}
+                  seed={post.slug}
+                  kind={post.type}
+                  priority
+                  sizes="(min-width: 1024px) 400px, 100vw"
+                />
+              ) : undefined}
+            </DecorWindowCell>
+          </FrameGrid>
+          {post.excerpt && !isNote && <Tldr text={post.excerpt} label={s.tldr} />}
+        </FrameSection>
+
+        <FrameSection
+          id="post-body"
+          ariaLabel={post.title}
+          guide={{ key: "post_body", say: t.guide.post_body }}
+          strip={{ index: 2, path: teamPath("BLOG", "POST", "BODY") }}
+        >
+          <ArticleBody
+            html={rendered.html}
+            headings={isNote ? [] : rendered.headings}
+            tocTitle={s.toc}
+            before={
+              yt ? (
                 <LiteYouTube
                   id={yt}
                   title={post.title}
@@ -169,84 +206,73 @@ async function BlogPost({ locale, t, slug }: { locale: Locale; t: Messages; slug
                   playLabel={s.playVideo}
                   notice={s.videoNotice}
                 />
-              ) : post.coverUrl ? (
-                <Cover
-                  src={post.coverUrl}
-                  alt={post.coverAlt ?? post.title}
-                  seed={post.slug}
-                  kind={post.type}
-                  priority
-                  sizes="(min-width: 1024px) 976px, 100vw"
-                  className="rounded-3xl ring-1 ring-border"
-                />
-              ) : null}
-            </div>
-          )}
-          <div
-            className={
-              isNote ? "mt-8 rounded-3xl border border-dashed bg-muted/30 p-6 sm:p-8" : "mt-10"
+              ) : undefined
             }
-          >
-            <ArticleBody
-              html={rendered.html}
-              headings={isNote ? [] : rendered.headings}
-              tocTitle={s.toc}
-              aside={
-                <Link
-                  href={`${href}.md`}
-                  prefetch={false}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
-                >
-                  <FileDownIcon className="size-3.5" /> {s.markdownVersion}
-                </Link>
+            aside={
+              <Link
+                href={`${href}.md`}
+                prefetch={false}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              >
+                <FileDownIcon className="size-3.5" /> {s.markdownVersion}
+              </Link>
+            }
+          />
+        </FrameSection>
+
+        <FrameSection
+          id="post-end"
+          ariaLabel={s.share}
+          guide={{ key: "post_share", say: t.guide.post_share }}
+          strip={{ index: 3, path: teamPath("BLOG", "POST", "SHARE") }}
+        >
+          <AuthorShareRow
+            profile={profile}
+            locale={locale}
+            t={t}
+            url={href}
+            title={post.title}
+            syndication={<Syndicated links={synd} t={t} />}
+          />
+          <PrevNext
+            prev={
+              adjacent.prev && {
+                href: postHref(locale, adjacent.prev),
+                title: adjacent.prev.title,
               }
-            />
-          </div>
-          <div className="mt-12 flex flex-col gap-4 border-y border-dashed py-6 sm:flex-row sm:items-center sm:justify-between">
-            <ShareBar url={href} title={post.title} t={t} />
-            <Syndicated links={synd} t={t} />
-          </div>
-          <div className="mt-10">
-            <AuthorBox profile={profile} locale={locale} t={t} />
-          </div>
-          <div className="mt-10">
-            <PrevNext
-              prev={
-                adjacent.prev && {
-                  href: postHref(locale, adjacent.prev),
-                  title: adjacent.prev.title,
-                }
+            }
+            next={
+              adjacent.next && {
+                href: postHref(locale, adjacent.next),
+                title: adjacent.next.title,
               }
-              next={
-                adjacent.next && {
-                  href: postHref(locale, adjacent.next),
-                  title: adjacent.next.title,
-                }
-              }
-              prevLabel={s.prevPost}
-              nextLabel={s.nextPost}
-            />
-          </div>
-          {/* microformats2 for IndieWeb readers */}
-          <a href={href} className="u-url hidden" aria-hidden tabIndex={-1}>
-            {post.title}
-          </a>
-        </Container>
+            }
+            prevLabel={s.prevPost}
+            nextLabel={s.nextPost}
+          />
+          {related.length > 0 && (
+            <>
+              <TitleRow title={s.relatedPosts} titleId="related-title" size="h3" />
+              <FrameGrid cols={3}>
+                {related.map((p) => (
+                  <FrameCell
+                    key={p.id}
+                    hover
+                    spot={{ key: `post-${p.slug}`, say: clampSay(p.excerpt || p.title) }}
+                  >
+                    <PostCard post={p} locale={locale} t={t} variant="cell" />
+                  </FrameCell>
+                ))}
+                <FrameFiller units={fillers(plainSpans(related.length), 3)} />
+              </FrameGrid>
+            </>
+          )}
+        </FrameSection>
+        {/* microformats2 for IndieWeb readers */}
+        <a href={href} className="u-url hidden" aria-hidden tabIndex={-1}>
+          {post.title}
+        </a>
       </article>
-      {related.length > 0 && (
-        <section className="mt-20">
-          <Container>
-            <h2 className="mb-8 text-2xl font-black tracking-tight sm:text-3xl">
-              {s.relatedPosts}
-            </h2>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {related.map((p) => (
-                <PostCard key={p.id} post={p} locale={locale} t={t} />
-              ))}
-            </div>
-          </Container>
-        </section>
-      )}
     </>
   );
 }
@@ -255,7 +281,9 @@ export default async function BlogPostPage({ params }: PageProps<"/[locale]/blog
   const locale = await getLocale();
   const t = getMessages(locale);
   return (
-    <Suspense fallback={<ArticleSkeleton />}>
+    <Suspense
+      fallback={<ArticleSkeleton guide={{ key: "post_detail", say: t.guide.post_detail }} />}
+    >
       {params.then(({ slug }) => (
         <BlogPost locale={locale} t={t} slug={decodeParam(slug)} />
       ))}

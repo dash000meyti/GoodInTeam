@@ -85,7 +85,7 @@ export default async function LessonPage({
   const locale = await getLocale();
   const t = getMessages(locale);
   return (
-    <Suspense fallback={<ArticleSkeleton />}>
+    <Suspense fallback={<ArticleSkeleton guide={{ key: "lesson", say: t.guide.lesson }} />}>
       {params.then((p) => (
         <Lesson
           locale={locale}

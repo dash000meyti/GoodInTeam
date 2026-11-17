@@ -8,4 +8,29 @@
  */
 
 @layer components {
+  /* A landmark wrapper around one grid (PrevNext's <nav class="frame-nav">) keeps
+     the stacked-grid hairline (frame.css §6.2 rule, extended through the wrapper). */
+  .frame-nav {
+    display: block;
+  }
+  .frame-grid:has(+ .frame-nav),
+  .frame-nav:has(+ .frame-grid) > .frame-grid {
+    margin-block-end: 0;
+  }
+
+  /* Long-form inside a frame cell: the first block never adds a top gap,
+     and headings keep a calm rhythm in the 2fr column. */
+  .frame-cell .prose-gt > :first-child {
+    margin-top: 0;
+  }
+
+  /* Decor windows: a cover fills the window body edge to edge. */
+  .frame-cell[data-decor] > .os-win .os-win-body > :only-child {
+    border-radius: 0;
+  }
+
+  /* FAQ rows inside a frame cell: the open question keeps a card surface. */
+  .frame-cell .gt-faq[open] > summary {
+    background: var(--card);
+  }
 }

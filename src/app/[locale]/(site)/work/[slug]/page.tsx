@@ -9,11 +9,18 @@ import { TestimonialCard } from "@/components/site/cards";
 import { Cover } from "@/components/site/cover";
 import { CtaBand } from "@/components/site/cta-band";
 import { articleLd, JsonLd } from "@/components/site/json-ld";
+import { FrameCell, FrameFiller, FrameGrid, FrameSection } from "@/components/site/frame";
 import { Breadcrumbs, PrevNext } from "@/components/site/nav-bits";
-import { decodeParam, homeCrumb, notFoundMetadata } from "@/components/site/page-utils";
+import {
+  decodeParam,
+  fillers,
+  homeCrumb,
+  notFoundMetadata,
+  plainSpans,
+} from "@/components/site/page-utils";
 import { pageMetadata, postAlternates } from "@/components/site/seo";
 import { ArticleSkeleton } from "@/components/site/skeletons";
-import { Container, fmtNum } from "@/components/site/ui";
+import { DecorWindowCell, fmtNum, teamPath, TitleCell, TitleRow } from "@/components/site/ui";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
 import { getLocale, getMessages } from "@/i18n/server";
@@ -79,8 +86,9 @@ async function WorkDetail({ locale, t, slug }: { locale: Locale; t: Messages; sl
     m.role && { k: s.role, v: m.role },
   ].filter(Boolean) as { k: string; v: string }[];
 
+  const gallery = m.gallery ?? [];
   return (
-    <article>
+    <article className="h-entry" data-reading="">
       <SetAlternates value={postAlternates(translations)} />
       <JsonLd
         data={articleLd({
@@ -102,38 +110,76 @@ async function WorkDetail({ locale, t, slug }: { locale: Locale; t: Messages; sl
           },
         })}
       />
-      {/* Hero */}
-      <header className="relative isolate">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
-        >
-          <div aria-hidden className="bg-grid mask-fade-b absolute inset-0 -z-10 opacity-70" />
-        </div>
-        <Container className="pt-10 sm:pt-14">
-          <Breadcrumbs
-            items={[
-              homeCrumb(locale),
-              { name: s.workPageTitle, path: localePath(locale, "/work") },
-              { name: post.title, path: href },
-            ]}
+
+      <FrameSection
+        id="top"
+        first
+        labelledBy="top-title"
+        guide={{ key: "work_detail", say: t.guide.work_detail }}
+        strip={{ index: 1, path: teamPath("WORK", "CASE-STUDY") }}
+      >
+        <FrameGrid cols="2-1">
+          <TitleCell
+            as="h1"
+            size="article"
+            titleId="top-title"
+            title={post.title}
+            hClassName="p-name"
+            className="lg:min-h-[280px]"
+            crumbs={
+              <Breadcrumbs
+                items={[
+                  homeCrumb(locale),
+                  { name: s.workPageTitle, path: localePath(locale, "/work") },
+                  { name: post.title, path: href },
+                ]}
+              />
+            }
+            eyebrow={
+              facts.length
+                ? facts
+                    .slice(0, 2)
+                    .map((f) => f.v)
+                    .join(" · ")
+                : undefined
+            }
+            subtitle={post.excerpt ? <span className="p-summary">{post.excerpt}</span> : undefined}
           />
-          <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-end">
-            <div className="space-y-5">
-              <h1 className="text-4xl leading-[1.15] font-black tracking-tight text-balance sm:text-5xl lg:text-6xl">
-                {post.title}
-              </h1>
-              {post.excerpt && (
-                <p className="max-w-2xl text-lg leading-8 text-pretty text-muted-foreground">
-                  {post.excerpt}
-                </p>
-              )}
-            </div>
-            <div className="space-y-5 lg:pb-2">
+          <DecorWindowCell path="CASE-STUDY" always>
+            <Cover
+              src={post.coverUrl}
+              alt={post.coverAlt ?? post.title}
+              seed={post.slug}
+              kind="work"
+              priority
+              sizes="(min-width: 1024px) 400px, 100vw"
+            />
+          </DecorWindowCell>
+        </FrameGrid>
+      </FrameSection>
+
+      <FrameSection
+        id="story"
+        ariaLabel={post.title}
+        guide={{ key: "work_story", say: t.guide.work_story }}
+        strip={{ index: 2, path: teamPath("WORK", "CASE-STUDY", "STORY") }}
+      >
+        <FrameGrid cols="2-1">
+          <FrameCell pad="lg" className="min-w-0">
+            <div
+              className="prose-gt e-content max-w-[70ch]"
+              dangerouslySetInnerHTML={{ __html: rendered.html }}
+            />
+          </FrameCell>
+          <FrameCell tone="card" as="aside" className="min-w-0">
+            <div className="flex flex-col gap-7 lg:sticky lg:below-chrome">
               {facts.length > 0 && (
-                <dl className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+                <dl className="grid gap-4">
                   {facts.map((f) => (
-                    <div key={f.k} className="min-w-0">
+                    <div
+                      key={f.k}
+                      className="min-w-0 border-b border-dashed border-frame-line pb-3"
+                    >
                       <dt className="text-xs font-semibold text-muted-foreground">{f.k}</dt>
                       <dd className="mt-1 text-sm font-bold">{f.v}</dd>
                     </div>
@@ -141,17 +187,35 @@ async function WorkDetail({ locale, t, slug }: { locale: Locale; t: Messages; sl
                 </dl>
               )}
               {!!m.stack?.length && (
-                <ul className="flex flex-wrap gap-1.5" aria-label={s.stack}>
-                  {m.stack.map((x) => (
-                    <li
-                      key={x}
-                      dir="ltr"
-                      className="rounded-lg border bg-background px-2.5 py-1 font-mono text-xs font-medium"
-                    >
-                      {x}
-                    </li>
-                  ))}
-                </ul>
+                <div>
+                  <p className="mb-2 text-xs font-semibold text-muted-foreground">{s.stack}</p>
+                  <ul className="flex flex-wrap gap-1.5" aria-label={s.stack}>
+                    {m.stack.map((x) => (
+                      <li
+                        key={x}
+                        dir="ltr"
+                        className="rounded-[6px] border border-frame-line bg-background px-2.5 py-1 font-mono text-xs font-medium"
+                      >
+                        {x}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {!!m.metrics?.length && (
+                <section aria-label={s.results}>
+                  <p className="mb-2 text-xs font-semibold text-muted-foreground">{s.results}</p>
+                  <dl className="divide-y divide-frame-line border-y border-frame-line">
+                    {m.metrics.map((x) => (
+                      <div key={x.label} className="flex items-baseline justify-between gap-4 py-3">
+                        <dt className="text-sm text-muted-foreground">{x.label}</dt>
+                        <dd className="text-2xl font-black tracking-tight tabular-nums">
+                          {x.value}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </section>
               )}
               {(m.liveUrl || m.repoUrl) && (
                 <div className="flex flex-wrap gap-2">
@@ -160,7 +224,7 @@ async function WorkDetail({ locale, t, slug }: { locale: Locale; t: Messages; sl
                       href={m.liveUrl}
                       target="_blank"
                       rel="noopener"
-                      className="inline-flex h-10 items-center gap-2 rounded-full bg-grey-800 px-5 text-sm font-bold text-white transition-colors hover:bg-grey-700 dark:bg-white dark:text-grey-800"
+                      className="u-url inline-flex h-10 items-center gap-2 rounded-full bg-foreground px-5 text-sm font-bold text-background transition-opacity hover:opacity-90"
                     >
                       {s.liveSite} <ExternalLinkIcon className="size-4" />
                     </a>
@@ -170,7 +234,7 @@ async function WorkDetail({ locale, t, slug }: { locale: Locale; t: Messages; sl
                       href={m.repoUrl}
                       target="_blank"
                       rel="noopener"
-                      className="inline-flex h-10 items-center gap-2 rounded-full border border-border px-5 text-sm font-bold hover:border-foreground/30"
+                      className="inline-flex h-10 items-center gap-2 rounded-full border border-frame-line bg-background px-5 text-sm font-bold hover:border-foreground/40"
                     >
                       <CodeXmlIcon className="size-4" /> {s.sourceCode}
                     </a>
@@ -178,107 +242,60 @@ async function WorkDetail({ locale, t, slug }: { locale: Locale; t: Messages; sl
                 </div>
               )}
             </div>
-          </div>
-        </Container>
-      </header>
+          </FrameCell>
+        </FrameGrid>
 
-      <Container className="mt-10 sm:mt-14">
-        <Cover
-          src={post.coverUrl}
-          alt={post.coverAlt ?? post.title}
-          seed={post.slug}
-          kind="work"
-          priority
-          sizes="(min-width: 1280px) 1232px, 100vw"
-          aspect="aspect-[16/10] sm:aspect-[16/8]"
-          className="rounded-3xl shadow-card ring-1 ring-border"
-        />
-      </Container>
-
-      {!!m.metrics?.length && (
-        <Container className="mt-8">
-          <section aria-label={s.results}>
-            <dl
-              className="grid gap-4"
-              style={{ gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, 14rem), 1fr))` }}
-            >
-              {m.metrics.map((x) => (
-                <div
-                  key={x.label}
-                  className="flex flex-col-reverse gap-1 rounded-2xl bg-primary/[0.06] p-6 ring-1 ring-primary/15"
-                >
-                  <dt className="text-sm font-semibold text-muted-foreground">{x.label}</dt>
-                  <dd className="text-4xl font-black tracking-tight text-primary-ink">{x.value}</dd>
-                </div>
+        {gallery.length > 0 && (
+          <>
+            <TitleRow title={s.gallery} titleId="gallery-title" size="h3" />
+            <FrameGrid cols={2}>
+              {gallery.map((src, i) => (
+                <FrameCell key={src + i} pad="none" as="figure">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+                    {/^\/(media|brand)\//.test(src) ? (
+                      <Image
+                        src={src}
+                        alt={`${post.title} — ${i + 1}`}
+                        fill
+                        sizes="(min-width: 768px) 600px, 100vw"
+                        className="object-cover"
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element -- external gallery image
+                      <img
+                        src={src}
+                        alt={`${post.title} — ${i + 1}`}
+                        loading="lazy"
+                        className="absolute inset-0 size-full object-cover"
+                      />
+                    )}
+                  </div>
+                </FrameCell>
               ))}
-            </dl>
-          </section>
-        </Container>
-      )}
+              <FrameFiller units={fillers(plainSpans(gallery.length), 2)} />
+            </FrameGrid>
+          </>
+        )}
 
-      <Container className="mt-14">
-        <div className="mx-auto max-w-3xl">
-          <div className="prose-gt" dangerouslySetInnerHTML={{ __html: rendered.html }} />
-        </div>
-      </Container>
+        {testimonial && (
+          <FrameGrid cols={1}>
+            <FrameCell tone="card" pad="lg">
+              <TestimonialCard item={testimonial} variant="cell" className="max-w-3xl" />
+            </FrameCell>
+          </FrameGrid>
+        )}
 
-      {!!m.gallery?.length && (
-        <Container className="mt-16">
-          <h2 className="mb-6 text-2xl font-black tracking-tight">{s.gallery}</h2>
-          <div className="grid gap-5 sm:grid-cols-2">
-            {m.gallery.map((src, i) => (
-              <figure
-                key={src + i}
-                className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-muted ring-1 ring-border"
-              >
-                {/^\/(media|brand)\//.test(src) ? (
-                  <Image
-                    src={src}
-                    alt={`${post.title} — ${i + 1}`}
-                    fill
-                    sizes="(min-width: 640px) 50vw, 100vw"
-                    className="object-cover"
-                  />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element -- external gallery image
-                  <img
-                    src={src}
-                    alt={`${post.title} — ${i + 1}`}
-                    loading="lazy"
-                    className="absolute inset-0 size-full object-cover"
-                  />
-                )}
-              </figure>
-            ))}
-          </div>
-        </Container>
-      )}
-
-      {testimonial && (
-        <Container className="mt-16">
-          <div className="mx-auto max-w-3xl">
-            <TestimonialCard
-              item={testimonial}
-              className="gt-ring bg-gradient-to-br from-primary/[0.06] to-transparent"
-            />
-          </div>
-        </Container>
-      )}
-
-      <Container className="mt-16">
-        <div className="mx-auto max-w-3xl">
-          <PrevNext
-            prev={
-              adjacent.prev && { href: postHref(locale, adjacent.prev), title: adjacent.prev.title }
-            }
-            next={
-              adjacent.next && { href: postHref(locale, adjacent.next), title: adjacent.next.title }
-            }
-            prevLabel={s.prevCase}
-            nextLabel={s.nextCase}
-          />
-        </div>
-      </Container>
+        <PrevNext
+          prev={
+            adjacent.prev && { href: postHref(locale, adjacent.prev), title: adjacent.prev.title }
+          }
+          next={
+            adjacent.next && { href: postHref(locale, adjacent.next), title: adjacent.next.title }
+          }
+          prevLabel={s.prevCase}
+          nextLabel={s.nextCase}
+        />
+      </FrameSection>
     </article>
   );
 }
@@ -288,7 +305,9 @@ export default async function WorkDetailPage({ params }: PageProps<"/[locale]/wo
   const t = getMessages(locale);
   return (
     <>
-      <Suspense fallback={<ArticleSkeleton />}>
+      <Suspense
+        fallback={<ArticleSkeleton guide={{ key: "work_detail", say: t.guide.work_detail }} />}
+      >
         {params.then(({ slug }) => (
           <WorkDetail locale={locale} t={t} slug={decodeParam(slug)} />
         ))}

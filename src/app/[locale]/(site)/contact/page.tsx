@@ -3,13 +3,15 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { ClockIcon, MailIcon, MapPinIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Window } from "@/components/shell/window";
 import { ContactForm } from "@/components/site/contact-form";
+import { FrameCell, FrameGrid, FrameSection } from "@/components/site/frame";
 import { ids, JsonLd } from "@/components/site/json-ld";
 import { Breadcrumbs } from "@/components/site/nav-bits";
 import { homeCrumb, sp } from "@/components/site/page-utils";
 import { absoluteUrl, pageMetadata } from "@/components/site/seo";
 import { SocialLinks } from "@/components/site/social-links";
-import { Container } from "@/components/site/ui";
+import { DecorWindowCell, teamPath, TitleCell } from "@/components/site/ui";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
 import { getLocale, getMessages } from "@/i18n/server";
@@ -89,8 +91,8 @@ async function DirectContact({ locale, t }: { locale: Locale; t: Messages }) {
               href={`mailto:${p.email}`}
               className="flex items-center gap-3 font-semibold hover:text-primary-ink"
             >
-              <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary-ink">
-                <MailIcon className="size-5" />
+              <span className={TILE}>
+                <MailIcon className="size-5" aria-hidden />
               </span>
               <span dir="ltr">{p.email}</span>
             </a>
@@ -98,76 +100,97 @@ async function DirectContact({ locale, t }: { locale: Locale; t: Messages }) {
         )}
         {p.location[locale] && (
           <li className="flex items-center gap-3 font-semibold">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary-ink">
-              <MapPinIcon className="size-5" />
+            <span className={TILE}>
+              <MapPinIcon className="size-5" aria-hidden />
             </span>
             {p.location[locale]}
           </li>
         )}
         <li className="flex items-center gap-3 font-semibold">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-primary/12 text-primary-ink">
-            <ClockIcon className="size-5" />
+          <span className={TILE}>
+            <ClockIcon className="size-5" aria-hidden />
           </span>
           {t.site.responseTime}
         </li>
       </ul>
-      <div className="mt-6 border-t border-dashed pt-6">
+      <div className="mt-6 border-t border-dashed border-frame-line pt-6">
         <SocialLinks socials={p.socials} />
       </div>
     </>
   );
 }
 
+const TILE =
+  "flex size-10 shrink-0 items-center justify-center rounded-[8px] border border-frame-line bg-card";
+
+/** Same fields, same heights, while the services list streams. */
+function FormSkeleton() {
+  return (
+    <div className="grid gap-5 sm:grid-cols-2">
+      {Array.from({ length: 6 }, (_, i) => (
+        <div key={i} className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-12 w-full rounded-xl" />
+        </div>
+      ))}
+      <Skeleton className="h-40 w-full rounded-xl sm:col-span-2" />
+      <Skeleton className="h-12 w-40 rounded-full sm:col-span-2 sm:justify-self-end" />
+    </div>
+  );
+}
+
+/**
+ * One box (spec §9): a header row (h1, subtitle, breadcrumbs + the decor
+ * CONTACT.APP window) stacked on the form row (the form in a NEW-MESSAGE
+ * window on dots, then the direct-contact cell). `?service=` preselects.
+ */
 export default async function ContactPage({ searchParams }: PageProps<"/[locale]/contact">) {
   const locale = await getLocale();
   const t = getMessages(locale);
   const s = t.site;
   return (
-    <section className="relative isolate">
-      <div
-        aria-hidden
-        className="bg-grid mask-fade-b absolute inset-0 -z-10 h-[32rem] opacity-70"
-      />
-      <div aria-hidden className="gt-glow start-[30%] -top-40 -z-10 size-[28rem] bg-primary/15" />
-      <Container className="pt-10 pb-10 sm:pt-14">
-        <Breadcrumbs
-          items={[homeCrumb(locale), { name: t.nav.contact, path: localePath(locale, "/contact") }]}
+    <FrameSection
+      id="top"
+      first
+      labelledBy="top-title"
+      guide={{ key: "contact", say: t.guide.contact }}
+      strip={{ index: 1, path: teamPath("CONTACT") }}
+    >
+      <FrameGrid cols="2-1">
+        <TitleCell
+          as="h1"
+          titleId="top-title"
+          className="lg:min-h-[200px]"
+          crumbs={
+            <Breadcrumbs
+              items={[
+                homeCrumb(locale),
+                { name: t.nav.contact, path: localePath(locale, "/contact") },
+              ]}
+            />
+          }
+          title={s.contactTitle}
+          subtitle={s.contactSubtitle}
         />
-        <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16">
-          <div className="space-y-6">
-            <h1 className="text-4xl leading-[1.15] font-black tracking-tight text-balance sm:text-6xl">
-              {s.contactTitle}
-            </h1>
-            <p className="text-lg leading-8 text-pretty text-muted-foreground">
-              {s.contactSubtitle}
-            </p>
-            <div className="rounded-3xl border border-border bg-card/70 p-6 backdrop-blur">
-              <p className="mb-4 text-sm font-black">{s.contactDirect}</p>
-              <Suspense fallback={<Skeleton className="h-48 w-full" />}>
-                <DirectContact locale={locale} t={t} />
+        <DecorWindowCell path="CONTACT.APP" icon="contact" />
+      </FrameGrid>
+      <FrameGrid cols="2-1">
+        <FrameCell tone="dots" className="px-3 py-6 md:p-[var(--cell-pad)]">
+          <Window path="NEW-MESSAGE">
+            <div className="p-5 sm:p-8">
+              <Suspense fallback={<FormSkeleton />}>
+                <Form locale={locale} t={t} searchParams={searchParams} />
               </Suspense>
             </div>
-          </div>
-          <div className="rounded-3xl bg-card p-6 shadow-card sm:p-10 dark:border dark:border-border">
-            <Suspense
-              fallback={
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {Array.from({ length: 6 }, (_, i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-12 w-full rounded-xl" />
-                    </div>
-                  ))}
-                  <Skeleton className="h-40 w-full rounded-xl sm:col-span-2" />
-                  <Skeleton className="h-12 w-40 rounded-full sm:col-span-2 sm:justify-self-end" />
-                </div>
-              }
-            >
-              <Form locale={locale} t={t} searchParams={searchParams} />
-            </Suspense>
-          </div>
-        </div>
-      </Container>
-    </section>
+          </Window>
+        </FrameCell>
+        <FrameCell as="aside" tone="card">
+          <h2 className="mb-5 text-sm font-black">{s.contactDirect}</h2>
+          <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+            <DirectContact locale={locale} t={t} />
+          </Suspense>
+        </FrameCell>
+      </FrameGrid>
+    </FrameSection>
   );
 }

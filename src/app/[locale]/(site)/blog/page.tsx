@@ -1,14 +1,29 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { NewspaperIcon, SearchIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { PostCard, TypeBadge } from "@/components/site/cards";
 import { Cover } from "@/components/site/cover";
+import {
+  FrameCell,
+  FrameFiller,
+  FrameGrid,
+  FrameSection,
+  type FrameSpan,
+} from "@/components/site/frame";
 import { Breadcrumbs, Pagination } from "@/components/site/nav-bits";
-import { homeCrumb, pageParam, sp, withQuery } from "@/components/site/page-utils";
+import {
+  clampSay,
+  fillers,
+  homeCrumb,
+  pageParam,
+  plainSpans,
+  sp,
+  withQuery,
+} from "@/components/site/page-utils";
 import { pageMetadata } from "@/components/site/seo";
-import { CardGridSkeleton, ChipsSkeleton } from "@/components/site/skeletons";
-import { Chip, Container, fmtDate, fmtNum, PageHero } from "@/components/site/ui";
+import { CellGridSkeleton, ChipRowSkeleton } from "@/components/site/skeletons";
+import { Chip, EmptyCell, fmtDate, fmtNum, PageHero, teamPath } from "@/components/site/ui";
 import { format } from "@/i18n/format-message";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
@@ -66,109 +81,134 @@ async function BlogList({
   const typeLabel = (k: BlogType) =>
     ({ article: t.site.type_article, vlog: t.site.type_vlog, note: t.site.type_note })[k];
 
+  const spans: (FrameSpan | undefined)[] = [
+    ...(hero ? [2 as const] : []),
+    ...plainSpans(items.length),
+  ];
   return (
     <>
-      <div className="mb-10 space-y-4">
-        <div className="-mx-4 flex scrollbar-none items-center gap-2 overflow-x-auto px-4 pb-1">
-          <Chip href={withQuery(base, { tag, q: search })} active={!type}>
-            {t.site.all}
-          </Chip>
-          {blogTypes.map((k) => (
-            <Chip key={k} href={withQuery(base, { type: k, tag, q: search })} active={type === k}>
-              {typeLabel(k)}
+      <FrameGrid cols={1}>
+        <FrameCell className="flex flex-col gap-4 py-5 md:py-5">
+          <div className="-mx-1 flex scrollbar-none items-center gap-2 overflow-x-auto px-1 pb-1">
+            <Chip href={withQuery(base, { tag, q: search })} active={!type}>
+              {t.site.all}
             </Chip>
-          ))}
-        </div>
-        {tags.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="me-1 text-sm font-semibold text-muted-foreground">{t.site.tags}:</span>
-            {tags.slice(0, 14).map((tg) => (
-              <Link
-                key={tg.tag}
-                href={withQuery(base, { type, tag: tag === tg.tag ? undefined : tg.tag })}
-                scroll={false}
-                className={
-                  tag === tg.tag
-                    ? "rounded-md bg-primary px-2 py-1 text-xs font-bold text-primary-foreground"
-                    : "rounded-md bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-                }
-              >
-                #{tg.tag}
-              </Link>
+            {blogTypes.map((k) => (
+              <Chip key={k} href={withQuery(base, { type: k, tag, q: search })} active={type === k}>
+                {typeLabel(k)}
+              </Chip>
             ))}
           </div>
-        )}
-        {search && (
-          <p className="text-sm text-muted-foreground">
-            {format(t.site.searchResults, { q: search })} — {fmtNum(list.total, locale)}
-          </p>
-        )}
-      </div>
-
-      {hero && (
-        <article className="gt-lift group relative mb-10 grid overflow-hidden rounded-3xl bg-card shadow-card md:grid-cols-2 dark:border dark:border-border">
-          <Cover
-            src={hero.coverUrl}
-            alt={hero.coverAlt ?? hero.title}
-            seed={hero.slug}
-            kind={hero.type}
-            priority
-            sizes="(min-width: 768px) 50vw, 100vw"
-            className="md:aspect-auto md:h-full"
-            imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-          <div className="flex flex-col justify-center gap-4 p-7 sm:p-10">
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-warning/16 px-2.5 py-0.5 text-xs font-bold text-[#b76e00] dark:text-warning">
-                {t.site.featured}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="me-1 text-sm font-semibold text-muted-foreground">
+                {t.site.tags}:
               </span>
-              <TypeBadge type={hero.type} t={t} />
+              {tags.slice(0, 14).map((tg) => (
+                <Link
+                  key={tg.tag}
+                  href={withQuery(base, { type, tag: tag === tg.tag ? undefined : tg.tag })}
+                  scroll={false}
+                  aria-current={tag === tg.tag ? "true" : undefined}
+                  className={
+                    tag === tg.tag
+                      ? "rounded-[6px] bg-primary px-2 py-1 text-xs font-bold text-primary-foreground"
+                      : "rounded-[6px] bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
+                  }
+                >
+                  #{tg.tag}
+                </Link>
+              ))}
             </div>
-            <h2 className="text-2xl leading-snug font-black tracking-tight text-balance sm:text-3xl">
-              <Link href={postHref(locale, hero)} className="after:absolute after:inset-0">
-                {hero.title}
-              </Link>
-            </h2>
-            {hero.excerpt && <p className="leading-8 text-muted-foreground">{hero.excerpt}</p>}
-            <p className="text-xs text-muted-foreground">
-              <time dateTime={hero.publishedAt?.toISOString()}>
-                {fmtDate(hero.publishedAt, locale)}
-              </time>
-              {hero.readingMinutes
-                ? ` · ${format(t.site.minRead, { n: fmtNum(hero.readingMinutes, locale) })}`
-                : ""}
+          )}
+          {search && (
+            <p className="text-sm text-muted-foreground">
+              {format(t.site.searchResults, { q: search })} — {fmtNum(list.total, locale)}
             </p>
-          </div>
-        </article>
-      )}
+          )}
+        </FrameCell>
+      </FrameGrid>
 
-      {items.length ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((p, i) => (
+      <FrameGrid cols={3}>
+        {hero && (
+          <FrameCell
+            span={2}
+            hover
+            pad="none"
+            spot={{ key: `post-${hero.slug}`, say: clampSay(hero.excerpt || hero.title) }}
+          >
+            <article className="group relative grid h-full md:grid-cols-2">
+              <Cover
+                src={hero.coverUrl}
+                alt={hero.coverAlt ?? hero.title}
+                seed={hero.slug}
+                kind={hero.type}
+                priority
+                sizes="(min-width: 1024px) 400px, (min-width: 768px) 50vw, 100vw"
+                className="md:aspect-auto md:h-full"
+                imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+              <div className="flex flex-col justify-center gap-4 p-[var(--cell-pad)]">
+                <div className="flex items-center gap-2">
+                  <span className="frame-eyebrow">{t.site.featured}</span>
+                  <TypeBadge type={hero.type} t={t} />
+                </div>
+                <h2 className="text-2xl leading-snug font-extrabold tracking-tight text-balance md:text-[28px]">
+                  <Link href={postHref(locale, hero)} className="after:absolute after:inset-0">
+                    {hero.title}
+                  </Link>
+                </h2>
+                {hero.excerpt && (
+                  <p className="line-clamp-4 leading-8 text-muted-foreground">{hero.excerpt}</p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  <time dateTime={hero.publishedAt?.toISOString()}>
+                    {fmtDate(hero.publishedAt, locale)}
+                  </time>
+                  {hero.readingMinutes
+                    ? ` · ${format(t.site.minRead, { n: fmtNum(hero.readingMinutes, locale) })}`
+                    : ""}
+                </p>
+              </div>
+            </article>
+          </FrameCell>
+        )}
+        {items.map((p, i) => (
+          <FrameCell
+            key={p.id}
+            hover
+            spot={{ key: `post-${p.slug}`, say: clampSay(p.excerpt || p.title) }}
+          >
             <PostCard
-              key={p.id}
               post={p}
               locale={locale}
               t={t}
               priority={!hero && i < 3}
               headingLevel="h2"
+              variant="cell"
             />
-          ))}
-        </div>
-      ) : (
-        !hero && (
-          <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed px-6 py-20 text-center">
-            <NewspaperIcon className="size-10 text-muted-foreground/60" />
-            <p className="text-lg font-bold">{t.site.emptyList}</p>
-            <p className="text-sm text-muted-foreground">{t.site.emptyListHint}</p>
-            {(type || tag || search) && (
-              <Link href={base} className="mt-2 text-sm font-bold text-primary-ink hover:underline">
-                {t.site.clearFilters}
-              </Link>
-            )}
-          </div>
-        )
-      )}
+          </FrameCell>
+        ))}
+        {!hero && !items.length ? (
+          <EmptyCell
+            icon="blog"
+            title={t.site.emptyList}
+            hint={t.site.emptyListHint}
+            action={
+              (type || tag || search) && (
+                <Link
+                  href={base}
+                  className="mt-2 text-sm font-bold text-primary-ink hover:underline"
+                >
+                  {t.site.clearFilters}
+                </Link>
+              )
+            }
+          />
+        ) : (
+          <FrameFiller units={fillers(spans, 3)} />
+        )}
+      </FrameGrid>
       <Pagination
         page={list.page}
         pages={list.pages}
@@ -180,12 +220,34 @@ async function BlogList({
   );
 }
 
+function SearchForm({ locale, t }: { locale: Locale; t: Messages }) {
+  return (
+    <form action={localePath(locale, "/blog")} method="get" role="search" className="relative">
+      <SearchIcon
+        aria-hidden
+        className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+      />
+      <input
+        type="search"
+        name="q"
+        enterKeyHint="search"
+        aria-label={t.site.searchPlaceholder}
+        placeholder={t.site.searchPlaceholder}
+        className="h-7 w-40 rounded-[6px] border border-frame-line bg-card ps-8 pe-2 text-[13px] outline-none placeholder:text-muted-foreground/80 focus-visible:border-primary-ink focus-visible:ring-2 focus-visible:ring-ring sm:w-56"
+      />
+    </form>
+  );
+}
+
 export default async function BlogPage({ searchParams }: PageProps<"/[locale]/blog">) {
   const locale = await getLocale();
   const t = getMessages(locale);
   return (
     <>
       <PageHero
+        section="BLOG"
+        icon="blog"
+        guide={{ key: "blog_index", say: t.guide.blog_index }}
         crumbs={
           <Breadcrumbs
             items={[
@@ -196,38 +258,25 @@ export default async function BlogPage({ searchParams }: PageProps<"/[locale]/bl
         }
         title={t.site.blogTitle}
         subtitle={t.site.blogSubtitle}
+        stripAction={<SearchForm locale={locale} t={t} />}
+      />
+      <FrameSection
+        id="posts"
+        ariaLabel={t.site.blogTitle}
+        guide={{ key: "blog_grid", say: t.guide.blog_grid }}
+        strip={{ index: 2, path: teamPath("BLOG", "POSTS") }}
       >
-        <form
-          action={localePath(locale, "/blog")}
-          method="get"
-          role="search"
-          className="relative max-w-md"
-        >
-          <SearchIcon className="pointer-events-none absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            name="q"
-            aria-label={t.site.searchPlaceholder}
-            placeholder={t.site.searchPlaceholder}
-            className="h-12 w-full rounded-full border border-input bg-background/80 ps-11 pe-4 text-[15px] shadow-card backdrop-blur outline-none focus-visible:border-primary-ink focus-visible:ring-2 focus-visible:ring-ring"
-          />
-        </form>
-      </PageHero>
-      <Container>
         <Suspense
           fallback={
             <>
-              <div className="mb-10 space-y-4">
-                <ChipsSkeleton count={4} />
-                <ChipsSkeleton count={8} />
-              </div>
-              <CardGridSkeleton count={6} />
+              <ChipRowSkeleton rows={[4, 8]} />
+              <CellGridSkeleton count={6} />
             </>
           }
         >
           <BlogList locale={locale} t={t} searchParams={searchParams} />
         </Suspense>
-      </Container>
+      </FrameSection>
     </>
   );
 }

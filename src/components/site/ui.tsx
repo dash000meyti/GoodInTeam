@@ -2,10 +2,24 @@ import "server-only";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronLeftIcon } from "lucide-react";
-import { localeMeta, type Locale } from "@/i18n/config";
+import { PixelAvatar, PixelIcon, PixelText } from "@/components/brand/pixel-art";
+import type { PixelIconName } from "@/components/brand/pixel-icons";
+import { Window } from "@/components/shell/window";
+import { localeMeta, localePath, type Locale } from "@/i18n/config";
+import type { Messages } from "@/i18n/messages";
 import { env } from "@/lib/env";
 import { formatDate, formatNumber, type FormatOptions } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import {
+  FrameCell,
+  FrameEyebrow,
+  FrameGrid,
+  FrameSection,
+  framePath,
+  type FrameSpan,
+  type FrameTone,
+  type GuideLine,
+} from "./frame";
 
 /** Public site building blocks (server components). */
 
@@ -43,20 +57,12 @@ export function Container({ className, children }: { className?: string; childre
   return <div className={cn("mx-auto w-full max-w-7xl px-4 sm:px-6", className)}>{children}</div>;
 }
 
+/** Dashed accent chip (renders foundation's FrameEyebrow; no blur). */
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 text-xs font-bold text-muted-foreground backdrop-blur",
-        className,
-      )}
-    >
-      <span className="gt-dot" aria-hidden />
-      {children}
-    </span>
-  );
+  return <FrameEyebrow className={className}>{children}</FrameEyebrow>;
 }
 
+/** Legacy section heading (home imports it until its rewrite). */
 export function SectionHeading({
   eyebrow,
   title,
@@ -131,54 +137,197 @@ export function ArrowLink({
   );
 }
 
-/** Page hero used by section index pages (work, blog, learn, services…). */
+/**
+ * Heading scale of the frame system (spec §3.5): the same literal classes as
+ * foundation's FrameHeaderCell, plus a smaller `article` h1 for long titles.
+ * TODO(foundation): FrameHeaderCell has no slot before the eyebrow (breadcrumbs)
+ * and no `spot`, so TitleCell mirrors its heading classes; export them from frame.tsx.
+ */
+export const HEADING_CLASS = {
+  h1: "text-[36px] leading-[1.08] font-bold text-balance md:text-[56px] md:leading-[1.02] [:lang(en)_&]:tracking-[-0.035em] [:lang(fa)_&]:text-[32px] [:lang(fa)_&]:leading-[1.35] [:lang(fa)_&]:font-extrabold md:[:lang(fa)_&]:text-[48px] md:[:lang(fa)_&]:leading-[1.3]",
+  article:
+    "text-[32px] leading-[1.12] font-bold text-balance md:text-[44px] md:leading-[1.08] [:lang(en)_&]:tracking-[-0.03em] [:lang(fa)_&]:text-[28px] [:lang(fa)_&]:leading-[1.45] [:lang(fa)_&]:font-extrabold md:[:lang(fa)_&]:text-[38px] md:[:lang(fa)_&]:leading-[1.4]",
+  h2: "text-[28px] leading-[1.15] font-bold text-balance md:text-[40px] md:leading-[1.08] [:lang(en)_&]:tracking-[-0.03em] [:lang(fa)_&]:leading-[1.4] [:lang(fa)_&]:font-extrabold md:[:lang(fa)_&]:text-[36px] md:[:lang(fa)_&]:leading-[1.35]",
+  h3: "text-xl leading-[1.3] font-bold text-balance [:lang(fa)_&]:leading-[1.6]",
+} as const;
+
+const LEAD =
+  "max-w-2xl text-lg leading-[1.6] text-pretty text-muted-foreground [:lang(fa)_&]:leading-[1.9]";
+
+/**
+ * A box's header cell (always `data-frame-header`): breadcrumbs, eyebrow,
+ * the h1/h2 (`titleId` labels the box), subtitle, then `children` (facets,
+ * a count line, buttons). `spot` makes it a guide "special part".
+ */
+export function TitleCell({
+  as: H = "h2",
+  size,
+  title,
+  titleId,
+  crumbs,
+  eyebrow,
+  subtitle,
+  span,
+  tone,
+  spot,
+  hClassName,
+  className,
+  children,
+}: {
+  as?: "h1" | "h2";
+  /** Heading scale; defaults to the tag (`article` = smaller h1 for long titles). */
+  size?: keyof typeof HEADING_CLASS;
+  title: ReactNode;
+  titleId: string;
+  crumbs?: ReactNode;
+  eyebrow?: ReactNode;
+  subtitle?: ReactNode;
+  span?: FrameSpan;
+  tone?: FrameTone;
+  spot?: GuideLine;
+  hClassName?: string;
+  className?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <FrameCell
+      header
+      span={span}
+      tone={tone}
+      spot={spot}
+      className={cn("flex flex-col items-start gap-4", className)}
+    >
+      {crumbs}
+      {eyebrow && <FrameEyebrow>{eyebrow}</FrameEyebrow>}
+      <H id={titleId} className={cn(HEADING_CLASS[size ?? H], hClassName)}>
+        {title}
+      </H>
+      {subtitle && <p className={LEAD}>{subtitle}</p>}
+      {children}
+    </FrameCell>
+  );
+}
+
+/** A plain full-width header row (FrameGrid 1) holding a TitleCell. */
+export function TitleRow(props: Parameters<typeof TitleCell>[0]) {
+  return (
+    <FrameGrid cols={1}>
+      <TitleCell {...props} />
+    </FrameGrid>
+  );
+}
+
+/**
+ * The decorative end cell of a first box (spec §9 first-box rule): a
+ * `tone="dots"` cell (so `data-decor`), hidden below lg unless `always`,
+ * ≥200px tall at lg, holding an opaque Window. The guide's first-box line
+ * lands here (candidate B), so it never holds text.
+ */
+export function DecorWindowCell({
+  path,
+  icon,
+  always,
+  className,
+  bodyClassName,
+  children,
+}: {
+  path: string;
+  icon?: PixelIconName;
+  always?: boolean;
+  className?: string;
+  bodyClassName?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <FrameCell
+      tone="dots"
+      aria-hidden={children ? undefined : true}
+      className={cn(
+        "flex flex-col justify-center lg:min-h-[200px]",
+        !always && "hidden lg:flex",
+        className,
+      )}
+    >
+      <Window path={path} className={cn("w-full", !children && "lg:flex-1")}>
+        {children ?? (
+          <div
+            className={cn(
+              "grid h-full min-h-[136px] place-items-center bg-[radial-gradient(var(--dots)_1px,transparent_1.5px)] [background-size:12px_12px] p-6",
+              bodyClassName,
+            )}
+          >
+            {icon && <PixelIcon name={icon} cell={6} />}
+          </div>
+        )}
+      </Window>
+    </FrameCell>
+  );
+}
+
+/**
+ * Page hero of the section index pages (spec §9): the page's first box
+ * (`FrameSection first`, id `top`), strip `GOOD-IN-TEAM/<SECTION>`, one
+ * `FrameGrid 2-1` of the h1 header cell (breadcrumbs, title, subtitle, then
+ * the facets/count line as children) and the decor end cell with the
+ * `<SECTION>.APP` window (the section's pixel icon, or `windowBody`).
+ */
 export function PageHero({
+  section,
+  icon,
+  guide,
   crumbs,
   eyebrow,
   title,
   subtitle,
+  stripAction,
+  windowBody,
   children,
-  className,
 }: {
+  section: string;
+  icon: PixelIconName;
+  guide: GuideLine;
   crumbs?: ReactNode;
   eyebrow?: ReactNode;
   title: ReactNode;
   subtitle?: ReactNode;
+  /** Inline-end of the strip (the /blog search form). */
+  stripAction?: ReactNode;
+  /** Replaces the icon inside the decor window (a series cover). */
+  windowBody?: ReactNode;
   children?: ReactNode;
-  className?: string;
 }) {
   return (
-    <section className={cn("relative isolate", className)}>
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
-      >
-        <div aria-hidden className="bg-grid mask-fade-b absolute inset-0 -z-10 opacity-70" />
-        <div
-          aria-hidden
-          className="gt-glow start-1/2 -top-40 -z-10 h-80 w-[36rem] -translate-x-1/2 bg-primary/15 rtl:translate-x-1/2"
-        />
-      </div>
-      <Container className="pt-14 pb-10 sm:pt-20 sm:pb-14">
-        {crumbs && <div className="mb-8">{crumbs}</div>}
-        <div className="max-w-3xl space-y-5">
-          {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-          <h1 className="text-4xl leading-[1.15] font-black tracking-tight text-balance sm:text-5xl lg:text-6xl">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="max-w-2xl text-lg leading-8 text-pretty text-muted-foreground">
-              {subtitle}
-            </p>
-          )}
-        </div>
-        {children && <div className="mt-8">{children}</div>}
-      </Container>
-    </section>
+    <FrameSection
+      id="top"
+      first
+      labelledBy="top-title"
+      guide={guide}
+      strip={{ index: 1, path: framePath("GOOD-IN-TEAM", section), action: stripAction }}
+    >
+      <FrameGrid cols="2-1">
+        <TitleCell
+          as="h1"
+          titleId="top-title"
+          crumbs={crumbs}
+          eyebrow={eyebrow}
+          title={title}
+          subtitle={subtitle}
+          className="lg:min-h-[200px]"
+        >
+          {children}
+        </TitleCell>
+        <DecorWindowCell path={`${section}.APP`} icon={icon}>
+          {windowBody}
+        </DecorWindowCell>
+      </FrameGrid>
+    </FrameSection>
   );
 }
 
-/** Pill-shaped filter chip link. */
+/** A strip path for a page box: `framePath("GOOD-IN-TEAM", …)`. */
+export const teamPath = (...segments: string[]) => framePath("GOOD-IN-TEAM", ...segments);
+
+/** Square-cornered filter chip link (frame look). */
 export function Chip({
   href,
   active,
@@ -196,10 +345,10 @@ export function Chip({
       scroll={false}
       aria-current={active ? "true" : undefined}
       className={cn(
-        "inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold whitespace-nowrap transition-colors",
+        "inline-flex h-8 items-center gap-1.5 rounded-[6px] border px-3 text-sm font-semibold whitespace-nowrap transition-colors",
         active
-          ? "border-transparent bg-grey-800 text-white dark:bg-white dark:text-grey-800"
-          : "border-border bg-background text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+          ? "border-foreground bg-foreground text-background"
+          : "border-frame-line bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground",
       )}
     >
       {children}
@@ -209,5 +358,98 @@ export function Chip({
         </span>
       )}
     </Link>
+  );
+}
+
+/** A full-row empty state (never on dots): pixel icon, title, hint, optional action. */
+export function EmptyCell({
+  icon,
+  title,
+  hint,
+  action,
+  span = "full",
+}: {
+  icon: PixelIconName;
+  title: string;
+  hint?: string;
+  action?: ReactNode;
+  span?: FrameSpan;
+}) {
+  return (
+    <FrameCell span={span} pad="lg" className="flex flex-col items-center gap-3 text-center">
+      <PixelIcon name={icon} cell={4} />
+      <p className="text-lg font-bold">{title}</p>
+      {hint && <p className="max-w-md text-sm text-muted-foreground">{hint}</p>}
+      {action}
+    </FrameCell>
+  );
+}
+
+const PILL =
+  "inline-flex h-11 items-center gap-2 rounded-full px-6 text-[15px] font-bold transition-colors";
+/** Primary (yellow, ink text) and outline pills. */
+export const pillClass = {
+  primary: `${PILL} bg-primary text-primary-foreground hover:bg-primary-hover`,
+  outline: `${PILL} border border-frame-line bg-card hover:border-foreground/40`,
+} as const;
+
+/**
+ * The 404 "alert" box (spec §9): a `FrameSection first` with a FrameGrid 2-1
+ * of the text cell (h1, body, Home/Contact pills, a few useful links) and a
+ * `tone="dots"` art cell (pixel 404 + the blinking avatar). Below lg they stack.
+ */
+export function NotFoundBox({ locale, t }: { locale: Locale; t: Messages }) {
+  const links = [
+    { href: "/work", label: t.nav.work },
+    { href: "/services", label: t.nav.services },
+    { href: "/blog", label: t.nav.blog },
+    { href: "/learn", label: t.nav.learn },
+  ];
+  return (
+    <FrameSection
+      id="top"
+      first
+      labelledBy="top-title"
+      guide={{ key: "not_found", say: t.guide.not_found }}
+      strip={{ index: 404, path: teamPath("NOT-FOUND") }}
+    >
+      <FrameGrid cols="2-1">
+        <TitleCell
+          as="h1"
+          titleId="top-title"
+          eyebrow={t.site.notFoundEyebrow}
+          title={t.common.notFoundTitle}
+          subtitle={t.common.notFoundBody}
+          className="justify-center lg:min-h-[320px]"
+        >
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Link href={localePath(locale, "/")} className={pillClass.primary}>
+              {t.common.goHome}
+            </Link>
+            <Link href={localePath(locale, "/contact")} className={pillClass.outline}>
+              {t.nav.contact}
+            </Link>
+          </div>
+          <nav aria-label={t.site.notFoundSuggestions} className="pt-4 text-sm">
+            <p className="mb-2 font-semibold text-muted-foreground">{t.site.notFoundSuggestions}</p>
+            <ul className="flex flex-wrap gap-x-5 gap-y-2">
+              {links.map((l) => (
+                <li key={l.href}>
+                  <ArrowLink href={localePath(locale, l.href)}>{l.label}</ArrowLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </TitleCell>
+        <FrameCell
+          tone="dots"
+          aria-hidden
+          className="flex min-h-[240px] flex-col items-center justify-center gap-6"
+        >
+          <PixelText text="404" cell={8} />
+          <PixelAvatar pose="blink" cell={8} />
+        </FrameCell>
+      </FrameGrid>
+    </FrameSection>
   );
 }

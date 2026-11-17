@@ -41,12 +41,18 @@ export interface ProfileLike {
 const sameAs = (p: ProfileLike) =>
   Object.values(p.socials).filter((u) => /^https?:\/\/.+\/.+/.test(u));
 
+/** Both forms of the master brand (spec §2), whatever the stored profile name is. */
+const BRAND_FORMS = ["Good In Team", "گودین تیم"];
+
 export function organizationLd(p: ProfileLike, locale: Locale): Thing {
+  const name = p.brandName[locale] || p.brandName.en;
   return {
     "@type": "Organization",
     "@id": ids.organization(),
-    name: p.brandName[locale] || p.brandName.en,
-    alternateName: p.brandName[locale === "fa" ? "en" : "fa"],
+    name,
+    alternateName: [
+      ...new Set([...BRAND_FORMS, p.brandName[locale === "fa" ? "en" : "fa"]]),
+    ].filter(Boolean),
     url: absoluteUrl(localePath(locale, "/")),
     logo: absoluteUrl("/icon.svg"),
     description: p.bio[locale] || undefined,
