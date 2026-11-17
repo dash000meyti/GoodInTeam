@@ -200,7 +200,7 @@ function ContractMock({ t }: { t: Messages }) {
           <div key={i} className="h-2 bg-muted" style={{ width: `${w}%` }} />
         ))}
       </div>
-      <div className="mt-6 flex items-end justify-between gap-4 border-t border-dashed border-frame-line pt-4">
+      <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-t border-dashed border-frame-line pt-4">
         <svg viewBox="0 0 160 50" className="h-12 w-40 text-foreground" fill="none" aria-hidden>
           <path
             d="M4 38c14-22 22-30 30-24s-6 26 6 22 14-28 24-26 2 22 12 22 12-16 20-16 6 12 14 12 16-10 22-12 14 4 22 2"
@@ -342,7 +342,7 @@ export function HowWeWork({ t, locale }: { t: Messages; locale: Locale }) {
                 <div
                   key={key}
                   className={cn(
-                    "gt-rise hidden min-h-[400px] gap-8 p-5 sm:p-6 md:grid-cols-2 md:items-center",
+                    "gt-rise hidden min-h-[400px] grid-cols-[minmax(0,1fr)] gap-8 p-5 sm:p-6 md:grid-cols-2 md:items-center",
                     tabCls[key].panel,
                   )}
                 >
