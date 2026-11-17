@@ -5,11 +5,21 @@ import {
   PixelAvatar,
   PixelAvatarSprite,
   PixelIcon,
+  PixelText,
   type SpriteState,
 } from "@/components/brand/pixel-art";
 import type { PixelPose } from "@/components/brand/pixel-avatar";
-import { pixelIconNames } from "@/components/brand/pixel-icons";
+import { PERSIAN_DIGITS } from "@/components/brand/pixel-font";
+import {
+  accentShare,
+  panelIconNames,
+  pixelIcons,
+  siteIconNames,
+  type PixelIconName,
+} from "@/components/brand/pixel-icons";
 import { PixelLogo, PixelLogoCycle, PixelMark } from "@/components/brand/pixel-logo";
+import { DockTile, type DockVariant } from "@/components/shell/dock";
+import { OsLights } from "@/components/shell/os-lights";
 import { chromeTokens, inkTokens } from "@/components/shared/design-tokens";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -153,9 +163,57 @@ import { PixelLogo, PixelMark, PixelLogoCycle } from "@/components/brand/pixel-l
 const iconCode = `import { PixelIcon, PixelText, PixelAvatar } from "@/components/brand/pixel-art";
 <PixelIcon name="studio" cell={2} />          // 24px
 <PixelIcon name="arrow" mirror />             // points to inline-end in fa and en
+<PixelIcon name={item.pixel} cell={2} />      // panel dock: nav-config NavItem.pixel
 <PixelText text="GOOD-IN-TEAM/WORK" cell={2} />
 <PixelAvatar pose="wave" cell={6} />          // literal colours, never on yellow
 <PixelAvatar part="head" cell={2} />          // 20px head (menu bar, Me tile)`;
+
+const digitsCode = `import { pixelDigits } from "@/components/brand/pixel-font";
+<PixelText text={pixelDigits("404", locale)} cell={8} />  // fa ۴۰۴ · en 404
+// FrameSection does it for its strip: strip={{ index: 3 }} → ۰۳ on fa, 03 on en`;
+
+/** One icon set at cell 2 and cell 1, each with its name and accent share. */
+function IconSet({ names, label }: { names: readonly PixelIconName[]; label: string }) {
+  return (
+    <div className="w-full space-y-2">
+      <p className="text-xs font-bold text-muted-foreground">{label}</p>
+      <ul className="grid w-full grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-x-2 gap-y-4">
+        {names.map((name) => (
+          <li key={name} className="flex flex-col items-center gap-1.5">
+            <PixelIcon name={name} cell={2} mirror={name === "arrow"} />
+            <PixelIcon name={name} cell={1} mirror={name === "arrow"} />
+            <code
+              className="flex flex-col items-center text-[10px] leading-4 text-muted-foreground"
+              dir="ltr"
+            >
+              <span>{name}</span>
+              <span>y {Math.round(accentShare(pixelIcons[name]) * 100)}%</span>
+            </code>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** The panel icons on dock tiles: brand (current theme), brand in dark, accent (yellow). */
+function TileRow({ variant, dark }: { variant: DockVariant; dark?: boolean }) {
+  return (
+    <div
+      className={
+        dark ? "dark flex flex-wrap gap-2 rounded-xl bg-[#161618] p-2" : "flex flex-wrap gap-2 p-2"
+      }
+    >
+      {panelIconNames.map((name) => (
+        <span key={name} className="block size-12">
+          <DockTile variant={variant}>
+            <PixelIcon name={name} cell={2} />
+          </DockTile>
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export function BrandSection({ t }: { t: Messages }) {
   const d = t.designSystem;
@@ -198,16 +256,55 @@ export function BrandSection({ t }: { t: Messages }) {
           </span>
           <PixelLogoCycle cell={2} />
         </Example>
-        <Example title={d.brandIcons} description={d.brandIconsHint} code={iconCode}>
-          <div className="grid w-full grid-cols-4 gap-3 sm:grid-cols-7">
-            {pixelIconNames.map((name) => (
-              <span key={name} className="flex flex-col items-center gap-1.5">
-                <PixelIcon name={name} cell={2} mirror={name === "arrow"} />
-                <PixelIcon name={name} cell={1} mirror={name === "arrow"} />
-                <code className="text-[10px] text-muted-foreground" dir="ltr">
-                  {name}
-                </code>
-              </span>
+        <Example
+          title={d.brandIcons}
+          description={d.brandIconsHint}
+          code={iconCode}
+          previewClassName="flex-col items-stretch gap-6"
+        >
+          <IconSet names={siteIconNames} label={d.brandSiteIcons} />
+          <IconSet names={panelIconNames} label={d.brandPanelIcons} />
+        </Example>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <Example
+          title={d.brandPanelTiles}
+          description={d.brandPanelTilesHint}
+          previewClassName="flex-col items-stretch gap-2"
+        >
+          <TileRow variant="brand" />
+          <TileRow variant="brand" dark />
+          <TileRow variant="accent" />
+        </Example>
+        <Example
+          title={d.brandDigits}
+          description={d.brandDigitsHint}
+          code={digitsCode}
+          previewClassName="flex-col items-start gap-4"
+        >
+          <div className="flex flex-col gap-3" dir="ltr">
+            <PixelText text="0123456789" cell={3} />
+            <PixelText text={PERSIAN_DIGITS} cell={3} />
+          </div>
+          <div className="flex flex-wrap items-center gap-4" dir="ltr">
+            {["01", "۰۱", "07", "۰۷", "404", "۴۰۴"].map((n) => (
+              <PixelText key={n} text={n} cell={2} />
+            ))}
+          </div>
+          {/* a strip as each locale lays it out: en (LTR) and fa (RTL, number beside the lights) */}
+          <div className="flex w-full flex-col gap-2">
+            {(
+              [
+                ["ltr", "03"],
+                ["rtl", "۰۳"],
+              ] as const
+            ).map(([dir, n]) => (
+              <div key={n} dir={dir} className="frame-strip rounded-lg border">
+                <OsLights size={10} />
+                <PixelText text={n} cell={2} />
+                <PixelText text="GOOD-IN-TEAM/WORK" cell={2} className="frame-path" />
+              </div>
             ))}
           </div>
         </Example>
