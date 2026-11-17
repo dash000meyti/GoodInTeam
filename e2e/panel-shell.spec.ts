@@ -84,9 +84,11 @@ test("the menu bar is keyboard-operable (Radix menubar)", async ({ page }) => {
   await expect(page.locator(":focus")).toHaveAttribute("href", "#main");
   await page.keyboard.press("Tab");
   await expect(page.locator(":focus")).toHaveAccessibleName("Good In menu");
-  await page.keyboard.press("ArrowRight"); // App menu
-  await page.keyboard.press("ArrowRight"); // first navigation menu: Work
-  await expect(page.locator(":focus")).toHaveText("Work");
+  // Radix moves roving focus on the next tick: wait for each move before the next key.
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator(":focus")).toHaveText("Good In Team"); // App menu (current app)
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator(":focus")).toHaveText("Work"); // first navigation menu
   await page.keyboard.press("Enter");
   const menu = page.getByRole("menu");
   await expect(menu).toBeVisible();
@@ -94,7 +96,7 @@ test("the menu bar is keyboard-operable (Radix menubar)", async ({ page }) => {
   await expect(menu.getByRole("menuitem").first()).toHaveText("Time tracking");
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/en\/panel\/time$/);
-  await expect(dock(page).locator('a[href="/en/panel/time"]')).toHaveAttribute(
+  await expect(dock(page).locator('[data-dock-app][href="/en/panel/time"]')).toHaveAttribute(
     "aria-current",
     "page",
   );
@@ -133,7 +135,8 @@ test("the Time tile's accessible name includes the running count", async ({ page
   await page.setViewportSize({ width: 1440, height: 900 });
   await login(page, MEMBER);
   await page.goto("/en/panel");
-  const time = dock(page).locator('a[href="/en/panel/time"]');
+  // The desktop tile (the 390px tab bar has a short-label twin without data-dock-app).
+  const time = dock(page).locator('[data-dock-app][href="/en/panel/time"]');
   await expect(time).toBeVisible();
   await page.waitForLoadState("networkidle");
   await stopAllTimers(page);
@@ -183,7 +186,7 @@ test("auto-hide hides the desktop dock but never the mobile tab bar", async ({ p
   const box = (await bar.boundingBox())!;
   expect(box.y + box.height).toBeLessThanOrEqual(844);
   expect(box.y + box.height).toBeGreaterThan(844 - 24);
-  await expect(dock(page).getByRole("link", { name: /^Time tracking/ })).toBeInViewport();
+  await expect(dock(page).getByRole("link", { name: /^Time\b/ })).toBeInViewport();
 });
 
 test("at 1280×720 the dock never covers the last vault button", async ({ page }) => {
