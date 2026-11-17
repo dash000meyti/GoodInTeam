@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { brandIds, type BrandId } from "@/components/brand/brands";
+import { brandIds, subBrandIds, type BrandId, type SubBrandId } from "@/components/brand/brands";
 import { guide as en } from "@/i18n/messages/en/guide";
 import { guide as fa } from "@/i18n/messages/fa/guide";
 
@@ -55,6 +55,7 @@ const COVERAGE = [
   "about",
   "about_values",
   "about_stats",
+  "brand_family",
   "contact",
   "not_found",
 ] as const;
@@ -73,6 +74,15 @@ describe("guide copy", () => {
     for (const id of brandIds) {
       const k: `services_brand_${BrandId}` = `services_brand_${id}`;
       expect(fa[k], k).toBeTruthy();
+    }
+    // brand landing pages (/studio, /code): the hero and the services box
+    for (const id of subBrandIds) {
+      const hero: `brand_${SubBrandId}` = `brand_${id}`;
+      const services: `brand_services_${SubBrandId}` = `brand_services_${id}`;
+      for (const k of [hero, services]) {
+        expect(fa[k], k).toBeTruthy();
+        expect(en[k], k).toBeTruthy();
+      }
     }
   });
 

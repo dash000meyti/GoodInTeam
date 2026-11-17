@@ -278,6 +278,12 @@ export const site: Record<keyof typeof fa, string> = {
   brandExplore: "Explore {brand}",
   brandEmpty: "No public services for this brand yet.",
   brandAsk: "Ask about {brand}",
+  // brand landing pages (/studio, /code)
+  brandStudioIntro: "The design side of Good In Team: product design, UX and UI, brand and motion.",
+  brandCodeIntro: "The engineering side of Good In Team: web apps, mobile apps and AI agents.",
+  brandServicesTitle: "{brand} services",
+  brandServicesSubtitle:
+    "Each service has its own page, with the full description and a consultation button.",
   viewAllCell: "See everything",
   availableShort: "Available",
   unavailableShort: "Booked",

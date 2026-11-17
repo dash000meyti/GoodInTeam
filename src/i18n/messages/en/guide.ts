@@ -67,6 +67,16 @@ export const guide: Record<keyof typeof fa, string> = {
   services_brand_team: "Good In Team builds whole products, from idea to launch.",
   services_brand_studio: "Good In Studio designs interfaces, brands and experiences.",
   services_brand_code: "Good In Code does the engineering: web, mobile and AI agents.",
+  brand_studio:
+    "Good In Studio is our design side: product design, UX and UI, brand and motion. Start a project right here.",
+  brand_code:
+    "Good In Code is our engineering side: web apps, mobile apps and AI agents. Start a project right here.",
+  brand_services_studio:
+    "Good In Studio's services. Each has its own page, with the full description and a consultation button.",
+  brand_services_code:
+    "Good In Code's services. Each has its own page, with the full description and a consultation button.",
+  brand_family:
+    '"Good In" stays; the second word says what we\'re good in. The other two members of the family are right here.',
   services_process:
     "We work together in four steps: a discovery call, design and plan, building with live reports, then launch and support.",
   services_faq:

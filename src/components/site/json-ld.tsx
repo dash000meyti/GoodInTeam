@@ -23,6 +23,8 @@ export function JsonLd({ data }: { data: Thing | Thing[] }) {
 
 export const ids = {
   organization: () => absoluteUrl("/#organization"),
+  /** A Good In sub-brand (`/studio`, `/code`): same id in every locale, like the organization. */
+  brand: (path: string) => absoluteUrl(`${path}#organization`),
   person: () => absoluteUrl("/#person"),
   website: (locale: Locale) => absoluteUrl(`${localePath(locale, "/")}#website`),
 };
@@ -97,6 +99,51 @@ export function websiteLd(p: ProfileLike, locale: Locale): Thing {
       },
       "query-input": "required name=search_term_string",
     },
+  };
+}
+
+/**
+ * A Good In sub-brand (spec §2): an Organization whose `parentOrganization`
+ * is the master brand, with its public services as an OfferCatalog. Rendered
+ * by the brand landing pages (`/studio`, `/code`) in their own streamed hole.
+ */
+export function subBrandLd(b: {
+  path: string;
+  locale: Locale;
+  name: string;
+  alternateName: string[];
+  slogan: string;
+  description: string;
+  catalogName: string;
+  services: { name: string; url: string; description?: string | null }[];
+}): Thing {
+  const id = ids.brand(b.path);
+  return {
+    "@type": "Organization",
+    "@id": id,
+    name: b.name,
+    alternateName: b.alternateName.filter((n) => n && n !== b.name),
+    url: absoluteUrl(localePath(b.locale, b.path)),
+    slogan: b.slogan,
+    description: b.description,
+    parentOrganization: { "@id": ids.organization() },
+    hasOfferCatalog: b.services.length
+      ? {
+          "@type": "OfferCatalog",
+          name: b.catalogName,
+          itemListElement: b.services.map((s) => ({
+            "@type": "Offer",
+            itemOffered: {
+              "@type": "Service",
+              name: s.name,
+              description: s.description ?? undefined,
+              url: absoluteUrl(s.url),
+              provider: { "@id": id },
+              areaServed: b.locale === "fa" ? "IR" : "Worldwide",
+            },
+          })),
+        }
+      : undefined,
   };
 }
 

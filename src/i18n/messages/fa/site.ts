@@ -296,6 +296,11 @@ export const site = {
   brandExplore: "دیدن {brand}",
   brandEmpty: "خدمت عمومی این برند هنوز این‌جا نیست.",
   brandAsk: "دربارهٔ {brand} بپرس",
+  // brand landing pages (/studio, /code)
+  brandStudioIntro: "بخش طراحی گودین تیم: طراحی محصول، تجربه و رابط کاربری، برند و موشن.",
+  brandCodeIntro: "بخش مهندسی گودین تیم: وب‌اپلیکیشن، اپلیکیشن موبایل و عامل‌های هوش مصنوعی.",
+  brandServicesTitle: "خدمات {brand}",
+  brandServicesSubtitle: "هر خدمت صفحهٔ خودش را دارد، با شرح کامل و دکمهٔ درخواست مشاوره.",
   viewAllCell: "همه را ببین",
   availableShort: "پذیرای پروژه",
   unavailableShort: "ظرفیت تکمیل",

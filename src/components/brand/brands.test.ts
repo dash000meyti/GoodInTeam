@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { brandIds, brandOf, brands, isValidSuffix } from "./brands";
+import {
+  brandById,
+  brandIds,
+  brandIntro,
+  brandOf,
+  brands,
+  isSubBrand,
+  isValidSuffix,
+  subBrandIds,
+} from "./brands";
 import { brandLogoLayout } from "./pixel-font";
 import { pixelIconNames } from "./pixel-icons";
 
@@ -24,6 +33,16 @@ describe("brand registry", () => {
     expect(isValidSuffix("")).toBe(false);
     expect(isValidSuffix("ACADEMYX")).toBe(false); // 39 cells
     expect(isValidSuffix("LABS")).toBe(true);
+  });
+
+  it("every sub-brand has its own landing page; the master brand lives on /about", () => {
+    expect(subBrandIds).toEqual(["studio", "code"]);
+    expect(subBrandIds.map((id) => brandById(id).href)).toEqual(["/studio", "/code"]);
+    expect(brandById("team").href).toBe("/about");
+    for (const id of subBrandIds) expect(brandIntro[id]).toMatch(/^brand\w+Intro$/);
+    expect(isSubBrand("studio")).toBe(true);
+    expect(isSubBrand("team")).toBe(false);
+    expect(isSubBrand("services")).toBe(false);
   });
 
   it("brandOf falls back to team", () => {
