@@ -117,7 +117,7 @@ async function SignView({
   const header = (
     <header className="relative flex items-center justify-between gap-3 print:hidden">
       <div className="flex min-w-0 items-center gap-3">
-        <LogoMark className="size-9 shrink-0" />
+        <LogoMark cell={3} />
         <div className="min-w-0">
           <p className="truncate font-extrabold">{brand.brandName}</p>
           {brand.ownerName && (

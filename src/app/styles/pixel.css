@@ -1,0 +1,241 @@
+/*
+ * pixel.css — owner: foundation (spec §4.4).
+ * Sizing of every pixel component (`svg.px-art`), the `.px-set` item swap,
+ * stepped corners, the guide sprite's frame switching and the once-only logo
+ * cycle. Class rules live in @layer components; @keyframes stay top level.
+ */
+
+@layer components {
+  /* Integer px per cell: --cell comes from the `cell` prop's [--cell:Npx] class or an ancestor. */
+  .px-art {
+    display: inline-block;
+    flex-shrink: 0;
+    vertical-align: middle;
+    inline-size: calc(var(--px-w) * var(--cell, 2px));
+    block-size: calc(var(--px-h) * var(--cell, 2px));
+  }
+
+  /* PixelTextSet: only the first item shows; consumers swap with :has() rules. */
+  .px-set > [data-path-id]:not(:first-child) {
+    display: none;
+  }
+
+  /* 4px stepped corners (8-point clip-path). Put focus rings on an unclipped parent. */
+  .px-corners {
+    clip-path: polygon(
+      4px 0,
+      calc(100% - 4px) 0,
+      100% 4px,
+      100% calc(100% - 4px),
+      calc(100% - 4px) 100%,
+      4px 100%,
+      0 calc(100% - 4px),
+      0 4px
+    );
+  }
+
+  /* ── Logo suffixes (PixelLogoCycle / PixelLogoSwap) ──
+     The first suffix (TEAM) shows; the cycle animates the others once, and
+     consumers of .gi-swap reveal one with :has() in their own partial. */
+  .gi-sfx {
+    opacity: 0;
+  }
+  .gi-sfx:first-of-type {
+    opacity: 1;
+  }
+
+  /* ── Sprite frames (PixelAvatarSprite) ──
+     Keyed ONLY on the sprite's own root `svg.px-sprite[data-state]` (Radix
+     also uses data-state on ancestors). Parts are hidden unless the state
+     shows them; animations switch frames with steps(1). */
+  .px-sprite [class*="px-p-"] {
+    opacity: 0;
+  }
+  .px-sprite:is([data-state="idle"], :not([data-state]))
+    :is(.px-p-eyes, .px-p-mouth, .px-p-feetIdle),
+  .px-sprite[data-state="walk"] :is(.px-p-eyes, .px-p-mouth),
+  .px-sprite[data-state="talk"] :is(.px-p-eyes, .px-p-feetIdle),
+  .px-sprite[data-state="wave"] :is(.px-p-eyes, .px-p-mouth, .px-p-feetIdle, .px-p-wave),
+  .px-sprite[data-state="sit"] :is(.px-p-eyes, .px-p-mouth, .px-p-armsLap, .px-p-feetSit) {
+    opacity: 1;
+  }
+  /* idle: a 120ms blink every 4.2s, 5 iterations per activation (the engine
+     restarts it by re-setting data-state). */
+  .px-sprite[data-state="idle"] .px-p-eyes {
+    animation: px-blink 4.2s steps(1, end) 5;
+  }
+  /* walk: feetA / feetB, 2 frames × 160ms, while the state is set. */
+  .px-sprite[data-state="walk"] .px-p-feetA {
+    animation: px-frame-a 320ms steps(1, end) infinite;
+  }
+  .px-sprite[data-state="walk"] .px-p-feetB {
+    animation: px-frame-b 320ms steps(1, end) infinite;
+  }
+  /* talk: mouth / mouthTalk, 2 frames × 180ms, until the text wipe ends. */
+  .px-sprite[data-state="talk"] .px-p-mouth {
+    animation: px-frame-a 360ms steps(1, end) infinite;
+  }
+  .px-sprite[data-state="talk"] .px-p-mouthTalk {
+    animation: px-frame-b 360ms steps(1, end) infinite;
+  }
+  /* wave: 4 frames × 2 iterations, ending with the hand up. */
+  .px-sprite[data-state="wave"] .px-p-wave {
+    animation: px-wave 480ms steps(1, end) 2 both;
+  }
+
+  /* ── Once-only logo cycle (.gi-cycle[data-play]), 4.2s, ending on TEAM ── */
+  .gi-cycle[data-play] .gi-sfx:nth-of-type(1) {
+    animation: gi-cycle-1 4.2s steps(1, end) both;
+  }
+  .gi-cycle[data-play] .gi-sfx:nth-of-type(2) {
+    animation: gi-cycle-2 4.2s steps(1, end) both;
+  }
+  .gi-cycle[data-play] .gi-sfx:nth-of-type(3) {
+    animation: gi-cycle-3 4.2s steps(1, end) both;
+  }
+}
+
+/* Reduced motion (OS setting or the site switch): no frame animation, a
+   meaningful static frame (idle, or sit when sitting) and TEAM only. */
+@media (prefers-reduced-motion: reduce) {
+  @layer components {
+    .px-sprite *,
+    .gi-cycle .gi-sfx {
+      animation: none !important;
+    }
+    .px-sprite:not([data-state="sit"]) :is(.px-p-eyes, .px-p-mouth, .px-p-feetIdle) {
+      opacity: 1;
+    }
+    .px-sprite:not([data-state="sit"]) :is(.px-p-mouthTalk, .px-p-feetA, .px-p-feetB, .px-p-wave) {
+      opacity: 0;
+    }
+  }
+}
+@layer components {
+  html[data-motion="reduce"] .px-sprite *,
+  html[data-motion="reduce"] .gi-cycle .gi-sfx {
+    animation: none !important;
+  }
+  html[data-motion="reduce"]
+    .px-sprite:not([data-state="sit"])
+    :is(.px-p-eyes, .px-p-mouth, .px-p-feetIdle) {
+    opacity: 1;
+  }
+  html[data-motion="reduce"]
+    .px-sprite:not([data-state="sit"])
+    :is(.px-p-mouthTalk, .px-p-feetA, .px-p-feetB, .px-p-wave) {
+    opacity: 0;
+  }
+}
+
+@keyframes px-blink {
+  0% {
+    opacity: 1;
+  }
+  97.14% {
+    opacity: 0;
+  }
+}
+@keyframes px-frame-a {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes px-frame-b {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes px-wave {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+/* TEAM 0–24% and 76–100%, STUDIO 24–50%, CODE 50–76%; every entrance is a
+   3-step clip-path wipe (inset → 66% → 33% → 0). */
+@keyframes gi-cycle-1 {
+  0% {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+  24% {
+    opacity: 0;
+  }
+  76% {
+    opacity: 1;
+    clip-path: inset(0 100% 0 0);
+  }
+  78% {
+    clip-path: inset(0 66% 0 0);
+  }
+  80% {
+    clip-path: inset(0 33% 0 0);
+  }
+  82%,
+  100% {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
+@keyframes gi-cycle-2 {
+  0% {
+    opacity: 0;
+  }
+  24% {
+    opacity: 1;
+    clip-path: inset(0 100% 0 0);
+  }
+  26% {
+    clip-path: inset(0 66% 0 0);
+  }
+  28% {
+    clip-path: inset(0 33% 0 0);
+  }
+  30% {
+    clip-path: inset(0);
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes gi-cycle-3 {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+    clip-path: inset(0 100% 0 0);
+  }
+  52% {
+    clip-path: inset(0 66% 0 0);
+  }
+  54% {
+    clip-path: inset(0 33% 0 0);
+  }
+  56% {
+    clip-path: inset(0);
+  }
+  76%,
+  100% {
+    opacity: 0;
+  }
+}

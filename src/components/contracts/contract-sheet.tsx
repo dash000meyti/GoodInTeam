@@ -11,7 +11,10 @@ export function bodyHasTitle(bodyMd: string) {
   return /^\s*#\s+\S/.test(bodyMd);
 }
 
-/** Light "paper" tokens so the sheet reads like a printed page even in dark mode. */
+/**
+ * Light "paper" tokens so the sheet reads like a printed page even in dark
+ * mode, including the light pixel-logo tones (no dark #2A2A2D logo paper).
+ */
 export const paperStyle = {
   "--background": "#ffffff",
   "--foreground": "#1c252e",
@@ -19,7 +22,12 @@ export const paperStyle = {
   "--card-foreground": "#1c252e",
   "--muted": "#f4f6f8",
   "--muted-foreground": "#637381",
-  "--border": "rgb(145 158 171 / 0.3)",
+  "--border": "rgb(106 106 108 / 0.3)",
+  "--brand-yellow": "#ffc50d",
+  "--brand-ink": "#6a6a6c",
+  "--brand-frame": "#b3b5b9",
+  "--brand-soft": "#caccce",
+  "--brand-paper": "#ffffff",
   colorScheme: "light",
   color: "#1c252e",
   backgroundColor: "#ffffff",
@@ -155,7 +163,7 @@ export function ContractSheet({
     >
       <div className="flex items-start justify-between gap-4 border-b-2 border-grey-800 pb-4">
         <div className="flex items-center gap-3">
-          <LogoMark className="size-9" />
+          <LogoMark cell={3} />
           <div>
             <p className="font-extrabold">{brandName}</p>
             {ownerName && <p className="text-xs text-muted-foreground">{ownerName}</p>}

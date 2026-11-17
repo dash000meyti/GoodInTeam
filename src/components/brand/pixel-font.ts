@@ -46,6 +46,12 @@ export const PIXEL_GLYPHS: Record<string, readonly string[]> = {
   "9": [".###.", "#...#", "#...#", ".####", "....#", "....#", ".###."],
   "-": ["...", "...", "...", "###", "...", "...", "..."],
   " ": ["...", "...", "...", "...", "...", "...", "..."],
+  // Path punctuation for window bars and frame strips (GOOD-IN-TEAM/WORK, SYSTEM.APP, 01 · ~).
+  "/": ["..#", "..#", ".#.", ".#.", ".#.", "#..", "#.."],
+  ".": [".", ".", ".", ".", ".", ".", "#"],
+  ":": [".", ".", "#", ".", ".", "#", "."],
+  "+": [".....", "..#..", "..#..", "#####", "..#..", "..#..", "....."],
+  "~": [".....", ".....", ".#..#", "#.##.", ".....", ".....", "....."],
 };
 
 export const GLYPH_HEIGHT = 7;
@@ -59,7 +65,8 @@ export const BRAND_COLORS = {
   paper: "#F3F3F3",
 } as const;
 
-export type PixelTone = "accent" | "ink" | "soft" | "frame" | "corner";
+/** Logo tones (accent, ink, soft, frame, corner) plus the avatar's face and eye tones. */
+export type PixelTone = "accent" | "ink" | "soft" | "frame" | "corner" | "face" | "eye";
 
 export interface PixelCell {
   x: number;
@@ -158,4 +165,40 @@ export function toRects(cells: PixelCell[]) {
     }
   }
   return rects;
+}
+
+/**
+ * Layout from a character grid (icons, the avatar): every character mapped in
+ * `tones` becomes a cell of that tone; anything else (`.`) is empty.
+ */
+export function layoutFromGrid(
+  rows: readonly string[],
+  tones: Record<string, PixelTone>,
+): BrandLogoLayout {
+  const cells: PixelCell[] = [];
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      const tone = tones[row[x]!];
+      if (tone) cells.push({ x, y, tone });
+    }
+  });
+  return { width: Math.max(0, ...rows.map((r) => r.length)), height: rows.length, cells };
+}
+
+/**
+ * One SVG path `d` per tone (spec D5/P6): horizontal runs merged like
+ * `toRects`, each emitted as `M{x} {y}h{w}v1h-{w}z`. Tones keep the order of
+ * their first cell, so the output is stable.
+ */
+export function toPaths(cells: readonly PixelCell[]): Partial<Record<PixelTone, string>> {
+  const out: Partial<Record<PixelTone, string>> = {};
+  const rects = toRects([...cells]).sort((a, b) => a.y - b.y || a.x - b.x);
+  const order: PixelTone[] = [];
+  for (const c of cells) if (!order.includes(c.tone)) order.push(c.tone);
+  for (const tone of order)
+    out[tone] = rects
+      .filter((r) => r.tone === tone)
+      .map((r) => `M${r.x} ${r.y}h${r.w}v1h-${r.w}z`)
+      .join("");
+  return out;
 }

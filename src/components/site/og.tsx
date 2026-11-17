@@ -2,6 +2,7 @@ import "server-only";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ImageResponse } from "next/og";
+import { brandLogoLayout, toPaths, type PixelTone } from "@/components/brand/pixel-font";
 import type { Locale } from "@/i18n/config";
 import { bidiRuns, hasRtl, visualRtl } from "@/lib/arabic-shaping";
 
@@ -15,6 +16,38 @@ import { bidiRuns, hasRtl, visualRtl } from "@/lib/arabic-shaping";
  */
 export const ogSize = { width: 1200, height: 630 };
 export const ogContentType = "image/png";
+
+/**
+ * The GOOD IN / TEAM pixel logo as inline SVG paths with LITERAL dark-mode
+ * fills (Satori resolves no CSS variables, so never the React PixelLogo).
+ */
+const OG_CELL = 10;
+const OG_LOGO = brandLogoLayout("TEAM");
+const OG_LOGO_PATHS = toPaths(OG_LOGO.cells);
+const OG_FILLS: Partial<Record<PixelTone, string>> = {
+  accent: "#FFC50D",
+  ink: "#A3A4A8",
+  corner: "#A3A4A8",
+  frame: "#4A4B4F",
+  soft: "#5E5F63",
+};
+const OG_PAPER = "#2A2A2D";
+
+function OgLogo() {
+  return (
+    <svg
+      width={OG_LOGO.width * OG_CELL}
+      height={OG_LOGO.height * OG_CELL}
+      viewBox={`0 0 ${OG_LOGO.width} ${OG_LOGO.height}`}
+      shapeRendering="crispEdges"
+    >
+      <rect x={1} y={1} width={OG_LOGO.width - 1} height={OG_LOGO.height - 1} fill={OG_PAPER} />
+      {(Object.entries(OG_LOGO_PATHS) as [PixelTone, string][]).map(([tone, d]) => (
+        <path key={tone} d={d} fill={OG_FILLS[tone]} />
+      ))}
+    </svg>
+  );
+}
 
 const fontDir = path.join(/*turbopackIgnore: true*/ process.cwd(), "public", "fonts", "og");
 let fonts: { name: string; data: Buffer; weight: 500 | 800; style: "normal" }[] | null = null;
@@ -75,7 +108,7 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
         flexDirection: "column",
         justifyContent: "space-between",
         padding: "64px 72px",
-        background: "#141A21",
+        background: "#161618",
         color: "#FFFFFF",
         fontFamily: family,
         position: "relative",
@@ -91,11 +124,11 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
           height: ogSize.height,
           display: "flex",
           backgroundImage:
-            "linear-gradient(to right, rgba(145,158,171,0.10) 1px, transparent 1px), linear-gradient(to bottom, rgba(145,158,171,0.10) 1px, transparent 1px)",
+            "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)",
           backgroundSize: "48px 48px",
         }}
       />
-      {/* Glows: full-canvas layers (Satori clips gradients of off-canvas elements; no `inset`). */}
+      {/* Glow: one full-canvas layer (Satori clips gradients of off-canvas elements; no `inset`). */}
       <div
         style={{
           position: "absolute",
@@ -104,18 +137,7 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
           width: ogSize.width,
           height: ogSize.height,
           display: "flex",
-          backgroundImage: `radial-gradient(circle at ${rtl ? "18%" : "82%"} 8%, rgba(0,167,111,0.45) 0%, rgba(0,167,111,0) 36%)`,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: ogSize.width,
-          height: ogSize.height,
-          display: "flex",
-          backgroundImage: `radial-gradient(circle at ${rtl ? "88%" : "12%"} 104%, rgba(142,51,255,0.3) 0%, rgba(142,51,255,0) 34%)`,
+          backgroundImage: `radial-gradient(circle at ${rtl ? "18%" : "82%"} 8%, rgba(255,197,13,0.28) 0%, rgba(255,197,13,0) 40%)`,
         }}
       />
 
@@ -128,14 +150,8 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
           gap: 18,
         }}
       >
-        <svg width="56" height="56" viewBox="0 0 40 40">
-          <rect x="2" y="2" width="22" height="22" rx="7" fill="#00A76F" />
-          <rect x="16" y="16" width="22" height="22" rx="7" fill="#007867" opacity="0.9" />
-          <path d="M16 16h8v8h-1a7 7 0 0 1-7-7v-1Z" fill="#5BE49B" />
-          <circle cx="13" cy="13" r="3.2" fill="#fff" />
-          <circle cx="27" cy="27" r="3.2" fill="#fff" />
-        </svg>
-        <div style={{ display: "flex", fontSize: 34, fontWeight: 800, letterSpacing: -0.5 }}>
+        <OgLogo />
+        <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: -0.5 }}>
           <Text text={brand} rtl={rtl} gap={10} />
         </div>
         {eyebrow && (
@@ -146,9 +162,9 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
               marginRight: rtl ? "auto" : 0,
               padding: "10px 22px",
               borderRadius: 9999,
-              background: "rgba(0,167,111,0.18)",
-              border: "1px solid rgba(91,228,155,0.35)",
-              color: "#5BE49B",
+              background: "rgba(255,197,13,0.16)",
+              border: "1px solid rgba(255,197,13,0.4)",
+              color: "#FFDB66",
               fontSize: 24,
               fontWeight: 800,
             }}
@@ -184,7 +200,7 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
           justifyContent: "space-between",
           fontSize: 24,
           fontWeight: 500,
-          color: "#C4CDD5",
+          color: "#A1A1A6",
         }}
       >
         <div
@@ -210,8 +226,7 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
                   style={{
                     width: 6,
                     height: 6,
-                    borderRadius: 9999,
-                    background: "#637381",
+                    background: "#6A6A6C",
                     display: "flex",
                   }}
                 />
@@ -222,7 +237,7 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
         </div>
         {domain && (
           <div
-            style={{ display: "flex", fontFamily: "PublicSans", fontWeight: 800, color: "#5BE49B" }}
+            style={{ display: "flex", fontFamily: "PublicSans", fontWeight: 800, color: "#FFDB66" }}
           >
             {domain}
           </div>
@@ -236,7 +251,7 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
           bottom: 0,
           height: 8,
           display: "flex",
-          background: "linear-gradient(90deg, #00A76F, #5BE49B, #8E33FF)",
+          background: "linear-gradient(90deg, #FFC50D, #6A6A6C)",
         }}
       />
     </div>,

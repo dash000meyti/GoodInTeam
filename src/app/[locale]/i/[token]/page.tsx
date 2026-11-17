@@ -46,7 +46,7 @@ async function PublicInvoice({ params }: { params: Promise<{ token: string }> })
       <PrintLightMode />
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <div className="flex items-center gap-3">
-          <LogoMark className="size-9" />
+          <LogoMark cell={3} />
           <div>
             <p className="text-sm font-extrabold">{brand}</p>
             <p className="text-xs text-muted-foreground">

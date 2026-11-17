@@ -91,7 +91,7 @@ function Brand({ collapsed }: { collapsed: boolean }) {
       href={localePath(locale, "/panel")}
       className={cn("flex h-16 items-center gap-2 px-5", collapsed && "justify-center px-0")}
     >
-      <LogoMark className="size-8" />
+      <LogoMark />
       {!collapsed && (
         <span className="text-[17px] font-extrabold tracking-tight text-foreground">
           {t.common.appName}

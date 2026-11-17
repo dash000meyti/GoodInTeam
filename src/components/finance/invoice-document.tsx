@@ -89,7 +89,7 @@ export function InvoiceDocument({
       <div className="space-y-8 p-5 sm:p-10">
         <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3">
-            <LogoMark className="size-11 shrink-0" />
+            <LogoMark cell={4} />
             <div className="space-y-0.5">
               <p className="text-xl font-black tracking-tight">{brand.name}</p>
               {brand.location && <p className="text-sm text-muted-foreground">{brand.location}</p>}
@@ -337,7 +337,8 @@ export function InvoicePrintStyles() {
     position: absolute; inset-inline: 0; top: 0; margin: 0 !important;
     box-shadow: none !important; border: 0 !important; border-radius: 0 !important;
     --background: #fff; --card: #fff; --card-foreground: #1c252e; --foreground: #1c252e;
-    --muted: #f4f6f8; --muted-foreground: #637381; --border: rgb(145 158 171 / .3);
+    --muted: #f4f6f8; --muted-foreground: #637381; --border: rgb(106 106 108 / .3);
+    --brand-yellow: #ffc50d; --brand-ink: #6a6a6c; --brand-frame: #b3b5b9; --brand-soft: #caccce; --brand-paper: #ffffff;
     background: #fff !important; color: #1c252e;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }

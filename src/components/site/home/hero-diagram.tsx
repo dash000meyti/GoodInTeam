@@ -158,7 +158,7 @@ export function HeroDiagram({ t, locale }: { t: Messages; locale: Locale }) {
         className="absolute flex flex-col items-center justify-center gap-[1.2cqw] rounded-[5cqw] border border-primary/30 bg-card shadow-[0_0_0_6px_rgb(var(--primary-rgb)/0.06),0_20px_60px_-12px_rgb(var(--primary-rgb)/0.45)]"
         style={{ insetInlineStart: "38.667%", top: "36.4%", width: "22.667%", height: "27.2%" }}
       >
-        <LogoMark className="size-[9cqw]" />
+        <LogoMark cell={4} />
         <span className="text-[clamp(9px,2.3cqw,14px)] font-black tracking-tight">
           {t.common.appName}
         </span>

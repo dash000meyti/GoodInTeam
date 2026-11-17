@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./styles/pixel.css"; /* foundation */
 
 /* Docs quote class names as prose (e.g. `text-[color:var(--a|b)]`); never scan them. */
 @source not "../../docs";

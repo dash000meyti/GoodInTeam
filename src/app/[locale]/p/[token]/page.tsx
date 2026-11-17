@@ -99,7 +99,7 @@ export default function PublicProjectStatus({ params }: PageProps<"/[locale]/p/[
       <div aria-hidden className="bg-dots mask-fade-b absolute inset-x-0 top-0 h-80" />
       <div className="relative mx-auto max-w-2xl">
         <div className="mb-8 flex justify-center">
-          <LogoMark className="size-10" />
+          <LogoMark cell={4} />
         </div>
         <Suspense fallback={<Skeleton className="h-96 rounded-2xl" />}>
           <StatusView params={params} />
