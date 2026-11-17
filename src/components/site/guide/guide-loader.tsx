@@ -91,7 +91,11 @@ export function GuideLoader({
       sig,
     );
     mq.addEventListener("change", () => api.current?.compact(mq.matches), sig);
-    return () => ac.abort();
+    return () => {
+      ac.abort();
+      // leaving the site layout (e.g. for the panel): no observers or timers left behind
+      api.current?.stop();
+    };
   }, [greeting, labels]);
 
   // Soft navigation: re-observe the new page's boxes (a no-op before the engine loads).

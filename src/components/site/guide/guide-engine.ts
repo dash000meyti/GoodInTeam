@@ -134,6 +134,10 @@ const blink = () => {
   state("idle");
 };
 const sayOf = (el: Element) => el.getAttribute("data-guide-say") || "";
+/** Rendered: Next keeps up to 3 previous pages in the DOM, hidden by <Activity> (display:none). */
+const shown = (el: Element) => el.isConnected && el.getClientRects().length > 0;
+/** The rendered `[data-guide]` boxes in DOM order (`sel` narrows to `main` for the first box). */
+const boxes = (sel = "[data-guide]") => Array.from(doc.querySelectorAll(sel)).filter(shown);
 
 /* ── chrome values (registered px lengths, §10.5 "Chrome values") ── */
 function readChrome() {
@@ -476,7 +480,7 @@ function activate(el: Element) {
 
 function greet() {
   if (scrollY >= 200 || readSessionFlag(GUIDE_GREETED_KEY)) return;
-  const el = first ?? doc.querySelector("[data-guide]");
+  const el = first ?? boxes()[0];
   if (!el) return;
   if (small) {
     // Compact: the one-time line says to tap the sprite when its "!" shows (4s of text).
@@ -533,7 +537,7 @@ const spotOut = () => later("spotOut", 1500, () => open?.kind === "spot" && clos
 
 function observeAll() {
   doc.querySelectorAll("[data-guide]").forEach((e) => io?.observe(e));
-  first = doc.querySelector("main [data-guide]");
+  first = boxes("main [data-guide]")[0] ?? null;
 }
 
 /** Re-anchor after streams, images or a resize (rAF-debounced ResizeObserver). */
@@ -541,7 +545,7 @@ function reanchor() {
   refresh();
   observeAll();
   const el = on;
-  if (small || !at || tour || root.getAttribute("data-move") || !el?.isConnected) return;
+  if (small || !at || tour || root.getAttribute("data-move") || !el || !shown(el)) return;
   if (open?.kind === "spot") return;
   const p = perch(el, frame())[1];
   const d = R(desk);
@@ -649,19 +653,19 @@ function nearest(): Element | null {
   const vh = innerHeight;
   let best: Element | null = null;
   let bd = Infinity;
-  doc.querySelectorAll("[data-guide]").forEach((e) => {
+  for (const e of boxes()) {
     const d = centreDistance(R(e), vh);
     if (d < bd) {
       bd = d;
       best = e;
     }
-  });
+  }
   return best;
 }
 
 function explain(toggle = false, from?: HTMLElement) {
   if (toggle && open?.kind === "explicit") return close(true);
-  const el = (active?.isConnected && active) || nearest();
+  const el = (active && shown(active) && active) || nearest();
   if (!el) return;
   invoker = from ?? (doc.activeElement as HTMLElement | null);
   tour = null;
@@ -669,9 +673,7 @@ function explain(toggle = false, from?: HTMLElement) {
 }
 
 function runTour() {
-  const list = Array.from(doc.querySelectorAll("[data-guide]")).filter(
-    (e) => (e as HTMLElement).offsetHeight > 0,
-  );
+  const list = boxes();
   if (!list.length) return;
   invoker = doc.activeElement as HTMLElement | null;
   hideBubble();
@@ -744,6 +746,8 @@ function wire() {
   bub.addEventListener("focusout", (e) => {
     if (!bub.contains(e.relatedTarget as Node) && !bub.matches(":hover")) resume();
   });
+  if (docWired) return;
+  docWired = true;
   doc.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && open) close(true);
   });
@@ -755,6 +759,7 @@ function wire() {
     { passive: true },
   );
 }
+let docWired = false;
 
 function setCompact(c: boolean) {
   small = c;
@@ -786,13 +791,21 @@ const api: GuideApi = {
   },
 };
 
-/** Start (or reconfigure) the guide. Idempotent; `mode` switches between automatic and explicit-only. */
+/**
+ * Start (or reconfigure) the guide. Idempotent; `mode` switches between
+ * automatic and explicit-only. A new layer (the site layout mounted again
+ * after a visit to the panel) is wired from scratch.
+ */
 export function start(opts: GuideOptions): GuideApi {
-  const firstRun = !o;
+  const fresh = opts.root !== root;
+  if (fresh && root) halt();
   o = opts;
-  if (firstRun) wire();
+  if (fresh) {
+    mode = "";
+    wire();
+  }
   root.dataset.engine = GUIDE_ENGINE_ID;
-  if (small !== opts.compact || firstRun) setCompact(opts.compact);
+  if (small !== opts.compact || fresh) setCompact(opts.compact);
   if (opts.mode === "auto") boot();
   else if (mode !== "explicit") halt();
   return api;
