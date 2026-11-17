@@ -92,7 +92,7 @@ export function inColumn(r: Box, f: Frame): Box {
   return { ...r, left: Math.max(r.left, f.col.left), right: Math.min(r.right, f.col.right) };
 }
 
-/** The roof is in the perch band (spec: `chromeTop + 56 ≤ r.top ≤ vh − dockSpace − 56`; lower roofs keep the roof perch). */
+/** The roof is low enough for the roof perch (`chromeTop + 56 ≤ r.top`; placeSprite also checks the band's bottom). */
 export function onRoof(r: Box, f: Frame): boolean {
   return r.top >= f.chromeTop + 56;
 }
@@ -102,8 +102,15 @@ export function railProbe(r: Box, f: Frame): { x: number; y: number } {
   return { x: f.rtl ? r.left + 12 : r.right - 12, y: f.chromeTop + 24 + SPRITE / 2 };
 }
 
-/** The sprite's perch for a box. `padNone`: the inline-end cell under the rail perch is `[data-pad=none]`. */
+/**
+ * The sprite's perch for a box. `padNone`: the inline-end cell under the rail
+ * perch is `[data-pad=none]`. A roof below the band (`vh − dockSpace − 56`,
+ * e.g. an explain on a box far down the page) gets no perch.
+ */
 export function placeSprite(r: Box, f: Frame, padNone = false): Perch {
+  if (r.top > f.vh - f.dockSpace - 56) {
+    return { kind: "none", x: f.rtl ? r.left + 12 : r.right - 12 - SPRITE, y: r.top - SPRITE + 1 };
+  }
   if (onRoof(r, f)) {
     return { kind: "roof", x: f.rtl ? r.left + 12 : r.right - 12 - SPRITE, y: r.top - SPRITE + 1 };
   }

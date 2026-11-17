@@ -105,14 +105,15 @@
     animation: gt-guide-land 0.12s steps(1);
   }
 
-  /* 3-square pixel trail during arc hops (6/4/3px, .7/.45/.25) */
+  /* 3-square pixel trail during arc hops (6/4/3px, .7/.45/.25), from the
+     sprite's centre backwards along the flight, clear of its body */
   .gt-guide-trail {
     position: absolute;
     left: 21px;
-    top: 36px;
+    top: 21px;
   }
   .gt-guide-trail > i {
-    --d: 14px;
+    --d: 32px;
     --o: 0.7;
     position: absolute;
     inline-size: 6px;
@@ -122,13 +123,13 @@
     translate: calc(var(--tdx, 0) * var(--d)) calc(var(--tdy, 0) * var(--d));
   }
   .gt-guide-trail > i:nth-child(2) {
-    --d: 26px;
+    --d: 42px;
     --o: 0.45;
     inline-size: 4px;
     block-size: 4px;
   }
   .gt-guide-trail > i:nth-child(3) {
-    --d: 36px;
+    --d: 50px;
     --o: 0.25;
     inline-size: 3px;
     block-size: 3px;

@@ -65,6 +65,15 @@ describe("placeSprite", () => {
     expect(placeSprite(rect(32 + 55), frame()).kind).toBe("rail");
   });
 
+  it("has no perch when the roof is below the band (vh − dockSpace − 56)", () => {
+    expect(placeSprite(rect(900 - 84 - 56), frame()).kind).toBe("roof");
+    expect(placeSprite(rect(900 - 84 - 55), frame()).kind).toBe("none");
+    // …so an explicit bubble falls back to C without a tail
+    const f = frame();
+    const r = rect(1200);
+    expect(placeBubble(input({ f, r, kind: "explicit" }))).toMatchObject({ at: "C", tail: null });
+  });
+
   it("clings to the inline-end border on the rail when the roof scrolled away", () => {
     const f = frame();
     expect(placeSprite(rect(40), f)).toEqual({ kind: "rail", x: 1320 - 24, y: 32 + 24 });
@@ -279,8 +288,10 @@ describe("candidate C and the chains", () => {
     expect(placeBubble(input({ f, r: rect(-300), kind: "spot" }))).toBeNull();
     // the dock band: a bubble whose bottom would pass vh − dockSpace − 8 does not fit
     const short = frame(false, { vh: 300 });
-    expect(placeBubble(input({ f: short, r: rect(262) }))?.at).toBe("A"); // bottom 208 = 300 − 84 − 8
-    expect(placeBubble(input({ f: short, r: rect(263) }))).toBeNull();
+    const roofAt = (top: number) => ({ kind: "roof", x: 1260, y: top - 47 }) as const;
+    // bottom 208 = 300 − 84 − 8
+    expect(placeBubble(input({ f: short, r: rect(262), sprite: roofAt(262) }))?.at).toBe("A");
+    expect(placeBubble(input({ f: short, r: rect(263), sprite: roofAt(263) }))).toBeNull();
   });
 });
 
