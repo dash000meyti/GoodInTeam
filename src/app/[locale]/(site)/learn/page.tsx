@@ -1,14 +1,14 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { GraduationCapIcon } from "lucide-react";
 import { PostCard, SeriesCard } from "@/components/site/cards";
+import { FrameCell, FrameFiller, FrameGrid, FrameSection } from "@/components/site/frame";
 import { JsonLd } from "@/components/site/json-ld";
 import { Breadcrumbs } from "@/components/site/nav-bits";
-import { homeCrumb } from "@/components/site/page-utils";
+import { clampSay, fillers, homeCrumb, plainSpans } from "@/components/site/page-utils";
 import { absoluteUrl, pageMetadata } from "@/components/site/seo";
-import { CardGridSkeleton } from "@/components/site/skeletons";
-import { Container, PageHero } from "@/components/site/ui";
+import { CellGridSkeleton } from "@/components/site/skeletons";
+import { EmptyCell, PageHero, teamPath, TitleRow } from "@/components/site/ui";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
 import { getLocale, getMessages } from "@/i18n/server";
@@ -25,6 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
+/** Courses (series cards, each a guide spot) then standalone tutorials, as stacked rows. */
 async function LearnContent({ locale, t }: { locale: Locale; t: Messages }) {
   await connection();
   const [courses, { items: tutorials }] = await Promise.all([
@@ -34,17 +35,15 @@ async function LearnContent({ locale, t }: { locale: Locale; t: Messages }) {
   const visibleCourses = courses.filter((c) => c.lessons > 0);
   if (!visibleCourses.length && !tutorials.length) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed px-6 py-20 text-center">
-        <GraduationCapIcon className="size-10 text-muted-foreground/60" />
-        <p className="text-lg font-bold">{t.site.noCourses}</p>
-        <p className="text-sm text-muted-foreground">{t.site.emptyListHint}</p>
-      </div>
+      <FrameGrid cols={1}>
+        <EmptyCell icon="learn" title={t.site.noCourses} hint={t.site.emptyListHint} />
+      </FrameGrid>
     );
   }
   return (
-    <div className="space-y-16">
+    <>
       {visibleCourses.length > 0 && (
-        <section>
+        <>
           <JsonLd
             data={{
               "@type": "ItemList",
@@ -55,25 +54,35 @@ async function LearnContent({ locale, t }: { locale: Locale; t: Messages }) {
               })),
             }}
           />
-          <h2 className="mb-6 text-2xl font-black tracking-tight">{t.site.courses}</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <TitleRow title={t.site.courses} titleId="courses-title" size="h3" />
+          <FrameGrid cols={3}>
             {visibleCourses.map((c) => (
-              <SeriesCard key={c.id} s={c} locale={locale} t={t} />
+              <FrameCell
+                key={c.id}
+                hover
+                spot={{ key: `series-${c.slug}`, say: clampSay(c.description || c.title) }}
+              >
+                <SeriesCard s={c} locale={locale} t={t} variant="cell" />
+              </FrameCell>
             ))}
-          </div>
-        </section>
+            <FrameFiller units={fillers(plainSpans(visibleCourses.length), 3)} />
+          </FrameGrid>
+        </>
       )}
       {tutorials.length > 0 && (
-        <section>
-          <h2 className="mb-6 text-2xl font-black tracking-tight">{t.site.standaloneTutorials}</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <>
+          <TitleRow title={t.site.standaloneTutorials} titleId="tutorials-title" size="h3" />
+          <FrameGrid cols={3}>
             {tutorials.map((p) => (
-              <PostCard key={p.id} post={p} locale={locale} t={t} />
+              <FrameCell key={p.id} hover>
+                <PostCard post={p} locale={locale} t={t} variant="cell" />
+              </FrameCell>
             ))}
-          </div>
-        </section>
+            <FrameFiller units={fillers(plainSpans(tutorials.length), 3)} />
+          </FrameGrid>
+        </>
       )}
-    </div>
+    </>
   );
 }
 
@@ -83,6 +92,9 @@ export default async function LearnPage() {
   return (
     <>
       <PageHero
+        section="LEARN"
+        icon="learn"
+        guide={{ key: "learn_index", say: t.guide.learn_index }}
         crumbs={
           <Breadcrumbs
             items={[
@@ -94,11 +106,16 @@ export default async function LearnPage() {
         title={t.site.learnTitle}
         subtitle={t.site.learnSubtitle}
       />
-      <Container>
-        <Suspense fallback={<CardGridSkeleton count={3} />}>
+      <FrameSection
+        id="courses"
+        ariaLabel={t.site.courses}
+        guide={{ key: "learn_grid", say: t.guide.learn_grid }}
+        strip={{ index: 2, path: teamPath("LEARN", "COURSES") }}
+      >
+        <Suspense fallback={<CellGridSkeleton count={3} cover={false} />}>
           <LearnContent locale={locale} t={t} />
         </Suspense>
-      </Container>
+      </FrameSection>
     </>
   );
 }

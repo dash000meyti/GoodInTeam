@@ -2,6 +2,7 @@ import "server-only";
 import type { Metadata } from "next";
 import { localePath, type Locale } from "@/i18n/config";
 import { getMessages } from "@/i18n/server";
+import { packRows, type FrameCols, type FrameSpan } from "./frame-plan";
 
 /** Route params may arrive percent-encoded (Persian slugs) — normalize. */
 export function decodeParam(v: string) {
@@ -42,3 +43,21 @@ export const homeCrumb = (locale: Locale) => ({
   name: getMessages(locale).site.breadcrumbHome,
   path: localePath(locale, "/"),
 });
+
+/**
+ * A guide spot line (spec §10.3): the visible excerpt or tagline itself,
+ * whitespace-collapsed and clamped to `max` characters (≤140).
+ */
+export function clampSay(text: string | null | undefined, max = 140) {
+  const s = (text ?? "").replace(/\s+/g, " ").trim();
+  if (s.length <= max) return s;
+  return `${s.slice(0, max - 1).trimEnd()}…`;
+}
+
+/** Spans of `n` plain cells (one track each), for `packRows`. */
+export const plainSpans = (n: number): undefined[] => Array.from({ length: n }, () => undefined);
+
+/** `FrameFiller` units for the cells actually rendered in a grid (trailing tracks at md and lg). */
+export function fillers(spans: readonly (FrameSpan | undefined)[], cols: FrameCols) {
+  return { md: packRows(spans, cols, "md").trailing, lg: packRows(spans, cols, "lg").trailing };
+}

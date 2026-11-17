@@ -3,15 +3,25 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { ArrowUpLeftIcon, CheckIcon } from "lucide-react";
+import { PixelLogo } from "@/components/brand/pixel-logo";
+import { brandOf, brands } from "@/components/brand/brands";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Faq, generalFaq } from "@/components/site/faq";
 import { CtaBand } from "@/components/site/cta-band";
+import { FaqBox, generalFaq } from "@/components/site/faq";
+import {
+  FrameCell,
+  FrameFiller,
+  FrameGrid,
+  FrameSection,
+  framePath,
+} from "@/components/site/frame";
 import { ids, JsonLd } from "@/components/site/json-ld";
 import { Breadcrumbs } from "@/components/site/nav-bits";
-import { homeCrumb } from "@/components/site/page-utils";
+import { fillers, homeCrumb, plainSpans } from "@/components/site/page-utils";
 import { absoluteUrl, pageMetadata } from "@/components/site/seo";
 import { ServiceIcon } from "@/components/site/service-icon";
-import { Container, fmtNum, PageHero, SectionHeading } from "@/components/site/ui";
+import { fmtNum, HEADING_CLASS, PageHero, teamPath, TitleRow } from "@/components/site/ui";
+import { format } from "@/i18n/format-message";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
 import { getLocale, getMessages } from "@/i18n/server";
@@ -29,71 +39,161 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-async function ServicesGrid({ locale, t }: { locale: Locale; t: Messages }) {
+type Brand = (typeof brands)[number];
+
+/** ItemList JSON-LD of every service (unchanged; its own streamed hole). */
+async function ServicesLd({ locale }: { locale: Locale }) {
   await connection();
   const items = await listServices(locale);
   return (
+    <JsonLd
+      data={{
+        "@type": "ItemList",
+        itemListElement: items.map((svc, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          item: {
+            "@type": "Service",
+            name: svc.title,
+            description: svc.excerpt ?? undefined,
+            url: absoluteUrl(postHref(locale, svc)),
+            provider: { "@id": ids.organization() },
+            areaServed: locale === "fa" ? "IR" : "Worldwide",
+          },
+        })),
+      }}
+    />
+  );
+}
+
+/** The streamed service cells of one brand box (+ fillers), or the full-row "ask" cell. */
+async function BrandServices({ brand, locale, t }: { brand: Brand; locale: Locale; t: Messages }) {
+  await connection();
+  const items = (await listServices(locale)).filter((svc) => brandOf(svc.meta) === brand.id);
+  const name = t.nav[brand.label];
+  if (!items.length) {
+    return (
+      <FrameCell span="full" tone="card" className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <p className="text-muted-foreground">{t.site.brandEmpty}</p>
+        <Link
+          href={localePath(locale, "/contact")}
+          className="inline-flex items-center gap-1.5 text-sm font-bold hover:text-primary-ink"
+        >
+          {format(t.site.brandAsk, { brand: name })}
+          <ArrowUpLeftIcon className="size-4 ltr:rotate-90" aria-hidden />
+        </Link>
+      </FrameCell>
+    );
+  }
+  return (
     <>
-      <JsonLd
-        data={{
-          "@type": "ItemList",
-          itemListElement: items.map((svc, i) => ({
-            "@type": "ListItem",
-            position: i + 1,
-            item: {
-              "@type": "Service",
-              name: svc.title,
-              description: svc.excerpt ?? undefined,
-              url: absoluteUrl(postHref(locale, svc)),
-              provider: { "@id": ids.organization() },
-              areaServed: locale === "fa" ? "IR" : "Worldwide",
-            },
-          })),
-        }}
-      />
-      <div className="grid gap-6 md:grid-cols-2">
-        {items.map((svc, i) => (
-          <article
-            key={svc.id}
-            className="gt-lift group relative flex flex-col gap-5 overflow-hidden rounded-3xl bg-card p-8 shadow-card dark:border dark:border-border"
-          >
-            <div
-              aria-hidden
-              className="bg-dots mask-radial absolute -end-16 -top-16 size-72 opacity-60"
-            />
-            <div className="relative flex items-center justify-between">
-              <span className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary-ink ring-1 ring-primary/20">
-                <ServiceIcon name={svc.meta.icon} className="size-7" />
-              </span>
-              <span className="font-mono text-sm font-bold text-muted-foreground/50">
-                {fmtNum(i + 1, locale).padStart(2, locale === "fa" ? "۰" : "0")}
-              </span>
-            </div>
-            <h2 className="relative text-2xl font-extrabold tracking-tight">
-              <Link href={postHref(locale, svc)} className="after:absolute after:inset-0">
-                {svc.title}
-              </Link>
-            </h2>
-            {svc.excerpt && (
-              <p className="relative leading-8 text-muted-foreground">{svc.excerpt}</p>
-            )}
-            {svc.highlights.length > 0 && (
-              <ul className="relative grid gap-2 sm:grid-cols-2">
-                {svc.highlights.map((h) => (
-                  <li key={h} className="flex items-start gap-2 text-sm font-semibold">
-                    <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary-ink" /> {h}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <span className="relative mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-bold text-primary-ink">
-              {t.site.viewDetails}
-              <ArrowUpLeftIcon className="size-4 transition-transform group-hover:-translate-y-0.5 ltr:rotate-90" />
+      {items.map((svc, i) => (
+        <FrameCell key={svc.id} hover as="article" className="group flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <span className="flex size-11 items-center justify-center rounded-[8px] border border-frame-line bg-card text-foreground shadow-[-3px_-3px_0_0_var(--brand-frame)] rtl:shadow-[3px_-3px_0_0_var(--brand-frame)]">
+              <ServiceIcon name={svc.meta.icon} className="size-5" />
             </span>
-          </article>
-        ))}
-      </div>
+            <span className="font-mono text-sm font-bold text-muted-foreground tabular-nums">
+              {fmtNum(i + 1, locale).padStart(2, locale === "fa" ? "۰" : "0")}
+            </span>
+          </div>
+          <h3 className={HEADING_CLASS.h3}>
+            <Link href={postHref(locale, svc)} className="after:absolute after:inset-0">
+              {svc.title}
+            </Link>
+          </h3>
+          {svc.excerpt && <p className="leading-7 text-muted-foreground">{svc.excerpt}</p>}
+          {svc.highlights.length > 0 && (
+            <ul className="grid gap-2">
+              {svc.highlights.slice(0, 3).map((h) => (
+                <li key={h} className="flex items-start gap-2 text-sm font-semibold">
+                  <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary-ink" aria-hidden /> {h}
+                </li>
+              ))}
+            </ul>
+          )}
+          <span className="mt-auto inline-flex items-center gap-1.5 pt-1 text-sm font-bold">
+            {t.site.viewDetails}
+            <ArrowUpLeftIcon
+              className="size-4 transition-transform group-hover:-translate-y-0.5 ltr:rotate-90"
+              aria-hidden
+            />
+          </span>
+        </FrameCell>
+      ))}
+      <FrameFiller units={fillers(["full", ...plainSpans(items.length)], 3)} />
     </>
+  );
+}
+
+/** Same cells while the list streams: three card skeletons. */
+function BrandServicesSkeleton() {
+  return (
+    <>
+      {Array.from({ length: 3 }, (_, i) => (
+        <FrameCell key={i} className={i ? "hidden md:block" : undefined}>
+          <div className="flex flex-col gap-5">
+            <Skeleton className="size-11 rounded-[8px]" />
+            <Skeleton className="h-6 w-2/3" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+          </div>
+        </FrameCell>
+      ))}
+    </>
+  );
+}
+
+/**
+ * One box per Good In brand, in registry order (`brands` as is, never
+ * re-sorted). `id` = brand id: the dock and menus link `/services#studio`,
+ * `#code`; the box clears the menu bar through `html { scroll-padding-top }`
+ * alone (no scroll-margin, D18).
+ */
+function BrandBox({
+  brand,
+  index,
+  locale,
+  t,
+}: {
+  brand: Brand;
+  index: number;
+  locale: Locale;
+  t: Messages;
+}) {
+  const name = t.nav[brand.label];
+  const tagline = t.site[brand.tagline];
+  return (
+    <FrameSection
+      id={brand.id}
+      labelledBy={`${brand.id}-title`}
+      guide={{ key: `services_brand_${brand.id}`, say: t.guide[`services_brand_${brand.id}`] }}
+      strip={{ index, path: framePath("GOOD-IN", brand.suffix) }}
+    >
+      <FrameGrid cols={3}>
+        <FrameCell
+          span="full"
+          header
+          spot={{ key: `brand-${brand.id}`, say: tagline }}
+          className="flex flex-col gap-5 md:flex-row md:items-center md:gap-8"
+        >
+          <span dir="ltr" className="shrink-0">
+            <PixelLogo suffix={brand.suffix} cell={4} />
+          </span>
+          <div className="min-w-0 flex-1 space-y-2">
+            <h2 id={`${brand.id}-title`} className={HEADING_CLASS.h2}>
+              {name}
+            </h2>
+            <p className="text-lg leading-[1.6] text-pretty text-muted-foreground [:lang(fa)_&]:leading-[1.9]">
+              {tagline}
+            </p>
+          </div>
+        </FrameCell>
+        <Suspense fallback={<BrandServicesSkeleton />}>
+          <BrandServices brand={brand} locale={locale} t={t} />
+        </Suspense>
+      </FrameGrid>
+    </FrameSection>
   );
 }
 
@@ -107,9 +207,13 @@ export default async function ServicesPage() {
     { title: s.step3Title, body: s.step3Body },
     { title: s.step4Title, body: s.step4Body },
   ];
+  const after = brands.length + 2;
   return (
     <>
       <PageHero
+        section="SERVICES"
+        icon="services"
+        guide={{ key: "services_index", say: t.guide.services_index }}
         crumbs={
           <Breadcrumbs
             items={[
@@ -121,49 +225,41 @@ export default async function ServicesPage() {
         title={s.servicesPageTitle}
         subtitle={s.servicesPageSubtitle}
       />
-      <Container>
-        <Suspense
-          fallback={
-            <div className="grid gap-6 md:grid-cols-2">
-              {Array.from({ length: 4 }, (_, i) => (
-                <Skeleton key={i} className="h-80 rounded-3xl" />
-              ))}
-            </div>
-          }
-        >
-          <ServicesGrid locale={locale} t={t} />
-        </Suspense>
-      </Container>
+      <Suspense fallback={null}>
+        <ServicesLd locale={locale} />
+      </Suspense>
 
-      <section className="py-20 sm:py-28">
-        <Container>
-          <SectionHeading eyebrow={s.processEyebrow} title={s.processStepsTitle} align="center" />
-          <div className="relative">
-            <div
-              aria-hidden
-              className="absolute inset-x-[12%] top-7 hidden border-t-2 border-dashed border-border md:block"
-            />
-            <ol className="relative grid gap-6 md:grid-cols-4">
-              {steps.map((st, i) => (
-                <li
-                  key={st.title}
-                  className="relative flex flex-col items-center gap-3 text-center"
-                >
-                  <span className="relative flex size-14 items-center justify-center rounded-2xl bg-grey-900 text-lg font-black text-white shadow-card ring-8 ring-background dark:bg-primary dark:text-primary-foreground">
-                    {fmtNum(i + 1, locale)}
-                  </span>
-                  <h3 className="text-lg font-extrabold">{st.title}</h3>
-                  <p className="max-w-60 text-sm leading-7 text-muted-foreground">{st.body}</p>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </Container>
-      </section>
+      {brands.map((b, i) => (
+        <BrandBox key={b.id} brand={b} index={i + 2} locale={locale} t={t} />
+      ))}
 
-      <Container className="max-w-4xl">
-        <Faq items={generalFaq(t)} title={s.faqTitle} />
-      </Container>
+      <FrameSection
+        id="process"
+        labelledBy="process-title"
+        guide={{ key: "services_process", say: t.guide.services_process }}
+        strip={{ index: after, path: teamPath("PROCESS") }}
+      >
+        <TitleRow eyebrow={s.processEyebrow} title={s.processStepsTitle} titleId="process-title" />
+        <FrameGrid cols={4} as="ol" className="grid-cols-1 md:grid-cols-2">
+          {steps.map((st, i) => (
+            <FrameCell key={st.title} as="li" tone={i % 2 ? "card" : "default"}>
+              <span className="flex size-11 items-center justify-center rounded-[8px] bg-foreground text-lg font-black text-background tabular-nums">
+                {fmtNum(i + 1, locale)}
+              </span>
+              <h3 className="mt-5 text-lg font-extrabold">{st.title}</h3>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">{st.body}</p>
+            </FrameCell>
+          ))}
+        </FrameGrid>
+      </FrameSection>
+
+      <FaqBox
+        items={generalFaq(t)}
+        title={s.faqTitle}
+        guide={{ key: "services_faq", say: t.guide.services_faq }}
+        index={after + 1}
+        path={teamPath("FAQ")}
+      />
       <CtaBand locale={locale} t={t} />
     </>
   );
