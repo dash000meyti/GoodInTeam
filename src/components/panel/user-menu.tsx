@@ -26,13 +26,11 @@ export function UserMenu({
   const locale = useLocale();
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger
-        className="cursor-pointer rounded-full p-0.5 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label={t.panel.profile}
-      >
-        <Avatar className="size-9 ring-2 ring-primary/30 ring-offset-2 ring-offset-background">
-          {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt={user.name} />}
-          <AvatarFallback>{initials(user.name)}</AvatarFallback>
+      {/* Menu-bar avatar (spec §11.2): 22px inside a 28px item. */}
+      <DropdownMenuTrigger className="os-mb-item os-mb-icon" aria-label={t.panel.profile}>
+        <Avatar className="size-[22px] ring-1 ring-[rgb(var(--grey-rgb)/0.25)]">
+          {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt="" />}
+          <AvatarFallback className="text-[9px] font-bold">{initials(user.name)}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">

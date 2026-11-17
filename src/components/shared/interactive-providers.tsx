@@ -14,7 +14,13 @@ export function InteractiveProviders({ children }: { children: ReactNode }) {
   return (
     <TooltipProvider>
       {children}
-      <Toaster position={dir === "rtl" ? "bottom-left" : "bottom-right"} dir={dir} />
+      {/* Above the panel dock: panel-shell.css sets --toast-bottom under .panel-shell (§11.6). */}
+      <Toaster
+        position={dir === "rtl" ? "bottom-left" : "bottom-right"}
+        dir={dir}
+        offset={{ bottom: "var(--toast-bottom, 24px)" }}
+        mobileOffset={{ bottom: "var(--toast-bottom, 16px)" }}
+      />
     </TooltipProvider>
   );
 }

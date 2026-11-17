@@ -96,29 +96,32 @@ export function TimerPill({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         {timers.length ? (
+          // Menu-bar status item (spec §11.2): a 22px pill inside the bar's hit area.
           <button
             type="button"
             aria-label={format(tt.runningCount, { n: formatNumber(timers.length, locale) })}
-            className="flex h-9 cursor-pointer items-center gap-2 rounded-full bg-primary/12 px-3 text-sm font-bold text-primary-dark transition-colors outline-none hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-ring dark:text-primary-light"
+            className="os-mb-item px-0.5 hover:bg-transparent data-[state=open]:bg-transparent"
           >
-            <PulseDot />
-            {timers.length > 1 && (
-              <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground tabular-nums">
-                {formatNumber(timers.length, locale)}
-              </span>
-            )}
-            {latest && (
-              <LiveDuration
-                since={latest.startedAt}
-                serverNow={serverNow}
-                className="hidden font-mono text-[13px] tabular-nums sm:inline"
-              />
-            )}
+            <span className="flex h-[22px] items-center gap-1.5 rounded-full bg-primary/16 px-2 text-xs font-bold text-primary-ink shadow-[inset_0_0_0_1px_rgb(var(--primary-rgb)/0.35)] transition-colors in-hover:bg-primary/26 in-data-[state=open]:bg-primary/26">
+              <PulseDot className="size-2" />
+              {timers.length > 1 && (
+                <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground tabular-nums">
+                  {formatNumber(timers.length, locale)}
+                </span>
+              )}
+              {latest && (
+                <LiveDuration
+                  since={latest.startedAt}
+                  serverNow={serverNow}
+                  className="hidden font-mono text-xs tabular-nums sm:inline"
+                />
+              )}
+            </span>
           </button>
         ) : (
-          <Button variant="ghost" size="icon" className="rounded-full" aria-label={tt.quickStart}>
-            <TimerIcon className="size-[18px]" />
-          </Button>
+          <button type="button" className="os-mb-item os-mb-icon" aria-label={tt.quickStart}>
+            <TimerIcon className="size-4" aria-hidden />
+          </button>
         )}
       </PopoverTrigger>
       <PopoverContent

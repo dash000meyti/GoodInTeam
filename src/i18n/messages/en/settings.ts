@@ -305,10 +305,6 @@ export const settings: Record<keyof typeof fa, string> = {
   preset_blue: "Blue",
   preset_orange: "Orange",
   preset_red: "Red",
-  sidebar: "Sidebar",
-  sidebarHint: "On large screens; also toggled by the button on the sidebar edge.",
-  sidebar_expanded: "Expanded",
-  sidebar_collapsed: "Compact",
   sampleButton: "Button",
   sampleBadge: "Label",
 

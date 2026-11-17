@@ -1,38 +1,69 @@
 import { cookies } from "next/headers";
-import { getLocale } from "@/i18n/server";
+import { connection } from "next/server";
+import { OsClock } from "@/components/shell/os-clock";
+import { getLocale, getMessages } from "@/i18n/server";
 import { requireActor } from "@/server/auth/session";
-import { CommandPalette } from "./command-palette";
+import { getPublicTimezone } from "@/server/modules/content/queries";
 import { HeaderWidgets } from "./header-widgets";
-import { SIDEBAR_COOKIE } from "./panel-prefs";
-import { PanelSidebar } from "./sidebar";
+import { NavMenus } from "./menu-bar-menus";
+import { PanelDock } from "./panel-dock";
+import { defaultShell, readShellCookie, SHELL_COOKIE } from "./panel-prefs";
 import { UserMenu } from "./user-menu";
 
-/**
- * Session-dependent sidebar (rendered inside <Suspense> by the panel layout). Reads the
- * collapsed-sidebar cookie here (request time) so the server HTML has the final width.
+/*
+ * Session-dependent holes of the panel OS shell (spec §11.1). Each one is
+ * rendered inside its own <Suspense> by the panel layout and calls
+ * requireActor (cached per request), so the static frame stays prerendered.
  */
-export async function SessionSidebar() {
-  const actor = await requireActor({ locale: await getLocale() });
-  const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "1";
+
+async function actor() {
+  return requireActor({ locale: await getLocale() });
+}
+
+/** Role-filtered navigation menus, inside the menu bar's Radix Menubar root. */
+export async function SessionMenus() {
+  const a = await actor();
+  return <NavMenus role={a.user.role} />;
+}
+
+/** Status items: running-timer pill (staff) and the notifications bell. */
+export async function SessionStatus() {
+  const a = await actor();
+  return <HeaderWidgets actor={a} />;
+}
+
+export async function SessionAvatar() {
+  const a = await actor();
+  return <UserMenu user={a.user} />;
+}
+
+/** Studio clock (≥1280px), the business time zone. */
+export async function SessionClock() {
+  const locale = await getLocale();
+  await requireActor({ locale });
+  await connection();
+  const tz = await getPublicTimezone();
+  return <OsClock locale={locale} tz={tz} label={getMessages(locale).common.studioTime} />;
+}
+
+/** The dock (+ ⌘K palette, Launchpad, panel guide) with the server-read `gt-shell` prefs. */
+export async function SessionDock() {
+  const a = await actor();
+  const value = (await cookies()).get(SHELL_COOKIE)?.value;
+  const prefs = readShellCookie(value ? `${SHELL_COOKIE}=${value}` : null) ?? defaultShell;
+  return <PanelDock role={a.user.role} prefs={prefs} />;
+}
+
+/** Reserves the timer (28px) and the bell (28px) so the streamed status never shifts the bar. */
+export function StatusSkeleton() {
   return (
-    <>
-      <PanelSidebar role={actor.user.role} defaultCollapsed={collapsed} />
-      <CommandPalette role={actor.user.role} />
-    </>
+    <span className="pm-status-skeleton" aria-hidden>
+      <span />
+      <span />
+    </span>
   );
 }
 
-/** Session-dependent header widgets (timers, notifications, user menu). */
-export async function SessionHeaderSlot() {
-  const actor = await requireActor({ locale: await getLocale() });
-  return (
-    <>
-      <HeaderWidgets actor={actor} />
-      <UserMenu user={actor.user} />
-    </>
-  );
-}
-
-export function HeaderSlotSkeleton() {
-  return <div className="size-9 animate-pulse rounded-full bg-grey-500/12" />;
+export function AvatarSkeleton() {
+  return <span className="os-avatar-skeleton" aria-hidden />;
 }

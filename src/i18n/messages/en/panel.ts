@@ -40,8 +40,6 @@ export const panel: Record<keyof typeof fa, string> = {
   role_admin: "Admin",
   role_member: "Team member",
   role_client: "Client",
-  collapseSidebar: "Collapse sidebar",
-  expandSidebar: "Expand sidebar",
   mainNav: "Main menu",
 
   // ── OS shell (menu bar, window, dock) ──
@@ -57,4 +55,8 @@ export const panel: Record<keyof typeof fa, string> = {
   dockAutohide: "Automatically hide the dock",
   guideTips: "Guide tips",
   aboutModule: "About {module}",
+  launchpadFilter: "Search apps",
+  toggleMagnify: "Toggle dock magnification",
+  toggleAutohide: "Toggle dock auto-hide",
+  windowCommands: "Window & dock",
 };
