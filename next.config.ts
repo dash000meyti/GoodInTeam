@@ -29,6 +29,9 @@ const nextConfig: NextConfig = {
     // src/proxy.ts runs on every app path and Next buffers the body for it;
     // keep this ≥ the upload limit or media uploads (≤ 20 MB) get truncated.
     proxyClientMaxBodySize: "25mb",
+    // `next dev`/`next build` remind (and `next upgrade --agent` defaults) to
+    // security releases only.
+    agentUpgrade: "security",
   },
   images: {
     formats: ["image/avif", "image/webp"],
