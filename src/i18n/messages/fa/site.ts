@@ -26,7 +26,6 @@ export const site = {
   diagramDeploy: "استقرار",
   diagramPortal: "پرتال مشتری",
   diagramAgents: "عامل‌های هوشمند",
-  diagramBuild: "بیلد موفق",
   diagramProgress: "پیشرفت پروژه",
   diagramLive: "زنده",
   diagramTasks: "کار انجام شد",
@@ -39,7 +38,6 @@ export const site = {
   workTitle: "محصولاتی که ساخته‌ایم",
   workSubtitle: "هر پروژه یک مسئله واقعی، یک راه‌حل سنجیده و نتیجه‌ای قابل اندازه‌گیری.",
   viewAllWork: "همه نمونه‌کارها",
-  viewCaseStudy: "مطالعه موردی",
 
   // ── Services ──
   servicesEyebrow: "خدمات",
@@ -90,7 +88,6 @@ export const site = {
   mockContract: "قرارداد توسعه — نسخه ۲",
   mockInvoice: "فاکتور GT-1042",
   mockPaid: "پرداخت شد",
-  mockDue: "سررسید",
 
   // ── Stats ──
   statsEyebrow: "به زبان اعداد",
@@ -134,9 +131,7 @@ export const site = {
   // ── Common section bits ──
   breadcrumbHome: "خانه",
   featured: "ویژه",
-  readMore: "ادامه مطلب",
   viewDetails: "جزئیات",
-  backTo: "بازگشت به {section}",
   pageOf: "صفحه {n} از {total}",
   newer: "جدیدتر",
   older: "قدیمی‌تر",
@@ -149,7 +144,6 @@ export const site = {
   workPageTitle: "نمونه‌کارها",
   workPageSubtitle:
     "مطالعه‌های موردی از محصولاتی که طراحی و ساخته‌ایم: چالش، راه‌حل، تکنولوژی و نتیجه.",
-  filterStack: "تکنولوژی",
   filterYear: "سال",
   client: "مشتری",
   year: "سال",
@@ -161,8 +155,6 @@ export const site = {
   gallery: "گالری",
   nextCase: "پروژه بعدی",
   prevCase: "پروژه قبلی",
-  workCtaTitle: "پروژه‌ای شبیه این دارید؟",
-  workCtaBody: "بیایید درباره هدف‌ها و محدودیت‌هایتان صحبت کنیم.",
 
   // ── Blog ──
   blogTitle: "بلاگ",
@@ -210,7 +202,6 @@ export const site = {
   totalTime: "زمان کل",
   courseLevel: "سطح",
   lessonOf: "درس {n} از {total}",
-  backToCourse: "بازگشت به دوره",
   noCourses: "به‌زودی دوره‌های جدید منتشر می‌شوند.",
   lessonPrev: "درس قبلی",
   lessonNext: "درس بعدی",
@@ -245,8 +236,6 @@ export const site = {
   faq5Q: "مالکیت کد با کیست؟",
   faq5A:
     "پس از تسویه، مالکیت کامل کد، طراحی و مستندات با شماست. همه چیز در مخزن خودتان تحویل می‌شود.",
-  serviceCtaTitle: "برای این خدمت آماده‌اید؟",
-  serviceCtaBody: "جزئیات پروژه را بنویسید؛ ظرف یک روز کاری پاسخ می‌دهیم.",
   otherServices: "خدمات دیگر",
   whatYouGet: "آنچه دریافت می‌کنید",
 
@@ -264,7 +253,6 @@ export const site = {
   value4Body: "چرخه‌های کوتاه، تحویل مداوم و تصمیم‌گیری سریع.",
   basedIn: "مستقر در",
   findUs: "ما را دنبال کنید",
-  sayHello: "سلام کنید",
 
   // ── Contact ──
   contactTitle: "بیایید صحبت کنیم",

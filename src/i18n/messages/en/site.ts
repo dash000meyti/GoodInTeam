@@ -25,7 +25,6 @@ export const site: Record<keyof typeof fa, string> = {
   diagramDeploy: "Deploy",
   diagramPortal: "Client portal",
   diagramAgents: "AI agents",
-  diagramBuild: "Build passed",
   diagramProgress: "Project progress",
   diagramLive: "Live",
   diagramTasks: "Task done",
@@ -36,7 +35,6 @@ export const site: Record<keyof typeof fa, string> = {
   workTitle: "Products we've shipped",
   workSubtitle: "Every project: a real problem, a considered solution and a measurable outcome.",
   viewAllWork: "All case studies",
-  viewCaseStudy: "Case study",
 
   servicesEyebrow: "Services",
   servicesTitle: "From design to AI, under one roof",
@@ -85,7 +83,6 @@ export const site: Record<keyof typeof fa, string> = {
   mockContract: "Development contract — v2",
   mockInvoice: "Invoice GT-1042",
   mockPaid: "Paid",
-  mockDue: "Due",
 
   statsEyebrow: "By the numbers",
   statProjects: "Projects delivered",
@@ -123,9 +120,7 @@ export const site: Record<keyof typeof fa, string> = {
 
   breadcrumbHome: "Home",
   featured: "Featured",
-  readMore: "Read more",
   viewDetails: "Details",
-  backTo: "Back to {section}",
   pageOf: "Page {n} of {total}",
   newer: "Newer",
   older: "Older",
@@ -137,7 +132,6 @@ export const site: Record<keyof typeof fa, string> = {
   workPageTitle: "Work",
   workPageSubtitle:
     "Case studies of products we designed and built: the challenge, the solution, the stack and the results.",
-  filterStack: "Stack",
   filterYear: "Year",
   client: "Client",
   year: "Year",
@@ -149,8 +143,6 @@ export const site: Record<keyof typeof fa, string> = {
   gallery: "Gallery",
   nextCase: "Next project",
   prevCase: "Previous project",
-  workCtaTitle: "Have a project like this?",
-  workCtaBody: "Let's talk about your goals and constraints.",
 
   blogTitle: "Blog",
   blogSubtitle: "Articles, vlogs and short notes from behind the scenes of building products.",
@@ -196,7 +188,6 @@ export const site: Record<keyof typeof fa, string> = {
   totalTime: "Total time",
   courseLevel: "Level",
   lessonOf: "Lesson {n} of {total}",
-  backToCourse: "Back to the course",
   noCourses: "New courses are coming soon.",
   lessonPrev: "Previous lesson",
   lessonNext: "Next lesson",
@@ -230,8 +221,6 @@ export const site: Record<keyof typeof fa, string> = {
   faq5Q: "Who owns the code?",
   faq5A:
     "Once paid, you fully own the code, design and documentation. Everything is delivered to your own repository.",
-  serviceCtaTitle: "Ready for this service?",
-  serviceCtaBody: "Tell us about your project; we reply within one business day.",
   otherServices: "Other services",
   whatYouGet: "What you get",
 
@@ -248,7 +237,6 @@ export const site: Record<keyof typeof fa, string> = {
   value4Body: "Short cycles, continuous delivery and fast decisions.",
   basedIn: "Based in",
   findUs: "Find us on",
-  sayHello: "Say hello",
 
   contactTitle: "Let's talk",
   contactSubtitle:
