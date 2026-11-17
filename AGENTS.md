@@ -167,7 +167,8 @@ docs/                      # architecture, conventions, data model, design syste
 5. `tools.ts` → `defineTool(...)` per capability; register in `src/server/api/registry.ts`.
 6. i18n namespace `src/i18n/messages/{fa,en}/<m>.ts` + register in `messages/index.ts`.
 7. Pages in `src/app/[locale]/panel/<m>/` (server components; client islands in `_components/`).
-8. Nav entry in `src/components/panel/nav-config.ts` (roles!).
+8. Nav entry in `src/components/panel/nav-config.ts` (roles!) with a lucide `icon` and a `pixel`
+   dock icon drawn into `panelIcons` (`components/brand/pixel-icons.ts`, docs/brand.md#icons).
 9. `loading.tsx` in every route folder of the module.
 10. A project-scoped panel (`_components/project-<m>-panel.tsx`, `({ projectId, ctx, clientView })`,
     returns `null` without access) and a tab on `panel/projects/[id]/page.tsx` if the module has

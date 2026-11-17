@@ -196,6 +196,7 @@ column, logo L-frame at inline-start, ringed markers) → one or more stacked `F
 | `EmptyState`                                                                                                     | every empty list                                                                       |
 | `StatCard`                                                                                                       | KPI tiles (`tone`: primary/info/warning/violet/destructive/success)                    |
 | `nav-config.ts`                                                                                                  | source of truth for the dock, menu bar, Launchpad and ⌘K (role filters, dock pins)     |
+| `nav-icon.tsx`                                                                                                   | a module's dock / tab-bar / Launchpad icon: `NavItem.pixel` (cell 2), else lucide      |
 | `panel-prefs.ts`                                                                                                 | `gt-shell` cookie (dock size, magnify, auto-hide, wide) + pre-paint script; ⌘K matcher |
 | `session-chrome.tsx`, `menu-bar.tsx`, `panel-dock.tsx`, `launchpad.tsx`, `control-center.tsx`, `panel-guide.tsx` | the panel OS chrome (see [os-shell.md](os-shell.md#shells-and-their-suspense-map))     |
 
@@ -204,6 +205,8 @@ column, logo L-frame at inline-start, ringed markers) → one or more stacked `F
 | `LogoMark`, `Logo`                                                           | compatibility layer; sized only by `cell` (3 → 33px)                 |
 | `PixelLogo`, `PixelMark`, `PixelLogoCycle`, `PixelLogoSwap`                  | one path per tone; `cell` 1/2/3/4/6/8/10/12 or an inherited `--cell` |
 | `PixelText`, `PixelTextSet`, `PixelIcon`, `PixelAvatar`, `PixelAvatarSprite` | see [brand.md](brand.md)                                             |
+| `pixel-icons.ts`                                                             | 13 site + 17 panel icons, accent ≤20% (brand.md#icons)               |
+| `pixelDigits(text, locale)`                                                  | Persian pixel digits on fa (strips, 404; brand.md#pixel-digits)      |
 | `brands.ts`                                                                  | the brand registry (team, studio, code), `brandOf`, `isValidSuffix`  |
 
 ## Forms & accessibility
