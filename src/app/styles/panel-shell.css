@@ -329,6 +329,10 @@
     .panel-shell .os-dock-item[aria-current="page"] .pm-dock-icon {
       color: var(--foreground);
     }
+    /* the pixel module icon of the current tab: full ink, like the lucide one */
+    .panel-shell .os-dock-item[aria-current="page"] .px-icon {
+      --px-ink: var(--foreground);
+    }
     .panel-shell > .os-dock .os-dock-item[aria-current="page"] .os-dock-label {
       font-weight: 700;
     }
