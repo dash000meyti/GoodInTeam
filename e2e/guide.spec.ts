@@ -5,10 +5,10 @@
  *
  * Every test sets `gt-guide-test=1` (under `navigator.webdriver` the loader
  * otherwise never boots the automatic guide) and runs at 1440×900 (desktop
- * mode) unless noted. It targets only the foundation contract of §15.1
- * (`[data-guide]`, ids, `--chrome-top`/`--dock-space`), so it runs before and
- * after the home rewrite; the greeting and first-box cases need the
- * rewritten hero's reserved roof and skip without it.
+ * mode) unless noted. It targets the foundation contract of §15.1
+ * (`[data-guide]`, ids, `--chrome-top`/`--dock-space`) plus the home hero's
+ * reserved roof (`section#top.frame-box[data-first]`, home.spec), which the
+ * greeting and first-box cases stand on.
  *
  *   BASE_URL=http://localhost:3000 pnpm exec playwright test e2e/guide.spec.ts
  */
@@ -51,13 +51,22 @@ const chromeTop = (page: Page) =>
     parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--chrome-top")),
   );
 
-/** Scroll so `[data-guide=key]`'s top sits at `y` px from the viewport top. */
+/**
+ * Scroll so `[data-guide=key]`'s top sits at `y` px from the viewport top.
+ * A jump renders the skipped `.frame-cv` boxes on the way at their real size
+ * (their intrinsic size is the desktop one), so it settles and scrolls again.
+ */
 const scrollBoxTo = (page: Page, key: string, y: number | "band") =>
   page.evaluate(
-    ([k, at]) => {
+    async ([k, at]) => {
       const el = document.querySelector(`[data-guide="${k}"]`)!;
       const top = at === "band" ? innerHeight * 0.4 : Number(at);
-      scrollTo({ top: scrollY + el.getBoundingClientRect().top - top, behavior: "instant" });
+      const go = () =>
+        scrollTo({ top: scrollY + el.getBoundingClientRect().top - top, behavior: "instant" });
+      const frame = () => new Promise((r) => requestAnimationFrame(r));
+      go();
+      for (let i = 0; i < 3; i++) await frame();
+      go();
     },
     [key, y] as const,
   );
@@ -88,7 +97,7 @@ test("chrome variables are finite px and the engine boots after load", async ({ 
 test("greeting stands on the first box's roof, inside the painted desktop", async ({ page }) => {
   await setup(page, { greeted: false });
   await page.goto("/en");
-  test.skip(!(await page.locator(ROOF).count()), "needs the home rewrite's reserved roof");
+  await expect(page.locator(ROOF)).toHaveCount(1);
   await engine(page);
   await expect(bubble(page).locator(".gt-guide-text")).toHaveText(
     greetingRe(en.greeting, en.greetingNoName),
@@ -108,7 +117,7 @@ test("greeting stands on the first box's roof, inside the painted desktop", asyn
 test("first box speaks into its decor cell (candidate B)", async ({ page }) => {
   await setup(page);
   await page.goto("/");
-  test.skip(!(await page.locator(ROOF).count()), "needs the home rewrite's reserved roof");
+  await expect(page.locator(ROOF)).toHaveCount(1);
   await engine(page);
   const say = await page.locator('[data-guide="home_hero"]').getAttribute("data-guide-say");
   await expect(bubble(page).locator(".gt-guide-text")).toHaveText(say!);
