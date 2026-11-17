@@ -25,17 +25,20 @@ pnpm check               # lint + typecheck + unit tests — run before every co
 pnpm build               # production build (also validates Cache Components rules)
 pnpm db:generate         # after editing src/server/db/schema/* → creates a migration in drizzle/
 pnpm db:reset && pnpm db:seed   # fresh local DB with demo data (owner@goodteam.local / goodteam-demo-pass)
-pnpm test:e2e            # Playwright browser tests (e2e/) against a running dev server with demo data
-node scripts/shots.mjs   # screenshots of pages (fa/en, --dark, --mobile) for visual QA
+pnpm test:e2e            # Playwright browser tests (e2e/) against a running server with demo data
+                         #   (BASE_URL=…; CI uses `pnpm start`; `@perf` timing checks need PERF=1)
+node scripts/shots.mjs   # screenshots of pages (fa/en, --dark, --mobile, --full) for visual QA
 ```
 
 Migrations are applied automatically when the server starts (`src/instrumentation.ts`).
 
-- **Stop a server by its port**, never by process name: `lsof -ti tcp:3000 | xargs kill`
-  (`pkill node`/`pkill next` also kills other servers, editors and tools on the machine).
+- **Stop a server by its port**, never by process name:
+  `lsof -ti tcp:3000 -sTCP:LISTEN | xargs kill`. Keep `-sTCP:LISTEN`: without it `lsof` also
+  lists every _client_ connected to that port (browsers, the Claude desktop app…) and kills them.
+  `pkill node`/`pkill next` also kills other servers, editors and tools on the machine.
 - **Stop `pnpm dev` before `git merge`/`rebase`/`checkout`.** Turbopack's persistent dev cache can
   capture files mid-merge (with conflict markers) and keep failing after they're fixed; if that
-  happens, `rm -rf .next/dev` and restart.
+  happens, or a dev page keeps reloading itself after a `pnpm build`, `rm -rf .next/dev` and restart.
 
 ## Git workflow (important)
 
@@ -70,7 +73,8 @@ src/
   components/shell/        # OS chrome shared by site + panel: MenuBarShell, Dock/DockLinks, Window,
                            #   OsLights, OsClock, appearance toggles, guide-events, pure helpers
   components/shared/       # app-wide building blocks (DatePicker, SelectField, Markdown…)
-  components/panel/        # panel chrome (sidebar nav-config, PageHeader, EmptyState, StatCard…)
+  components/panel/        # panel OS chrome (menu bar, dock, window, Launchpad, Control Center, quiet
+                           #   guide; nav-config.ts drives the dock, menus and ⌘K), PageHeader, EmptyState…
   components/site/         # public site components; frame.tsx (FrameSection/Grid/Cell), frame-plan.ts
                            #   (packRows), stats-cells.tsx, cta-band.tsx
   i18n/                    # locales, messages/{fa,en}/<namespace>.ts, server/client helpers
@@ -132,7 +136,7 @@ docs/                      # architecture, conventions, data model, design syste
    Every list needs an `EmptyState`; every page a `PageHeader`. When you add or change a
    component in `components/ui` / `components/shared`, update its example in the living catalog
    `/panel/design-system` (`panel/design-system/_components/sections/*`).
-10. **OS shell rules** (Good In OS, `docs/design/os-redesign.md`):
+10. **OS shell rules** (Good In OS; how it works: `docs/os-shell.md`, spec: `docs/design/os-redesign.md`):
     - **Offsets** use the shell utilities `below-chrome` (sticky asides), `top-chrome` (sticky
       bars), `above-dock`, `pb-dock`, `max-h-chrome` — never hard-coded `top-*`/`bottom-*` for
       the chrome. JS reads `--chrome-top`/`--dock-space` (registered px) via
