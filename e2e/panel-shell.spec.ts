@@ -88,7 +88,7 @@ test("the menu bar is keyboard-operable (Radix menubar)", async ({ page, browser
   await expect(page.locator(":focus")).toHaveAccessibleName("Good In menu");
   // Radix moves roving focus on the next tick: wait for each move before the next key.
   await page.keyboard.press("ArrowRight");
-  await expect(page.locator(":focus")).toHaveText("Good In Team"); // App menu (current app)
+  await expect(page.locator(":focus")).toHaveText("Desktop"); // App menu (current app, /panel = Desktop)
   await page.keyboard.press("ArrowRight");
   await expect(page.locator(":focus")).toHaveText("Work"); // first navigation menu
   await page.keyboard.press("Enter");
