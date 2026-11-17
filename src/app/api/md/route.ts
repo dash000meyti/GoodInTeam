@@ -6,7 +6,7 @@ import { markdownForPath } from "@/server/modules/content/geo";
  * Markdown mirrors for agents / answer engines. src/proxy.ts rewrites
  * `/<path>.md` (and `/en/<path>.md`) to `/api/md?locale=&path=`.
  * Supported: /blog/<slug>, /work/<slug>, /learn/<course>[/<lesson>],
- * /learn/<tutorial>, /services/<slug>, /about.
+ * /learn/<tutorial>, /services/<slug>, /about, and the brand pages /studio, /code.
  */
 export async function GET(req: NextRequest) {
   await connection();
