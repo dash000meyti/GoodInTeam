@@ -28,6 +28,7 @@ export interface ProfileValues {
   phone: string;
   socials: Record<keyof typeof socialIcons, string>;
   availableForWork: boolean;
+  siteGuide: boolean;
 }
 
 const networks = Object.keys(socialIcons) as (keyof typeof socialIcons)[];
@@ -212,6 +213,17 @@ export function ProfileForm({ values }: { values: ProfileValues }) {
             <span className="space-y-0.5">
               <span className="block text-sm font-semibold">{s.availableForWork}</span>
               <span className="block text-xs text-muted-foreground">{s.availableForWorkHint}</span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 self-start rounded-xl border border-dashed p-4 md:col-start-2">
+            <SwitchInput
+              name="siteGuide"
+              defaultChecked={values.siteGuide}
+              onChange={() => setDirty(true)}
+            />
+            <span className="space-y-0.5">
+              <span className="block text-sm font-semibold">{s.siteGuide}</span>
+              <span className="block text-xs text-muted-foreground">{s.siteGuideHint}</span>
             </span>
           </label>
         </div>

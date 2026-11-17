@@ -13,13 +13,17 @@ import { GuideLayer } from "./guide-layer";
  * Request-time (the owner's name comes from the cached profile): formats the
  * desktop greeting and the compact one (compact mode opens no automatic
  * bubbles, so its greeting says to tap the sprite when its "!" shows) and
- * passes them, with the bubble labels, to the client loader. The `guide`
+ * passes them, with the bubble labels, to the client loader. Renders nothing
+ * but a hide rule for the entry points when the owner turned the guide off. The `guide`
  * namespace never ships to the browser; section lines live in the pages'
  * `data-guide-say` attributes.
  */
 export async function GuideMount({ locale }: { locale: Locale }) {
   await connection();
   const profile = await getPublicProfile();
+  // Owner switched the guide off (Settings → Site profile): no layer, and the
+  // menu bar / Control Center / Launchpad entry points (`data-guide-entry`) hide.
+  if (!profile.siteGuide) return <style>{"[data-guide-entry]{display:none!important}"}</style>;
   const t = getMessages(locale);
   const g = t.guide;
   const owner = profile.ownerName[locale]?.trim();

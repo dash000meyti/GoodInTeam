@@ -29,7 +29,7 @@ export function SiteControlCenter({ locale, t }: { locale: Locale; t: Messages }
         <p className="os-cc-title">{t.common.appearance}</p>
         <AppearanceModeToggle />
       </div>
-      <div className="os-cc-tile col-span-2">
+      <div className="os-cc-tile col-span-2" data-guide-entry="">
         <GuideSwitch label={<span className="os-cc-title">{t.guide.toggle}</span>} />
         <div className="grid grid-cols-2 gap-1.5">
           <GuideAction popover="os-cc" type="explain" className="os-cc-btn">

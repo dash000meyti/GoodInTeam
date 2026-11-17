@@ -124,6 +124,7 @@ function GuideExtra({ t }: { t: Messages }) {
         type="button"
         popoverTarget="mb-guide"
         aria-label={t.guide.toggle}
+        data-guide-entry=""
         className={cn(MB_ICON_CLASS, "hidden lg:inline-flex")}
         style={a.trigger}
       >

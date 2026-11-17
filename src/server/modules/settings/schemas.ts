@@ -64,6 +64,7 @@ export const profileFormInput = z.object({
   "socials.instagram": link,
   "socials.youtube": link,
   availableForWork: zBool,
+  siteGuide: zBool,
 });
 
 const biPatch = (max: number) =>
@@ -95,6 +96,10 @@ export const profilePatchInput = z.object({
     .optional()
     .describe("Links or handles: x, linkedin, github, telegram, instagram, youtube"),
   availableForWork: z.boolean().optional(),
+  siteGuide: z
+    .boolean()
+    .optional()
+    .describe("Show the pixel 'virtual me' guide on the public site (default true)"),
 });
 export type ProfilePatch = z.output<typeof profilePatchInput>;
 

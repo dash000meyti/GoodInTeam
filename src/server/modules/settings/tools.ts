@@ -12,7 +12,7 @@ export const settingsTools = [
     name: "settings_get",
     title: "Get site & business settings",
     description:
-      "Returns the public site profile (bilingual { fa, en } brand name, owner name, headline, bio, location; avatar, contact email/phone, social links, availableForWork) and business settings (baseCurrency, IANA timezone, invoicePrefix, defaultTaxBps + defaultTaxPercent, defaultHourlyRateMinor + defaultHourlyRate in MAJOR units of baseCurrency, bilingual paymentInstructions).",
+      "Returns the public site profile (bilingual { fa, en } brand name, owner name, headline, bio, location; avatar, contact email/phone, social links, availableForWork, siteGuide) and business settings (baseCurrency, IANA timezone, invoicePrefix, defaultTaxBps + defaultTaxPercent, defaultHourlyRateMinor + defaultHourlyRate in MAJOR units of baseCurrency, bilingual paymentInstructions).",
     input: z.object({}),
     scope: "read",
     roles: [...ADMIN],
