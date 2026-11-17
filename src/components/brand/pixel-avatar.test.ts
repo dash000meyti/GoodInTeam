@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   AVATAR_BASE,
-  AVATAR_HEAD,
+  AVATAR_ICON,
   AVATAR_PARTS,
   AVATAR_POSES,
   AVATAR_REFERENCE,
   AVATAR_SIZE,
   AVATAR_TONES,
+  avatarIconCells,
   composeAvatar,
   type PixelPose,
 } from "./pixel-avatar";
@@ -19,10 +20,12 @@ function render(pose: PixelPose) {
   return grid.map((r) => r.join(""));
 }
 
-describe("pixel avatar", () => {
-  it("base and every part fit in 16×16", () => {
-    expect(AVATAR_BASE).toHaveLength(16);
-    for (const r of AVATAR_BASE) expect(r).toHaveLength(16);
+describe("pixel avatar (M3 screen creature)", () => {
+  it("reference, base and every part fit in 16×16", () => {
+    for (const g of [AVATAR_REFERENCE, AVATAR_BASE]) {
+      expect(g).toHaveLength(16);
+      for (const r of g) expect(r).toHaveLength(16);
+    }
     for (const [name, cells] of Object.entries(AVATAR_PARTS))
       for (const c of cells) {
         expect(c.x, name).toBeGreaterThanOrEqual(0);
@@ -39,9 +42,20 @@ describe("pixel avatar", () => {
     }
   });
 
-  it("the base neutralises eyes, mouth and feet", () => {
-    expect(AVATAR_BASE[6]).toBe("...kffffffffk...");
-    expect(AVATAR_BASE[8]).toBe("...kffffffffk...");
+  it("the body wears the logo frame: ink corner, light top and left, ink right and bottom", () => {
+    expect(AVATAR_REFERENCE[4]).toBe("..OFFFFFFFFFFF..");
+    expect(AVATAR_REFERENCE[13]).toBe("..FOOOOOOOOOOO..");
+    for (let y = 5; y <= 12; y++) {
+      expect(AVATAR_REFERENCE[y]![2], `r${y}`).toBe("F");
+      expect(AVATAR_REFERENCE[y]![13], `r${y}`).toBe("O");
+    }
+  });
+
+  it("the base keeps the eyes' bottom row and drops the variable cells", () => {
+    expect(AVATAR_BASE[7]).toBe("..FDDDDDDDDDDO..");
+    expect(AVATAR_BASE[8]).toBe("..FDDDDDDDDDDO..");
+    expect(AVATAR_BASE[9]).toBe(".OFDYYYDDYYYDO..");
+    expect(AVATAR_BASE[14]).toBe(".".repeat(16));
     expect(AVATAR_BASE[15]).toBe(".".repeat(16));
   });
 
@@ -58,21 +72,24 @@ describe("pixel avatar", () => {
     expect(render("idle")).toEqual(AVATAR_REFERENCE);
   });
 
-  it("blink hides the eyes, talk opens the mouth, wave raises a hand", () => {
-    expect(render("blink")[6]).toBe("...kffffffffk...");
-    expect(render("talk")[8]).toBe("...kffeeeeffk...");
-    expect(render("wave")[8]![14]).toBe("f");
-    expect(render("sit")[15]).toBe("..kkkk....kkkk..");
+  it("blink closes the eyes, talk opens a mouth, wave raises the arm", () => {
+    expect(render("blink")[7]).toBe("..FDDDDDDDDDDO..");
+    expect(render("blink")[9]).toBe(".OFDYYYDDYYYDOO.");
+    expect(render("idle")[11]).toBe("..FDDDDDDDDDDO..");
+    expect(render("talk")[11]).toBe("..FDDDDYYDDDDO..");
+    expect(render("wave")[6]![15]).toBe("O");
+    expect(render("wave")[10]![15]).toBe(".");
+    expect(render("sit")[15]).toBe("..OOOO....OOOO..");
   });
 
-  it("the head crop lies inside the grid and has no hoodie cells", () => {
-    const { x, y, w, h } = AVATAR_HEAD;
-    expect(x + w).toBeLessThanOrEqual(16);
-    expect(y + h).toBeLessThanOrEqual(16);
-    const head = composeAvatar("idle").filter(
-      (c) => c.x >= x && c.x < x + w && c.y >= y && c.y < y + h,
+  it("the small icon is a leg-free framed square with centred eyes", () => {
+    expect(AVATAR_ICON).toHaveLength(10);
+    for (const r of AVATAR_ICON) expect(r).toHaveLength(10);
+    const eyeRows = AVATAR_ICON.flatMap((r, y) => (r.includes("Y") ? [y] : []));
+    expect(eyeRows).toEqual([3, 4, 5]);
+    expect(AVATAR_ICON[9]).toBe("FOOOOOOOOO");
+    expect(new Set(avatarIconCells().map((c) => c.tone))).toEqual(
+      new Set(["ink", "frame", "face", "accent"]),
     );
-    expect(head.some((c) => c.tone === "accent")).toBe(false);
-    expect(head.some((c) => c.tone === "eye")).toBe(true);
   });
 });

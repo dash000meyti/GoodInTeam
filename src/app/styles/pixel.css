@@ -63,15 +63,16 @@
     opacity: 0;
   }
   .px-sprite:is([data-state="idle"], :not([data-state]))
-    :is(.px-p-eyes, .px-p-mouth, .px-p-feetIdle),
-  .px-sprite[data-state="walk"] :is(.px-p-eyes, .px-p-mouth),
-  .px-sprite[data-state="talk"] :is(.px-p-eyes, .px-p-feetIdle),
-  .px-sprite[data-state="wave"] :is(.px-p-eyes, .px-p-mouth, .px-p-feetIdle, .px-p-wave),
-  .px-sprite[data-state="sit"] :is(.px-p-eyes, .px-p-mouth, .px-p-armsLap, .px-p-feetSit) {
+    :is(.px-p-eyes, .px-p-armR, .px-p-feetIdle),
+  .px-sprite[data-state="walk"] :is(.px-p-eyes, .px-p-armR),
+  .px-sprite[data-state="talk"] :is(.px-p-eyes, .px-p-armR, .px-p-feetIdle),
+  .px-sprite[data-state="wave"] :is(.px-p-eyes, .px-p-feetIdle, .px-p-wave),
+  .px-sprite[data-state="sit"] :is(.px-p-eyes, .px-p-armR, .px-p-feetSit) {
     opacity: 1;
   }
   /* idle: a 120ms blink every 4.2s, 5 iterations per activation (the engine
-     restarts it by re-setting data-state). */
+     restarts it by re-setting data-state). The eyes' bottom row lives in the
+     base, so a hidden .px-p-eyes reads as closed eyes. */
   .px-sprite[data-state="idle"] .px-p-eyes {
     animation: px-blink 4.2s steps(1, end) 5;
   }
@@ -82,16 +83,16 @@
   .px-sprite[data-state="walk"] .px-p-feetB {
     animation: px-frame-b 320ms steps(1, end) infinite;
   }
-  /* talk: mouth / mouthTalk, 2 frames × 180ms, until the text wipe ends. */
-  .px-sprite[data-state="talk"] .px-p-mouth {
-    animation: px-frame-a 360ms steps(1, end) infinite;
-  }
+  /* talk: the mouth opens and closes, 2 frames × 180ms, until the text wipe ends. */
   .px-sprite[data-state="talk"] .px-p-mouthTalk {
     animation: px-frame-b 360ms steps(1, end) infinite;
   }
-  /* wave: 4 frames × 2 iterations, ending with the hand up. */
+  /* wave: the arm swings up and down, 4 frames × 2 iterations, ending up. */
   .px-sprite[data-state="wave"] .px-p-wave {
     animation: px-wave 480ms steps(1, end) 2 both;
+  }
+  .px-sprite[data-state="wave"] .px-p-armR {
+    animation: px-wave-down 480ms steps(1, end) 2 both;
   }
 
   /* ── Once-only logo cycle (.gi-cycle[data-play]), 4.2s, ending on TEAM ── */
@@ -114,7 +115,7 @@
     .gi-cycle .gi-sfx {
       animation: none !important;
     }
-    .px-sprite:not([data-state="sit"]) :is(.px-p-eyes, .px-p-mouth, .px-p-feetIdle) {
+    .px-sprite:not([data-state="sit"]) :is(.px-p-eyes, .px-p-armR, .px-p-feetIdle) {
       opacity: 1;
     }
     .px-sprite:not([data-state="sit"]) :is(.px-p-mouthTalk, .px-p-feetA, .px-p-feetB, .px-p-wave) {
@@ -129,7 +130,7 @@
   }
   html[data-motion="reduce"]
     .px-sprite:not([data-state="sit"])
-    :is(.px-p-eyes, .px-p-mouth, .px-p-feetIdle) {
+    :is(.px-p-eyes, .px-p-armR, .px-p-feetIdle) {
     opacity: 1;
   }
   html[data-motion="reduce"]
@@ -178,6 +179,23 @@
   }
   100% {
     opacity: 1;
+  }
+}
+@keyframes px-wave-down {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 /* TEAM 0–24% and 76–100%, STUDIO 24–50%, CODE 50–76%; every entrance is a

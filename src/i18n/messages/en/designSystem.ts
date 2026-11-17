@@ -259,7 +259,7 @@ export const designSystem: Record<keyof typeof fa, string> = {
     "Persian 0–9 on the Latin digits' 5×7 grid; fa pages number their frame strips and the 404 with them.",
   brandAvatar: "Virtual me: poses",
   brandAvatarHint:
-    "Literal colours in both modes; the yellow hoodie never sits directly on a yellow surface.",
+    "A dark screen in the logo's frame with yellow eyes; literal colours in both modes. The menu bar uses its leg-free 10×10 icon.",
   brandSprite: "Guide sprite",
   brandSpriteHint: "Each state on a light and a dark surface; the colours must stay identical.",
   brandContrast: "Contrast rules",

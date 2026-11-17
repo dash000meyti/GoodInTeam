@@ -29,7 +29,7 @@ const RING =
  * narration `guide` — `home_cta` on home, `cta` elsewhere). Never wrap it or
  * pass spacing classes. A yellow stepped-corner panel (always #FFC50D with ink
  * text, both modes); the waving avatar stands on a #F3F3F3 paper tile with a
- * 2px ink border (the always-yellow hoodie would vanish on the panel).
+ * 2px ink border, so its yellow eyes never sit on the yellow panel.
  */
 export function CtaBand({
   locale,

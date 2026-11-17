@@ -1,8 +1,9 @@
 import {
-  AVATAR_HEAD,
+  AVATAR_ICON,
   AVATAR_PARTS,
   AVATAR_SIZE,
   avatarBaseCells,
+  avatarIconCells,
   composeAvatar,
   type AvatarPart,
   type PixelPose,
@@ -129,9 +130,10 @@ function AvatarPaths({ cells }: { cells: readonly PixelCell[] }) {
 }
 
 /**
- * The "virtual me" as one static frame (≤5 elements; the head crop 4).
- * `part="head"` crops to AVATAR_HEAD (10×10 cells): the site menu-bar extra
- * and the panel Me tile use it at `cell={2}` (20px). Decorative (aria-hidden).
+ * The "virtual me" as one static frame (≤4 elements). `part="head"` draws the
+ * 10×10 AVATAR_ICON (the framed screen without limbs, eyes centred): the site
+ * menu-bar extra, the panel guide and the Me tile use it at `cell={2}` (20px).
+ * Decorative (aria-hidden).
  */
 export function PixelAvatar({
   pose = "idle",
@@ -144,19 +146,17 @@ export function PixelAvatar({
   cell?: PixelCellSize;
   className?: string;
 }) {
-  const all = composeAvatar(pose);
   if (part === "head") {
-    const { x, y, w, h } = AVATAR_HEAD;
-    const head = all.filter((c) => c.x >= x && c.x < x + w && c.y >= y && c.y < y + h);
+    const size = AVATAR_ICON.length;
     return (
-      <PixelSvg w={w} h={h} viewBox={`${x} ${y} ${w} ${h}`} cell={cell} className={className}>
-        <AvatarPaths cells={head} />
+      <PixelSvg w={size} h={size} cell={cell} className={className}>
+        <AvatarPaths cells={avatarIconCells()} />
       </PixelSvg>
     );
   }
   return (
     <PixelSvg w={AVATAR_SIZE} h={AVATAR_SIZE} cell={cell} className={className}>
-      <AvatarPaths cells={all} />
+      <AvatarPaths cells={composeAvatar(pose)} />
     </PixelSvg>
   );
 }
@@ -165,9 +165,9 @@ export type SpriteState = "idle" | "walk" | "talk" | "wave" | "sit";
 
 const SPRITE_PARTS: AvatarPart[] = [
   "eyes",
-  "mouth",
   "mouthTalk",
-  "armsLap",
+  "armR",
+  "wave",
   "feetIdle",
   "feetA",
   "feetB",
@@ -182,7 +182,7 @@ function PartPath({ part, className }: { part: AvatarPart; className?: string })
 
 /**
  * The animated sprite for the guide: the base tones plus every variable part
- * as its own element (`.px-p-eyes`, `.px-p-mouth`, … and `<g class="px-p-wave">`),
+ * as its own element (`.px-p-eyes`, `.px-p-mouthTalk`, `.px-p-wave`, …),
  * switched by `pixel.css` rules keyed ONLY on this root's `data-state`. The
  * guide engine writes every state change to `#gt-guide svg.px-sprite`; the
  * prop sets the first frame. `cell` has no default: without it the size comes
@@ -209,10 +209,6 @@ export function PixelAvatarSprite({
       {SPRITE_PARTS.map((p) => (
         <PartPath key={p} part={p} className={`px-p-${p}`} />
       ))}
-      <g className="px-p-wave">
-        <PartPath part="waveFace" />
-        <PartPath part="waveSleeve" />
-      </g>
     </PixelSvg>
   );
 }

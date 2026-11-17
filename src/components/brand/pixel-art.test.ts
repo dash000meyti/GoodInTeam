@@ -32,7 +32,7 @@ describe("pixel components (element budgets, spec §4.2)", () => {
     for (const name of pixelIconNames)
       expect(count(html(createElement(PixelIcon, { name }))), name).toBeLessThanOrEqual(3);
     expect(count(html(createElement(PixelAvatar)))).toBeLessThanOrEqual(5);
-    expect(count(html(createElement(PixelAvatar, { part: "head" })))).toBe(4);
+    expect(count(html(createElement(PixelAvatar, { part: "head" })))).toBe(5);
     expect(count(html(createElement(PixelAvatarSprite)))).toBeLessThanOrEqual(16);
   });
 
@@ -49,17 +49,7 @@ describe("pixel components (element budgets, spec §4.2)", () => {
   it("the sprite exposes its state on its own root and every part", () => {
     const s = html(createElement(PixelAvatarSprite, { state: "walk" }));
     expect(s).toMatch(/^<svg[^>]*data-state="walk"/);
-    for (const p of [
-      "eyes",
-      "mouth",
-      "mouthTalk",
-      "armsLap",
-      "feetIdle",
-      "feetA",
-      "feetB",
-      "feetSit",
-      "wave",
-    ])
+    for (const p of ["eyes", "mouthTalk", "armR", "wave", "feetIdle", "feetA", "feetB", "feetSit"])
       expect(s, p).toContain(`class="px-p-${p}"`);
   });
 
@@ -71,7 +61,11 @@ describe("pixel components (element budgets, spec §4.2)", () => {
       const s = html(el);
       expect(s).not.toContain("var(");
       expect(s).toContain('fill="#FFC50D"');
+      expect(s).toContain('fill="#1C1C1E"');
     }
+    const head = html(createElement(PixelAvatar, { part: "head" }));
+    expect(head).toContain('viewBox="0 0 10 10"');
+    expect(head).not.toContain("var(");
   });
 
   it("Persian digits render inside the one text path, LTR", () => {

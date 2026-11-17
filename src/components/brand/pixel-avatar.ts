@@ -1,62 +1,60 @@
 import { layoutFromGrid, type PixelCell, type PixelTone } from "./pixel-font";
 
 /**
- * The "virtual me" sprite (spec §4.3, D20): a 16×16 figure with a yellow
- * hoodie. Tones: `k` ink, `f` face, `e` eyes, `y` hoodie. It is painted with
- * the literal AVATAR_FILLS in both modes (never re-toned), faces its direction
- * of travel and is never mirrored. Pure data + `composeAvatar`.
+ * The "virtual me" sprite (spec §4.3, D20; the owner's pick "M3", 2026-11-17):
+ * a 16×16 screen creature. Its body is a dark screen in the logo's frame (light
+ * top and left edge, ink corner, right and bottom edges), with two yellow
+ * eyes, stubby ink arms and legs, and a mouth only while it talks. Tones: `O`
+ * ink, `F` frame, `D` face (the screen), `Y` accent (eyes, mouth). It is
+ * painted with the literal AVATAR_FILLS in both modes (never re-toned), is
+ * symmetric apart from the waving arm and is never mirrored. Pure data +
+ * `composeAvatar`.
  */
 
 export const AVATAR_SIZE = 16;
 
 export const AVATAR_TONES = {
-  k: "ink",
-  f: "face",
-  e: "eye",
-  y: "accent",
+  O: "ink",
+  F: "frame",
+  D: "face",
+  Y: "accent",
 } as const satisfies Record<string, PixelTone>;
 
-/** The reference idle frame with every part shown (r0 is empty). */
+/** The reference idle frame with every idle part shown (rows 0–3 stay free for the wave). */
 export const AVATAR_REFERENCE: readonly string[] = [
   "................",
-  ".....kkkkkk.....",
-  "....kkkkkkkk....",
-  "...kkkkkkkkkk...",
-  "...kkffffffkk...",
-  "...kffffffffk...",
-  "...kfeffffefk...",
-  "...kffffffffk...",
-  "...kfffeefffk...",
-  "....kffffffk....",
-  ".....kkkkkk.....",
-  "....yyyyyyyy....",
-  "...yyyyyyyyyy...",
-  "..yyyyyyyyyyyy..",
-  "..yyy.yyyy.yyy..",
-  "....kk....kk....",
+  "................",
+  "................",
+  "................",
+  "..OFFFFFFFFFFF..",
+  "..FDDDDDDDDDDO..",
+  "..FDDDDDDDDDDO..",
+  "..FDYYYDDYYYDO..",
+  "..FDYYYDDYYYDO..",
+  ".OFDYYYDDYYYDOO.",
+  "O.FDDDDDDDDDDO.O",
+  "..FDDDDDDDDDDO..",
+  "..FDDDDDDDDDDO..",
+  "..FOOOOOOOOOOO..",
+  ".....O....O.....",
+  "....OO....OO....",
 ];
 
 /**
- * The reference frame with the variable cells neutralised: eyes (x 5, 10 on
- * r6) and mouth (x 7–8 on r8) become face, r15 (feet) is empty.
+ * The reference frame with the variable cells neutralised: the top two eye
+ * rows (r7–r8) become screen, the right arm and the legs (r14–r15) go. The
+ * eyes' bottom row stays, so hiding the `eyes` part reads as a blink.
  */
 export const AVATAR_BASE: readonly string[] = AVATAR_REFERENCE.map((row, y) => {
-  if (y === 6 || y === 8) return row.replaceAll("e", "f");
-  if (y === 15) return ".".repeat(AVATAR_SIZE);
+  if (y === 7 || y === 8) return row.replaceAll("Y", "D");
+  if (y === 9) return `${row.slice(0, 14)}..`;
+  if (y === 10) return `${row.slice(0, 14)}..`;
+  if (y >= 14) return ".".repeat(AVATAR_SIZE);
   return row;
 });
 
 export type AvatarPart =
-  | "eyes"
-  | "mouth"
-  | "mouthTalk"
-  | "armsLap"
-  | "feetIdle"
-  | "feetA"
-  | "feetB"
-  | "feetSit"
-  | "waveFace"
-  | "waveSleeve";
+  "eyes" | "mouthTalk" | "armR" | "wave" | "feetIdle" | "feetA" | "feetB" | "feetSit";
 
 const cells = (tone: PixelTone, xy: readonly (readonly [number, number])[]): PixelCell[] =>
   xy.map(([x, y]) => ({ x, y, tone }));
@@ -65,46 +63,21 @@ const run = (x0: number, x1: number, y: number) =>
 
 /** Each part is a delta of one tone, drawn over the base. */
 export const AVATAR_PARTS: Record<AvatarPart, PixelCell[]> = {
-  eyes: cells("eye", [
-    [5, 6],
-    [10, 6],
-  ]),
-  mouth: cells("eye", [
-    [7, 8],
-    [8, 8],
-  ]),
-  mouthTalk: cells("eye", [...run(6, 9, 8), ...run(7, 8, 9)]),
-  armsLap: cells("accent", [
-    [5, 14],
-    [10, 14],
-  ]),
-  feetIdle: cells("ink", [
-    [4, 15],
-    [5, 15],
-    [10, 15],
-    [11, 15],
-  ]),
-  feetA: cells("ink", [
-    [3, 15],
-    [4, 15],
-    [11, 15],
-    [12, 15],
-  ]),
-  feetB: cells("ink", [
-    [5, 15],
-    [6, 15],
-    [9, 15],
-    [10, 15],
-  ]),
-  feetSit: cells("ink", [...run(2, 5, 15), ...run(10, 13, 15)]),
-  waveFace: cells("face", [
-    [14, 8],
+  eyes: cells("accent", [...run(4, 6, 7), ...run(9, 11, 7), ...run(4, 6, 8), ...run(9, 11, 8)]),
+  mouthTalk: cells("accent", run(7, 8, 11)),
+  armR: cells("ink", [
     [14, 9],
+    [15, 10],
   ]),
-  waveSleeve: cells("accent", [
-    [13, 10],
-    [13, 11],
+  wave: cells("ink", [
+    [14, 8],
+    [15, 7],
+    [15, 6],
   ]),
+  feetIdle: cells("ink", [[5, 14], ...run(4, 5, 15), [10, 14], ...run(10, 11, 15)]),
+  feetA: cells("ink", [[4, 14], ...run(3, 4, 15), [11, 14], ...run(11, 12, 15)]),
+  feetB: cells("ink", [[6, 14], ...run(6, 7, 15), [9, 14], ...run(8, 9, 15)]),
+  feetSit: cells("ink", [[5, 14], ...run(2, 5, 15), [10, 14], ...run(10, 13, 15)]),
 };
 
 export const avatarPartNames = Object.keys(AVATAR_PARTS) as AvatarPart[];
@@ -112,17 +85,37 @@ export const avatarPartNames = Object.keys(AVATAR_PARTS) as AvatarPart[];
 export type PixelPose = "idle" | "blink" | "talk" | "walkA" | "walkB" | "wave" | "sit";
 
 export const AVATAR_POSES: Record<PixelPose, AvatarPart[]> = {
-  idle: ["eyes", "mouth", "feetIdle"],
-  blink: ["mouth", "feetIdle"],
-  talk: ["eyes", "mouthTalk", "feetIdle"],
-  walkA: ["eyes", "mouth", "feetA"],
-  walkB: ["eyes", "mouth", "feetB"],
-  wave: ["eyes", "mouth", "feetIdle", "waveFace", "waveSleeve"],
-  sit: ["eyes", "mouth", "armsLap", "feetSit"],
+  idle: ["eyes", "armR", "feetIdle"],
+  blink: ["armR", "feetIdle"],
+  talk: ["eyes", "mouthTalk", "armR", "feetIdle"],
+  walkA: ["eyes", "armR", "feetA"],
+  walkB: ["eyes", "armR", "feetB"],
+  wave: ["eyes", "wave", "feetIdle"],
+  sit: ["eyes", "armR", "feetSit"],
 };
 
-/** The crop used by `PixelAvatar part="head"` (menu-bar extra, panel Me tile). */
-export const AVATAR_HEAD = { x: 3, y: 1, w: 10, h: 10 } as const;
+/**
+ * The 10×10 icon for small sizes (`PixelAvatar part="head"`: the site menu-bar
+ * extra, the panel guide button and Me tile at `cell={2}` = 20px): the framed
+ * screen alone, no limbs, eyes centred.
+ */
+export const AVATAR_ICON: readonly string[] = [
+  "OFFFFFFFFF",
+  "FDDDDDDDDO",
+  "FDDDDDDDDO",
+  "FDYYDDYYDO",
+  "FDYYDDYYDO",
+  "FDYYDDYYDO",
+  "FDDDDDDDDO",
+  "FDDDDDDDDO",
+  "FDDDDDDDDO",
+  "FOOOOOOOOO",
+];
+
+/** Icon cells. */
+export function avatarIconCells(): PixelCell[] {
+  return layoutFromGrid(AVATAR_ICON, AVATAR_TONES).cells;
+}
 
 /** Base cells (no variable parts). */
 export function avatarBaseCells(): PixelCell[] {

@@ -110,8 +110,8 @@ All pixel art is inline SVG with **one `<path>` per tone** (`toPaths` in `pixel-
 | `PixelText text`                    | 7 tall | 2                   | Latin + Persian digits, aria-hidden, LTR                          |
 | `PixelTextSet items`                | 7 tall | 1 + n               | one svg, one `path[data-path-id]` per item, first shown           |
 | `PixelIcon name mirror?`            | 12×12  | ≤3                  | 13 site + 17 panel icons; only `arrow` is directional (`mirror`)  |
-| `PixelAvatar pose part`             | 16×16  | ≤5 (head 4)         | static "virtual me"; `part="head"` = 10×10 crop                   |
-| `PixelAvatarSprite state`           | 16×16  | 15                  | guide sprite; frames keyed on its own `svg.px-sprite[data-state]` |
+| `PixelAvatar pose part`             | 16×16  | ≤5 (head 5)         | static "virtual me"; `part="head"` = the 10×10 `AVATAR_ICON`      |
+| `PixelAvatarSprite state`           | 16×16  | 13                  | guide sprite; frames keyed on its own `svg.px-sprite[data-state]` |
 | `LogoMark cell` / `Logo label cell` | —      | —                   | compatibility layer over `PixelMark` / `PixelLogo TEAM`           |
 
 ### Integer cells only
@@ -144,9 +144,19 @@ must stay empty. Never `%` or `vw` sizing.
   `var(--px-accent, var(--brand-yellow))`, ink `var(--px-ink, var(--brand-ink))`, soft and frame
   `--brand-soft`/`--brand-frame`; they follow light/dark and a tile can re-tone them (the yellow
   Contact tile sets `--px-accent: #1C1C1E`).
-- The avatar uses **literal** `AVATAR_FILLS` in both modes (ink `#6A6A6C`, face `#F3F3F3`, eyes
-  `#1C1C1E`, hoodie `#FFC50D`): no tile or dark mode re-tones the person. The hoodie has no ink
-  outline, so the avatar never sits directly on a yellow surface (the CTA puts it on a paper tile).
+- The avatar uses **literal** `AVATAR_FILLS` in both modes (ink `#6A6A6C`, frame `#B3B5B9`,
+  screen `#1C1C1E`, eyes `#FFC50D`): no tile or dark mode re-tones it. It never sits directly on a
+  yellow surface (the CTA puts it on a paper tile).
+
+### The "virtual me" (owner's pick M3, 2026-11-17)
+
+A small screen creature, not a portrait: a dark screen wearing the logo's frame (ink corner,
+light top and left edge, ink right and bottom edges), two 3×3 yellow eyes, stubby ink arms and
+legs, and a mouth only while it talks (`pixel-avatar.ts`). Poses: idle (blinks), blink, talk,
+walkA/walkB, wave, sit; the eyes' bottom row lives in the base, so hiding the `eyes` part reads
+as a blink. Small sizes (menu bar, panel guide button, Me tile) use the separate leg-free 10×10
+`AVATAR_ICON` with centred eyes, not a crop of the sprite.
+
 - Print and the contract/invoice paper force the light brand tones (`--brand-paper: #fff`).
 
 ### Icons

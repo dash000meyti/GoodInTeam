@@ -40,14 +40,14 @@ export const TONE_FILLS: Record<PixelTone, string> = {
 
 /**
  * Fills of the avatar (PixelAvatar, PixelAvatarSprite): literal hex in both
- * modes, never a variable, so no tile, panel or dark mode re-tones the person
- * (D20). The hoodie has no ink outline, so the avatar never sits directly on
- * a yellow surface.
+ * modes, never a variable, so no tile, panel or dark mode re-tones it (D20).
+ * The dark screen keeps its light frame on dark surfaces, and its ink edges
+ * and limbs on light ones.
  */
 export const AVATAR_FILLS = {
   ink: "#6A6A6C",
-  face: "#F3F3F3",
-  eye: "#1C1C1E",
+  frame: "#B3B5B9",
+  face: "#1C1C1E",
   accent: "#FFC50D",
 } as const satisfies Partial<Record<PixelTone, string>>;
 
