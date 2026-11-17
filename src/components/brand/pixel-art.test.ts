@@ -74,6 +74,22 @@ describe("pixel components (element budgets, spec §4.2)", () => {
     }
   });
 
+  it("Persian digits render inside the one text path, LTR", () => {
+    const fa = html(createElement(PixelText, { text: "۰۳", cell: 2 }));
+    expect(count(fa)).toBe(2);
+    expect(fa).toContain('dir="ltr"');
+    expect(fa).toContain("--px-w:11;--px-h:7");
+    expect(fa).toMatch(/<path d="M\d/);
+  });
+
+  it("icons are marked px-icon (forced colours) and panel icons stay ≤3 elements", () => {
+    for (const name of pixelIconNames) {
+      const s = html(createElement(PixelIcon, { name }));
+      expect(s, name).toMatch(/^<svg[^>]*class="px-art \[--cell:2px\] px-icon/);
+      expect((s.match(/<path\b/g) ?? []).length, name).toBeLessThanOrEqual(2);
+    }
+  });
+
   it("the cycle marks itself for play and the arrow mirrors only when asked", () => {
     expect(html(createElement(PixelLogoCycle))).toContain('data-play=""');
     expect(html(createElement(PixelLogoCycle, { play: false }))).not.toContain("data-play");
