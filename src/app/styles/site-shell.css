@@ -39,8 +39,10 @@
     font-size: 13px;
     font-weight: 600;
   }
-  :lang(fa) .os-mb-item.os-mb-lang {
+  .os-mb-item.os-mb-lang:lang(fa) {
     font-family: var(--font-fa);
+    /* Vazirmatn sits high at line-height 1: centre «فا» optically. */
+    padding-block-start: 3px;
   }
   .os-mb-lang[aria-current] {
     background: rgb(var(--grey-rgb) / 0.14);
@@ -104,11 +106,11 @@
     min-inline-size: 168px;
   }
   /* Pixel icons in a highlighted (yellow) row turn ink, like the accent tile. */
-  .os-menu-item:is(:hover, :focus-visible, [data-highlighted]) {
+  :is(.os-popmenu, .os-spotlight) .os-menu-item:is(:hover, :focus-visible) {
     --px-accent: #1c1c1e;
     --px-ink: #1c1c1e;
   }
-  button.os-menu-item {
+  .os-popmenu button.os-menu-item {
     inline-size: 100%;
     text-align: start;
   }
