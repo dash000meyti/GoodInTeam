@@ -32,8 +32,11 @@ export async function CodeBlock({
         <CopyButton value={code.trim()} size="icon-sm" />
       </div>
       <div
-        // .prose-gt rules are unlayered → overrides need `!` to win over them.
-        className="prose-gt max-h-72 scrollbar-thin overflow-auto [&_pre]:!m-0 [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!bg-transparent [&_pre]:!px-4 [&_pre]:!pt-1 [&_pre]:!pb-3 [&_pre]:!text-[12.5px] [&_pre]:!leading-6 [&_pre_span]:!bg-transparent"
+        // .prose-gt is layered, so plain utilities win; the `!` also beats Shiki's inline colours.
+        className={cn(
+          "prose-gt",
+          "max-h-72 scrollbar-thin overflow-auto [&_pre]:!m-0 [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!bg-transparent [&_pre]:!px-4 [&_pre]:!pt-1 [&_pre]:!pb-3 [&_pre]:!text-[12.5px] [&_pre]:!leading-6 [&_pre_span]:!bg-transparent",
+        )}
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </div>

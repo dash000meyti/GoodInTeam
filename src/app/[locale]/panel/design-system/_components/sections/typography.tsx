@@ -100,7 +100,7 @@ export function TypographySection({ t }: { t: Messages }) {
 <Markdown source={post.bodyMd} />            // → <div className="prose-gt">…</div>
 <Markdown source={trustedHtml} allowHtml />  // raw HTML only for owner-authored public content`}
       >
-        <Markdown source={d.proseSample} className="max-w-2xl text-[15px]" />
+        <Markdown source={d.proseSample} className="max-w-2xl" />
       </Example>
     </DsSection>
   );

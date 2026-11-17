@@ -23,9 +23,9 @@ export async function ContractDocument({
       dir={localeMeta[locale].dir}
       lang={locale}
       className={cn(
-        "prose-gt text-[15px] sm:text-base",
+        "prose-gt",
         "[&_mark.gt-placeholder]:rounded-md [&_mark.gt-placeholder]:bg-warning/25 [&_mark.gt-placeholder]:px-1 [&_mark.gt-placeholder]:font-mono [&_mark.gt-placeholder]:text-[0.85em] [&_mark.gt-placeholder]:text-[#b76e00] dark:[&_mark.gt-placeholder]:text-[#ffd666]",
-        // prose-gt is unlayered CSS, so overrides need `!`.
+        // prose-gt is layered (@layer components); `!` keeps these ahead of any utility.
         "[&_h1]:text-2xl! sm:[&_h1]:text-[1.75rem]! [&_h2]:mt-9! [&_h2]:text-xl! [&_h3]:text-lg!",
         locale === "fa" && "[&_ol]:list-[persian]!",
         // Heading anchors from the markdown renderer must read as plain headings in a contract.

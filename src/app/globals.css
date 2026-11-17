@@ -5,16 +5,22 @@
 @source not "../../docs";
 
 /*
- * Good Team design tokens
- * ───────────────────────
- * Structure follows shadcn/ui (semantic CSS variables consumed by Tailwind),
- * palette follows the Minimals design language (soft greys, green primary,
- * soft "alpha" surfaces). See docs/design-system.md before changing anything.
+ * Good In Team design tokens
+ * ──────────────────────────
+ * Structure follows shadcn/ui (semantic CSS variables consumed by Tailwind).
+ * The palette is the Good In OS one: brand yellow #FFC50D as the only accent,
+ * neutral greys, ink text. See docs/design-system.md before changing anything.
  *
  * - Light/dark: `.dark` class on <html> (next-themes).
- * - Primary color preset: `data-preset` attribute on <html> (green default).
+ * - Primary color preset: `data-preset` attribute on <html> (yellow default, in :root).
  * - Direction: `dir` attribute on <html> (rtl for fa). Always use logical
  *   utilities (ms-*, me-*, ps-*, pe-*, start-*, end-*, text-start, text-end).
+ * - Yellow is never text, an icon or a thin line on a light surface: use the
+ *   `-ink` tokens (text-primary-ink, text-success-ink…) for text (spec §3.4).
+ * - Keep the :root, .dark, @theme inline, [data-preset] and .preset-scope
+ *   blocks flat (no nesting, no @media): design-tokens.test.ts reads each one
+ *   up to its first closing brace.
+ * - New shell/site CSS lives in the partials under src/app/styles/ (D17).
  */
 
 @custom-variant dark (&:is(.dark *));
@@ -36,6 +42,8 @@
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
   --color-primary-darker: var(--primary-darker);
+  --color-primary-ink: var(--primary-ink);
+  --color-primary-hover: var(--primary-hover);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -50,10 +58,13 @@
 
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-success-ink: var(--success-ink);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-warning-ink: var(--warning-ink);
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
+  --color-info-ink: var(--info-ink);
   --color-violet: var(--violet);
   --color-violet-foreground: var(--violet-foreground);
 
@@ -72,16 +83,22 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --color-grey-50: #fcfdfd;
-  --color-grey-100: #f9fafb;
-  --color-grey-200: #f4f6f8;
-  --color-grey-300: #dfe3e8;
-  --color-grey-400: #c4cdd5;
-  --color-grey-500: #919eab;
-  --color-grey-600: #637381;
-  --color-grey-700: #454f5b;
-  --color-grey-800: #1c252e;
-  --color-grey-900: #141a21;
+  --color-desktop: var(--desktop);
+  --color-frame-line: var(--frame-line);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-frame: var(--brand-frame);
+
+  --color-grey-50: #fafafa;
+  --color-grey-100: #f3f3f3;
+  --color-grey-200: #e8e8ea;
+  --color-grey-300: #caccce;
+  --color-grey-400: #b3b5b9;
+  --color-grey-500: #8e8e93;
+  --color-grey-600: #6a6a6c;
+  --color-grey-700: #48484a;
+  --color-grey-800: #2c2c2e;
+  --color-grey-900: #1c1c1e;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -94,6 +111,7 @@
   --shadow-dropdown: var(--shadow-dropdown);
   --shadow-dialog: var(--shadow-dialog);
   --shadow-primary: var(--shadow-primary);
+  --shadow-window: var(--shadow-window);
 
   --animate-marquee: marquee var(--marquee-duration, 40s) linear infinite;
   --animate-float: float 6s ease-in-out infinite;
@@ -105,103 +123,163 @@
 :root {
   --radius: 0.75rem;
 
-  /* Primary — overridden by [data-preset] */
+  /* Primary (yellow, the default preset). Overridden by [data-preset]. */
+  --primary-lighter: #fff3c4;
+  --primary-light: #ffdb66;
+  --primary: #ffc50d;
+  --primary-dark: #7a5a00;
+  --primary-darker: #4d3800;
+  --primary-foreground: #1c1c1e;
+  --primary-rgb: 255 197 13;
+  /* Text-safe primary (5.75:1 on #f3f3f3) and the fill hover. */
+  --primary-ink: var(--primary-dark);
+  --primary-hover: color-mix(in oklab, var(--primary) 86%, black);
+
+  --background: #f3f3f3;
+  --foreground: #1c1c1e;
+  --card: #ffffff;
+  --card-foreground: #1c1c1e;
+  --popover: #ffffff;
+  --popover-foreground: #1c1c1e;
+  --secondary: #e8e8ea;
+  --secondary-foreground: #1c1c1e;
+  --muted: #e8e8ea;
+  --muted-foreground: #636366;
+  --accent: rgb(106 106 108 / 0.08);
+  --accent-foreground: #1c1c1e;
+  --destructive: #ce2c31;
+  --destructive-foreground: #ffffff;
+  --border: rgb(106 106 108 / 0.18);
+  --input: rgb(106 106 108 / 0.32);
+  --ring: var(--primary-ink);
+
+  --success: #22c55e;
+  --success-foreground: #1c1c1e;
+  --success-ink: #0b6b42;
+  --warning: #f76b15;
+  --warning-foreground: #1c1c1e;
+  --warning-ink: #a04a00;
+  --info: #00b8d9;
+  --info-foreground: #1c1c1e;
+  --info-ink: #00618c;
+  --violet: #8e33ff;
+  --violet-foreground: #ffffff;
+
+  /* chart-1 follows the preset in both modes (ink in light, fill in dark). */
+  --chart-1: var(--primary-ink);
+  --chart-2: #8e33ff;
+  --chart-3: #0086a8;
+  --chart-4: #118d57;
+  --chart-5: #ce2c31;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #636366;
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: color-mix(in oklab, var(--primary) 14%, transparent);
+  --sidebar-accent-foreground: var(--primary-ink);
+  --sidebar-border: rgb(106 106 108 / 0.12);
+  --sidebar-ring: var(--primary-ink);
+
+  --shadow-card:
+    0 0 0 1px rgb(0 0 0 / 0.04), 0 1px 2px rgb(0 0 0 / 0.05), 0 8px 24px -10px rgb(0 0 0 / 0.12);
+  --shadow-dropdown: 0 0 0 0.5px rgb(0 0 0 / 0.08), 0 10px 30px -6px rgb(0 0 0 / 0.22);
+  --shadow-dialog: 0 0 0 0.5px rgb(0 0 0 / 0.1), 0 30px 80px -12px rgb(0 0 0 / 0.35);
+  --shadow-primary: 0 8px 16px 0 rgb(var(--primary-rgb) / 0.32);
+  --shadow-window: 0 0 0 0.5px rgb(0 0 0 / 0.12), 0 22px 70px -14px rgb(0 0 0 / 0.3);
+
+  --surface-grid: rgb(106 106 108 / 0.14);
+  --surface-glow: rgb(var(--primary-rgb) / 0.2);
+  --grey-rgb: 106 106 108;
+
+  /* OS chrome: brand tones, desktop wallpaper, frames, markers, lights, guide. */
+  --brand-yellow: #ffc50d;
+  --brand-ink: #6a6a6c;
+  --brand-frame: #b3b5b9;
+  --brand-soft: #caccce;
+  --brand-paper: #f3f3f3;
+  --desktop: #e6e6e9;
+  --dots: rgb(106 106 108 / 0.28);
+  --frame-line: #d8d9dc;
+  --frame-rail: #c2c4c8;
+  --marker-ring: #b3b5b9;
+  --marker-fill: #f3f3f3;
+  --marker-dot: #6a6a6c;
+  --light-close: #ff5f57;
+  --light-min: #febc2e;
+  --light-zoom: #28c840;
+  --light-idle: #caccce;
+  --guide-line: #9a7200;
+  --dock-dot: rgb(28 28 30 / 0.72);
+}
+
+.dark {
+  --background: #161618;
+  --foreground: #f5f5f7;
+  --card: #1f1f22;
+  --card-foreground: #f5f5f7;
+  --popover: #232326;
+  --popover-foreground: #f5f5f7;
+  --secondary: #2a2a2d;
+  --secondary-foreground: #f5f5f7;
+  --muted: #2a2a2d;
+  --muted-foreground: #a1a1a6;
+  --accent: rgb(255 255 255 / 0.06);
+  --accent-foreground: #f5f5f7;
+  --border: rgb(255 255 255 / 0.1);
+  --input: rgb(255 255 255 / 0.16);
+
+  --primary-ink: var(--primary-light);
+  --destructive: #ff6369;
+  --destructive-foreground: #1c1c1e;
+  --warning-foreground: #1c1c1e;
+  --warning-ink: #ff9f43;
+  --success-ink: #22c55e;
+  --info-ink: #00b8d9;
+
+  --chart-1: var(--primary);
+  --chart-3: #00b8d9;
+  --chart-4: #22c55e;
+  --chart-5: #ff6369;
+
+  --sidebar: #161618;
+  --sidebar-foreground: #a1a1a6;
+  --sidebar-accent-foreground: var(--primary-light);
+  --sidebar-border: rgb(255 255 255 / 0.08);
+
+  --shadow-card: 0 0 0 1px rgb(255 255 255 / 0.06), 0 8px 24px -10px rgb(0 0 0 / 0.5);
+  --shadow-dropdown: 0 0 0 0.5px rgb(255 255 255 / 0.1), 0 10px 30px -6px rgb(0 0 0 / 0.6);
+  --shadow-window: 0 0 0 0.5px rgb(255 255 255 / 0.14), 0 26px 80px -12px rgb(0 0 0 / 0.7);
+
+  --surface-grid: rgb(255 255 255 / 0.06);
+  --surface-glow: rgb(var(--primary-rgb) / 0.16);
+
+  --brand-ink: #a3a4a8;
+  --brand-frame: #4a4b4f;
+  --brand-soft: #5e5f63;
+  --brand-paper: #2a2a2d;
+  --desktop: #0e0e10;
+  --dots: rgb(255 255 255 / 0.07);
+  --frame-line: #2c2c30;
+  --frame-rail: #3a3b3f;
+  --marker-ring: #4a4b4f;
+  --marker-fill: #161618;
+  --marker-dot: #a3a4a8;
+  --light-idle: #3a3b3f;
+  --guide-line: #ffc50d;
+  --dock-dot: #ffc50d;
+}
+
+/* ─── Color presets (yellow is the :root default) ─────────────────────────── */
+[data-preset="green"] {
   --primary-lighter: #c8fad6;
   --primary-light: #5be49b;
   --primary: #00a76f;
   --primary-dark: #007867;
   --primary-darker: #004b50;
-  --primary-foreground: #ffffff;
   --primary-rgb: 0 167 111;
-
-  --background: #ffffff;
-  --foreground: #1c252e;
-  --card: #ffffff;
-  --card-foreground: #1c252e;
-  --popover: #ffffff;
-  --popover-foreground: #1c252e;
-  --secondary: #f4f6f8;
-  --secondary-foreground: #1c252e;
-  --muted: #f4f6f8;
-  --muted-foreground: #637381;
-  --accent: rgb(145 158 171 / 0.08);
-  --accent-foreground: #1c252e;
-  --destructive: #ff5630;
-  --destructive-foreground: #ffffff;
-  --border: rgb(145 158 171 / 0.2);
-  --input: rgb(145 158 171 / 0.32);
-  --ring: var(--primary);
-
-  --success: #22c55e;
-  --success-foreground: #ffffff;
-  --warning: #ffab00;
-  --warning-foreground: #1c252e;
-  --info: #00b8d9;
-  --info-foreground: #ffffff;
-  --violet: #8e33ff;
-  --violet-foreground: #ffffff;
-
-  --chart-1: var(--primary);
-  --chart-2: #8e33ff;
-  /* chart-3/4 are darkened in light mode for ≥3:1 contrast on white (dataviz check) */
-  --chart-3: #0086a8;
-  --chart-4: #c27a00;
-  --chart-5: #ff5630;
-
-  --sidebar: #ffffff;
-  --sidebar-foreground: #637381;
-  --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: color-mix(in oklab, var(--primary) 8%, transparent);
-  --sidebar-accent-foreground: var(--primary);
-  --sidebar-border: rgb(145 158 171 / 0.12);
-  --sidebar-ring: var(--primary);
-
-  --shadow-card: 0 0 2px 0 rgb(145 158 171 / 0.2), 0 12px 24px -4px rgb(145 158 171 / 0.12);
-  --shadow-dropdown:
-    0 0 2px 0 rgb(145 158 171 / 0.24), -20px 20px 40px -4px rgb(145 158 171 / 0.24);
-  --shadow-dialog: -40px 40px 80px -8px rgb(0 0 0 / 0.24);
-  --shadow-primary: 0 8px 16px 0 rgb(var(--primary-rgb) / 0.24);
-
-  --surface-grid: rgb(145 158 171 / 0.14);
-  --surface-glow: rgb(var(--primary-rgb) / 0.18);
+  --primary-foreground: #ffffff;
 }
-
-.dark {
-  --background: #141a21;
-  --foreground: #ffffff;
-  --card: #1c252e;
-  --card-foreground: #ffffff;
-  --popover: #1c252e;
-  --popover-foreground: #ffffff;
-  --secondary: #28323d;
-  --secondary-foreground: #ffffff;
-  --muted: #28323d;
-  --muted-foreground: #919eab;
-  --accent: rgb(145 158 171 / 0.12);
-  --accent-foreground: #ffffff;
-  --border: rgb(145 158 171 / 0.16);
-  --input: rgb(145 158 171 / 0.24);
-
-  --warning-foreground: #1c252e;
-
-  --chart-3: #00b8d9;
-  --chart-4: #ffab00;
-
-  --sidebar: #141a21;
-  --sidebar-foreground: #919eab;
-  --sidebar-accent: color-mix(in oklab, var(--primary) 12%, transparent);
-  --sidebar-accent-foreground: var(--primary-light);
-  --sidebar-border: rgb(145 158 171 / 0.1);
-
-  --shadow-card: 0 0 2px 0 rgb(0 0 0 / 0.2), 0 12px 24px -4px rgb(0 0 0 / 0.12);
-  --shadow-dropdown: 0 0 2px 0 rgb(0 0 0 / 0.24), -20px 20px 40px -4px rgb(0 0 0 / 0.24);
-
-  --surface-grid: rgb(145 158 171 / 0.08);
-  --surface-glow: rgb(var(--primary-rgb) / 0.22);
-}
-
-/* ─── Color presets (same names as Minimals) ─────────────────────────────── */
 [data-preset="cyan"] {
   --primary-lighter: #ccf4fe;
   --primary-light: #68cdf9;
@@ -209,6 +287,7 @@
   --primary-dark: #0351ab;
   --primary-darker: #012972;
   --primary-rgb: 7 141 238;
+  --primary-foreground: #ffffff;
 }
 [data-preset="purple"] {
   --primary-lighter: #ebd6fd;
@@ -217,6 +296,7 @@
   --primary-dark: #431a9e;
   --primary-darker: #200a69;
   --primary-rgb: 118 53 220;
+  --primary-foreground: #ffffff;
 }
 [data-preset="blue"] {
   --primary-lighter: #cde9fd;
@@ -225,6 +305,7 @@
   --primary-dark: #063ba7;
   --primary-darker: #021d6f;
   --primary-rgb: 12 104 233;
+  --primary-foreground: #ffffff;
 }
 [data-preset="orange"] {
   --primary-lighter: #fef4d4;
@@ -242,11 +323,38 @@
   --primary-dark: #b71833;
   --primary-darker: #7a0930;
   --primary-rgb: 255 48 48;
+  --primary-foreground: #ffffff;
+}
+
+/*
+ * Preset previews (spec §3.1). A subtree that overrides --primary* inline
+ * (presetStyle) re-derives every var(--primary…)-based token here, so the
+ * preview shows its own ink, hover and ring in both modes. Render
+ * `className={PRESET_SCOPE_CLASS}` together with `style={presetStyle(p)}`.
+ */
+.preset-scope {
+  --primary-ink: var(--primary-dark);
+  --primary-hover: color-mix(in oklab, var(--primary) 86%, black);
+  --ring: var(--primary-ink);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: color-mix(in oklab, var(--primary) 14%, transparent);
+  --sidebar-accent-foreground: var(--primary-ink);
+  --sidebar-ring: var(--primary-ink);
+  --chart-1: var(--primary-ink);
+  --shadow-primary: 0 8px 16px 0 rgb(var(--primary-rgb) / 0.32);
+  --surface-glow: rgb(var(--primary-rgb) / 0.2);
+}
+.dark .preset-scope {
+  --primary-ink: var(--primary-light);
+  --sidebar-accent-foreground: var(--primary-light);
+  --chart-1: var(--primary);
+  --surface-glow: rgb(var(--primary-rgb) / 0.16);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   html {
     @apply scroll-smooth;
@@ -287,6 +395,18 @@
       scroll-behavior: auto !important;
     }
   }
+  /* The site's "Reduce motion" switch (gt-motion → html[data-motion=reduce]) mirrors the OS setting. */
+  html[data-motion="reduce"] *,
+  html[data-motion="reduce"] *::before,
+  html[data-motion="reduce"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  html[data-motion="reduce"] {
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer utilities {
@@ -321,12 +441,7 @@
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
   }
   .text-gradient {
-    background-image: linear-gradient(
-      100deg,
-      var(--primary) 0%,
-      var(--primary-light) 35%,
-      var(--color-chart-2) 100%
-    );
+    background-image: linear-gradient(100deg, var(--primary-ink) 0%, var(--foreground) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -343,7 +458,7 @@
   }
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgb(145 158 171 / 0.4) transparent;
+    scrollbar-color: rgb(var(--grey-rgb) / 0.4) transparent;
   }
 }
 
@@ -389,89 +504,295 @@
   }
 }
 
-/* ─── Long-form content (blog, docs, contracts) ──────────────────────────── */
-.prose-gt {
-  --tw-prose-gap: 1.1em;
-  line-height: 1.9;
-  font-size: 1.0625rem;
-  color: var(--foreground);
-  overflow-wrap: anywhere;
+/*
+ * Legacy long-form + site rules, layered (spec §5.1, D17). They sit in
+ * `components` so Tailwind utilities and the partials in src/app/styles/*.css
+ * can override them. Never add rules here.
+ */
+@layer components {
+  /* ─── Long-form content (blog, docs, contracts) ──────────────────────────── */
+  .prose-gt {
+    --tw-prose-gap: 1.1em;
+    line-height: 1.9;
+    font-size: 1.0625rem;
+    color: var(--foreground);
+    overflow-wrap: anywhere;
+  }
+  .prose-gt > * + * {
+    margin-top: var(--tw-prose-gap);
+  }
+  .prose-gt h1,
+  .prose-gt h2,
+  .prose-gt h3,
+  .prose-gt h4 {
+    font-weight: 800;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  }
+  .prose-gt h1 {
+    font-size: 2rem;
+  }
+  .prose-gt h2 {
+    font-size: 1.5rem;
+    margin-top: 2.2em;
+  }
+  .prose-gt h3 {
+    font-size: 1.25rem;
+    margin-top: 1.8em;
+  }
+  .prose-gt p,
+  .prose-gt li {
+    color: color-mix(in oklab, var(--foreground) 86%, transparent);
+  }
+  .prose-gt :is(h1, h2, h3, h4) > a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .prose-gt a:not(:is(h1, h2, h3, h4) > a) {
+    color: var(--primary-ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+  .prose-gt ul,
+  .prose-gt ol {
+    padding-inline-start: 1.5em;
+  }
+  .prose-gt ul {
+    list-style: disc;
+  }
+  .prose-gt ol {
+    list-style: decimal;
+  }
+  .prose-gt li + li {
+    margin-top: 0.35em;
+  }
+  .prose-gt blockquote {
+    border-inline-start: 4px solid var(--primary-ink);
+    padding: 0.5em 1em;
+    background: var(--muted);
+    border-radius: 0.5rem;
+    color: var(--muted-foreground);
+  }
+  .prose-gt :not(pre) > code {
+    font-size: 0.875em;
+    padding: 0.15em 0.4em;
+    border-radius: 0.375rem;
+    background: var(--muted);
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+  .prose-gt pre {
+    direction: ltr;
+    text-align: left;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    padding: 1rem 1.25rem;
+    border-radius: 0.75rem;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+  }
+  .prose-gt img,
+  .prose-gt video {
+    border-radius: 0.75rem;
+    max-width: 100%;
+    height: auto;
+  }
+  .prose-gt hr {
+    border-color: var(--border);
+    margin: 2.5em 0;
+  }
+  .prose-gt table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+  .prose-gt th,
+  .prose-gt td {
+    border: 1px solid var(--border);
+    padding: 0.5em 0.75em;
+    text-align: start;
+  }
+  .prose-gt th {
+    background: var(--muted);
+    font-weight: 700;
+  }
+
+  /* ─── site ─── */
+  /* Legacy site utilities, layered. New site CSS goes in src/app/styles/*.css (D17); never add rules here. */
+
+  /* Giant faded brand wordmark at the bottom of the footer. */
+  .gt-wordmark {
+    font-size: clamp(4rem, 17vw, 15rem);
+    margin-bottom: -0.18em;
+    background: linear-gradient(to bottom, rgb(var(--grey-rgb) / 0.22), rgb(var(--grey-rgb) / 0));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Accent words: a yellow highlighter stroke in light mode, yellow text in dark mode. */
+  .gt-accent {
+    background: linear-gradient(
+      transparent 58%,
+      rgb(var(--primary-rgb) / 0.55) 58% 92%,
+      transparent 92%
+    );
+    color: inherit;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .dark .gt-accent {
+    color: var(--primary);
+    background: none;
+  }
+
+  /* Section eyebrow dot */
+  .gt-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--primary);
+    box-shadow: 0 0 0 1px var(--brand-ink);
+  }
+
+  /* Soft glow blobs behind heroes */
+  .gt-glow {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+
+  /* Hero system diagram: traveling packets along connector paths (pathLength=100). */
+  .gt-packet {
+    stroke-dasharray: 8 100;
+    stroke-dashoffset: 108;
+    animation: gt-packet 3.2s cubic-bezier(0.45, 0, 0.55, 1) 6;
+  }
+
+  /* Static dashes: no endless motion (spec §12). */
+  .gt-ants {
+    stroke-dasharray: 4 6;
+  }
+
+  /* Pulsing status dot */
+  .gt-live {
+    position: relative;
+  }
+  .gt-live::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
+    animation: gt-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* Entrance for content blocks (CSS only; disabled by reduced motion globally). */
+
+  .gt-rise {
+    animation: gt-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  /* Draw an SVG stroke (pathLength=100) — restarts whenever the element is shown again. */
+  .gt-draw {
+    stroke-dasharray: 100;
+    animation: gt-draw 1.6s ease-out both;
+  }
+
+  /* Mobile menu on the Popover API */
+  .gt-mobile-menu {
+    inset: 0;
+    border: 0;
+  }
+  .gt-mobile-menu:popover-open {
+    display: block;
+    animation: gt-menu-in 0.22s ease-out;
+  }
+  .gt-mobile-menu:popover-open .gt-menu-item {
+    animation: gt-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Marquee track (always LTR so it scrolls the same way in both directions). */
+  .gt-marquee {
+    --marquee-gap: 3rem;
+    animation: marquee var(--marquee-duration, 36s) linear infinite;
+  }
+  .gt-marquee-wrap:hover .gt-marquee {
+    animation-play-state: paused;
+  }
+
+  /* Cards: subtle lift on hover */
+  .gt-lift {
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.3s ease;
+  }
+  .gt-lift:hover {
+    transform: translateY(-4px);
+    /* !important: after layering, `shadow-card` on the same element would win. */
+    box-shadow:
+      0 0 2px 0 rgb(var(--grey-rgb) / 0.2),
+      0 24px 48px -12px rgb(var(--grey-rgb) / 0.28) !important;
+  }
+  .dark .gt-lift:hover {
+    box-shadow:
+      0 0 2px 0 rgb(0 0 0 / 0.3),
+      0 24px 48px -12px rgb(0 0 0 / 0.5) !important;
+  }
+
+  /* Gradient hairline border for highlighted cards */
+  .gt-ring {
+    position: relative;
+  }
+  .gt-ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      135deg,
+      rgb(var(--primary-rgb) / 0.55),
+      rgb(var(--grey-rgb) / 0.14)
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Native <details> accordion (FAQ) */
+  .gt-faq summary {
+    list-style: none;
+  }
+  .gt-faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .gt-faq[open] .gt-faq-icon {
+    transform: rotate(45deg);
+  }
+
+  /* Long-form niceties for public posts */
+  .prose-gt :is(h1, h2, h3, h4) > a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .prose-gt h2 a:hover::after,
+  .prose-gt h3 a:hover::after {
+    content: " #";
+    color: var(--primary-ink);
+  }
+  .prose-gt img {
+    margin-inline: auto;
+  }
+  /* ─── /site ─── */
 }
-.prose-gt > * + * {
-  margin-top: var(--tw-prose-gap);
-}
-.prose-gt h1,
-.prose-gt h2,
-.prose-gt h3,
-.prose-gt h4 {
-  font-weight: 800;
-  line-height: 1.4;
-  scroll-margin-top: 6rem;
-  letter-spacing: -0.01em;
-}
-.prose-gt h1 {
-  font-size: 2rem;
-}
-.prose-gt h2 {
-  font-size: 1.5rem;
-  margin-top: 2.2em;
-}
-.prose-gt h3 {
-  font-size: 1.25rem;
-  margin-top: 1.8em;
-}
-.prose-gt p,
-.prose-gt li {
-  color: color-mix(in oklab, var(--foreground) 86%, transparent);
-}
-.prose-gt :is(h1, h2, h3, h4) > a {
-  color: inherit;
-  text-decoration: none;
-}
-.prose-gt a:not(:is(h1, h2, h3, h4) > a) {
-  color: var(--primary);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-thickness: 1px;
-}
-.prose-gt ul,
-.prose-gt ol {
-  padding-inline-start: 1.5em;
-}
-.prose-gt ul {
-  list-style: disc;
-}
-.prose-gt ol {
-  list-style: decimal;
-}
-.prose-gt li + li {
-  margin-top: 0.35em;
-}
-.prose-gt blockquote {
-  border-inline-start: 4px solid var(--primary);
-  padding: 0.5em 1em;
-  background: var(--muted);
-  border-radius: 0.5rem;
-  color: var(--muted-foreground);
-}
-.prose-gt :not(pre) > code {
-  font-size: 0.875em;
-  padding: 0.15em 0.4em;
-  border-radius: 0.375rem;
-  background: var(--muted);
-  direction: ltr;
-  unicode-bidi: isolate;
-}
-.prose-gt pre {
-  direction: ltr;
-  text-align: left;
-  font-size: 0.875rem;
-  line-height: 1.7;
-  padding: 1rem 1.25rem;
-  border-radius: 0.75rem;
-  overflow-x: auto;
-  border: 1px solid var(--border);
-}
+
+/* Shiki paints inline background colours; these must stay unlayered so an
+   important utility (e.g. `[&_pre]:!bg-transparent`) can still beat them —
+   an important declaration inside a layer would outrank every utility. */
 .prose-gt pre.shiki {
   background-color: var(--shiki-light-bg, #fff) !important;
 }
@@ -480,102 +801,11 @@
   background-color: var(--shiki-dark-bg) !important;
   color: var(--shiki-dark) !important;
 }
-.prose-gt img,
-.prose-gt video {
-  border-radius: 0.75rem;
-  max-width: 100%;
-  height: auto;
-}
-.prose-gt hr {
-  border-color: var(--border);
-  margin: 2.5em 0;
-}
-.prose-gt table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9375rem;
-}
-.prose-gt th,
-.prose-gt td {
-  border: 1px solid var(--border);
-  padding: 0.5em 0.75em;
-  text-align: start;
-}
-.prose-gt th {
-  background: var(--muted);
-  font-weight: 700;
-}
 
-/* ─── site ─── */
-/* Public website utilities (owned by the site/content module). Keep additions inside this block. */
-
-/* Giant faded brand wordmark at the bottom of the footer. */
-.gt-wordmark {
-  font-size: clamp(4rem, 17vw, 15rem);
-  margin-bottom: -0.18em;
-  background: linear-gradient(to bottom, rgb(145 158 171 / 0.22), rgb(145 158 171 / 0));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-/* Gradient accent text that starts at the reading edge (RTL-aware). */
-.gt-accent {
-  background-image: linear-gradient(90deg, var(--primary), var(--primary-light) 45%, #8e33ff);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
-}
-[dir="rtl"] .gt-accent {
-  background-image: linear-gradient(270deg, var(--primary), var(--primary-light) 45%, #8e33ff);
-}
-
-/* Section eyebrow dot */
-.gt-dot {
-  width: 0.375rem;
-  height: 0.375rem;
-  border-radius: 9999px;
-  background: var(--primary);
-  box-shadow: 0 0 0 4px rgb(var(--primary-rgb) / 0.16);
-}
-
-/* Soft glow blobs behind heroes */
-.gt-glow {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(80px);
-  pointer-events: none;
-}
-
-/* Hero system diagram: traveling packets along connector paths (pathLength=100). */
-.gt-packet {
-  stroke-dasharray: 8 100;
-  stroke-dashoffset: 108;
-  animation: gt-packet 3.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-}
 @keyframes gt-packet {
   to {
     stroke-dashoffset: 0;
   }
-}
-.gt-ants {
-  stroke-dasharray: 4 6;
-  animation: dash 2.4s linear infinite;
-}
-
-/* Pulsing status dot */
-.gt-live {
-  position: relative;
-}
-.gt-live::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: inherit;
-  animation: gt-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 @keyframes gt-ping {
   75%,
@@ -584,8 +814,6 @@
     opacity: 0;
   }
 }
-
-/* Entrance for content blocks (CSS only; disabled by reduced motion globally). */
 @keyframes gt-rise {
   from {
     opacity: 0;
@@ -596,14 +824,6 @@
     transform: none;
   }
 }
-.gt-rise {
-  animation: gt-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-/* Draw an SVG stroke (pathLength=100) — restarts whenever the element is shown again. */
-.gt-draw {
-  stroke-dasharray: 100;
-  animation: gt-draw 1.6s ease-out both;
-}
 @keyframes gt-draw {
   from {
     stroke-dashoffset: 100;
@@ -612,98 +832,8 @@
     stroke-dashoffset: 0;
   }
 }
-
-/* Mobile menu on the Popover API */
-.gt-mobile-menu {
-  inset: 0;
-  border: 0;
-}
-.gt-mobile-menu:popover-open {
-  display: block;
-  animation: gt-menu-in 0.22s ease-out;
-}
-.gt-mobile-menu:popover-open .gt-menu-item {
-  animation: gt-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
 @keyframes gt-menu-in {
   from {
     opacity: 0;
   }
 }
-
-/* Marquee track (always LTR so it scrolls the same way in both directions). */
-.gt-marquee {
-  --marquee-gap: 3rem;
-  animation: marquee var(--marquee-duration, 36s) linear infinite;
-}
-.gt-marquee-wrap:hover .gt-marquee {
-  animation-play-state: paused;
-}
-
-/* Cards: subtle lift on hover */
-.gt-lift {
-  transition:
-    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.3s ease;
-}
-.gt-lift:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 0 2px 0 rgb(145 158 171 / 0.2),
-    0 24px 48px -12px rgb(145 158 171 / 0.28);
-}
-.dark .gt-lift:hover {
-  box-shadow:
-    0 0 2px 0 rgb(0 0 0 / 0.3),
-    0 24px 48px -12px rgb(0 0 0 / 0.5);
-}
-
-/* Gradient hairline border for highlighted cards */
-.gt-ring {
-  position: relative;
-}
-.gt-ring::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  border-radius: inherit;
-  background: linear-gradient(
-    135deg,
-    rgb(var(--primary-rgb) / 0.55),
-    rgb(145 158 171 / 0.12) 40%,
-    rgb(142 51 255 / 0.4)
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* Native <details> accordion (FAQ) */
-.gt-faq summary {
-  list-style: none;
-}
-.gt-faq summary::-webkit-details-marker {
-  display: none;
-}
-.gt-faq[open] .gt-faq-icon {
-  transform: rotate(45deg);
-}
-
-/* Long-form niceties for public posts */
-.prose-gt :is(h1, h2, h3, h4) > a {
-  color: inherit;
-  text-decoration: none;
-}
-.prose-gt h2 a:hover::after,
-.prose-gt h3 a:hover::after {
-  content: " #";
-  color: var(--primary);
-}
-.prose-gt img {
-  margin-inline: auto;
-}
-/* ─── /site ─── */

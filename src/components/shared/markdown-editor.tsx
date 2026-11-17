@@ -89,7 +89,7 @@ export function MarkdownEditor({
             <p className="text-sm text-muted-foreground">{t.common.loading}</p>
           ) : (
             <div
-              className="prose-gt text-[15px]"
+              className="prose-gt"
               dangerouslySetInnerHTML={{ __html: html || `<p class="text-muted-foreground">—</p>` }}
             />
           )}

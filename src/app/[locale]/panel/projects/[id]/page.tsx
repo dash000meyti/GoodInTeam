@@ -200,7 +200,7 @@ export default async function ProjectPage({
               </CardHeader>
               <CardContent>
                 {project.description ? (
-                  <Markdown source={project.description} className="text-[15px]" />
+                  <Markdown source={project.description} />
                 ) : (
                   <p className="text-sm text-muted-foreground">—</p>
                 )}
@@ -312,7 +312,7 @@ export default async function ProjectPage({
                           {u.author?.name} · {formatDateTime(u.createdAt, fmt)}
                         </span>
                       </div>
-                      {u.bodyMd && <Markdown source={u.bodyMd} className="text-[15px]" />}
+                      {u.bodyMd && <Markdown source={u.bodyMd} />}
                     </Card>
                   </li>
                 ))}

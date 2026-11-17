@@ -8,7 +8,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import { colorPresets, presetSwatches, PRESET_STORAGE_KEY, type ColorPreset } from "./theme";
+import { presetScales } from "./design-tokens";
+import {
+  colorPresets,
+  DEFAULT_PRESET,
+  presetSwatches,
+  PRESET_STORAGE_KEY,
+  type ColorPreset,
+} from "./theme";
 
 // The preset lives on <html data-preset>; every hook instance (header menu,
 // Settings → Appearance) observes the attribute so they stay in sync.
@@ -18,13 +25,13 @@ function subscribePreset(onChange: () => void) {
   return () => mo.disconnect();
 }
 const readPreset = () =>
-  (document.documentElement.getAttribute("data-preset") as ColorPreset | null) ?? "green";
+  (document.documentElement.getAttribute("data-preset") as ColorPreset | null) ?? DEFAULT_PRESET;
 
 /** Current color preset + setter (persists to localStorage). */
 export function usePreset() {
-  const preset = useSyncExternalStore(subscribePreset, readPreset, () => "green" as ColorPreset);
+  const preset = useSyncExternalStore(subscribePreset, readPreset, () => DEFAULT_PRESET);
   const setPreset = (p: ColorPreset) => {
-    if (p === "green") document.documentElement.removeAttribute("data-preset");
+    if (p === DEFAULT_PRESET) document.documentElement.removeAttribute("data-preset");
     else document.documentElement.setAttribute("data-preset", p);
     try {
       localStorage.setItem(PRESET_STORAGE_KEY, p);
@@ -90,12 +97,12 @@ export function AppearanceMenu({ className }: { className?: string }) {
         </div>
         <div className="space-y-2">
           <p className="text-xs font-bold text-muted-foreground">{t.common.colorPreset}</p>
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-7 gap-2">
             {colorPresets.map((p) => (
               <button
                 key={p}
                 type="button"
-                aria-label={p}
+                aria-label={t.settings[`preset_${p}`]}
                 onClick={() => setPreset(p)}
                 className={cn(
                   "flex aspect-square cursor-pointer items-center justify-center rounded-lg border transition-transform hover:scale-105",
@@ -107,7 +114,13 @@ export function AppearanceMenu({ className }: { className?: string }) {
                   className="flex size-5 items-center justify-center rounded-full"
                   style={{ backgroundColor: presetSwatches[p] }}
                 >
-                  {preset === p && <CheckIcon className="size-3 text-white" strokeWidth={3} />}
+                  {preset === p && (
+                    <CheckIcon
+                      className="size-3"
+                      style={{ color: presetScales[p].contrast }}
+                      strokeWidth={3}
+                    />
+                  )}
                 </span>
               </button>
             ))}

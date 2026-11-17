@@ -408,9 +408,9 @@ export function MarkdownSection({ t }: { t: Messages }) {
         title={d.rendered}
         previewClassName="block bg-none"
         code={`import { Markdown } from "@/components/shared/markdown";
-<Markdown source={update.bodyMd} className="text-[15px]" />`}
+<Markdown source={update.bodyMd} />`}
       >
-        <Markdown source={d.editorSample} className="text-[15px]" />
+        <Markdown source={d.editorSample} />
       </Example>
     </DsSection>
   );

@@ -84,7 +84,7 @@ async function StatusView({ params }: { params: Promise<{ token: string }> }) {
                 <Badge variant="info">{formatDate(u.createdAt, fmt)}</Badge>
                 <h3 className="font-bold">{u.title}</h3>
               </div>
-              {u.bodyMd && <Markdown source={u.bodyMd} className="text-[15px]" />}
+              {u.bodyMd && <Markdown source={u.bodyMd} />}
             </Card>
           ))}
         </div>

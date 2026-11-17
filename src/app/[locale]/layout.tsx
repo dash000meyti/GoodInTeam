@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
 import { InlineScript } from "@/components/shared/inline-script";
 import { Providers } from "@/components/shared/providers";
-import { presetInitScript } from "@/components/shared/theme";
+import { bootInitScript, presetInitScript } from "@/components/shared/theme";
 import { isLocale, localeMeta, localePath, locales } from "@/i18n/config";
 import { getLocale, getMessages } from "@/i18n/server";
 import { fontVariables } from "../fonts";
@@ -40,8 +40,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#141a21" },
+    { media: "(prefers-color-scheme: light)", color: "#F3F3F3" },
+    { media: "(prefers-color-scheme: dark)", color: "#161618" },
   ],
   colorScheme: "light dark",
 };
@@ -60,6 +60,7 @@ export default async function RootLayout({ children }: LayoutProps<"/[locale]">)
     >
       <head>
         <InlineScript html={presetInitScript} />
+        <InlineScript html={bootInitScript} />
       </head>
       <body className="min-h-dvh">
         <Providers dir={dir}>{children}</Providers>
