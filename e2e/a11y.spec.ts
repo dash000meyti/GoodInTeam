@@ -12,7 +12,7 @@ import { execFileSync } from "node:child_process";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const PUBLIC = ["/", "/en", "/services", "/login"];
+const PUBLIC = ["/", "/en", "/services", "/studio", "/en/code", "/login"];
 const PANEL = ["/panel", "/panel/design-system", "/panel/settings/appearance"];
 
 async function login(page: Page) {

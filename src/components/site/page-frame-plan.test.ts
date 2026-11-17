@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { brands, subBrandIds } from "@/components/brand/brands";
+import { familySpans, serviceCellsPlan } from "./brand-plan";
 import { packRows, type FrameBp, type FrameCols, type FrameSpan } from "./frame-plan";
 
 /**
@@ -126,6 +128,50 @@ describe("/services", () => {
 
   it("FAQ box: header cell + questions cell (2-1)", () => {
     expect(filled([undefined, undefined], "2-1")).toEqual({ md: 0, lg: 0 });
+  });
+});
+
+describe("brand service cells (serviceCellsPlan: /services brand boxes and brand pages)", () => {
+  it("0–12 services: hole-free, the ask cell only fills a free lg track", () => {
+    for (let n = 0; n <= 12; n++) {
+      const { ask, spans } = serviceCellsPlan(n);
+      filled(spans, 3);
+      // the /services box keeps its full header row in the same grid
+      filled(["full", ...spans], 3);
+      if (n === 0) {
+        expect(spans).toEqual(["full"]);
+        continue;
+      }
+      expect(ask).toBe(n % 3 !== 0);
+      // the ask cell never opens a new lg row
+      expect(Math.ceil(spans.length / 3)).toBe(Math.ceil(n / 3));
+    }
+  });
+});
+
+describe("brand pages (/studio, /code)", () => {
+  it("hero: h1 cell + the always-shown logo decor cell (2-1); they stack below lg", () => {
+    expect(filled([undefined, undefined], "2-1")).toEqual({ md: 0, lg: 0 });
+  });
+
+  it("services box: title row (FrameGrid 1) stacked on the service cells (FrameGrid 3)", () => {
+    filled([undefined], 1);
+    for (let n = 0; n <= 6; n++) filled(serviceCellsPlan(n).spans, 3);
+  });
+
+  it("services skeleton: 1 cell, 2 at md, 3 at lg (one full row)", () => {
+    expect(packRows([undefined, undefined], 3, "md")).toEqual({ holes: 0, trailing: 0 });
+    expect(packRows([undefined, undefined, undefined], 3, "lg")).toEqual({ holes: 0, trailing: 0 });
+  });
+
+  it("family box: md2 header + one cell per other brand, hole-free for 2–5 others", () => {
+    // today: the registry minus the page's own brand (team + the other sub-brand)
+    for (const id of subBrandIds) {
+      const others = brands.filter((b) => b.id !== id).length;
+      expect(others).toBe(2);
+      expect(filled(familySpans(others), 3)).toEqual({ md: 0, lg: 0 });
+    }
+    for (let n = 2; n <= 5; n++) filled(familySpans(n), 3);
   });
 });
 

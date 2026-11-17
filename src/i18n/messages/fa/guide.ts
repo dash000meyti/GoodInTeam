@@ -3,7 +3,8 @@
  * rendered into `data-guide-say` attributes (never shipped as a namespace),
  * full in the panel. Every section line paraphrases copy visible on the same
  * page and adds no new facts (spec §10.3). Placeholders: {owner} {i} {n} {module}.
- * `services_brand_<BrandId>` must exist for every brand in the registry.
+ * `services_brand_<BrandId>` must exist for every brand in the registry, and
+ * `brand_<SubBrandId>` / `brand_services_<SubBrandId>` for every sub-brand page.
  */
 export const guide = {
   name: "منِ مجازی",
@@ -70,6 +71,16 @@ export const guide = {
   services_brand_team: "گودین تیم محصول کامل را می‌سازد، از ایده تا انتشار.",
   services_brand_studio: "گودین استودیو رابط، برند و تجربه را طراحی می‌کند.",
   services_brand_code: "گودین کد مهندسی وب، موبایل و عامل‌های هوشمند را انجام می‌دهد.",
+  brand_studio:
+    "گودین استودیو بخش طراحی ماست: طراحی محصول، تجربه و رابط کاربری، برند و موشن. همکاری را از همین‌جا شروع کن.",
+  brand_code:
+    "گودین کد بخش مهندسی ماست: وب‌اپلیکیشن، اپلیکیشن موبایل و عامل‌های هوش مصنوعی. همکاری را از همین‌جا شروع کن.",
+  brand_services_studio:
+    "خدمات گودین استودیو؛ هر کدام صفحهٔ خودش را دارد، با شرح کامل و دکمهٔ درخواست مشاوره.",
+  brand_services_code:
+    "خدمات گودین کد؛ هر کدام صفحهٔ خودش را دارد، با شرح کامل و دکمهٔ درخواست مشاوره.",
+  brand_family:
+    "«گودین» ثابت است و کلمهٔ دوم می‌گوید در چه کاری خوبیم. دو عضو دیگر خانواده همین‌جا هستند.",
   services_process:
     "همکاری در چهار قدم: گفتگو و کشف، طراحی و برنامه، ساخت با گزارش زنده، و تحویل و پشتیبانی.",
   services_faq:

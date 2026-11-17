@@ -18,12 +18,24 @@ export const ogSize = { width: 1200, height: 630 };
 export const ogContentType = "image/png";
 
 /**
- * The GOOD IN / TEAM pixel logo as inline SVG paths with LITERAL dark-mode
- * fills (Satori resolves no CSS variables, so never the React PixelLogo).
+ * The GOOD IN / <SUFFIX> pixel logo (TEAM by default; the brand pages pass
+ * STUDIO or CODE) as inline SVG paths with LITERAL dark-mode fills (Satori
+ * resolves no CSS variables, so never the React PixelLogo).
  */
 const OG_CELL = 10;
-const OG_LOGO = brandLogoLayout("TEAM");
-const OG_LOGO_PATHS = toPaths(OG_LOGO.cells);
+const ogLogos = new Map<
+  string,
+  { layout: ReturnType<typeof brandLogoLayout>; paths: ReturnType<typeof toPaths> }
+>();
+function ogLogo(suffix: string) {
+  let logo = ogLogos.get(suffix);
+  if (!logo) {
+    const layout = brandLogoLayout(suffix);
+    logo = { layout, paths: toPaths(layout.cells) };
+    ogLogos.set(suffix, logo);
+  }
+  return logo;
+}
 const OG_FILLS: Partial<Record<PixelTone, string>> = {
   accent: "#FFC50D",
   ink: "#A3A4A8",
@@ -33,16 +45,17 @@ const OG_FILLS: Partial<Record<PixelTone, string>> = {
 };
 const OG_PAPER = "#2A2A2D";
 
-function OgLogo() {
+function OgLogo({ suffix }: { suffix: string }) {
+  const { layout, paths } = ogLogo(suffix);
   return (
     <svg
-      width={OG_LOGO.width * OG_CELL}
-      height={OG_LOGO.height * OG_CELL}
-      viewBox={`0 0 ${OG_LOGO.width} ${OG_LOGO.height}`}
+      width={layout.width * OG_CELL}
+      height={layout.height * OG_CELL}
+      viewBox={`0 0 ${layout.width} ${layout.height}`}
       shapeRendering="crispEdges"
     >
-      <rect x={1} y={1} width={OG_LOGO.width - 1} height={OG_LOGO.height - 1} fill={OG_PAPER} />
-      {(Object.entries(OG_LOGO_PATHS) as [PixelTone, string][]).map(([tone, d]) => (
+      <rect x={1} y={1} width={layout.width - 1} height={layout.height - 1} fill={OG_PAPER} />
+      {(Object.entries(paths) as [PixelTone, string][]).map(([tone, d]) => (
         <path key={tone} d={d} fill={OG_FILLS[tone]} />
       ))}
     </svg>
@@ -91,9 +104,19 @@ export interface OgInput {
   brand: string;
   footer?: string[];
   domain?: string;
+  /** Second word of the pixel logo (a valid brand suffix); TEAM by default. */
+  logoSuffix?: string;
 }
 
-export function renderOgImage({ locale, title, eyebrow, brand, footer = [], domain }: OgInput) {
+export function renderOgImage({
+  locale,
+  title,
+  eyebrow,
+  brand,
+  footer = [],
+  domain,
+  logoSuffix = "TEAM",
+}: OgInput) {
   const rtl = locale === "fa";
   const family = rtl ? "Vazirmatn" : "PublicSans";
   const len = title.length;
@@ -150,7 +173,7 @@ export function renderOgImage({ locale, title, eyebrow, brand, footer = [], doma
           gap: 18,
         }}
       >
-        <OgLogo />
+        <OgLogo suffix={logoSuffix} />
         <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: -0.5 }}>
           <Text text={brand} rtl={rtl} gap={10} />
         </div>

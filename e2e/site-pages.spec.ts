@@ -27,6 +27,8 @@ const FIRST_BOX_PAGES = [
   "/contact",
   "/work/acme-learning-platform",
   "/services/product-design",
+  "/studio",
+  "/code",
   "/blog/sqlite-is-enough",
   "/learn/nextjs-zero-to-deploy/nextjs-01-setup",
   "/does-not-exist",
@@ -37,6 +39,8 @@ const FIRST_BOX_PAGES = [
   "/en/contact",
   "/en/work/acme-learning-platform",
   "/en/services/web-development",
+  "/en/studio",
+  "/en/code",
   "/en/blog/sqlite-is-enough",
   "/en/does-not-exist",
 ];
@@ -131,9 +135,11 @@ test.describe("guide coverage (§9)", () => {
   for (const path of [
     "/services",
     "/about",
+    "/studio",
     "/blog/sqlite-is-enough",
     "/en/services",
     "/en/about",
+    "/en/code",
   ]) {
     test(`${path}: every box carries a guide key and line`, async ({ page }) => {
       await page.goto(path);

@@ -176,7 +176,7 @@ test.describe("home weight (1440×900)", () => {
 });
 
 test.describe("public routes ship no Radix menus, tooltips or toasts", () => {
-  for (const path of ["/", "/login"]) {
+  for (const path of ["/", "/studio", "/login"]) {
     test(`no DropdownMenu, Tooltip or sonner code on ${path}`, async ({ page }) => {
       const scripts = collectScripts(page);
       await page.goto(path, { waitUntil: "networkidle" });

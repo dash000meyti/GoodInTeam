@@ -16,6 +16,8 @@ const sections = [
   { path: "/", priority: 1, changeFrequency: "weekly" },
   { path: "/work", priority: 0.9, changeFrequency: "weekly" },
   { path: "/services", priority: 0.9, changeFrequency: "monthly" },
+  { path: "/studio", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/code", priority: 0.8, changeFrequency: "monthly" },
   { path: "/blog", priority: 0.8, changeFrequency: "daily" },
   { path: "/learn", priority: 0.8, changeFrequency: "weekly" },
   { path: "/about", priority: 0.7, changeFrequency: "monthly" },

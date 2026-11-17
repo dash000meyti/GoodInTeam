@@ -63,7 +63,7 @@ brands = [
     suffix: "STUDIO",
     label: "brandStudio",
     tagline: "brandStudioTagline",
-    href: "/services#studio",
+    href: "/studio",
     icon: "studio",
   },
   {
@@ -71,7 +71,7 @@ brands = [
     suffix: "CODE",
     label: "brandCode",
     tagline: "brandCodeTagline",
-    href: "/services#code",
+    href: "/code",
     icon: "code",
   },
 ];
@@ -81,6 +81,11 @@ brands = [
   `/services` boxes, the footer brand list. A different order is a change to this array.
 - `label` keys live in `nav`, `tagline` keys in `site`. `brandOf(meta)` reads a service's brand
   and falls back to `team`.
+- **Pages**: `href` is where a brand lives. The master brand's is `/about`; every sub-brand
+  (`subBrandIds`, `SubBrandId`) has its own landing page at `/studio`, `/code` (the shared
+  `BrandPage`; see [modules/content.md](modules/content.md#public-pages)), and every Studio/Code
+  entry point links there. A sub-brand's page needs `site.brandXIntro` (mapped in `brandIntro`),
+  `guide.brand_x` and `guide.brand_services_x` (typed) and an `x/` route folder like `studio/`.
 - **Suffix rule**: `isValidSuffix(s)` — the suffix is already in the pixel alphabet
   (`toPixelText(s) === s`, upper case) and at most **31 cells** wide, which keeps every logo at
   34×18 cells. Validate with this function (zod `refine`), never a length regex.

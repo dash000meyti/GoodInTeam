@@ -1,4 +1,13 @@
 import "server-only";
+import {
+  brandById,
+  brandIntro,
+  brandOf,
+  brands,
+  isSubBrand,
+  type SubBrandId,
+} from "@/components/brand/brands";
+import { format } from "@/i18n/format-message";
 import { localePath, locales, type Locale } from "@/i18n/config";
 import { messages } from "@/i18n/messages";
 import { env } from "@/lib/env";
@@ -80,6 +89,39 @@ export function postToMarkdown(
   return `${head}# ${post.title}\n\n${tldr}${metaLines(post, t)}${post.contentMd.trim()}\n`;
 }
 
+/**
+ * A brand landing page (`/studio`, `/code`) as Markdown: name, tagline,
+ * intro, the brand's public services (linking to their `.md` mirrors) and the
+ * rest of the Good In family. Mirrors the visible copy of the page.
+ */
+export async function brandMarkdown(locale: Locale, id: SubBrandId) {
+  const t = messages[locale];
+  const brand = brandById(id);
+  const name = t.nav[brand.label];
+  const canonical = abs(localePath(locale, brand.href));
+  const services = (await listServices(locale)).filter((s) => brandOf(s.meta) === id);
+  const list = services.length
+    ? services
+        .map((s) => `- [${s.title}](${url(locale, s)}.md)${s.excerpt ? `: ${s.excerpt}` : ""}`)
+        .join("\n")
+    : t.site.brandEmpty;
+  const family = brands
+    .filter((b) => b.id !== id)
+    .map(
+      (b) =>
+        `- [${t.nav[b.label]}](${abs(localePath(locale, "master" in b ? "/" : b.href))}): ${t.site[b.tagline]}`,
+    )
+    .join("\n");
+  const md = `${frontMatter({
+    title: name,
+    description: t.site[brandIntro[id]],
+    type: "brand",
+    lang: locale,
+    canonical,
+  })}# ${name}\n\n> ${t.site[brand.tagline]}\n\n${t.site[brandIntro[id]]}\n\n## ${format(t.site.brandServicesTitle, { brand: name })}\n\n${list}\n\n## ${t.site.brandsEyebrow}\n\n${family}\n`;
+  return { md, canonical };
+}
+
 /** Resolve a public path (without locale, without `.md`) to Markdown. */
 export async function markdownForPath(
   locale: Locale,
@@ -109,6 +151,7 @@ export async function markdownForPath(
   if (section === "work" && a && !b) return one(["work"], a);
   if (section === "services" && a && !b) return one(["service"], a);
   if (section === "about" && !a) return one(["page"], "about");
+  if (section && !a && isSubBrand(section)) return brandMarkdown(locale, section);
   if (section === "learn" && a && b) {
     const course = await getSeriesWithLessons(locale, a);
     const post = await getPublishedPost(locale, ["tutorial"], b);
@@ -159,7 +202,7 @@ export async function buildLlmsTxt() {
     `- Location: ${profile.location.en}`,
     `- Languages: Persian (default, RTL, ${abs("/")}) and English (${abs("/en")})`,
     `- Contact: ${profile.email ? `${profile.email} · ` : ""}${abs("/contact")} (form) · ${profile.availableForWork ? "currently available for new projects" : "currently fully booked"}`,
-    "- Every article, case study, lesson and service page has a clean Markdown version: append `.md` to its URL (e.g. `/blog/<slug>.md`).",
+    "- Every article, case study, lesson, service and brand page has a clean Markdown version: append `.md` to its URL (e.g. `/blog/<slug>.md`, `/studio.md`).",
     "",
   );
   for (const locale of locales) {
@@ -198,6 +241,11 @@ export async function buildLlmsTxt() {
     out.push(
       `- [${t.nav.home}](${abs(localePath(locale, "/"))})`,
       `- [${t.site.aboutTitle}](${abs(localePath(locale, "/about"))}.md)`,
+      ...brands.flatMap((b) =>
+        "master" in b
+          ? []
+          : [`- [${t.nav[b.label]}](${abs(localePath(locale, b.href))}.md): ${t.site[b.tagline]}`],
+      ),
       `- [${t.nav.contact}](${abs(localePath(locale, "/contact"))})`,
       `- [RSS](${abs(localePath(locale, "/feed.xml"))})`,
       "",
