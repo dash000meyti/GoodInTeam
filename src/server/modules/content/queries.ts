@@ -297,6 +297,7 @@ export async function getPublishedPost(
       seoDescription: posts.seoDescription,
       projectId: posts.projectId,
       authorName: users.name,
+      authorRole: users.role,
     })
     .from(posts)
     .leftJoin(series, eq(series.id, posts.seriesId))
@@ -304,11 +305,11 @@ export async function getPublishedPost(
     .where(
       and(visible(now), eq(posts.locale, locale), inArray(posts.type, types), eq(posts.slug, slug)),
     )
-    .all() as PostDetail[];
+    .all() as (PostDetail & AuthorRole)[];
   if (!rows.length) return null;
   // Same slug in several blog types: article > vlog > note > others (stable).
   rows.sort((a, b) => types.indexOf(a.type) - types.indexOf(b.type));
-  return rows[0]!;
+  return localizeAuthors(rows)[0]!;
 }
 
 /** Visible translations of a piece (same translationKey), including itself. */
@@ -714,8 +715,13 @@ export async function listFullPosts(locale: Locale | null, types: PostType[], li
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
-  return db
-    .select({ ...cardColumns, contentMd: posts.contentMd, authorName: users.name })
+  const rows = db
+    .select({
+      ...cardColumns,
+      contentMd: posts.contentMd,
+      authorName: users.name,
+      authorRole: users.role,
+    })
     .from(posts)
     .leftJoin(series, eq(series.id, posts.seriesId))
     .leftJoin(users, eq(users.id, posts.authorId))
@@ -724,5 +730,25 @@ export async function listFullPosts(locale: Locale | null, types: PostType[], li
     )
     .orderBy(desc(publishedAtExpr))
     .limit(limit)
-    .all() as (PostCard & { contentMd: string; authorName: string | null })[];
+    .all() as (PostCard & { contentMd: string; authorName: string | null } & AuthorRole)[];
+  return localizeAuthors(rows);
+}
+
+type AuthorRole = { authorRole: string | null };
+
+/**
+ * `users.name` is one language, so the owner's posts take the profile's
+ * bilingual owner name for the post's locale (falling back to the account
+ * name). Settings saves already revalidate the `content` tag.
+ */
+function localizeAuthors<T extends { locale: Locale; authorName: string | null } & AuthorRole>(
+  rows: T[],
+): Omit<T, "authorRole">[] {
+  const ownerName = rows.some((r) => r.authorRole === "owner")
+    ? getSettings("profile").ownerName
+    : null;
+  return rows.map(({ authorRole, ...r }) => ({
+    ...r,
+    authorName: (authorRole === "owner" && ownerName?.[r.locale]?.trim()) || r.authorName,
+  }));
 }
