@@ -50,6 +50,30 @@ Cache Components is ON. That changes the rules compared to classic Next.js:
 `pnpm build` validates these rules — a build error mentioning "blocking prerender" or
 "uncached data" means a rule above was broken.
 
+### The shells and the guide
+
+The site, auth and panel layouts are OS shells (menu bar, desktop, dock; [os-shell.md](os-shell.md)
+has the full Suspense map). They follow the same model:
+
+- **The chrome is static.** Menu bar, desktop, footer, dock and the native popovers prerender
+  per locale. Anything request-bound gets its own `<Suspense>` hole whose fallback has the final
+  size (studio clock, availability, socials, JSON-LD; in the panel the role menus, status,
+  avatar, clock, window title and the role dock), so streaming causes no layout shift.
+- **Public routes ship no Radix menus, tooltips or toasts.** Menus are native popovers; the
+  panel's Radix Menubar and `InteractiveProviders` (tooltips, toasts) mount only under `/panel`
+  (and the signing page).
+- **Preferences apply before paint** with inline scripts, never effects: the colour preset
+  (`gt-preset`), the boot flag (`gt-boot` → `html[data-booted]`), Reduce motion
+  (`gt-motion` → `html[data-motion]`), the theme (next-themes; its script runs only from the
+  server HTML) and the panel's `gt-shell` cookie (dock size, auto-hide, wide window).
+- **The guide adds nothing to first load.** `GuideMount` (request-time, inside `.os-desktop`)
+  renders the layer and formats the greeting on the server; narration lives in `data-guide-say`
+  attributes the pages render; the vanilla engine is imported after `load` + idle and makes no
+  network request.
+- **Soft navigations keep the previous route mounted but hidden** (React Activity under Cache
+  Components). Code and tests that query the DOM must ignore hidden subtrees (the guide engine
+  does; e2e/perf checks count visible elements).
+
 ## Layers
 
 ### `src/server/db`

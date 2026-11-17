@@ -123,6 +123,10 @@ hard-coded `top-24`/`bottom-4` for the chrome. Fragment/focus scrolling uses onl
 
 ## OS shell (`src/components/shell`)
 
+How the site and panel shells, the frame system, the pixel brand and the guide fit together
+(Suspense map, CSS variable contract, menus, dock, guide authoring, storage keys, budgets):
+**[os-shell.md](os-shell.md)**.
+
 | Export                                                            | Notes                                                                                                                  |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `MenuBarShell` + class constants (`MB_ITEM_CLASS`, `MENU_CLASS`…) | server-safe `<header class="os-menubar">` with a labelled start `<nav>` and end group                                  |
@@ -186,13 +190,14 @@ column, logo L-frame at inline-start, ringed markers) → one or more stacked `F
 | `ThemeToggle`, `AppearanceMenu`, `usePreset`, `LocaleSwitcher`        | `usePreset()` stays in sync across components; `ThemeToggle` and the mode toggle live in `shell/appearance.tsx` (re-exported)                                |
 | `design-tokens.ts`                                                    | tokens as data (see [Tokens](#tokens-srcappglobalscss)), `presetStyle(p)` + `PRESET_SCOPE_CLASS` — verified against `globals.css` by `design-tokens.test.ts` |
 
-| Panel (`components/panel`) |                                                                     |
-| -------------------------- | ------------------------------------------------------------------- |
-| `PageHeader`               | title, breadcrumbs, description, actions — every page               |
-| `EmptyState`               | every empty list                                                    |
-| `StatCard`                 | KPI tiles (`tone`: primary/info/warning/violet/destructive/success) |
-| `nav-config.ts`            | sidebar + ⌘K palette source of truth (with role filters)            |
-| `panel-prefs.ts`           | ⌘K matcher (layout-independent) + collapsed-sidebar cookie helpers  |
+| Panel (`components/panel`)                                                                                       |                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `PageHeader`                                                                                                     | title, breadcrumbs, description, actions — every page                                  |
+| `EmptyState`                                                                                                     | every empty list                                                                       |
+| `StatCard`                                                                                                       | KPI tiles (`tone`: primary/info/warning/violet/destructive/success)                    |
+| `nav-config.ts`                                                                                                  | source of truth for the dock, menu bar, Launchpad and ⌘K (role filters, dock pins)     |
+| `panel-prefs.ts`                                                                                                 | `gt-shell` cookie (dock size, magnify, auto-hide, wide) + pre-paint script; ⌘K matcher |
+| `session-chrome.tsx`, `menu-bar.tsx`, `panel-dock.tsx`, `launchpad.tsx`, `control-center.tsx`, `panel-guide.tsx` | the panel OS chrome (see [os-shell.md](os-shell.md#shells-and-their-suspense-map))     |
 
 | Brand (`components/brand`)                                                   |                                                                      |
 | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -219,12 +224,13 @@ column, logo L-frame at inline-start, ringed markers) → one or more stacked `F
   `components/*`.
 - **Row actions revealed on hover** must also show on `focus-visible`, `group-focus-within` and
   touch (`pointer-coarse:opacity-100`) — see the milestone list.
-- **Small muted text** (sidebar group titles, captions) uses full `text-muted-foreground`
+- **Small muted text** (menu group labels, captions) uses full `text-muted-foreground`
   (4.9:1 light / 6.4:1 dark); `/80` and lighter fail WCAG AA.
 - **Keyboard shortcuts** match layout-independently (`isCommandPaletteShortcut`: Latin `e.key`,
   else `e.code`) so ⌘K works on a Persian keyboard.
-- **Client-only preferences** that change layout (collapsed sidebar) live in a cookie read on the
-  server inside `<Suspense>`, plus an `InlineScript` before paint — never `localStorage` + effect.
+- **Client-only preferences** that change layout (the `gt-shell` dock size / auto-hide / wide
+  window) live in a cookie applied by an inline script before paint — never `localStorage` +
+  effect.
 
 ## RTL rules
 

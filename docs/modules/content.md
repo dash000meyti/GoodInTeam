@@ -108,8 +108,9 @@ YouTube for vlogs, share links, syndication links, author box, related, prev/nex
 `/about`, `/contact`.
 
 Client JavaScript on public pages is limited to tiny islands (`components/site/islands.tsx`,
-`header-client.tsx`, `contact-form.tsx`): header scroll state/active link/language
-target/mobile menu (native Popover API), lite YouTube, copy link, TOC highlight, view counter.
+`site-menubar-client.tsx`, `header-client.tsx`, `contact-form.tsx`, the dock's `DockLinks`, the
+lazy guide): menu-bar popovers (native Popover API), Spotlight filter, language target, active
+dock tile, lite YouTube, copy link, TOC highlight, view counter. See [../os-shell.md](../os-shell.md).
 The site ships only the `common` + `nav` message namespaces; islands get labels as props.
 
 ## SEO / AEO / GEO
