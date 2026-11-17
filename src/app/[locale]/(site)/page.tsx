@@ -36,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Intrinsic heights (px) of the below-the-fold box bodies for `content-visibility` (spec §8). */
-const CIS = { work: 900, services: 760, stats: 150, latest: 820, kindWords: 620 } as const;
+const CIS = { work: 900, services: 760, stats: 140, latest: 820, kindWords: 620 } as const;
 
 /**
  * Home (spec §8): ten framed boxes in a fixed order. Their ids and

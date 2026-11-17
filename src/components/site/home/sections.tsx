@@ -91,7 +91,7 @@ export const AvailabilityEyebrowSkeleton = () => (
 // ─── 03 · trust marquee (the whole box streams; null below 2 names) ──────────
 
 /** Intrinsic height of the trust body for `content-visibility`. */
-const TRUST_CIS = 140;
+const TRUST_CIS = 112;
 
 function TrustFrame({ t, children }: { t: Messages; children: ReactNode }) {
   return (
@@ -209,15 +209,23 @@ export async function FeaturedWorkCells({ locale, t }: { locale: Locale; t: Mess
   );
 }
 
-function CardCellSkeleton({ lead }: { lead?: boolean }) {
+/**
+ * Mirrors a `variant="cell"` card line by line (cover 16/10, then the same
+ * text rows at their line heights): a work card (meta, title, two excerpt
+ * lines, stack chips) or a post card (type badge, title, excerpt, meta).
+ */
+function CardCellSkeleton({ kind, lead }: { kind: "work" | "post"; lead?: boolean }) {
   return (
     <div className="flex h-full flex-col gap-4">
       <Skeleton className="aspect-[16/10] w-full rounded-[8px]" />
       <div className="flex flex-col gap-3">
-        <Skeleton className="h-4 w-28" />
+        <Skeleton className={kind === "work" ? "h-4 w-28" : "h-[22px] w-16 rounded-full"} />
         <Skeleton className={lead ? "h-8 w-3/4" : "h-7 w-4/5"} />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
+        <div className="flex h-14 flex-col justify-around">
+          <Skeleton className="h-3.5 w-full" />
+          <Skeleton className="h-3.5 w-2/3" />
+        </div>
+        <Skeleton className={kind === "work" ? "mt-2 h-5 w-40" : "mt-1 h-4 w-32"} />
       </div>
     </div>
   );
@@ -228,13 +236,13 @@ export function FeaturedWorkCellsSkeleton() {
   return (
     <>
       <FrameCell span={2} className={LEAD}>
-        <CardCellSkeleton lead />
+        <CardCellSkeleton kind="work" lead />
       </FrameCell>
       <FrameCell>
-        <CardCellSkeleton />
+        <CardCellSkeleton kind="work" />
       </FrameCell>
       <FrameCell>
-        <CardCellSkeleton />
+        <CardCellSkeleton kind="work" />
       </FrameCell>
       <FrameCell className="flex min-h-[240px] flex-col justify-between gap-8">
         <Skeleton className="h-16 w-40" />
@@ -453,13 +461,15 @@ export function LatestCellsSkeleton() {
   return (
     <>
       <FrameCell>
-        <CardCellSkeleton />
+        <CardCellSkeleton kind="post" />
       </FrameCell>
       <FrameCell>
-        <CardCellSkeleton />
+        <CardCellSkeleton kind="post" />
       </FrameCell>
       <FrameCell span={3} tone="ink" className={COURSE_CELL}>
-        <Skeleton className="h-full min-h-[256px] rounded-[10px] bg-white/[0.06]" />
+        {/* the COURSE.APP window's height (one title line, two description lines,
+            three lessons): stacked below sm, lessons in two columns from sm, side by side at lg */}
+        <Skeleton className="h-[432px] rounded-[10px] bg-white/[0.06] sm:h-[392px] lg:h-[294px]" />
       </FrameCell>
     </>
   );
@@ -488,7 +498,7 @@ export function TestimonialCellsSkeleton() {
     <>
       {Array.from({ length: 3 }, (_, i) => (
         <FrameCell key={i}>
-          <div className="flex h-full min-h-[260px] flex-col gap-5">
+          <div className="flex h-full min-h-[238px] flex-col gap-5">
             <Skeleton className="size-8" />
             <Skeleton className="h-4 w-24" />
             <div className="flex flex-col gap-2">
