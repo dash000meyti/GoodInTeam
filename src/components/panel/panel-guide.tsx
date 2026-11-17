@@ -61,14 +61,19 @@ export function useGuideTips() {
 /* ── Controller ── */
 
 /**
- * The tip a role reads for a module. The `guide.panel_*` lines speak to the
- * team (e.g. "you decide what the client sees"), so a client reads the portal
- * line on the shared modules (projects, invoices, contracts).
+ * The `guide.panel_*` lines speak to the team (e.g. "you decide what the
+ * client sees"), so on the shared modules a client reads its own line, which
+ * paraphrases the portal page's subtitle.
  */
+const CLIENT_TIPS: Record<string, string> = {
+  projects: "clientProjects",
+  invoices: "clientInvoices",
+  contracts: "clientContracts",
+};
+
+/** The tip a role reads for a module (`guide.panel_<key>`). */
 export function tipKeyFor(navKey: string, role: UserRole): string {
-  return role === "client" && ["projects", "invoices", "contracts"].includes(navKey)
-    ? "portalHome"
-    : navKey;
+  return (role === "client" && CLIENT_TIPS[navKey]) || navKey;
 }
 
 const BUBBLE_ID = "panel-guide";

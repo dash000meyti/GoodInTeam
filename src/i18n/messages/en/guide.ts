@@ -101,6 +101,9 @@ export const guide: Record<keyof typeof fa, string> = {
   // ── Panel (quiet guide, one line per module) ──
   panel_dashboard: "Today at a glance: timers, due tasks and the latest changes.",
   panel_portalHome: "Your projects live here; progress, invoices and contracts are one click away.",
+  panel_clientProjects: "Here are your projects, and where each one stands.",
+  panel_clientInvoices: "Your invoices are here, and whether each one is paid.",
+  panel_clientContracts: "Every contract and approval we've sent you, in one place.",
   panel_time:
     "Run timers in parallel; every logged hour flows into reports and invoices. You can start one from the menu bar too.",
   panel_calendar: "Press T to jump to today and N to create an event.",
