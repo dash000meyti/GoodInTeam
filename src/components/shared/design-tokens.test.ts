@@ -86,7 +86,6 @@ describe("design tokens match globals.css", () => {
       expect(vars["primary-darker"], `${p} darker`).toBe(s.darker);
       expect(vars["primary-foreground"], `${p} contrast`).toBe(s.contrast);
       expect(vars["primary-rgb"], `${p} rgb`).toBe(s.rgb);
-      expect(vars["preset-ink"], `${p} ink`).toBe(s.ink);
     }
   });
 

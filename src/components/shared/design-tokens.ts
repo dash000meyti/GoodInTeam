@@ -17,8 +17,6 @@ export interface PresetScale {
   contrast: string;
   /** "r g b" for rgb(var(--primary-rgb) / a). */
   rgb: string;
-  /** Light-mode text ink (--preset-ink) when `dark` misses 4.5:1 on white (orange). */
-  ink?: string;
 }
 
 export const presetScales: Record<ColorPreset, PresetScale> = {
@@ -71,11 +69,10 @@ export const presetScales: Record<ColorPreset, PresetScale> = {
     lighter: "#fef4d4",
     light: "#fed680",
     main: "#fda92d",
-    dark: "#b66816",
+    dark: "#9e5510",
     darker: "#793908",
     contrast: "#1c252e",
     rgb: "253 169 45",
-    ink: "#9e5510",
   },
   red: {
     lighter: "#ffe3d5",
@@ -106,8 +103,6 @@ export function presetStyle(p: ColorPreset): Record<string, string> {
     "--primary-darker": s.darker,
     "--primary-foreground": s.contrast,
     "--primary-rgb": s.rgb,
-    // always set: a preview must not inherit the page preset's ink
-    "--preset-ink": s.ink ?? s.dark,
   };
 }
 
@@ -176,7 +171,7 @@ export const inkTokens: ColorToken[] = [
   {
     name: "primary-ink",
     tw: "primary-ink",
-    light: "var(--preset-ink, var(--primary-dark))",
+    light: "var(--primary-dark)",
     dark: "var(--primary-light)",
   },
   {
