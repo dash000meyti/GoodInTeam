@@ -227,8 +227,9 @@ export function OverlaysSection({ t }: { t: Messages }) {
       </Example>
       <Example
         title={d.command}
-        code={`// Global ⌘K palette: entries come from components/panel/nav-config.ts
-const { setPaletteOpen } = usePanelUI();
+        code={`// Global ⌘K palette (mounted by the dock): nav from components/panel/nav-config.ts,
+// actions via <CommandPalette role extraCommands={[{ id, label, group, icon, run }]} />
+const { setPaletteOpen, setLaunchpadOpen, setShell } = usePanelUI();
 <CommandDialog open={open} onOpenChange={setOpen} title="…">
   <CommandInput placeholder="…" />
   <CommandList><CommandGroup heading="…"><CommandItem onSelect={…}>…</CommandItem></CommandGroup></CommandList>

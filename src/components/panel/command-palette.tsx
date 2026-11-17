@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -18,16 +19,26 @@ import type { UserRole } from "@/server/db/schema/auth";
 import { navForRole } from "./nav-config";
 import { usePanelUI } from "./panel-ui";
 
+export interface PaletteCommand {
+  id: string;
+  label: string;
+  group: string;
+  icon?: ReactNode;
+  run: () => void;
+}
+
 /**
- * ⌘K / Ctrl+K palette. Modules can register extra commands later via
- * `extraCommands` (e.g. "start timer for …").
+ * ⌘K / Ctrl+K palette (mounted by the dock's session hole). Navigation comes
+ * from `navForRole`; modules and the shell add actions via `extraCommands`
+ * (the dock passes Zoom window, magnification, auto-hide, guide tips, All apps
+ * and View site).
  */
 export function CommandPalette({
   role,
   extraCommands = [],
 }: {
   role: UserRole;
-  extraCommands?: { id: string; label: string; group: string; run: () => void }[];
+  extraCommands?: PaletteCommand[];
 }) {
   const { paletteOpen, setPaletteOpen } = usePanelUI();
   const router = useRouter();
@@ -38,11 +49,16 @@ export function CommandPalette({
     setPaletteOpen(false);
     router.push(localePath(locale, href));
   };
-  const groups: Record<string, typeof extraCommands> = {};
+  const groups: Record<string, PaletteCommand[]> = {};
   for (const c of extraCommands) (groups[c.group] ??= []).push(c);
 
   return (
-    <CommandDialog open={paletteOpen} onOpenChange={setPaletteOpen} title={t.common.commandPalette}>
+    <CommandDialog
+      open={paletteOpen}
+      onOpenChange={setPaletteOpen}
+      title={t.common.commandPalette}
+      description={t.common.commandHint}
+    >
       <CommandInput placeholder={t.common.searchPlaceholder} />
       <CommandList>
         <CommandEmpty>{t.common.empty}</CommandEmpty>
@@ -67,13 +83,13 @@ export function CommandPalette({
             {cmds.map((c) => (
               <CommandItem
                 key={c.id}
-                value={c.label}
+                value={`${c.label} ${c.id}`}
                 onSelect={() => {
                   setPaletteOpen(false);
                   c.run();
                 }}
               >
-                {c.label}
+                {c.icon} {c.label}
               </CommandItem>
             ))}
           </CommandGroup>

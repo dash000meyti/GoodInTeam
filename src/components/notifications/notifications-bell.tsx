@@ -73,19 +73,23 @@ export function NotificationsBell({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative rounded-full"
+        {/* Menu-bar status item (spec §11.2): 28px icon button. */}
+        <button
+          type="button"
+          className="os-mb-item os-mb-icon relative"
           aria-label={unread ? format(n.open, { n: formatNumber(unread, locale) }) : n.title}
         >
-          {unread ? <BellRingIcon className="size-[18px]" /> : <BellIcon className="size-[18px]" />}
+          {unread ? (
+            <BellRingIcon className="size-4" aria-hidden />
+          ) : (
+            <BellIcon className="size-4" aria-hidden />
+          )}
           {unread > 0 && (
-            <span className="absolute -end-0.5 -top-0.5 flex h-[18px] min-w-[18px] animate-in items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-bold text-destructive-foreground tabular-nums ring-2 ring-background zoom-in-50">
+            <span className="absolute -end-0.5 -top-0.5 flex h-3.5 min-w-3.5 animate-in items-center justify-center rounded-full bg-destructive px-[3px] text-[9px] leading-none font-bold text-destructive-foreground tabular-nums ring-[1.5px] ring-background zoom-in-50 max-lg:end-0.5 max-lg:top-1">
               {badge}
             </span>
           )}
-        </Button>
+        </button>
       </PopoverTrigger>
       <PopoverContent
         align="end"

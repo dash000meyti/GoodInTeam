@@ -43,8 +43,10 @@ const CLIENT = ["client"] as const;
 const ALL = ["owner", "admin", "member", "client"] as const;
 
 /**
- * Single source of truth for the panel sidebar + command palette.
- * Add a module: add an item here, create src/app/[locale]/panel/<module>/page.tsx.
+ * Single source of truth for the panel dock, menu-bar menus, Launchpad and
+ * command palette. Add a module: add an item here, create
+ * src/app/[locale]/panel/<module>/page.tsx (+ loading.tsx) and a
+ * `guide.panel_<label>` tip.
  */
 export const panelNav: NavGroup[] = [
   {
@@ -111,6 +113,40 @@ export function navForRole(role: UserRole): NavGroup[] {
   return panelNav
     .map((g) => ({ ...g, items: g.items.filter((i) => i.roles.includes(role)) }))
     .filter((g) => g.items.length > 0);
+}
+
+/**
+ * The mobile tab bar (<1024px, spec §11.3): staff get 4 pins plus "More"
+ * (Launchpad); clients get exactly 5 pins and no More.
+ */
+export const mobilePins: Record<UserRole, (keyof Messages["nav"])[]> = {
+  owner: ["dashboard", "tasks", "time", "projects"],
+  admin: ["dashboard", "tasks", "time", "projects"],
+  member: ["dashboard", "tasks", "time", "projects"],
+  client: ["portalHome", "projects", "invoices", "contracts", "settings"],
+};
+
+/**
+ * The module a panel path belongs to: longest-prefix match over every
+ * `panelNav` item except the `/panel` overview (role-neutral, so the static
+ * menu bar and window title can use it). `null` for `/panel` itself and for
+ * paths outside the nav. `path` is unprefixed (`stripLocale(...).path`).
+ */
+export function matchNav(path: string): NavItem | null {
+  const clean = path.replace(/\/+$/, "") || "/";
+  let best: NavItem | null = null;
+  for (const g of panelNav)
+    for (const item of g.items) {
+      if (item.href === "/panel") continue;
+      if (clean !== item.href && !clean.startsWith(`${item.href}/`)) continue;
+      if (!best || item.href.length > best.href.length) best = item;
+    }
+  return best;
+}
+
+/** The nav key of the active module for a role (`/panel` → dashboard or portalHome). */
+export function navKeyFor(path: string, role: UserRole): keyof Messages["nav"] {
+  return matchNav(path)?.label ?? (role === "client" ? "portalHome" : "dashboard");
 }
 
 // Re-exported icons used by pages for consistent iconography.

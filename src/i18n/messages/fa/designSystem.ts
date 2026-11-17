@@ -264,4 +264,15 @@ export const designSystem = {
   osShellFrame: "جعبهٔ قاب‌دار",
   osShellFrameHint: "ردیف سرتیتر روی یک شبکهٔ سه‌ستونی؛ خط بین دو شبکه باید دیده شود.",
   osShellWindow: "پنجره با چند مسیر",
+  osShellMenubar: "نوار منو",
+  osShellMenubarHint:
+    "یک ریشهٔ Radix Menubar برای همهٔ منوها؛ با کلیدهای جهت‌دار جابه‌جا می‌شود و در راست‌به‌چپ قرینه است.",
+  osShellMenubarDemo: "نمونهٔ نوار منو",
+  osShellDock: "داک",
+  osShellDockHint:
+    "کاشی‌ها با برچسب دیدنی نام‌گذاری می‌شوند؛ نقطه یعنی صفحهٔ فعلی یا برنامهٔ در حال اجرا. زیر ۱۰۲۴ پیکسل نوار زبانه می‌شود.",
+  osShellDockDemo: "نمونهٔ داک",
+  osShellLights: "چراغ‌ها و ساعت",
+  osShellLightsHint:
+    "چراغ‌های هشت‌ضلعی تزئینی‌اند (در پنجرهٔ پنل فقط با اشاره‌گر کار می‌کنند)؛ ساعت عرض ثابت دارد تا نوار جابه‌جا نشود.",
 } as const satisfies Record<string, string>;

@@ -39,8 +39,6 @@ export const panel = {
   role_admin: "مدیر",
   role_member: "عضو تیم",
   role_client: "مشتری",
-  collapseSidebar: "جمع کردن نوار کناری",
-  expandSidebar: "باز کردن نوار کناری",
   mainNav: "منوی اصلی",
 
   // ── OS shell (menu bar, window, dock) ──
@@ -56,4 +54,11 @@ export const panel = {
   dockAutohide: "پنهان‌شدن خودکار داک",
   guideTips: "نکته‌های راهنما",
   aboutModule: "دربارهٔ {module}",
+  launchpadFilter: "جستجوی برنامه‌ها",
+  toggleMagnify: "روشن یا خاموش کردن بزرگ‌نمایی داک",
+  toggleAutohide: "روشن یا خاموش کردن پنهان‌شدن خودکار داک",
+  windowCommands: "پنجره و داک",
+  // short tab-bar labels (mobile); the dock tooltip keeps the full module name
+  tabTime: "زمان",
+  tabTasks: "کارها",
 } as const satisfies Record<string, string>;

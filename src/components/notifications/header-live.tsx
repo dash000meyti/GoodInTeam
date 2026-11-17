@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { localePath } from "@/i18n/config";
 import { useLocale, useT } from "@/i18n/client";
+import { setRunning } from "@/components/panel/chrome-store";
 import { TimerPill } from "@/components/time/timer-pill";
 import type { ProjectOption } from "@/components/time/project-select";
 import type { HeaderSnapshot } from "@/server/modules/notifications/header";
@@ -17,7 +18,8 @@ import { NotificationsBell } from "./notifications-bell";
 const POLL_MS = 60_000;
 
 /**
- * Live part of the panel top bar: running-timer pill + notifications bell.
+ * Live part of the panel menu bar: running-timer pill + notifications bell.
+ * Also publishes the running-timer count to `chrome-store` for the dock.
  * Starts from the server snapshot, re-syncs whenever the server re-renders
  * (after any action's refresh()), and polls every 60 s while the tab is open.
  * New unread notifications pop as a toast (tab visible) or a native desktop
@@ -44,6 +46,11 @@ export function HeaderLive({
     setSource(initial);
     setSnap(initial);
   }
+  // The dock's Time tile reads the running count from the chrome store (dot + name).
+  const runningCount = snap.running.length;
+  useEffect(() => setRunning(runningCount), [runningCount]);
+  useEffect(() => () => setRunning(0), []);
+
   const known = useRef(new Set(initial.items.map((i) => i.id)));
   useEffect(() => {
     for (const i of initial.items) known.current.add(i.id);

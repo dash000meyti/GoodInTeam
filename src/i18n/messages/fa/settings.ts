@@ -306,10 +306,6 @@ export const settings = {
   preset_blue: "آبی",
   preset_orange: "نارنجی",
   preset_red: "قرمز",
-  sidebar: "نوار کناری",
-  sidebarHint: "در نمایشگرهای بزرگ؛ با دکمه‌ی کنار نوار هم عوض می‌شود.",
-  sidebar_expanded: "کامل",
-  sidebar_collapsed: "جمع‌وجور",
   sampleButton: "دکمه",
   sampleBadge: "برچسب",
 

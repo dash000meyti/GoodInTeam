@@ -7,5 +7,468 @@
  * least one class more specific (globals.css imports partials first).
  */
 
+@layer base {
+  /* Toasts sit above the dock (sonner offset reads it; §11.6). */
+  html:has(.panel-shell) {
+    --toast-bottom: calc(var(--dock-space) + 8px);
+  }
+}
+
 @layer components {
+  /* ── Desktop (§11.4): dotted wallpaper behind the window ── */
+  .panel-shell {
+    min-block-size: 100dvh;
+    background:
+      radial-gradient(var(--dots) 1px, transparent 1.5px) 0 0 / 12px 12px,
+      var(--desktop);
+  }
+
+  /* ── Menu bar (§11.2) ── */
+  .pm-menus {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-inline-size: 0;
+  }
+  .pm-brand {
+    padding-inline: 5px;
+  }
+  .pm-app {
+    font-weight: 700;
+    max-inline-size: min(40vw, 220px);
+  }
+  .pm-nav-goto,
+  .pm-nav-group {
+    display: none;
+  }
+  @media (width >= 64rem) and (width < 80rem) {
+    .pm-nav-goto {
+      display: inline-flex;
+    }
+  }
+  @media (width >= 80rem) {
+    .pm-nav-group {
+      display: inline-flex;
+    }
+  }
+  /* current module in a nav menu: aria-current + a 4px square dot */
+  .pm-current-dot {
+    margin-inline-start: auto;
+    inline-size: 4px;
+    block-size: 4px;
+    flex-shrink: 0;
+    background: currentColor;
+  }
+  .os-menu-item[aria-current="page"] {
+    font-weight: 700;
+  }
+
+  /*
+   * Zero layout shift: the end group and the status hole generate no box, so
+   * when the session items stream in (a running-timer pill is wider than its
+   * skeleton) only the spacer shrinks — no box after it changes its start edge.
+   */
+  .pm-menubar > .os-mb-end,
+  .pm-status {
+    display: contents;
+  }
+  .pm-status-skeleton {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  /* timer (28) + bell (28): the same boxes as the streamed items */
+  .pm-status-skeleton > span {
+    inline-size: 28px;
+    block-size: 24px;
+  }
+  .pm-avatar {
+    display: contents;
+  }
+  .os-avatar-skeleton {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 28px;
+    block-size: 24px;
+  }
+  .os-avatar-skeleton::before {
+    content: "";
+    inline-size: 22px;
+    block-size: 22px;
+    border-radius: 999px;
+    background: rgb(var(--grey-rgb) / 0.16);
+  }
+  .pm-desktop-only,
+  .pm-clock {
+    display: none;
+  }
+  @media (width >= 64rem) {
+    .pm-desktop-only {
+      display: contents;
+    }
+  }
+  @media (width >= 80rem) {
+    .pm-clock {
+      display: inline-flex;
+      align-items: center;
+      padding-inline: 8px 6px;
+      font-weight: 500;
+    }
+  }
+
+  /* Spotlight: 28px icon; a 200px pill with the placeholder and ⌘K at ≥1280px */
+  .pm-spotlight {
+    inline-size: 28px;
+    justify-content: center;
+    padding: 0;
+  }
+  .pm-spotlight-text,
+  .pm-spotlight-kbd {
+    display: none;
+  }
+  @media (width >= 80rem) {
+    .pm-spotlight {
+      inline-size: 200px;
+      margin-inline: 4px;
+      padding-inline: 8px 4px;
+      justify-content: flex-start;
+      gap: 6px;
+      color: var(--muted-foreground);
+      font-weight: 400;
+      background: rgb(var(--grey-rgb) / 0.1);
+      box-shadow: inset 0 0 0 1px rgb(var(--grey-rgb) / 0.12);
+    }
+    .pm-spotlight:hover {
+      background: rgb(var(--grey-rgb) / 0.16);
+      color: var(--foreground);
+    }
+    .pm-spotlight-text {
+      display: inline;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: start;
+    }
+    .pm-spotlight-kbd {
+      display: inline-block;
+      padding: 3px 5px;
+      border-radius: 4px;
+      font: 600 11px/1 var(--font-sans);
+      color: var(--muted-foreground);
+      background: var(--background);
+      box-shadow: inset 0 0 0 1px rgb(var(--grey-rgb) / 0.22);
+    }
+  }
+
+  /* Mobile (<1024px): 44px bar, 36px targets */
+  @media (width < 64rem) {
+    .pm-menubar .os-mb-item {
+      block-size: 36px;
+      min-inline-size: 36px;
+    }
+    .pm-menubar .pm-spotlight,
+    .pm-menubar .os-mb-icon,
+    .pm-status-skeleton > span,
+    .os-avatar-skeleton {
+      inline-size: 36px;
+      block-size: 36px;
+    }
+    .pm-app {
+      max-inline-size: 34vw;
+    }
+  }
+
+  /* ── Window (§11.4) ── */
+  .os-window {
+    display: flex;
+    flex-direction: column;
+    min-block-size: calc(100dvh - var(--chrome-top) - 12px);
+    margin: 12px max(var(--gutter), calc((100% - 1400px) / 2)) 0;
+    border-radius: 12px;
+    border: 1px solid var(--frame-line);
+    background: var(--background);
+    box-shadow: var(--shadow-window);
+  }
+  html[data-window-wide]:has(.panel-shell) .os-window {
+    margin-inline: var(--gutter);
+  }
+  .os-titlebar {
+    block-size: 40px;
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding-inline: 14px;
+    border-block-end: 1px solid var(--frame-line);
+    border-start-start-radius: 12px;
+    border-start-end-radius: 12px;
+    background: color-mix(in oklab, var(--card) 72%, var(--background));
+  }
+  .os-window-body {
+    flex: 1;
+    min-inline-size: 0;
+    padding: 20px 16px var(--dock-space);
+  }
+  @media (width >= 64rem) {
+    .os-window-body {
+      padding: 24px 32px var(--dock-space);
+    }
+  }
+  @media (width < 64rem) {
+    .os-window {
+      min-block-size: calc(100dvh - var(--chrome-top));
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+    .os-titlebar {
+      display: none;
+    }
+  }
+  .pm-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-inline-size: 0;
+    max-inline-size: 50vw;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted-foreground);
+  }
+  .pm-title > svg {
+    opacity: 0.8;
+  }
+
+  /* Pointer-only octagon lights, 12px in 20px hit areas */
+  .pm-lights {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    margin-inline-start: -4px;
+  }
+  .pm-lights > * {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 20px;
+    block-size: 20px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+  .pm-lights > :disabled,
+  .pm-lights > span {
+    cursor: default;
+  }
+  .pm-lights > *::before {
+    content: "";
+    inline-size: 12px;
+    block-size: 12px;
+    clip-path: polygon(20% 0, 80% 0, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0 80%, 0 20%);
+    background: var(--on, var(--light-idle));
+  }
+  .pm-lights > [data-light="close"] {
+    --on: var(--light-close);
+  }
+  .pm-lights > [data-light="min"] {
+    --on: var(--light-min);
+  }
+  .pm-lights > [data-light="zoom"] {
+    --on: var(--light-zoom);
+  }
+  .pm-lights > span[data-light],
+  .pm-lights > [data-light="close"]:disabled {
+    --on: var(--light-idle);
+  }
+  .pm-lights > *::after {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font:
+      700 10px/1 system-ui,
+      sans-serif;
+    color: rgb(0 0 0 / 0.55);
+    opacity: 0;
+  }
+  .pm-lights > [data-light="close"]::after {
+    content: "×";
+    font-size: 12px;
+  }
+  .pm-lights > [data-light="zoom"]::after {
+    content: "⤢";
+  }
+  .pm-lights:hover > button:not(:disabled)::after {
+    opacity: 1;
+  }
+
+  /* ── Dock (§11.3) ── */
+  @media (width >= 64rem) {
+    .panel-shell > .os-dock {
+      --dock-tile: max(
+        36px,
+        min(
+          var(--dock-pref),
+          calc((100vw - 2 * var(--gutter) - 12px - var(--dock-seps) * 17px) / var(--dock-n) - 8px)
+        )
+      );
+    }
+  }
+  .pm-dock-icon {
+    inline-size: max(18px, calc(var(--dock-tile, 48px) * 0.46));
+    block-size: max(18px, calc(var(--dock-tile, 48px) * 0.46));
+    color: color-mix(in oklab, var(--foreground) 80%, transparent);
+  }
+  @media (width < 64rem) {
+    .panel-shell .pm-dock-icon {
+      inline-size: 22px;
+      block-size: 22px;
+    }
+    .panel-shell .os-dock-item[aria-current="page"] .pm-dock-icon {
+      color: var(--foreground);
+    }
+    .panel-shell > .os-dock .os-dock-item[aria-current="page"] .os-dock-label {
+      font-weight: 700;
+    }
+    /* long module names ("Tasks & reminders") truncate inside their tab */
+    .panel-shell > .os-dock li {
+      min-inline-size: 0;
+    }
+    .panel-shell > .os-dock .os-dock-label {
+      max-inline-size: 100%;
+      padding-inline: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  /* Auto-hide: desktop dock only; the <1024px tab bar never slides away. */
+  .os-dock-zone {
+    display: none;
+  }
+  @media (width >= 64rem) {
+    html[data-dock-autohide] .panel-shell > .os-dock {
+      translate: 0 calc(100% + var(--dock-gap));
+      transition: translate 0.2s var(--ease-os);
+    }
+    html[data-dock-autohide] .panel-shell > .os-dock:is(:hover, :focus-within),
+    html[data-dock-autohide] .panel-shell > .os-dock-zone:hover + .os-dock {
+      translate: 0 0;
+    }
+    html[data-dock-autohide] .panel-shell .os-dock-zone {
+      display: block;
+      position: fixed;
+      z-index: 41;
+      inset-inline: 0;
+      bottom: 0;
+      block-size: 8px;
+    }
+    /* hover bridge between the hot strip and the pill */
+    html[data-dock-autohide] .panel-shell > .os-dock .os-dock-list::after {
+      content: "";
+      position: absolute;
+      inset-inline: 0;
+      top: 100%;
+      block-size: calc(var(--dock-gap) + 4px);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html[data-dock-autohide] .panel-shell > .os-dock {
+      transition: none;
+    }
+  }
+
+  /* ── Panel guide bubble (§10.6): never a dialog ── */
+  .pm-guide {
+    position: fixed;
+    inset: auto;
+    inset-inline: 12px;
+    bottom: calc(var(--dock-space) + 8px);
+    z-index: 45;
+    margin: 0 auto;
+    inline-size: auto;
+    max-inline-size: 420px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid rgb(var(--grey-rgb) / 0.2);
+    color: var(--popover-foreground);
+    background: color-mix(in oklab, var(--popover) 97%, transparent);
+    box-shadow: var(--shadow-dropdown);
+    overflow: visible;
+    transition:
+      opacity 0.16s,
+      translate 0.16s var(--ease-os),
+      display 0.16s allow-discrete,
+      overlay 0.16s allow-discrete;
+  }
+  .pm-guide:not(:popover-open) {
+    opacity: 0;
+    translate: 0 6px;
+  }
+  @starting-style {
+    .pm-guide:popover-open {
+      opacity: 0;
+      translate: 0 6px;
+    }
+  }
+  .pm-guide[data-anchored] {
+    inset-inline-end: auto;
+    margin: 0;
+    inline-size: 340px;
+  }
+  /* the tail points down at the Me tile */
+  .pm-guide[data-anchored]::after {
+    content: "";
+    position: absolute;
+    bottom: -6px;
+    inset-inline-start: 18px;
+    inline-size: 10px;
+    block-size: 10px;
+    rotate: 45deg;
+    background: inherit;
+    border-inline-end: 1px solid rgb(var(--grey-rgb) / 0.2);
+    border-block-end: 1px solid rgb(var(--grey-rgb) / 0.2);
+  }
+  .pm-guide-avatar {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    padding: 4px;
+    background: var(--brand-paper);
+    box-shadow: inset 0 0 0 1px rgb(var(--grey-rgb) / 0.18);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pm-guide {
+      transition: none;
+    }
+  }
+
+  /* ── Launchpad (§11.3) ── */
+  .pm-lp-tile {
+    display: block;
+    inline-size: 56px;
+    block-size: 56px;
+  }
+  .pm-lp-tile > .os-tile {
+    color: color-mix(in oklab, var(--foreground) 80%, transparent);
+  }
+
+  /* ── Catalog: a dock demo that stays in the flow ── */
+  .os-dock.pm-dock-demo {
+    position: relative;
+    inset: auto;
+    z-index: auto;
+    margin-inline: auto;
+    max-inline-size: 100%;
+    animation: none;
+    translate: none;
+  }
+  /* opaque: the real dock and menu bar stay the page's only blurred surfaces */
+  .os-dock.pm-dock-demo .os-dock-list::before {
+    background: var(--card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
