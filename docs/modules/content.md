@@ -34,17 +34,40 @@ public/fonts/og/*.ttf                static TTF instances for OG images (OFL fon
 
 One `posts` table; `type` decides the URL (`postPath()` in `src/lib/content.ts`):
 
-| type                      | URL                                         | Notes                                                      |
-| ------------------------- | ------------------------------------------- | ---------------------------------------------------------- |
-| `article`, `vlog`, `note` | `/blog/<slug>`                              | one URL namespace — slugs unique across the three types    |
-| `work`                    | `/work/<slug>`                              | `meta`: client, year, role, stack, links, metrics, gallery |
-| `tutorial`                | `/learn/<series>/<slug>` or `/learn/<slug>` | lesson of a course (`series`) or standalone                |
-| `service`                 | `/services/<slug>`                          | `meta.icon` (lucide name), `meta.faq` → FAQPage            |
-| `page`                    | `/about` (slug `about`)                     | about page body + profile settings                         |
+| type                      | URL                                         | Notes                                                         |
+| ------------------------- | ------------------------------------------- | ------------------------------------------------------------- |
+| `article`, `vlog`, `note` | `/blog/<slug>`                              | one URL namespace — slugs unique across the three types       |
+| `work`                    | `/work/<slug>`                              | `meta`: client, year, role, stack, links, metrics, gallery    |
+| `tutorial`                | `/learn/<series>/<slug>` or `/learn/<slug>` | lesson of a course (`series`) or standalone                   |
+| `service`                 | `/services/<slug>`                          | `meta.icon` (lucide name), `meta.brand`, `meta.faq` → FAQPage |
+| `page`                    | `/about` (slug `about`)                     | about page body + profile settings                            |
 
 `/learn/<slug>` resolves to a **course landing** when a published series has that slug,
 otherwise to a **standalone tutorial**. Slugs keep Persian letters (`slugify`); URLs are
 percent-encoded in links/canonicals and decoded in route params.
+
+### Services and brands
+
+Every service belongs to a Good In brand (see [../brand.md](../brand.md)): `meta.brand` is one
+of the registry ids (`team`, `studio`, `code`), validated by
+`z.preprocess(emptyToUndefined, z.enum(brandIds).optional())`. Readers use `brandOf(meta)`, so a
+missing or invalid brand falls back to `team`. In the editor the "Good In brand" select sits next
+to the icon select; "None" sends `""`, which clears it.
+
+**Sync across locales** (`content/service.ts`, so the server action, REST and MCP all get it):
+the brand is shared by a service's `translationKey` siblings. From the parsed `meta`:
+
+- **set** (`meta.brand` defined) → `json_set(meta, '$.brand', …)` on every sibling service;
+- **cleared** (`"brand" in meta`, value `undefined` — the editor sent `""`) → `json_remove`;
+- **absent** (no `brand` key, or no `meta`) → no sync.
+
+It runs in the same transaction as `createPost`/`updatePost`, last write wins, and never touches
+a non-service post that shares the key. `createTranslation` copies `meta`, so a new translation
+inherits the brand. Seed mapping: web, mobile, AI → `code`; consulting → `team`; the demo
+`product-design` service → `studio`. Tested in `content/service.test.ts`.
+
+`updatePostInput` is a true partial: fields that are absent stay as they are (zod 4 applies
+`.default()` inside `.partial()`, so the defaults of `postInput` are removed for updates).
 
 Translations share `translationKey`. The header language menu (icon button + dropdown, next to
 the theme toggle) and `hreflang` alternates point to
@@ -66,6 +89,8 @@ so scheduled posts appear on time without a cron job.
   the cached functions in `queries.ts`.
 - `queries.ts`: `'use cache'` + `cacheTag("content")` + `cacheLife("hours")` (or shorter, see
   scheduling). `renderContent(md)` caches Markdown → HTML (Shiki) by content (`max`).
+- `getPublicProfile()` and `getPublicTimezone()` (studio time zone for the public and panel
+  clocks) are cached with the tags `content` + `settings`.
 - Invalidation: CMS actions call `updateTag("content")` (read-your-own-writes); tools and route
   handlers call `revalidateTag("content", "max")`. View counts are written without
   invalidation (lists may lag by the cache lifetime).

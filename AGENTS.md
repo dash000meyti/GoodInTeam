@@ -8,9 +8,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# Good Team — guide for AI agents
+# Good In Team — guide for AI agents
 
-Good Team is a **portfolio + publishing website** and a **private work OS** (time
+Good In Team («گودین تیم») is a **portfolio + publishing website** and a **private work OS** (time
 tracking, calendar, tasks, projects, clients, finance, contracts, password vault,
 docs) with a **client portal**, in one Next.js app backed by SQLite.
 
@@ -56,15 +56,23 @@ the `/data` volume) · pnpm.
 ```
 src/
   app/[locale]/            # root layout per locale (fa = default, RTL; en = LTR)
-    (site)/                # public website (header/footer)
+    (site)/                # public website (menu bar, .os-desktop wallpaper, framed boxes, dock)
     (auth)/login, setup    # sign-in + first-run owner setup
     panel/<module>/        # private panel (owner/admin/member) + client portal (client role)
     p/[token]              # public project status page
   app/api/                 # REST (/api/v1), MCP (/api/mcp), health
+  app/styles/              # CSS partials imported by globals.css, ONE OWNER EACH (docs/design-system.md):
+                           #   os-shell.css · frame.css · pixel.css (foundation), site-shell.css (site-shell),
+                           #   home.css (home), site-pages.css (site-pages), guide.css (assistant),
+                           #   panel-shell.css (panel-shell). Tokens stay in globals.css.
   components/ui/           # design-system primitives (shadcn structure) — reuse, don't fork
+  components/brand/        # pixel logo/mark/text/icons/avatar, brand registry (docs/brand.md)
+  components/shell/        # OS chrome shared by site + panel: MenuBarShell, Dock/DockLinks, Window,
+                           #   OsLights, OsClock, appearance toggles, guide-events, pure helpers
   components/shared/       # app-wide building blocks (DatePicker, SelectField, Markdown…)
   components/panel/        # panel chrome (sidebar nav-config, PageHeader, EmptyState, StatCard…)
-  components/site/         # public site components
+  components/site/         # public site components; frame.tsx (FrameSection/Grid/Cell), frame-plan.ts
+                           #   (packRows), stats-cells.tsx, cta-band.tsx
   i18n/                    # locales, messages/{fa,en}/<namespace>.ts, server/client helpers
   lib/                     # pure utils: format (dates/numbers), money, tz, markdown, zod-helpers
   server/
@@ -115,12 +123,35 @@ docs/                      # architecture, conventions, data model, design syste
 8. **Security:** every service checks the actor; clients only see what `projects.share*` flags
    allow. Vault secrets are encrypted in the browser — the server must never receive plaintext.
    Log important mutations with `logActivity()`.
-9. **UI:** compose from `components/ui` + `components/shared` + `components/panel`. Follow the
-   Minimals look (soft surfaces, `shadow-card`, `rounded-2xl` cards, `Badge` soft variants).
+9. **UI:** compose from `components/ui` + `components/shared` + `components/panel`. In the panel,
+   follow the Minimals look (soft surfaces, `shadow-card`, `rounded-2xl` cards, `Badge` soft
+   variants). **On the public site, sections are framed boxes instead**: `FrameSection` →
+   stacked `FrameGrid`s → `FrameCell`s (square boxes; only `Window`s are rounded; a
+   `tone="dots"` cell never holds text; every grid layout is proven hole-free with `packRows`
+   and completed with `FrameFiller`) — see docs/design-system.md "Frame".
    Every list needs an `EmptyState`; every page a `PageHeader`. When you add or change a
    component in `components/ui` / `components/shared`, update its example in the living catalog
    `/panel/design-system` (`panel/design-system/_components/sections/*`).
-10. **Keep docs in sync:** when you add a module/feature, update `docs/modules/<module>.md` and
+10. **OS shell rules** (Good In OS, `docs/design/os-redesign.md`):
+    - **Offsets** use the shell utilities `below-chrome` (sticky asides), `top-chrome` (sticky
+      bars), `above-dock`, `pb-dock`, `max-h-chrome` — never hard-coded `top-*`/`bottom-*` for
+      the chrome. JS reads `--chrome-top`/`--dock-space` (registered px) via
+      `shell/chrome-vars.ts`. Fragment offsets come only from `html { scroll-padding }`.
+    - **Contrast**: yellow is a fill, never text/icon/thin line on a light surface. Text uses
+      the `-ink` tokens (`text-primary-ink`, `text-success-ink`, `text-info-ink`,
+      `text-warning-ink`); the ESLint guard fails on `text-primary|success|info|warning`
+      outside `dark:`. Never `eslint-disable` it.
+    - **No blur** outside the menu bar and the dock (`backdrop-blur`/`glass` are banned
+      elsewhere; use 95% opaque surfaces). No endless main-thread animation.
+    - **Logos**: `LogoMark`/`Logo`/`PixelMark`/`PixelLogo` are sized only by `cell` (integer
+      px per cell) — never `size-*`/`w-*`/`h-*` on them.
+    - **Guide narration**: every public box gets `guide={{ key, say }}` (FrameSection) or
+      `{...guideAttrs(key, say)}`; special parts `spot` / `spotAttrs`. Lines live in the
+      server-only `guide` i18n namespace and must **paraphrase copy visible in that section**
+      (no new facts, no hidden text). Never ship the `guide` namespace to the site client.
+    - **New CSS** goes in your track's partial under `src/app/styles/` (`@layer components`,
+      never `:root {`/`.dark {`); the legacy site block in `globals.css` is frozen.
+11. **Keep docs in sync:** when you add a module/feature, update `docs/modules/<module>.md` and
     the relevant section of `docs/`. Expose new capabilities as tools in `tools.ts`.
 
 ## Adding a panel module (checklist)
