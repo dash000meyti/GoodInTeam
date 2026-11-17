@@ -40,7 +40,7 @@ export const vault: Record<keyof typeof fa, string> = {
   savedIt: "I have saved my recovery key somewhere safe.",
   createVault: "Create vault",
   vaultCreated: "Your vault is ready and unlocked.",
-  recoveryFileHeader: "Good Team password vault — recovery key",
+  recoveryFileHeader: "Good In Team password vault — recovery key",
   recoveryFileNote:
     "If you forget your master password, choose “Use recovery key” on the vault page and enter this key. Keep this file somewhere safe and never share it.",
   recoveryFileAccount: "Account",
@@ -245,7 +245,7 @@ export const vault: Record<keyof typeof fa, string> = {
     "The backup file is fully encrypted and opens only with the master password (or recovery key) valid when it was made.",
   exportEncrypted: "Download encrypted backup",
   importEncrypted: "Restore from backup",
-  importInvalid: "This file is not a Good Team vault backup.",
+  importInvalid: "This file is not a Good In Team vault backup.",
   importNeedsSecret:
     "This backup was made with a different key. Enter the master password or recovery key from when it was created.",
   backupSecret: "Backup master password or recovery key",

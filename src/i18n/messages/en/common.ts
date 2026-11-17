@@ -1,8 +1,8 @@
 import type { common as fa } from "../fa/common";
 
 export const common: Record<keyof typeof fa, string> = {
-  appName: "Good Team",
-  appTagline: "Designing and building digital products",
+  appName: "Good In Team",
+  appTagline: "A design & engineering team for digital products",
   save: "Save",
   saving: "Saving…",
   saved: "Saved",
@@ -95,4 +95,20 @@ export const common: Record<keyof typeof fa, string> = {
   chooseDate: "Choose a date",
   previousMonth: "Previous month",
   nextMonth: "Next month",
+
+  // ── OS shell (menu bar, dock, Spotlight, Control Center) ──
+  menuBar: "Menu bar",
+  dock: "Dock",
+  launchpad: "All apps",
+  more: "More",
+  spotlight: "Search the site",
+  spotlightPlaceholder: "What are you looking for?",
+  spotlightHint: "Press Enter to search posts",
+  quickLinks: "Quick links",
+  noMatches: "No matches",
+  controlCenter: "Control Center",
+  appearance: "Appearance",
+  reduceMotion: "Reduce motion",
+  studioTime: "Studio time",
+  opensNewTab: "(opens in a new tab)",
 };

@@ -2,7 +2,7 @@
 export const designSystem = {
   title: "سیستم طراحی",
   subtitle:
-    "کتابخانه‌ی زنده‌ی اجزای رابط کاربری گود تیم — برای شما و برای عامل‌های هوش مصنوعی که روی آن کار می‌کنند.",
+    "کتابخانه‌ی زنده‌ی اجزای رابط کاربری گودین تیم — برای شما و برای عامل‌های هوش مصنوعی که روی آن کار می‌کنند.",
   onThisPage: "در این صفحه",
   code: "کد",
   hideCode: "بستن کد",
@@ -41,8 +41,8 @@ export const designSystem = {
   fontFa: "وزیرمتن · فارسی",
   fontEn: "Public Sans · لاتین",
   fontMono: "JetBrains Mono · کد",
-  sampleFa: "گود تیم محصولات دیجیتال را با دقت و حوصله طراحی و توسعه می‌دهد.",
-  sampleEn: "Good Team designs and builds digital products with care.",
+  sampleFa: "گودین تیم محصولات دیجیتال را با دقت و حوصله طراحی و توسعه می‌دهد.",
+  sampleEn: "Good In Team designs and builds digital products with care.",
   sampleHeading: "پروژه‌ها را با خیال راحت تحویل دهید",
   sampleBody:
     "زمان، کارها، قراردادها و فاکتورها کنار هم؛ مشتری هم فقط همان چیزی را می‌بیند که باید ببیند.",
@@ -232,4 +232,10 @@ export const designSystem = {
   toastInfoMsg: "نسخه‌ی جدید پنل در دسترس است.",
   toastLoadingMsg: "در حال ساخت گزارش…",
   toastDoneMsg: "گزارش آماده است.",
+
+  // ── Brand + OS shell sections ──
+  sec_brand: "برند",
+  sec_osShell: "پوستهٔ سیستم‌عامل",
+  brandIntro: "لوگوی پیکسلی، خانوادهٔ برندها و قواعد رنگ.",
+  osShellIntro: "نوار منو، داک، پنجره‌ها و قاب‌ها.",
 } as const satisfies Record<string, string>;

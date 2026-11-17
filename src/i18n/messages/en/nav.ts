@@ -34,4 +34,12 @@ export const nav: Record<keyof typeof fa, string> = {
   apiTokens: "API tokens",
   designSystem: "Design system",
   portalHome: "My projects",
+
+  // ── Good In brand family (registry order: team, studio, code) ──
+  brandTeam: "Good In Team",
+  brandStudio: "Good In Studio",
+  brandCode: "Good In Code",
+  brands: "Brands",
+  brandMenu: "Good In menu",
+  goTo: "Go to",
 };

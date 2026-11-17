@@ -43,4 +43,18 @@ export const panel: Record<keyof typeof fa, string> = {
   collapseSidebar: "Collapse sidebar",
   expandSidebar: "Expand sidebar",
   mainNav: "Main menu",
+
+  // ── OS shell (menu bar, window, dock) ──
+  desktop: "Desktop",
+  closeWindow: "Close window",
+  zoomWindow: "Zoom window",
+  windowWide: "Full-width windows",
+  dockSize: "Dock size",
+  dockSmall: "Small",
+  dockMedium: "Medium",
+  dockLarge: "Large",
+  dockMagnify: "Magnification",
+  dockAutohide: "Automatically hide the dock",
+  guideTips: "Guide tips",
+  aboutModule: "About {module}",
 };

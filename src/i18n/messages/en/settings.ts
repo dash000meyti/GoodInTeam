@@ -2,7 +2,7 @@ import type { settings as fa } from "../fa/settings";
 
 export const settings: Record<keyof typeof fa, string> = {
   title: "Settings",
-  subtitle: "Manage your account, security, appearance and how Good Team is configured.",
+  subtitle: "Manage your account, security, appearance and how Good In Team is configured.",
   groupPersonal: "Personal",
   groupWorkspace: "Workspace",
   nav_account: "My account",
@@ -237,7 +237,7 @@ export const settings: Record<keyof typeof fa, string> = {
 
   // API & AI agents
   apiTitle: "API & AI agents",
-  apiSubtitle: "Connect Claude and your scripts to Good Team with a personal token.",
+  apiSubtitle: "Connect Claude and your scripts to Good In Team with a personal token.",
   connectTitle: "Connect in three steps",
   connectStep1: "Create a token — “Read only” is plenty to start.",
   connectStep2: "Run the connect command in your terminal.",
@@ -358,4 +358,9 @@ export const settings: Record<keyof typeof fa, string> = {
   error_owner_only: "Only an owner can manage owner accounts.",
   error_client_role: "Client portal accounts can't have a team role.",
   error_invalid_timezone: "That timezone isn't recognised.",
+
+  // ── Good In yellow preset + Desktop & Dock ──
+  preset_yellow: "Good In yellow",
+  desktopDock: "Desktop & Dock",
+  desktopDockHint: "Dock and window behaviour on large screens.",
 };

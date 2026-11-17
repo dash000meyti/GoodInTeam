@@ -3,7 +3,7 @@ import type { designSystem as fa } from "../fa/designSystem";
 export const designSystem: Record<keyof typeof fa, string> = {
   title: "Design system",
   subtitle:
-    "The living library of Good Team's UI building blocks — for you and for the AI agents that work on it.",
+    "The living library of Good In Team's UI building blocks — for you and for the AI agents that work on it.",
   onThisPage: "On this page",
   code: "Code",
   hideCode: "Hide code",
@@ -42,8 +42,8 @@ export const designSystem: Record<keyof typeof fa, string> = {
   fontFa: "Vazirmatn · Persian",
   fontEn: "Public Sans · Latin",
   fontMono: "JetBrains Mono · code",
-  sampleFa: "گود تیم محصولات دیجیتال را با دقت و حوصله طراحی و توسعه می‌دهد.",
-  sampleEn: "Good Team designs and builds digital products with care.",
+  sampleFa: "گودین تیم محصولات دیجیتال را با دقت و حوصله طراحی و توسعه می‌دهد.",
+  sampleEn: "Good In Team designs and builds digital products with care.",
   sampleHeading: "Ship projects with peace of mind",
   sampleBody:
     "Time, tasks, contracts and invoices side by side — and clients only see what they should.",
@@ -234,4 +234,10 @@ export const designSystem: Record<keyof typeof fa, string> = {
   toastInfoMsg: "A new version of the panel is available.",
   toastLoadingMsg: "Building your report…",
   toastDoneMsg: "Your report is ready.",
+
+  // ── Brand + OS shell sections ──
+  sec_brand: "Brand",
+  sec_osShell: "OS shell",
+  brandIntro: "The pixel logo, the brand family and colour rules.",
+  osShellIntro: "Menu bar, dock, windows and frames.",
 };

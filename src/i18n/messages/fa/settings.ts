@@ -1,7 +1,7 @@
 /** Settings area: account, security, site profile, business, team, API, appearance, data. */
 export const settings = {
   title: "تنظیمات",
-  subtitle: "حساب، امنیت، ظاهر و پیکربندی گود تیم را از اینجا مدیریت کنید.",
+  subtitle: "حساب، امنیت، ظاهر و پیکربندی گودین تیم را از اینجا مدیریت کنید.",
   groupPersonal: "حساب شخصی",
   groupWorkspace: "فضای کار",
   nav_account: "حساب من",
@@ -236,7 +236,7 @@ export const settings = {
 
   // ─── API & AI agents ─────────────────────────────────────────────────────
   apiTitle: "API و عامل‌های هوش مصنوعی",
-  apiSubtitle: "Claude و اسکریپت‌هایتان را با یک توکن شخصی به گود تیم وصل کنید.",
+  apiSubtitle: "Claude و اسکریپت‌هایتان را با یک توکن شخصی به گودین تیم وصل کنید.",
   connectTitle: "اتصال در سه قدم",
   connectStep1: "یک توکن بسازید — «فقط خواندن» برای شروع کافی است.",
   connectStep2: "دستور اتصال را در ترمینال اجرا کنید.",
@@ -360,4 +360,9 @@ export const settings = {
   error_owner_only: "فقط مالک می‌تواند حساب‌های مالک را مدیریت کند.",
   error_client_role: "حساب‌های پرتال مشتری نقش تیمی نمی‌گیرند.",
   error_invalid_timezone: "این منطقه‌ی زمانی شناخته‌شده نیست.",
+
+  // ── Good In yellow preset + Desktop & Dock ──
+  preset_yellow: "زرد گودین",
+  desktopDock: "میز کار و داک",
+  desktopDockHint: "اندازه و رفتار داک و پنجره‌ها در صفحه‌های بزرگ.",
 } as const satisfies Record<string, string>;

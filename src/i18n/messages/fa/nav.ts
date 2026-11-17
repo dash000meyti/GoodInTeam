@@ -34,4 +34,12 @@ export const nav = {
   apiTokens: "توکن‌های API",
   designSystem: "سیستم طراحی",
   portalHome: "پروژه‌های من",
+
+  // ── Good In brand family (registry order: team, studio, code) ──
+  brandTeam: "گودین تیم",
+  brandStudio: "گودین استودیو",
+  brandCode: "گودین کد",
+  brands: "برندها",
+  brandMenu: "منوی گودین",
+  goTo: "رفتن به",
 } as const satisfies Record<string, string>;

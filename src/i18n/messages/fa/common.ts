@@ -1,6 +1,6 @@
 export const common = {
-  appName: "گود تیم",
-  appTagline: "طراحی و توسعه محصولات دیجیتال",
+  appName: "گودین تیم",
+  appTagline: "تیم طراحی و مهندسی محصولات دیجیتال",
   save: "ذخیره",
   saving: "در حال ذخیره…",
   saved: "ذخیره شد",
@@ -93,4 +93,20 @@ export const common = {
   chooseDate: "انتخاب تاریخ",
   previousMonth: "ماه قبل",
   nextMonth: "ماه بعد",
+
+  // ── OS shell (menu bar, dock, Spotlight, Control Center) ──
+  menuBar: "نوار منو",
+  dock: "داک",
+  launchpad: "همهٔ برنامه‌ها",
+  more: "بیشتر",
+  spotlight: "جستجو در سایت",
+  spotlightPlaceholder: "دنبال چه می‌گردی؟",
+  spotlightHint: "برای جستجو در نوشته‌ها Enter را بزن",
+  quickLinks: "میان‌برها",
+  noMatches: "چیزی پیدا نشد",
+  controlCenter: "مرکز کنترل",
+  appearance: "ظاهر",
+  reduceMotion: "کاهش حرکت",
+  studioTime: "ساعت استودیو",
+  opensNewTab: "(در زبانهٔ تازه باز می‌شود)",
 } as const satisfies Record<string, string>;

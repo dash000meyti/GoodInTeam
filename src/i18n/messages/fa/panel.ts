@@ -42,4 +42,18 @@ export const panel = {
   collapseSidebar: "جمع کردن نوار کناری",
   expandSidebar: "باز کردن نوار کناری",
   mainNav: "منوی اصلی",
+
+  // ── OS shell (menu bar, window, dock) ──
+  desktop: "میز کار",
+  closeWindow: "بستن پنجره",
+  zoomWindow: "بزرگ‌نمایی پنجره",
+  windowWide: "پنجرهٔ تمام‌عرض",
+  dockSize: "اندازهٔ داک",
+  dockSmall: "کوچک",
+  dockMedium: "متوسط",
+  dockLarge: "بزرگ",
+  dockMagnify: "بزرگ‌نمایی آیکون‌ها",
+  dockAutohide: "پنهان‌شدن خودکار داک",
+  guideTips: "نکته‌های راهنما",
+  aboutModule: "دربارهٔ {module}",
 } as const satisfies Record<string, string>;

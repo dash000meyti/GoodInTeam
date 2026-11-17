@@ -1,6 +1,6 @@
 /** Public website copy (chrome, home, section pages). Content itself comes from the CMS. */
 export const site = {
-  metaTitle: "گود تیم — طراحی و توسعه محصولات دیجیتال",
+  metaTitle: "گودین تیم — طراحی و مهندسی محصولات دیجیتال",
   metaDescription:
     "نمونه‌کارها، مقالات، آموزش‌ها و تجربه‌های واقعی از ساخت محصولات وب، اپلیکیشن و سیستم‌های هوشمند.",
 
@@ -297,4 +297,18 @@ export const site = {
   // ── 404 ──
   notFoundEyebrow: "خطای ۴۰۴",
   notFoundSuggestions: "شاید این‌ها کمک کنند:",
+
+  // ── Good In brand family + OS shell ──
+  brandsEyebrow: "خانوادهٔ گودین",
+  brandsTitle: "یک تیم، چند کار خوب",
+  brandsSubtitle: "«گودین» ثابت است؛ کلمهٔ دوم می‌گوید در چه کاری خوبیم.",
+  brandTeamTagline: "محصول کامل، از ایده تا انتشار",
+  brandStudioTagline: "طراحی رابط، برند و تجربه",
+  brandCodeTagline: "مهندسی وب، موبایل و عامل‌های هوشمند",
+  brandExplore: "دیدن {brand}",
+  brandEmpty: "خدمت عمومی این برند هنوز این‌جا نیست.",
+  brandAsk: "دربارهٔ {brand} بپرس",
+  viewAllCell: "همه را ببین",
+  availableShort: "پذیرای پروژه",
+  unavailableShort: "ظرفیت تکمیل",
 } as const satisfies Record<string, string>;

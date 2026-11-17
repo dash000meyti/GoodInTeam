@@ -1,7 +1,7 @@
 import type { site as fa } from "../fa/site";
 
 export const site: Record<keyof typeof fa, string> = {
-  metaTitle: "Good Team — Designing and building digital products",
+  metaTitle: "Good In Team — Designing and building digital products",
   metaDescription:
     "Portfolio, articles, tutorials and real-world lessons from building web products, apps and intelligent systems.",
 
@@ -279,4 +279,18 @@ export const site: Record<keyof typeof fa, string> = {
 
   notFoundEyebrow: "Error 404",
   notFoundSuggestions: "These might help:",
+
+  // ── Good In brand family + OS shell ──
+  brandsEyebrow: "The Good In family",
+  brandsTitle: "One team, a few good things",
+  brandsSubtitle: '"Good In" stays; the second word says what we\'re good in.',
+  brandTeamTagline: "Whole products, from idea to launch",
+  brandStudioTagline: "Interface, brand and experience design",
+  brandCodeTagline: "Web, mobile and AI-agent engineering",
+  brandExplore: "Explore {brand}",
+  brandEmpty: "No public services for this brand yet.",
+  brandAsk: "Ask about {brand}",
+  viewAllCell: "See everything",
+  availableShort: "Available",
+  unavailableShort: "Booked",
 };
