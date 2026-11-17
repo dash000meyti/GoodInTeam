@@ -59,7 +59,8 @@ export function LessonList({
                 compact
                   ? "px-2.5 py-2 text-sm hover:bg-muted"
                   : "border border-border bg-card p-4 hover:border-primary/40 sm:p-5",
-                current && (compact ? "bg-primary/10 font-bold text-primary-ink" : "border-primary/50"),
+                current &&
+                  (compact ? "bg-primary/10 font-bold text-primary-ink" : "border-primary/50"),
               )}
             >
               <span

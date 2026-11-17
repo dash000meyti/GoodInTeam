@@ -18,6 +18,7 @@ import {
   listTestimonials,
   getSeriesWithLessons,
 } from "@/server/modules/content/queries";
+import { guideAttrs } from "@/components/shell/guide-events";
 import { PostCard, TestimonialCard, WorkCard } from "../cards";
 import { ServiceIcon } from "../service-icon";
 import { CardSkeleton } from "../skeletons";
@@ -46,7 +47,12 @@ export async function TrustMarquee({ locale, t }: { locale: Locale; t: Messages 
   if (names.length < 2) return <div className="h-px" />;
   const row = [...names, ...names, ...names].slice(0, Math.max(8, names.length));
   return (
-    <section aria-label={t.site.trustedBy} className="border-y border-dashed py-8">
+    <section
+      id="trust"
+      aria-label={t.site.trustedBy}
+      className="border-y border-dashed py-8"
+      {...guideAttrs("home_trust", t.guide.home_trust)}
+    >
       <Container>
         <p className="mb-6 text-center text-sm font-semibold text-muted-foreground">
           {t.site.trustedBy}
@@ -303,7 +309,11 @@ export async function Testimonials({ locale, t }: { locale: Locale; t: Messages 
   const items = await listTestimonials(locale, 6);
   if (!items.length) return null;
   return (
-    <section className="py-20 sm:py-28">
+    <section
+      id="kind-words"
+      className="py-20 sm:py-28"
+      {...guideAttrs("home_testimonials", t.guide.home_testimonials)}
+    >
       <Container>
         <SectionHeading
           eyebrow={t.site.testimonialsEyebrow}
@@ -336,60 +346,5 @@ export const TestimonialsSkeleton = ({ t }: { t: Messages }) => (
     </Container>
   </section>
 );
-
-// ─── CTA band ──────────────────────────────────────────────────────────────
-
-export function CtaBand({
-  locale,
-  t,
-  className,
-}: {
-  locale: Locale;
-  t: Messages;
-  className?: string;
-}) {
-  return (
-    <section className={cn("py-10", className)}>
-      <Container>
-        <div className="relative isolate overflow-hidden rounded-[2rem] bg-grey-900 px-6 py-16 text-center text-white sm:px-16 sm:py-20 dark:border dark:border-border dark:bg-card">
-          <div aria-hidden className="bg-grid mask-radial absolute inset-0 -z-10 opacity-40" />
-          <div
-            aria-hidden
-            className="gt-glow start-1/2 -bottom-32 -z-10 h-72 w-[40rem] -translate-x-1/2 bg-primary/50 rtl:translate-x-1/2"
-          />
-          <div aria-hidden className="gt-glow -end-20 -top-24 -z-10 size-72 bg-violet/30" />
-          <h2 className="mx-auto max-w-2xl text-3xl leading-tight font-black tracking-tight text-balance sm:text-5xl">
-            {t.site.ctaTitle}
-          </h2>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-8 text-grey-400 sm:text-lg">
-            {t.site.ctaSubtitle}
-          </p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href={localePath(locale, "/contact")}
-              className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-hover"
-            >
-              {t.site.ctaButton}
-              <ArrowUpLeftIcon className="size-4 ltr:rotate-90" />
-            </Link>
-            <Link
-              href={localePath(locale, "/services")}
-              className="inline-flex h-12 items-center rounded-full border border-white/20 px-7 text-[15px] font-bold text-white transition-colors hover:bg-white/10"
-            >
-              {t.site.ctaSecondary}
-            </Link>
-          </div>
-          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-grey-400">
-            {[t.site.heroProof1, t.site.heroProof2, t.site.heroProof3].map((p) => (
-              <li key={p} className="inline-flex items-center gap-1.5">
-                <CheckIcon className="size-4 text-primary-light" /> {p}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </Container>
-    </section>
-  );
-}
 
 export { ArrowLink };

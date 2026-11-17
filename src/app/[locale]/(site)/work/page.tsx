@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { BriefcaseIcon } from "lucide-react";
 import { WorkCard } from "@/components/site/cards";
-import { CtaBand } from "@/components/site/home/sections";
+import { CtaBand } from "@/components/site/cta-band";
 import { Breadcrumbs } from "@/components/site/nav-bits";
 import { homeCrumb, sp, withQuery } from "@/components/site/page-utils";
 import { pageMetadata } from "@/components/site/seo";

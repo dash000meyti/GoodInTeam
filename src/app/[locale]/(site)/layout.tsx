@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { AlternatesProvider } from "@/components/site/alternates";
+import { GuideMount } from "@/components/site/guide/guide-mount";
 import { JsonLd, organizationLd, personLd, websiteLd, type Thing } from "@/components/site/json-ld";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
@@ -38,10 +39,16 @@ export default async function SiteLayout({ children }: LayoutProps<"/[locale]">)
           {t.common.skipToContent}
         </a>
         <SiteHeader locale={locale} t={t} />
-        <main id="main" className="min-h-[60dvh] overflow-x-clip">
-          {children}
-        </main>
-        <SiteFooter locale={locale} t={t} />
+        {/* Desktop wallpaper + guide layer container: display:flow-root, never transformed (§6.2). */}
+        <div className="os-desktop">
+          <main id="main" className="min-h-[60dvh] overflow-x-clip">
+            {children}
+          </main>
+          <SiteFooter locale={locale} t={t} />
+          <Suspense fallback={null}>
+            <GuideMount locale={locale} />
+          </Suspense>
+        </div>
         <Suspense fallback={null}>
           <SiteJsonLd locale={locale} />
         </Suspense>

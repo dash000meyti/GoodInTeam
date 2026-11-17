@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { ArrowUpLeftIcon, CheckIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Faq, generalFaq } from "@/components/site/faq";
-import { CtaBand } from "@/components/site/home/sections";
+import { CtaBand } from "@/components/site/cta-band";
 import { ids, JsonLd } from "@/components/site/json-ld";
 import { Breadcrumbs } from "@/components/site/nav-bits";
 import { homeCrumb } from "@/components/site/page-utils";
@@ -164,7 +164,7 @@ export default async function ServicesPage() {
       <Container className="max-w-4xl">
         <Faq items={generalFaq(t)} title={s.faqTitle} />
       </Container>
-      <CtaBand locale={locale} t={t} className="mt-16" />
+      <CtaBand locale={locale} t={t} />
     </>
   );
 }

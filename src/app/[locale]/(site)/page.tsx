@@ -4,10 +4,11 @@ import Link from "next/link";
 import { ArrowUpLeftIcon, CheckIcon } from "lucide-react";
 import { HeroDiagram } from "@/components/site/home/hero-diagram";
 import { HowWeWork } from "@/components/site/home/how-we-work";
+import { guideAttrs } from "@/components/shell/guide-events";
+import { CtaBand } from "@/components/site/cta-band";
 import {
   AvailabilityBadge,
   AvailabilityBadgeSkeleton,
-  CtaBand,
   FeaturedWork,
   FeaturedWorkSkeleton,
   LatestPosts,
@@ -57,7 +58,11 @@ export default async function HomePage() {
   return (
     <>
       {/* ── Hero ── */}
-      <section className="relative isolate">
+      <section
+        id="top"
+        className="relative isolate"
+        {...guideAttrs("home_hero", t.guide.home_hero)}
+      >
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
@@ -113,7 +118,7 @@ export default async function HomePage() {
       </Suspense>
 
       {/* ── Featured work ── */}
-      <section className="py-20 sm:py-28">
+      <section id="work" className="py-20 sm:py-28" {...guideAttrs("home_work", t.guide.home_work)}>
         <Container>
           <SectionHeading
             eyebrow={s.workEyebrow}
@@ -128,7 +133,11 @@ export default async function HomePage() {
       </section>
 
       {/* ── Services ── */}
-      <section className="relative py-20 sm:py-28">
+      <section
+        id="services"
+        className="relative py-20 sm:py-28"
+        {...guideAttrs("home_services", t.guide.home_services)}
+      >
         <div
           aria-hidden
           className="mask-fade-y absolute inset-x-0 top-0 -z-10 h-full bg-muted/40"
@@ -147,7 +156,11 @@ export default async function HomePage() {
       </section>
 
       {/* ── How we work (transparency) ── */}
-      <section className="py-20 sm:py-28">
+      <section
+        id="process"
+        className="py-20 sm:py-28"
+        {...guideAttrs("home_process", t.guide.home_process)}
+      >
         <Container>
           <SectionHeading
             eyebrow={s.processEyebrow}
@@ -160,7 +173,11 @@ export default async function HomePage() {
       </section>
 
       {/* ── Stats ── */}
-      <section aria-label={s.statsEyebrow}>
+      <section
+        id="stats"
+        aria-label={s.statsEyebrow}
+        {...guideAttrs("home_stats", t.guide.home_stats)}
+      >
         <Container>
           <div className="relative overflow-hidden rounded-3xl border border-border bg-card">
             <div aria-hidden className="bg-dots absolute inset-0 opacity-60" />
@@ -174,7 +191,11 @@ export default async function HomePage() {
       </section>
 
       {/* ── Latest ── */}
-      <section className="py-20 sm:py-28">
+      <section
+        id="latest"
+        className="py-20 sm:py-28"
+        {...guideAttrs("home_latest", t.guide.home_latest)}
+      >
         <Container>
           <SectionHeading
             eyebrow={s.latestEyebrow}
@@ -193,7 +214,7 @@ export default async function HomePage() {
         <Testimonials locale={locale} t={t} />
       </Suspense>
 
-      <CtaBand locale={locale} t={t} />
+      <CtaBand locale={locale} t={t} guide="home_cta" />
     </>
   );
 }

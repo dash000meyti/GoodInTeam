@@ -7,7 +7,7 @@ import { CodeXmlIcon, ExternalLinkIcon } from "lucide-react";
 import { SetAlternates } from "@/components/site/alternates";
 import { TestimonialCard } from "@/components/site/cards";
 import { Cover } from "@/components/site/cover";
-import { CtaBand } from "@/components/site/home/sections";
+import { CtaBand } from "@/components/site/cta-band";
 import { articleLd, JsonLd } from "@/components/site/json-ld";
 import { Breadcrumbs, PrevNext } from "@/components/site/nav-bits";
 import { decodeParam, homeCrumb, notFoundMetadata } from "@/components/site/page-utils";
@@ -293,7 +293,7 @@ export default async function WorkDetailPage({ params }: PageProps<"/[locale]/wo
           <WorkDetail locale={locale} t={t} slug={decodeParam(slug)} />
         ))}
       </Suspense>
-      <CtaBand locale={locale} t={t} className="mt-10" />
+      <CtaBand locale={locale} t={t} />
     </>
   );
 }

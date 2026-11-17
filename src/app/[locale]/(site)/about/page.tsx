@@ -4,7 +4,9 @@ import { connection } from "next/server";
 import { EyeIcon, GaugeIcon, GraduationCapIcon, MapPinIcon, ShieldCheckIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SetAlternates } from "@/components/site/alternates";
-import { CtaBand, StatsStrip, StatsStripSkeleton } from "@/components/site/home/sections";
+import { CtaBand } from "@/components/site/cta-band";
+import { FrameSection } from "@/components/site/frame";
+import { StatsCells, StatsCellsSkeleton } from "@/components/site/stats-cells";
 import { ids, JsonLd } from "@/components/site/json-ld";
 import { Breadcrumbs } from "@/components/site/nav-bits";
 import { homeCrumb } from "@/components/site/page-utils";
@@ -183,19 +185,16 @@ export default async function AboutPage() {
         </Container>
       </section>
 
-      <section aria-label={s.statsEyebrow} className="py-6">
-        <Container>
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-card">
-            <div aria-hidden className="bg-dots absolute inset-0 opacity-60" />
-            <div className="relative">
-              <Suspense fallback={<StatsStripSkeleton />}>
-                <StatsStrip locale={locale} t={t} />
-              </Suspense>
-            </div>
-          </div>
-        </Container>
-      </section>
-      <CtaBand locale={locale} t={t} className="mt-16" />
+      <FrameSection
+        id="stats"
+        ariaLabel={s.statsEyebrow}
+        guide={{ key: "about_stats", say: t.guide.about_stats }}
+      >
+        <Suspense fallback={<StatsCellsSkeleton />}>
+          <StatsCells locale={locale} t={t} />
+        </Suspense>
+      </FrameSection>
+      <CtaBand locale={locale} t={t} />
     </>
   );
 }

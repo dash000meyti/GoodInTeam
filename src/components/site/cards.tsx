@@ -24,6 +24,14 @@ import { fmtDate, fmtNum } from "./ui";
 
 const typeIcon = { vlog: PlayIcon, note: NotebookPenIcon, tutorial: BookOpenIcon } as const;
 
+/**
+ * `card` (default): a standalone rounded card. `cell`: the content of a frame
+ * cell (spec §6, D22) — no radius, shadow, lift or background of its own; the
+ * consumer wraps it in a `FrameCell` (span, hover, spot). Covers keep 16/10
+ * with an 8px radius; metric chips are yellow with ink text.
+ */
+export type CardVariant = "card" | "cell";
+
 export function TypeBadge({
   type,
   t,
@@ -69,6 +77,7 @@ export function PostCard({
   priority,
   className,
   headingLevel: H = "h3",
+  variant = "card",
 }: {
   post: PostCardData;
   locale: Locale;
@@ -76,14 +85,19 @@ export function PostCard({
   priority?: boolean;
   className?: string;
   headingLevel?: "h2" | "h3";
+  variant?: CardVariant;
 }) {
   if (post.type === "note")
-    return <NoteCard post={post} locale={locale} t={t} className={className} />;
+    return <NoteCard post={post} locale={locale} t={t} className={className} variant={variant} />;
   const href = postHref(locale, post);
+  const cell = variant === "cell";
   return (
     <article
       className={cn(
-        "gt-lift group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-card dark:border dark:border-border",
+        "group relative flex flex-col",
+        cell
+          ? "h-full gap-4"
+          : "gt-lift overflow-hidden rounded-2xl bg-card shadow-card dark:border dark:border-border",
         className,
       )}
     >
@@ -94,14 +108,15 @@ export function PostCard({
         kind={post.type}
         priority={priority}
         sizes="(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw"
+        className={cell ? "rounded-[8px]" : undefined}
         imgClassName="transition-transform duration-500 group-hover:scale-[1.03]"
       />
       {post.type === "vlog" && (
-        <span className="absolute start-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur">
+        <span className="absolute start-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-black/70 text-white">
           <PlayIcon className="size-4 fill-current" />
         </span>
       )}
-      <div className="flex flex-1 flex-col gap-3 p-5">
+      <div className={cn("flex flex-1 flex-col gap-3", !cell && "p-5")}>
         <div className="flex items-center gap-2">
           <TypeBadge type={post.type} t={t} />
           {post.seriesTitle && (
@@ -130,16 +145,21 @@ export function NoteCard({
   locale,
   t,
   className,
+  variant = "card",
 }: {
   post: PostCardData;
   locale: Locale;
   t: Messages;
   className?: string;
+  variant?: CardVariant;
 }) {
   return (
     <article
       className={cn(
-        "gt-lift group relative flex flex-col gap-3 rounded-2xl border border-dashed border-border bg-muted/40 p-5",
+        "group relative flex flex-col gap-3",
+        variant === "cell"
+          ? "h-full"
+          : "gt-lift rounded-2xl border border-dashed border-border bg-muted/40 p-5",
         className,
       )}
     >
@@ -169,6 +189,7 @@ export function WorkCard({
   priority,
   size = "md",
   className,
+  variant = "card",
 }: {
   post: PostCardData;
   locale: Locale;
@@ -176,24 +197,30 @@ export function WorkCard({
   priority?: boolean;
   size?: "md" | "lg";
   className?: string;
+  variant?: CardVariant;
 }) {
   const metric = post.meta.metrics?.[0];
+  const cell = variant === "cell";
+  const tall = size === "lg" && !cell;
   return (
     <article
       className={cn(
-        "gt-lift group relative flex flex-col overflow-hidden rounded-3xl bg-card shadow-card dark:border dark:border-border",
+        "group relative flex flex-col",
+        cell
+          ? "h-full gap-4"
+          : "gt-lift overflow-hidden rounded-3xl bg-card shadow-card dark:border dark:border-border",
         className,
       )}
     >
-      <div className={cn("relative", size === "lg" && "flex flex-col lg:flex-1")}>
+      <div className={cn("relative", tall && "flex flex-col lg:flex-1")}>
         <Cover
           src={post.coverUrl}
           alt={post.coverAlt ?? post.title}
           seed={post.slug}
           kind="work"
           priority={priority}
-          className={size === "lg" ? "lg:min-h-80 lg:flex-1" : undefined}
-          aspect={size === "lg" ? "aspect-[16/10] lg:aspect-auto" : "aspect-[16/10]"}
+          className={cell ? "rounded-[8px]" : tall ? "lg:min-h-80 lg:flex-1" : undefined}
+          aspect={tall ? "aspect-[16/10] lg:aspect-auto" : "aspect-[16/10]"}
           sizes={
             size === "lg"
               ? "(min-width: 1024px) 720px, 100vw"
@@ -201,16 +228,22 @@ export function WorkCard({
           }
           imgClassName="transition-transform duration-700 group-hover:scale-[1.04]"
         />
-        {metric && (
-          <div className="absolute end-4 bottom-4 rounded-2xl bg-background/85 px-4 py-2.5 shadow-dropdown backdrop-blur-md">
-            <p className="text-xl leading-none font-black tracking-tight text-primary-ink">
-              {metric.value}
-            </p>
-            <p className="mt-1 text-[11px] font-semibold text-muted-foreground">{metric.label}</p>
-          </div>
-        )}
+        {metric &&
+          (cell ? (
+            <div className="absolute end-3 bottom-3 rounded-[6px] bg-primary px-3 py-2 text-primary-foreground">
+              <p className="text-lg leading-none font-black tracking-tight">{metric.value}</p>
+              <p className="mt-1 text-[11px] font-semibold">{metric.label}</p>
+            </div>
+          ) : (
+            <div className="absolute end-4 bottom-4 rounded-2xl bg-background/95 px-4 py-2.5 shadow-dropdown">
+              <p className="text-xl leading-none font-black tracking-tight text-primary-ink">
+                {metric.value}
+              </p>
+              <p className="mt-1 text-[11px] font-semibold text-muted-foreground">{metric.label}</p>
+            </div>
+          ))}
       </div>
-      <div className={cn("flex flex-col gap-3 p-6", size !== "lg" && "flex-1")}>
+      <div className={cn("flex flex-col gap-3", !cell && "p-6", size !== "lg" && "flex-1")}>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-muted-foreground">
           {post.meta.client && <span>{post.meta.client}</span>}
           {post.meta.client && post.meta.year && (
@@ -255,16 +288,21 @@ export function SeriesCard({
   locale,
   t,
   className,
+  variant = "card",
 }: {
   s: SeriesCardData;
   locale: Locale;
   t: Messages;
   className?: string;
+  variant?: CardVariant;
 }) {
   return (
     <article
       className={cn(
-        "gt-lift gt-ring group relative flex flex-col overflow-hidden rounded-3xl bg-card p-6 shadow-card",
+        "group relative flex flex-col",
+        variant === "cell"
+          ? "h-full"
+          : "gt-lift gt-ring overflow-hidden rounded-3xl bg-card p-6 shadow-card",
         className,
       )}
     >
@@ -307,6 +345,7 @@ export function SeriesCard({
 export function TestimonialCard({
   item,
   className,
+  variant = "card",
 }: {
   item: {
     author: string;
@@ -318,13 +357,16 @@ export function TestimonialCard({
     locale?: string;
   };
   className?: string;
+  variant?: CardVariant;
 }) {
+  const cell = variant === "cell";
   return (
     <figure
       lang={item.locale}
       dir={item.locale === "en" ? "ltr" : item.locale === "fa" ? "rtl" : undefined}
       className={cn(
-        "relative flex h-full flex-col gap-5 rounded-3xl bg-card p-7 shadow-card dark:border dark:border-border",
+        "relative flex h-full flex-col gap-5",
+        !cell && "rounded-3xl bg-card p-7 shadow-card dark:border dark:border-border",
         className,
       )}
     >
@@ -355,8 +397,13 @@ export function TestimonialCard({
             className="size-11 rounded-full object-cover"
             loading="lazy"
           />
+        ) : cell ? (
+          // framed initial tile (logo L-frame motif)
+          <span className="flex size-11 items-center justify-center border border-frame-line bg-card text-sm font-bold text-foreground shadow-[-3px_-3px_0_0_var(--brand-frame)] rtl:shadow-[3px_-3px_0_0_var(--brand-frame)]">
+            {initials(item.author)}
+          </span>
         ) : (
-          <span className="flex size-11 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary-dark text-sm font-bold text-white">
+          <span className="flex size-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
             {initials(item.author)}
           </span>
         )}
