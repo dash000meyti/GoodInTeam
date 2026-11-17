@@ -139,8 +139,9 @@
   --primary-darker: #4d3800;
   --primary-foreground: #1c1c1e;
   --primary-rgb: 255 197 13;
-  /* Text-safe primary (5.75:1 on #f3f3f3) and the fill hover. */
-  --primary-ink: var(--primary-dark);
+  /* Text-safe primary (5.75:1 on #f3f3f3) and the fill hover. A preset whose
+     -dark misses 4.5:1 sets --preset-ink (orange). */
+  --primary-ink: var(--preset-ink, var(--primary-dark));
   --primary-hover: color-mix(in oklab, var(--primary) 86%, black);
 
   --background: #f3f3f3;
@@ -323,6 +324,8 @@
   --primary-darker: #793908;
   --primary-rgb: 253 169 45;
   --primary-foreground: #1c252e;
+  /* #b66816 is 4.22:1 on white; this keeps text ≥4.5:1 (5.58 on #fff, 5.03 on #f3f3f3) */
+  --preset-ink: #9e5510;
 }
 [data-preset="red"] {
   --primary-lighter: #ffe3d5;
@@ -341,7 +344,7 @@
  * `className={PRESET_SCOPE_CLASS}` together with `style={presetStyle(p)}`.
  */
 .preset-scope {
-  --primary-ink: var(--primary-dark);
+  --primary-ink: var(--preset-ink, var(--primary-dark));
   --primary-hover: color-mix(in oklab, var(--primary) 86%, black);
   --ring: var(--primary-ink);
   --sidebar-primary: var(--primary);
