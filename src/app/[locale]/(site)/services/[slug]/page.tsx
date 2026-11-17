@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -26,7 +26,7 @@ import {
   plainSpans,
   withQuery,
 } from "@/components/site/page-utils";
-import { absoluteUrl, pageMetadata, postAlternates } from "@/components/site/seo";
+import { absoluteUrl, pageMetadata, postAlternates, withDefaultImage } from "@/components/site/seo";
 import { ServiceIcon } from "@/components/site/service-icon";
 import { ArticleSkeleton } from "@/components/site/skeletons";
 import { pillClass, TitleCell, TitleRow } from "@/components/site/ui";
@@ -43,14 +43,15 @@ import {
   renderContent,
 } from "@/server/modules/content/queries";
 
-export async function generateMetadata({
-  params,
-}: PageProps<"/[locale]/services/[slug]">): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: PageProps<"/[locale]/services/[slug]">,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
   const locale = await getLocale();
   await connection();
   const post = await getPublishedPost(locale, ["service"], decodeParam((await params).slug));
   if (!post) return notFoundMetadata(locale);
-  return pageMetadata({
+  const meta = pageMetadata({
     locale,
     path: postPath(post),
     title: post.seoTitle || post.title,
@@ -59,6 +60,7 @@ export async function generateMetadata({
     image: post.coverUrl,
     markdownPath: `${postPath(post)}.md`,
   });
+  return withDefaultImage(meta, parent);
 }
 
 type FaqItem = { q: string; a: string };

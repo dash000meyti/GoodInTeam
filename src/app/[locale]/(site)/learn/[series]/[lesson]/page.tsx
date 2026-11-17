@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { LessonView } from "@/components/site/lesson";
 import { decodeParam, notFoundMetadata } from "@/components/site/page-utils";
-import { pageMetadata, postAlternates } from "@/components/site/seo";
+import { pageMetadata, postAlternates, withDefaultImage } from "@/components/site/seo";
 import { ArticleSkeleton } from "@/components/site/skeletons";
 import type { Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
@@ -25,16 +25,17 @@ async function resolve(locale: Locale, seriesSlug: string, lessonSlug: string) {
   return { course, post };
 }
 
-export async function generateMetadata({
-  params,
-}: PageProps<"/[locale]/learn/[series]/[lesson]">): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: PageProps<"/[locale]/learn/[series]/[lesson]">,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
   const locale = await getLocale();
   await connection();
   const p = await params;
   const r = await resolve(locale, decodeParam(p.series), decodeParam(p.lesson));
   if (!r) return notFoundMetadata(locale);
   const { post, course } = r;
-  return pageMetadata({
+  const meta = pageMetadata({
     locale,
     path: postPath(post),
     title: `${post.seoTitle || post.title} — ${course.series.title}`,
@@ -49,6 +50,7 @@ export async function generateMetadata({
     image: post.coverUrl,
     markdownPath: `${postPath(post)}.md`,
   });
+  return withDefaultImage(meta, parent);
 }
 
 async function Lesson({

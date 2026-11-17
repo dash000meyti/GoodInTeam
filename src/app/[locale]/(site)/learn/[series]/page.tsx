@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import type { Metadata } from "next";
+import type { Metadata, ResolvingMetadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -11,7 +11,7 @@ import { JsonLd, ids } from "@/components/site/json-ld";
 import { LessonList, LessonView } from "@/components/site/lesson";
 import { Breadcrumbs } from "@/components/site/nav-bits";
 import { decodeParam, homeCrumb, notFoundMetadata } from "@/components/site/page-utils";
-import { absoluteUrl, pageMetadata, postAlternates } from "@/components/site/seo";
+import { absoluteUrl, pageMetadata, postAlternates, withDefaultImage } from "@/components/site/seo";
 import { ArticleSkeleton } from "@/components/site/skeletons";
 import { fmtNum, PageHero, pillClass, teamPath, TitleRow } from "@/components/site/ui";
 import { format } from "@/i18n/format-message";
@@ -39,16 +39,17 @@ async function resolve(locale: Locale, slug: string) {
   return null;
 }
 
-export async function generateMetadata({
-  params,
-}: PageProps<"/[locale]/learn/[series]">): Promise<Metadata> {
+export async function generateMetadata(
+  { params }: PageProps<"/[locale]/learn/[series]">,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
   const locale = await getLocale();
   await connection();
   const slug = decodeParam((await params).series);
   const r = await resolve(locale, slug);
   if (!r) return notFoundMetadata(locale);
   if (r.kind === "course") {
-    return pageMetadata({
+    const meta = pageMetadata({
       locale,
       path: `/learn/${encodeURIComponent(r.course.series.slug)}`,
       title: r.course.series.title,
@@ -58,9 +59,10 @@ export async function generateMetadata({
       },
       image: r.course.series.coverUrl,
     });
+    return withDefaultImage(meta, parent);
   }
   const post = r.post;
-  return pageMetadata({
+  const meta = pageMetadata({
     locale,
     path: postPath(post),
     title: post.seoTitle || post.title,
@@ -74,6 +76,7 @@ export async function generateMetadata({
     image: post.coverUrl,
     markdownPath: `${postPath(post)}.md`,
   });
+  return withDefaultImage(meta, parent);
 }
 
 async function SeriesOrTutorial({

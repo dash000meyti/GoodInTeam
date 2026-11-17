@@ -1,5 +1,5 @@
 import "server-only";
-import type { Metadata } from "next";
+import type { Metadata, ResolvingMetadata } from "next";
 import { defaultLocale, localeMeta, localePath, locales, type Locale } from "@/i18n/config";
 import { getMessages } from "@/i18n/server";
 import { env } from "@/lib/env";
@@ -101,5 +101,26 @@ export function pageMetadata(input: PageMetaInput): Metadata {
     },
     ...(input.authors?.length && { authors: input.authors.map((name) => ({ name })) }),
     ...(input.noindex && { robots: { index: false, follow: true } }),
+  };
+}
+
+/**
+ * A page that sets `openGraph` drops the image inherited from the (site)
+ * segment's file-based card. Pages whose image is optional (a cover) pass the
+ * metadata through here: without an image of their own they keep the default
+ * card instead of having none.
+ */
+export async function withDefaultImage(
+  meta: Metadata,
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  if (meta.openGraph?.images) return meta;
+  const inherited = await parent;
+  const images = inherited.openGraph?.images;
+  if (!images?.length) return meta;
+  return {
+    ...meta,
+    openGraph: { ...meta.openGraph, images },
+    twitter: { ...meta.twitter, images: inherited.twitter?.images ?? images },
   };
 }
