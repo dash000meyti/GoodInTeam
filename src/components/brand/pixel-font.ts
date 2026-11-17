@@ -44,6 +44,20 @@ export const PIXEL_GLYPHS: Record<string, readonly string[]> = {
   "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
   "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
   "9": [".###.", "#...#", "#...#", ".####", "....#", "....#", ".###."],
+  // Persian digits ۰–۹ (U+06F0–U+06F9), drawn from Vazirmatn's forms on the Latin
+  // digits' 5×7 grid: ۰ a small ring at mid height, ۲/۳ one and two teeth on a
+  // stem, the Persian ۴ ۵ ۶ (not the Arabic-Indic ٤ ٥ ٦). Used on fa pages
+  // through `pixelDigits` (frame strip numbers, the 404).
+  "۰": [".....", ".....", ".###.", ".#.#.", ".###.", ".....", "....."],
+  "۱": ["..#..", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."],
+  "۲": ["#...#", "#...#", "#...#", "####.", "#....", "#....", "#...."],
+  "۳": ["#.#.#", "#.#.#", "#.#.#", "##.#.", "#....", "#....", "#...."],
+  "۴": ["#.###", ".#...", ".#...", ".####", ".#...", ".#...", ".#..."],
+  "۵": ["..#..", ".#.#.", "#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
+  "۶": [".###.", "#....", "#....", ".####", "...#.", "..#..", ".#..."],
+  "۷": ["#...#", "#...#", ".#.#.", ".#.#.", ".#.#.", "..#..", "..#.."],
+  "۸": ["..#..", "..#..", ".#.#.", ".#.#.", ".#.#.", "#...#", "#...#"],
+  "۹": [".###.", "#...#", "#...#", ".####", "....#", "....#", "....#"],
   "-": ["...", "...", "...", "###", "...", "...", "..."],
   " ": ["...", "...", "...", "...", "...", "...", "..."],
   // Path punctuation for window bars and frame strips (GOOD-IN-TEAM/WORK, SYSTEM.APP, 01 · ~).
@@ -77,6 +91,19 @@ export interface PixelCell {
 /** Normalize to the supported alphabet (upper-case; unknown characters dropped). */
 export function toPixelText(text: string) {
   return [...text.toUpperCase()].filter((ch) => ch in PIXEL_GLYPHS).join("");
+}
+
+/** The Persian digits ۰–۹, indexed by value. */
+export const PERSIAN_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+
+/**
+ * Locale-aware digits for pixel text: on `fa` every Latin digit becomes its
+ * Persian form ("01" → "۰۱", "404" → "۴۰۴"); other characters and locales
+ * are unchanged. Pixel text is drawn left to right (`dir="ltr"`), which is
+ * also how Persian numbers read.
+ */
+export function pixelDigits(text: string, locale: string) {
+  return locale === "fa" ? text.replace(/[0-9]/g, (d) => PERSIAN_DIGITS[Number(d)]!) : text;
 }
 
 /** Width in cells of a word (1-cell gap between glyphs). */

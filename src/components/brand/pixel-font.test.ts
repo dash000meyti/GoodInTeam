@@ -3,6 +3,8 @@ import {
   brandLogoLayout,
   brandMarkLayout,
   layoutFromGrid,
+  PERSIAN_DIGITS,
+  pixelDigits,
   pixelText,
   pixelTextWidth,
   PIXEL_GLYPHS,
@@ -64,7 +66,8 @@ describe("pixel logo", () => {
   });
 
   it("drops unsupported characters and merges runs into rects", () => {
-    expect(toPixelText("Good In ۱ Code!")).toBe("GOOD IN  CODE");
+    expect(toPixelText("Good In گ Code!")).toBe("GOOD IN  CODE");
+    expect(toPixelText("Good In ٤ Code")).toBe("GOOD IN  CODE"); // Arabic-Indic, not Persian
     const rects = toRects(brandLogoLayout().cells);
     const filled = rects.reduce((n, r) => n + r.w, 0);
     expect(filled).toBe(brandLogoLayout().cells.length);
@@ -122,6 +125,49 @@ describe("pixel font extensions", () => {
       expect([l.width, l.height], s).toEqual([34, 18]);
     }
     expect([brandMarkLayout().width, brandMarkLayout().height]).toEqual([11, 11]);
+  });
+
+  it("has the Persian digits ۰–۹ on the Latin digits' grid", () => {
+    expect([...PERSIAN_DIGITS].map((d) => d.codePointAt(0))).toEqual(
+      Array.from({ length: 10 }, (_, i) => 0x06f0 + i),
+    );
+    for (const [i, fa] of [...PERSIAN_DIGITS].entries()) {
+      const rows = PIXEL_GLYPHS[fa]!;
+      expect(rows, fa).toHaveLength(7);
+      expect(new Set(rows.map((r) => r.length)), fa).toEqual(new Set([5])); // as wide as "0"–"9"
+      expect(rows.join("").includes("#"), fa).toBe(true);
+      expect(rows, fa).not.toEqual(PIXEL_GLYPHS[String(i)]); // its own form
+    }
+    // the Persian ۴ ۵ ۶ differ from each other and from the Latin 4 5 6
+    expect(new Set(["۴", "۵", "۶"].map((d) => PIXEL_GLYPHS[d]!.join("/"))).size).toBe(3);
+    // toPixelText upper-cases and filters: Persian digits pass through untouched
+    expect(toPixelText("good-in-team/work ۰۳")).toBe("GOOD-IN-TEAM/WORK ۰۳");
+    expect(toPixelText(PERSIAN_DIGITS)).toBe(PERSIAN_DIGITS);
+  });
+
+  it("renders a Persian number with the 1-cell gap", () => {
+    expect(pixelTextWidth("۰۱")).toBe(pixelTextWidth("01"));
+    expect(pixelTextWidth("۴۰۴")).toBe(5 * 3 + 2);
+    const cells = pixelText("۰۱", 0, 0, "ink");
+    // ۰ is the 3×3 ring at x 1–3, y 2–4; ۱ is the bar at x 8 (5 + gap + 2)
+    expect(
+      cells
+        .filter((c) => c.x <= 4)
+        .map((c) => `${c.x}:${c.y}`)
+        .sort(),
+    ).toEqual(["1:2", "2:2", "3:2", "1:3", "3:3", "1:4", "2:4", "3:4"].sort());
+    expect(cells.filter((c) => c.x > 4).every((c) => c.x === 8)).toBe(true);
+    expect(cells.filter((c) => c.x === 8)).toHaveLength(7);
+    expect(toPaths(cells).ink).toContain("M1 2h3v1h-3z"); // the ring's top run, merged
+  });
+
+  it("pixelDigits localizes digits on fa only", () => {
+    expect(pixelDigits("01", "fa")).toBe("۰۱");
+    expect(pixelDigits("404", "fa")).toBe("۴۰۴");
+    expect(pixelDigits("GOOD-IN-TEAM/WORK 03", "fa")).toBe("GOOD-IN-TEAM/WORK ۰۳");
+    expect(pixelDigits("1234567890", "fa")).toBe("۱۲۳۴۵۶۷۸۹۰");
+    expect(pixelDigits("07", "en")).toBe("07");
+    expect(pixelDigits("۰۷", "en")).toBe("۰۷");
   });
 
   it("layoutFromGrid maps characters to tones", () => {
