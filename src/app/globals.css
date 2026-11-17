@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./styles/os-shell.css"; /* foundation */
+@import "./styles/frame.css"; /* foundation */
 @import "./styles/pixel.css"; /* foundation */
+@import "./styles/site-shell.css"; /* site-shell */
+@import "./styles/home.css"; /* home */
+@import "./styles/site-pages.css"; /* site-pages */
+@import "./styles/guide.css"; /* assistant */
+@import "./styles/panel-shell.css"; /* panel-shell */
 
 /* Docs quote class names as prose (e.g. `text-[color:var(--a|b)]`); never scan them. */
 @source not "../../docs";

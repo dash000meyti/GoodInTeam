@@ -1,0 +1,11 @@
+/*
+ * guide.css — owner: assistant track.
+ * Holds the pixel guide layer, sprite, bubble and selection (spec §10).
+ * Rules: class rules in @layer components, html variables in @layer base,
+ * @keyframes at top level; never `:root {` or `.dark {` (use html {} and .dark .x);
+ * no @apply dark:. To override a legacy .gt-* or .prose-gt rule, use a selector at
+ * least one class more specific (globals.css imports partials first).
+ */
+
+@layer components {
+}

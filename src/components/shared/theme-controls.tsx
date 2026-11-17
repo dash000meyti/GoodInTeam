@@ -8,6 +8,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
+
+// Shared with the site (no Radix): re-exported for existing panel imports.
+export { AppearanceModeToggle, ThemeToggle, useMotionPref } from "@/components/shell/appearance";
 import { presetScales } from "./design-tokens";
 import {
   colorPresets,
@@ -38,24 +41,6 @@ export function usePreset() {
     } catch {}
   };
   return { preset, setPreset };
-}
-
-/** Light/dark toggle button (cycles light → dark). */
-export function ThemeToggle({ className }: { className?: string }) {
-  const { resolvedTheme, setTheme } = useTheme();
-  const t = useT();
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className={cn("rounded-full", className)}
-      aria-label={t.common.toggleTheme}
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-    >
-      <SunIcon className="size-[18px] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-      <MoonIcon className="absolute size-[18px] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-    </Button>
-  );
 }
 
 /** Minimals-like settings popover: mode + primary color preset. */

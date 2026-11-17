@@ -1,0 +1,291 @@
+/*
+ * frame.css — owner: foundation (spec §6.2).
+ * The desktop wallpaper (.os-desktop), framed boxes with the logo L-frame and
+ * ringed markers, hairline grids and cells, strips, scroll-driven reveals.
+ *
+ * Layout rules (see docs/design-system.md "Frame"):
+ * - Every .frame-cell is a child of a .frame-grid; stack grids for rows of
+ *   different shapes (a lone cell would draw a double line).
+ * - Never overflow:hidden / content-visibility on .frame-box or .frame-grid;
+ *   never .frame-cv around sticky children.
+ * - A tone=dots cell never holds text.
+ * - Never transform / filter / contain / backdrop-filter / will-change on
+ *   .os-desktop (it is the containing block of the guide layer).
+ */
+
+@layer components {
+  .os-desktop {
+    position: relative;
+    /* flow-root keeps the first box's top margin inside the wallpaper (main is
+       overflow-x:clip, which creates no BFC). Never replace with overflow/contain. */
+    display: flow-root;
+    background:
+      linear-gradient(var(--background) 0 0) 50% 0 /
+        min(calc(100% - 2 * var(--gutter)), var(--frame-max)) 100% no-repeat,
+      radial-gradient(var(--dots) 1px, transparent 1.5px) 0 0 / 12px 12px,
+      var(--desktop);
+  }
+  .os-desktop::before,
+  .os-desktop::after {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inline-size: 1px;
+    pointer-events: none;
+    background: linear-gradient(to bottom, var(--frame-rail) 50%, transparent 0) 0 0 / 1px 16px
+      repeat-y;
+  }
+  .os-desktop::before {
+    left: max(var(--gutter), calc(50% - var(--frame-max) / 2));
+  }
+  .os-desktop::after {
+    right: max(var(--gutter), calc(50% - var(--frame-max) / 2));
+  }
+
+  .frame-box {
+    position: relative;
+    inline-size: min(100% - 2 * var(--gutter), var(--frame-max));
+    margin-inline: auto;
+    margin-block-start: var(--section-gap);
+    border: 1px solid var(--frame-line);
+    background: var(--background);
+    /* logo L-frame, outside the border, at inline-start */
+    box-shadow: calc(-1 * var(--frame-l) * var(--dir)) calc(-1 * var(--frame-l)) 0 0
+      var(--brand-frame);
+    view-timeline: --box block;
+  }
+  .frame-box[data-first] {
+    margin-block-start: calc(var(--section-gap) / 2);
+  }
+  @media (width >= 64rem) {
+    /* reserved roof for the 48px guide sprite (§10.5) */
+    .frame-box[data-first] {
+      margin-block-start: max(56px, calc(var(--section-gap) / 2));
+    }
+  }
+  .frame-box::before,
+  .frame-box::after {
+    content: "";
+    position: absolute;
+    z-index: 2;
+    inset-inline: -5px;
+    block-size: 9px;
+    pointer-events: none;
+  }
+  /* top-start: logo corner cell · top-end: ringed marker */
+  .frame-box::before {
+    inset-block-start: -5px;
+    background:
+      linear-gradient(var(--brand-ink) 0 0) left 1px top 1px / 3px 3px no-repeat,
+      linear-gradient(var(--marker-dot) 0 0) right 3px top 3px / 3px 3px no-repeat,
+      linear-gradient(var(--marker-fill) 0 0) right 1px top 1px / 7px 7px no-repeat,
+      linear-gradient(var(--marker-ring) 0 0) right top / 9px 9px no-repeat;
+  }
+  [dir="rtl"] .frame-box::before {
+    background:
+      linear-gradient(var(--brand-ink) 0 0) right 1px top 1px / 3px 3px no-repeat,
+      linear-gradient(var(--marker-dot) 0 0) left 3px top 3px / 3px 3px no-repeat,
+      linear-gradient(var(--marker-fill) 0 0) left 1px top 1px / 7px 7px no-repeat,
+      linear-gradient(var(--marker-ring) 0 0) left top / 9px 9px no-repeat;
+  }
+  .frame-box::after {
+    inset-block-end: -5px;
+    background:
+      linear-gradient(var(--marker-dot) 0 0) left 3px top 3px / 3px 3px no-repeat,
+      linear-gradient(var(--marker-dot) 0 0) right 3px top 3px / 3px 3px no-repeat,
+      linear-gradient(var(--marker-fill) 0 0) left 1px top 1px / 7px 7px no-repeat,
+      linear-gradient(var(--marker-fill) 0 0) right 1px top 1px / 7px 7px no-repeat,
+      linear-gradient(var(--marker-ring) 0 0) left top / 9px 9px no-repeat,
+      linear-gradient(var(--marker-ring) 0 0) right top / 9px 9px no-repeat;
+  }
+
+  /* Hairlines: each cell draws its end + bottom line; the grid overlaps the box
+     border by 1px, so incomplete rows have no grey holes. */
+  .frame-grid {
+    display: grid;
+    margin-inline-end: -1px;
+    margin-block-end: -1px;
+  }
+  /* stacked grids: keep the line between them (the next grid's opaque cells would paint over it) */
+  .frame-grid:has(+ .frame-grid) {
+    margin-block-end: 0;
+  }
+  .frame-cell {
+    position: relative;
+    min-inline-size: 0;
+    padding: var(--cell-pad);
+    background: var(--background);
+    border-inline-end: 1px solid var(--frame-line);
+    border-block-end: 1px solid var(--frame-line);
+    transition: background-color 0.16s;
+  }
+  .frame-cell[data-pad="none"] {
+    padding: 0;
+  }
+  .frame-cell[data-pad="lg"] {
+    padding: calc(var(--cell-pad) + 8px);
+  }
+  .frame-cell[data-tone="card"],
+  .frame-cell[data-hover]:hover {
+    background: var(--card);
+  }
+  .frame-cell[data-tone="dots"] {
+    background:
+      radial-gradient(var(--dots) 1px, transparent 1.5px) 0 0 / 12px 12px,
+      var(--background);
+  }
+  .frame-cell[data-tone="ink"] {
+    background: #1c1c1e;
+    color: #f3f3f3;
+    --px-ink: #a3a4a8;
+  }
+  .frame-cell[data-tone="yellow"] {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  @media (width >= 48rem) {
+    .frame-cell::before,
+    .frame-cell::after {
+      content: "";
+      position: absolute;
+      z-index: 1;
+      inline-size: 9px;
+      block-size: 9px;
+      pointer-events: none;
+      background:
+        linear-gradient(var(--marker-dot) 0 0) 3px 3px / 3px 3px no-repeat,
+        linear-gradient(var(--marker-fill) 0 0) 1px 1px / 7px 7px no-repeat,
+        var(--marker-ring);
+    }
+    .frame-cell::before {
+      inset-block-start: -5px;
+      inset-inline-start: -5px;
+    }
+    .frame-cell::after {
+      inset-block-end: -5px;
+      inset-inline-end: -5px;
+    }
+    /* box origin is the logo corner */
+    :is(.frame-box, .frame-cv) > .frame-grid:first-child > .frame-cell:first-child::before {
+      display: none;
+    }
+    .frame-cell[data-hover]:hover::before,
+    .frame-cell[data-hover]:hover::after {
+      --marker-dot: var(--brand-yellow);
+    }
+  }
+
+  .frame-strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    block-size: 36px;
+    padding-inline: 12px;
+    border-block-end: 1px solid var(--frame-line);
+  }
+  .frame-strip .frame-strip-action {
+    margin-inline-start: auto;
+  }
+  @media (width < 48rem) {
+    .frame-strip .frame-path {
+      display: none;
+    }
+  }
+  .frame-strip .os-lights > span::after {
+    opacity: 1;
+  }
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      html:not([data-motion="reduce"]) .frame-strip .os-lights > span::after {
+        animation: os-focus linear both;
+        animation-timeline: --box;
+        animation-range: cover 20% cover 80%;
+      }
+      html:not([data-motion="reduce"]) .gt-reveal {
+        animation: gt-reveal linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 40%;
+      }
+    }
+  }
+
+  /* Dashed accent chip (FrameEyebrow). */
+  .frame-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    block-size: 26px;
+    padding-inline: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--foreground);
+    background: rgb(var(--primary-rgb) / 0.14);
+    border: 1px dashed #9a7200;
+  }
+  .frame-eyebrow::before {
+    content: "";
+    inline-size: 6px;
+    block-size: 6px;
+    flex-shrink: 0;
+    background: var(--primary);
+    box-shadow: 0 0 0 1px var(--brand-ink);
+  }
+  .dark .frame-eyebrow {
+    color: #ffdb66;
+    background: rgb(var(--primary-rgb) / 0.12);
+    border-color: rgb(var(--primary-rgb) / 0.6);
+  }
+
+  /* Below-the-fold bodies (D8): -5px margin + 5px padding so markers are not clipped. */
+  .frame-cv {
+    content-visibility: auto;
+    contain-intrinsic-size: auto var(--cis, 640px);
+    margin: -5px;
+    padding: 5px;
+  }
+
+  @media (forced-colors: active) {
+    .os-desktop {
+      background: Canvas;
+    }
+    .os-desktop::before,
+    .os-desktop::after,
+    .frame-box::before,
+    .frame-box::after,
+    .frame-cell::before,
+    .frame-cell::after {
+      display: none;
+    }
+  }
+  @media print {
+    .os-menubar,
+    .os-dock,
+    .gt-guide,
+    .os-desktop::before,
+    .os-desktop::after {
+      display: none !important;
+    }
+  }
+}
+
+@keyframes os-focus {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 1;
+  }
+}
+@keyframes gt-reveal {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}

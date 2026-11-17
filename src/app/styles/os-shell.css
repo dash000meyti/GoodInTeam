@@ -1,0 +1,811 @@
+/*
+ * os-shell.css — owner: foundation (spec §5.2–§5.6).
+ * Shell variables and offset utilities, the menu bar base, menus, the dock
+ * base (desktop + tab-bar modes), traffic lights, windows, the clock and the
+ * once-per-session boot. Site- and panel-specific chrome goes in
+ * site-shell.css / panel-shell.css. Rules: class rules in @layer components,
+ * html variables in @layer base, @keyframes and @property at top level; never
+ * `:root {` or `.dark {` here.
+ */
+
+/* Registered so getComputedStyle returns a resolved px length for JS readers
+   (the guide engine, Toc rootMargins); top level, outside any layer. */
+@property --chrome-top {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+@property --dock-space {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@layer base {
+  html {
+    --menubar-h: 44px;
+    --menubar-fs: 13px;
+    --dock-pref: 48px;
+    --dock-pad: 6px;
+    --dock-gap: 12px;
+    --dock-h: calc(var(--dock-pref) + 2 * var(--dock-pad));
+    --dock-space: calc(var(--dock-h) + 2 * var(--dock-gap) + env(safe-area-inset-bottom));
+    --chrome-top: var(--menubar-h);
+    --frame-max: 1200px;
+    --gutter: 16px;
+    --section-gap: 48px;
+    --cell-pad: 24px;
+    --frame-l: 3px;
+    --dir: 1;
+    --ease-os: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+    /*
+     * Clock width (fixed, not a minimum; spec §5.6). Measured in Chromium
+     * (headless 1254) on the site, every day of 2026 at 23:59 Tehran, with
+     * font-weight 500 and tabular-nums; the widest equals CLOCK_LONGEST:
+     *   fa  Vazirmatn 14px: «چهارشنبه ۳۰ اردیبهشت ۲۳:۵۹» 179.53px = 12.82em → 12.9 + 0.25 = 13.15em
+     *   en  Public Sans 13px: "Wed 30 Sept 23:59"          122.83px =  9.45em →  9.5 + 0.25 =  9.75em
+     */
+    --clock-w: 13.15em;
+    /* One scroll-offset mechanism for fragments, scrollIntoView and focus (D18). */
+    scroll-padding-top: calc(var(--chrome-top) + 16px);
+    scroll-padding-bottom: calc(var(--dock-space) + 8px);
+  }
+  html:lang(fa) {
+    --menubar-fs: 14px;
+  }
+  html:lang(en) {
+    --clock-w: 9.75em;
+  }
+  html[dir="rtl"] {
+    --dir: -1;
+  }
+  @media (width < 48rem) {
+    html:not(:has(.panel-shell)) {
+      --dock-h: 60px;
+      --dock-gap: 8px;
+    }
+  }
+  @media (width < 64rem) {
+    html:has(.panel-shell) {
+      --dock-h: 60px;
+      --dock-gap: 8px;
+    }
+  }
+  @media (width >= 48rem) {
+    html {
+      --cell-pad: 32px;
+    }
+  }
+  @media (width >= 48rem) and (pointer: fine) {
+    html:not(:has(.panel-shell)) {
+      --menubar-h: 32px;
+    }
+  }
+  @media (width >= 64rem) {
+    html {
+      --gutter: 24px;
+      --section-gap: 64px;
+    }
+  }
+  @media (width >= 64rem) and (pointer: fine) {
+    html:has(.panel-shell) {
+      --menubar-h: 32px;
+    }
+  }
+  @media (width >= 80rem) {
+    html {
+      --gutter: 32px;
+      --section-gap: 80px;
+    }
+  }
+  html[data-dock-size="40"]:has(.panel-shell) {
+    --dock-pref: 40px;
+  }
+  html[data-dock-size="56"]:has(.panel-shell) {
+    --dock-pref: 56px;
+  }
+  /* desktop dock only: the <1024px tab bar never hides (§11.3) */
+  @media (width >= 64rem) {
+    html[data-dock-autohide]:has(.panel-shell) {
+      --dock-space: calc(16px + env(safe-area-inset-bottom));
+    }
+  }
+  html:has([data-reading]) {
+    --dock-pref: 40px;
+  }
+}
+
+/* Offsets: never hard-code top-N or bottom-N for the chrome (spec §15.3). */
+@utility below-chrome {
+  top: calc(var(--chrome-top) + 1.5rem);
+}
+@utility top-chrome {
+  top: var(--chrome-top);
+}
+@utility above-dock {
+  bottom: calc(var(--dock-space) + 0.5rem);
+}
+@utility pb-dock {
+  padding-bottom: calc(var(--dock-space) + 1.5rem);
+}
+@utility max-h-chrome {
+  max-height: calc(100dvh - var(--chrome-top) - var(--dock-space) - 3rem);
+}
+
+@layer components {
+  /* ── Menu bar (§5.3) ── */
+  .os-menubar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    block-size: var(--menubar-h);
+    padding-inline: 8px;
+    font-size: var(--menubar-fs);
+    line-height: 1;
+    background: var(--background);
+    border-block-end: 1px solid var(--frame-line);
+  }
+  @media (width >= 48rem) {
+    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+      .os-menubar {
+        background: color-mix(in oklab, var(--background) 78%, transparent);
+        -webkit-backdrop-filter: saturate(180%) blur(16px);
+        backdrop-filter: saturate(180%) blur(16px);
+        border-block-end-color: rgb(var(--grey-rgb) / 0.16);
+      }
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .os-menubar {
+      background: var(--background);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+  .os-mb-start,
+  .os-mb-end {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-inline-size: 0;
+  }
+  .os-mb-spacer {
+    flex: 1;
+  }
+  .os-mb-item {
+    block-size: 24px;
+    padding-inline: 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+    color: var(--foreground);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .os-mb-icon {
+    inline-size: 28px;
+    block-size: 24px;
+    justify-content: center;
+    padding: 0;
+  }
+  .os-mb-item:hover,
+  .os-mb-item[aria-current="page"],
+  .os-mb-item:has(+ :popover-open),
+  .os-mb-item[data-state="open"] {
+    background: rgb(var(--grey-rgb) / 0.14);
+  }
+  /* detached top-layer popovers (not adjacent to their trigger) */
+  html:has(#os-spotlight:popover-open) .os-mb-item[popovertarget="os-spotlight"],
+  html:has(#os-cc:popover-open) .os-mb-item[popovertarget="os-cc"] {
+    background: rgb(var(--grey-rgb) / 0.14);
+  }
+  .os-mb-item[aria-current="page"] {
+    font-weight: 700;
+  }
+  .os-mb-item:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+  @media (width < 48rem), (pointer: coarse) {
+    .os-mb-item {
+      block-size: 36px;
+      min-inline-size: 36px;
+    }
+  }
+
+  /* ── Menus (§5.4): .os-menu is visual only (site popovers + panel Radix);
+     .os-popmenu positions native popovers on the site. No blur. ── */
+  .os-menu {
+    min-inline-size: 224px;
+    max-inline-size: min(320px, 100vw - 16px);
+    padding: 5px;
+    border-radius: 10px;
+    border: 1px solid rgb(var(--grey-rgb) / 0.2);
+    color: var(--popover-foreground);
+    background: color-mix(in oklab, var(--popover) 97%, transparent);
+    box-shadow: var(--shadow-dropdown);
+  }
+  .os-popmenu {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    top: calc(var(--menubar-h) + 4px);
+    transform-origin: top center;
+    transition:
+      opacity 0.12s,
+      scale 0.12s var(--ease-os),
+      display 0.12s allow-discrete,
+      overlay 0.12s allow-discrete;
+  }
+  .os-popmenu:not(:popover-open) {
+    opacity: 0;
+    scale: 0.98;
+  }
+  @starting-style {
+    .os-popmenu:popover-open {
+      opacity: 0;
+      scale: 0.98;
+    }
+  }
+  .os-popmenu[data-align="start"] {
+    inset-inline-start: 8px;
+  }
+  .os-popmenu[data-align="end"] {
+    inset-inline-end: 8px;
+  }
+  @supports (anchor-name: --a) {
+    .os-popmenu[data-anchor] {
+      position-anchor: var(--anchor);
+    }
+    .os-popmenu[data-anchor][data-align="start"] {
+      inset-inline-start: anchor(start);
+    }
+    .os-popmenu[data-anchor][data-align="end"] {
+      inset-inline-start: auto;
+      inset-inline-end: anchor(end);
+    }
+  }
+  .os-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-block-size: 28px;
+    padding-inline: 10px;
+    border-radius: 6px;
+    font-size: var(--menubar-fs);
+    outline: none;
+    cursor: pointer;
+  }
+  .os-menu-item:hover,
+  .os-menu-item:focus-visible,
+  .os-menu-item[data-highlighted] {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  .os-menu-item:focus-visible,
+  .os-menu-item[data-highlighted] {
+    box-shadow: inset 0 0 0 1.5px var(--primary-dark);
+  }
+  .os-menu-item[data-variant="destructive"] {
+    color: var(--destructive);
+  }
+  .os-menu-item[data-variant="destructive"]:is(:hover, :focus-visible, [data-highlighted]) {
+    background: var(--destructive);
+    color: var(--destructive-foreground);
+    box-shadow: none;
+  }
+  .os-menu-sep {
+    block-size: 1px;
+    margin: 5px 10px;
+    background: rgb(var(--grey-rgb) / 0.2);
+  }
+  .os-menu-label {
+    padding: 6px 10px 2px;
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+  .os-menu-shortcut {
+    margin-inline-start: auto;
+    color: var(--muted-foreground);
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-size: 12px;
+  }
+  @media (pointer: coarse) {
+    .os-menu-item {
+      min-block-size: 40px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .os-popmenu {
+      transition: none;
+    }
+  }
+
+  /* ── Dock (§5.5) ── */
+  .os-dock {
+    position: fixed;
+    z-index: 40;
+    inset-inline: 0;
+    bottom: calc(var(--dock-gap) + env(safe-area-inset-bottom));
+    margin-inline: auto;
+    inline-size: max-content;
+    max-inline-size: calc(100vw - 2 * var(--gutter));
+    pointer-events: none;
+    --dock-tile: var(--dock-pref);
+    --S: calc(var(--dock-tile) + 8px);
+  }
+  .os-dock-list {
+    pointer-events: auto;
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: flex-end;
+    margin: 0;
+    padding: var(--dock-pad);
+    list-style: none;
+    block-size: calc(var(--dock-tile) + 2 * var(--dock-pad));
+    contain: layout style;
+  }
+  .os-dock-list::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 18px;
+    border: 1px solid rgb(var(--grey-rgb) / 0.2);
+    background: var(--card);
+    box-shadow: 0 10px 30px -10px rgb(0 0 0 / 0.25);
+    transition: inset 0.18s var(--ease-os);
+  }
+  @media (width >= 48rem) {
+    @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+      .os-dock-list::before {
+        background: color-mix(in oklab, var(--background) 72%, transparent);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        backdrop-filter: saturate(180%) blur(20px);
+        box-shadow:
+          0 10px 30px -10px rgb(0 0 0 / 0.25),
+          inset 0 1px 0 rgb(255 255 255 / 0.35);
+      }
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .os-dock-list::before {
+      background: var(--card);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+  .os-dock-list > li {
+    position: relative;
+    inline-size: var(--S);
+    display: flex;
+    justify-content: center;
+    transform-origin: 50% 100%;
+    transition:
+      scale 0.18s var(--ease-os),
+      translate 0.18s var(--ease-os);
+  }
+  .os-dock-list > li[data-sep] {
+    inline-size: 17px;
+    align-self: center;
+    block-size: calc(var(--dock-tile) * 0.66);
+  }
+  .os-dock-list > li[data-sep]::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 8px;
+    inline-size: 1px;
+    background: rgb(var(--grey-rgb) / 0.3);
+  }
+  .os-dock-item {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: var(--dock-tile);
+    block-size: var(--dock-tile);
+    border-radius: 12px;
+    color: var(--foreground);
+    cursor: pointer;
+  }
+  .os-tile {
+    inline-size: 100%;
+    block-size: 100%;
+    display: grid;
+    place-items: center;
+    background: var(--card);
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06);
+  }
+  .dark .os-tile {
+    background: #2a2a2d;
+  }
+  .os-tile[data-variant="accent"] {
+    background: var(--primary);
+    --px-accent: #1c1c1e;
+    --px-ink: #1c1c1e;
+  }
+  .os-tile[data-variant="brand"] {
+    background:
+      linear-gradient(var(--brand-ink) 0 0) left 4px top 4px / 3px 3px no-repeat,
+      linear-gradient(var(--brand-frame) 0 0) left 4px top 4px / calc(100% - 8px) 3px no-repeat,
+      linear-gradient(var(--brand-frame) 0 0) left 4px top 4px / 3px calc(100% - 8px) no-repeat,
+      var(--card);
+  }
+  [dir="rtl"] .os-tile[data-variant="brand"] {
+    background:
+      linear-gradient(var(--brand-ink) 0 0) right 4px top 4px / 3px 3px no-repeat,
+      linear-gradient(var(--brand-frame) 0 0) right 4px top 4px / calc(100% - 8px) 3px no-repeat,
+      linear-gradient(var(--brand-frame) 0 0) right 4px top 4px / 3px calc(100% - 8px) no-repeat,
+      var(--card);
+  }
+  .dark .os-tile[data-variant="brand"] {
+    background-color: #2a2a2d;
+  }
+  /* magnification: only fine pointers, motion allowed, data-magnify present */
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li[data-app]:hover {
+      scale: 1.5;
+      z-index: 1;
+    }
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li[data-app]:hover + li {
+      translate: calc(var(--S) * 0.375 * var(--dir)) 0;
+    }
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li[data-app]:hover + li[data-app] {
+      scale: 1.25;
+    }
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li[data-app]:hover + li + li {
+      translate: calc(var(--S) * 0.55 * var(--dir)) 0;
+    }
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li[data-app]:hover + li + li[data-app] {
+      scale: 1.1;
+    }
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li[data-app]:hover + li + li ~ li {
+      translate: calc(var(--S) * 0.6 * var(--dir)) 0;
+    }
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li:has(+ li[data-app]:hover) {
+      translate: calc(var(--S) * -0.375 * var(--dir)) 0;
+    }
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li[data-app]:has(+ li[data-app]:hover) {
+      scale: 1.25;
+    }
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li:has(+ li + li[data-app]:hover) {
+      translate: calc(var(--S) * -0.55 * var(--dir)) 0;
+    }
+    html:not([data-motion="reduce"])
+      .os-dock[data-magnify]
+      li[data-app]:has(+ li + li[data-app]:hover) {
+      scale: 1.1;
+    }
+    html:not([data-motion="reduce"]) .os-dock[data-magnify] li:has(+ li + li ~ li[data-app]:hover) {
+      translate: calc(var(--S) * -0.6 * var(--dir)) 0;
+    }
+    html:not([data-motion="reduce"])
+      .os-dock[data-magnify]
+      .os-dock-list:has(> li[data-app]:hover)::before {
+      inset-inline: calc(var(--S) * -0.6);
+    }
+    .os-dock-list:hover > li {
+      will-change: scale, translate;
+    }
+    .os-dock-item:has(> .os-dock-pending[data-on]) .os-tile {
+      animation: os-bounce 0.6s var(--ease-os) infinite;
+    }
+  }
+  .os-dock-label {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    inset-inline-start: 50%;
+    translate: calc(-50% * var(--dir)) 0;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font: 500 var(--menubar-fs) / 1 var(--font-sans); /* 13px en, 14px fa (§3.5) */
+    white-space: nowrap;
+    color: var(--popover-foreground);
+    background: color-mix(in oklab, var(--popover) 95%, transparent);
+    border: 1px solid rgb(var(--grey-rgb) / 0.2);
+    box-shadow: var(--shadow-dropdown);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s;
+  }
+  :lang(fa) .os-dock-label {
+    font-family: var(--font-fa);
+  }
+  .os-dock li:hover .os-dock-label {
+    opacity: 1;
+  }
+  .os-dock[data-magnify] li[data-app]:hover .os-dock-label {
+    scale: 0.6667;
+    transform-origin: 50% 100%;
+  }
+  .os-dock-item:focus-visible .os-dock-label {
+    opacity: 1;
+  }
+  .os-dock-item:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  .os-dock-item[aria-current="page"]::after,
+  .os-dock-item[data-running]::after {
+    content: "";
+    position: absolute;
+    bottom: -5px;
+    inset-inline-start: 50%;
+    translate: calc(-50% * var(--dir)) 0;
+    inline-size: 4px;
+    block-size: 4px;
+    background: var(--dock-dot);
+  }
+  .os-dock-pending {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* Tab-bar mode: below 768px for data-tabbar=md (site), below 1024px for lg (panel). */
+  @media (width < 48rem) {
+    .os-dock[data-tabbar="md"] {
+      inset-inline: 12px;
+      inline-size: auto;
+      max-inline-size: none;
+      bottom: calc(8px + env(safe-area-inset-bottom));
+    }
+    .os-dock[data-tabbar="md"] .os-dock-list {
+      justify-content: space-around;
+      block-size: 60px;
+    }
+    .os-dock[data-tabbar="md"] li {
+      flex: 1;
+      inline-size: auto;
+    }
+    .os-dock[data-tabbar="md"] .os-dock-item {
+      inline-size: 100%;
+      block-size: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+    /* icons inside must be ≤28px: PixelIcon cell 2 (24px), PixelMark cell 2 (22px) */
+    .os-dock[data-tabbar="md"] .os-tile {
+      inline-size: 28px;
+      block-size: 28px;
+      background: none;
+      box-shadow: none;
+    }
+    .os-dock[data-tabbar="md"] .os-dock-label {
+      position: static;
+      opacity: 1;
+      translate: none;
+      padding: 0;
+      border: 0;
+      box-shadow: none;
+      background: none;
+      font-size: 11px;
+    }
+    :lang(fa) .os-dock[data-tabbar="md"] .os-dock-label {
+      font-size: 12px;
+    }
+    .os-dock[data-tabbar="md"] li:active {
+      scale: 0.92;
+    }
+    .os-dock[data-tabbar="md"] [data-dock="desktop"] {
+      display: none;
+    }
+    .os-dock[data-tabbar="md"] .os-dock-list::before {
+      background: var(--card);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .os-dock[data-tabbar="md"] .os-dock-item[aria-current="page"]::after,
+    .os-dock[data-tabbar="md"] .os-dock-item[data-running]::after {
+      bottom: -3px;
+    }
+  }
+  @media (width >= 48rem) {
+    .os-dock[data-tabbar="md"] [data-dock="mobile"] {
+      display: none;
+    }
+  }
+  @media (width < 64rem) {
+    .os-dock[data-tabbar="lg"] {
+      inset-inline: 12px;
+      inline-size: auto;
+      max-inline-size: none;
+      bottom: calc(8px + env(safe-area-inset-bottom));
+    }
+    .os-dock[data-tabbar="lg"] .os-dock-list {
+      justify-content: space-around;
+      block-size: 60px;
+    }
+    .os-dock[data-tabbar="lg"] li {
+      flex: 1;
+      inline-size: auto;
+    }
+    .os-dock[data-tabbar="lg"] .os-dock-item {
+      inline-size: 100%;
+      block-size: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+    .os-dock[data-tabbar="lg"] .os-tile {
+      inline-size: 28px;
+      block-size: 28px;
+      background: none;
+      box-shadow: none;
+    }
+    .os-dock[data-tabbar="lg"] .os-dock-label {
+      position: static;
+      opacity: 1;
+      translate: none;
+      padding: 0;
+      border: 0;
+      box-shadow: none;
+      background: none;
+      font-size: 11px;
+    }
+    :lang(fa) .os-dock[data-tabbar="lg"] .os-dock-label {
+      font-size: 12px;
+    }
+    .os-dock[data-tabbar="lg"] li:active {
+      scale: 0.92;
+    }
+    .os-dock[data-tabbar="lg"] [data-dock="desktop"] {
+      display: none;
+    }
+    .os-dock[data-tabbar="lg"] .os-dock-list::before {
+      background: var(--card);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+    .os-dock[data-tabbar="lg"] .os-dock-item[aria-current="page"]::after,
+    .os-dock[data-tabbar="lg"] .os-dock-item[data-running]::after {
+      bottom: -3px;
+    }
+  }
+  @media (width >= 64rem) {
+    .os-dock[data-tabbar="lg"] [data-dock="mobile"] {
+      display: none;
+    }
+  }
+
+  /* ── Traffic lights (§5.6): idle grey octagons; ::after paints the colour. ── */
+  .os-lights {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .os-lights > span {
+    position: relative;
+    display: block;
+    inline-size: 10px;
+    block-size: 10px;
+    background: var(--light-idle);
+    clip-path: polygon(20% 0, 80% 0, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0 80%, 0 20%);
+  }
+  .os-lights[data-size="12"] {
+    gap: 8px;
+  }
+  .os-lights[data-size="12"] > span {
+    inline-size: 12px;
+    block-size: 12px;
+  }
+  .os-lights > span:nth-child(1) {
+    --on: var(--light-close);
+  }
+  .os-lights > span:nth-child(2) {
+    --on: var(--light-min);
+  }
+  .os-lights > span:nth-child(3) {
+    --on: var(--light-zoom);
+  }
+  .os-lights > span::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--on);
+    opacity: 0;
+  }
+  /* the focused (elevated) window shows its colours */
+  .os-win[data-elevated] > .os-win-bar .os-lights > span::after {
+    opacity: 1;
+  }
+
+  /* ── Window (§5.6) ── */
+  .os-win {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    overflow: clip;
+    border-radius: 10px;
+    border: 1px solid var(--frame-line);
+    background: var(--card);
+    color: var(--card-foreground);
+    box-shadow: var(--shadow-card);
+  }
+  .os-win[data-elevated] {
+    box-shadow: var(--shadow-window);
+  }
+  .os-win-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    block-size: 32px;
+    padding-inline: 12px;
+    border-block-end: 1px solid var(--frame-line);
+  }
+  .os-win-path {
+    min-inline-size: 0;
+    overflow: hidden;
+  }
+  .os-win-body {
+    position: relative;
+    flex: 1;
+    min-block-size: 0;
+  }
+  .os-win[data-tone="ink"] {
+    background: #1c1c1e;
+    color: #f3f3f3;
+    border-color: #2c2c30;
+    --px-ink: #a3a4a8;
+  }
+  .os-win[data-tone="ink"] > .os-win-bar {
+    border-block-end-color: rgb(255 255 255 / 0.1);
+  }
+
+  /* ── Clock (§5.6): fixed width, so the streamed hole never shifts the bar. ── */
+  .os-clock {
+    display: inline-block;
+    inline-size: var(--clock-w);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Boot (§5.6): once per session, transforms only; never the <h1>. ── */
+  @media (prefers-reduced-motion: no-preference) {
+    html:not([data-booted]):not([data-motion="reduce"]) .os-menubar {
+      animation: os-boot-bar 0.32s var(--ease-out-expo) both;
+    }
+    html:not([data-booted]):not([data-motion="reduce"]) .os-dock {
+      animation: os-boot-dock 0.44s var(--ease-out-expo) 0.12s both;
+    }
+  }
+}
+
+@keyframes os-bounce {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  40% {
+    translate: 0 -14px;
+  }
+}
+@keyframes os-boot-bar {
+  from {
+    translate: 0 -100%;
+  }
+}
+@keyframes os-boot-dock {
+  from {
+    translate: 0 calc(100% + 32px);
+  }
+}
