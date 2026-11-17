@@ -57,9 +57,12 @@ test.describe("brand pages", () => {
       await expect(top.locator(`a[href="${prefix(p.locale)}/contact"]`)).toBeVisible();
       await expect(top.locator('a[href="#services"]')).toBeVisible();
 
-      const links = await page
-        .locator("main section#services article h3 a")
-        .evaluateAll((els) => els.map((a) => (a as HTMLAnchorElement).pathname));
+      // the services stream into their Suspense hole: wait for them before reading
+      const cards = page.locator("main section#services article h3 a");
+      await expect(cards).toHaveCount(SERVICES[p.id].length);
+      const links = await cards.evaluateAll((els) =>
+        els.map((a) => (a as HTMLAnchorElement).pathname),
+      );
       expect(links.map((h) => h.split("/").pop()).sort()).toEqual([...SERVICES[p.id]].sort());
       for (const h of links) expect(h).toMatch(new RegExp(`^${prefix(p.locale)}/services/`));
     });
