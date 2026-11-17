@@ -1,0 +1,1058 @@
+{
+ "site": {
+  "summary": "The public site lives in `src/app/[locale]/(site)/**`. Its layout wraps every page in `I18nProvider`, which ships only the `common` and `nav` namespaces, plus `AlternatesProvider`, a skip link, `SiteHeader`, `<main id=\"main\">` and `SiteFooter`. Organization, Person and WebSite JSON-LD stream in behind a separate `<Suspense>`.\n\nStatic and streamed parts:\n- `getLocale()` reads `next/root-params`, so each page shell is prerendered per locale.\n- Every DB-backed part is an async server component that calls `await connection()` inside its own `<Suspense>`. It then reads `'use cache'` + `cacheTag(\"content\")` functions from `src/server/modules/content/queries.ts`.\n- The skeletons have the same box sizes as the real content, so nothing shifts when it streams in.\n- No `loading.tsx` exists under `(site)`. Detail pages use the `params.then(...)` pattern inside `<Suspense fallback={<ArticleSkeleton/>}>`.\n\nHome sections, in order:\n1. Hero, with a streamed availability badge.\n2. Trust marquee (streamed).\n3. Featured work (streamed).\n4. Services bento (streamed).\n5. HowWeWork tabs (static, no JS).\n6. Stats strip (streamed).\n7. Latest posts plus a course card (streamed).\n8. Testimonials (streamed).\n9. CtaBand (static).\n\nClient JS is kept small: header scroll state, active nav link, language dropdown, theme toggle, a mobile menu built on the native Popover API, next-themes, Radix `DirectionProvider`, and per-page islands (`LiteYouTube`, `CopyLink`, `ViewTracker`, `Toc`, `ContactForm`).\n\nRTL is handled with logical utilities. Arrow icons are drawn for RTL and get `ltr:rotate-*`. The hero SVG mirrors with `rtl:-scale-x-100`, `gt-accent` flips its gradient under `[dir=rtl]`, and the marquee is forced `dir=\"ltr\"`.\n\nThe current brand, a green two-square mark called \"Good Team\", is hard-coded in at least 10 places, including the OG renderer and the favicon.",
+  "files": [
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/layout.tsx",
+    "role": "Root layout for each locale (html lang/dir, fonts, theme init, Providers)",
+    "notes": "`generateStaticParams` covers fa and en. `presetInitScript` is injected through `<InlineScript>` in `<head>`. `viewport.themeColor` is hard-coded to #ffffff / #141a21. Metadata title template is `%s | ${t.common.appName}`. `<body class=\"min-h-dvh\">` wraps `<Providers dir>` (next-themes `attribute=class`, `defaultTheme=system`, plus Radix `DirectionProvider`)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/(site)/layout.tsx",
+    "role": "Public chrome: the main mount point for a menu bar, dock and assistant",
+    "notes": "Order: `I18nProvider(pickMessages(locale, [\"common\",\"nav\"]))` > `AlternatesProvider` > skip link to `#main` > `<SiteHeader locale t/>` > `<main id=\"main\" className=\"min-h-[60dvh] overflow-x-clip\">` > `<SiteFooter/>` > `<Suspense fallback={null}><SiteJsonLd/></Suspense>` (calls `connection()` + `getPublicProfile()`, then emits organizationLd/personLd/websiteLd). There is no loading.tsx."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/(site)/page.tsx",
+    "role": "Home page (static shell plus streamed sections)",
+    "notes": "`generateMetadata` uses `pageMetadata({path:'/', title:t.site.metaTitle, absoluteTitle:true})`.\n\nSections in order:\n(1) HERO `<section class=relative isolate>`. Background layer at `-top-16`: `bg-grid mask-radial` and two `gt-glow` blobs (primary/20, violet/15). Grid at `lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]`. Left column (`gt-rise`):\n  - `<Suspense fallback={AvailabilityBadgeSkeleton}><AvailabilityBadge/>` reads `getPublicProfile().availableForWork` and shows `site.available` or `site.unavailable`.\n  - h1 `HeroTitle` wraps `site.heroAccent`… specifically `site.heroTitleAccent` (a substring of `site.heroTitle`) in `.gt-accent`.\n  - `site.heroSubtitle`.\n  - CTA links: `site.heroPrimaryCta` to /contact, `site.heroSecondaryCta` to /work.\n  - Proof list: `site.heroProof1..3`.\n  Right column: `<HeroDiagram/>` (static).\n(2) `<Suspense fallback=TrustMarqueeSkeleton(h-[121px])><TrustMarquee/>`.\n(3) Featured work: static `SectionHeading` (`site.workEyebrow`, `site.workTitle`, `site.workSubtitle`; action `ArrowLink` `site.viewAllWork` to /work), then `<Suspense FeaturedWorkSkeleton><FeaturedWork/>`.\n(4) Services: section with a `mask-fade-y bg-muted/40` backdrop. `SectionHeading` uses `site.servicesEyebrow`, `servicesTitle`, `servicesSubtitle` and `allServices` (to /services), then `<Suspense><ServicesBento/>`.\n(5) How we work: `SectionHeading` (`site.processEyebrow`, `processTitle`, `processSubtitle`, centered) plus `<HowWeWork/>`. Fully static.\n(6) Stats: `<section aria-label={site.statsEyebrow}>`, a rounded-3xl card with `bg-dots`, then `<Suspense StatsStripSkeleton><StatsStrip/>`.\n(7) Latest: `SectionHeading` (`site.latestEyebrow`, `latestTitle`, `latestSubtitle`, `readBlog` to /blog), then `<Suspense><LatestPosts/>`.\n(8) `<Suspense TestimonialsSkeleton><Testimonials/>` (the whole section streams).\n(9) `<CtaBand/>` (static).\n\nSections have no `id` or `data-*` hooks today."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/home/sections.tsx",
+    "role": "Streamed home sections and their matching skeletons (server-only)",
+    "notes": "Every async section starts with `await connection()`.\n\n- `AvailabilityBadge({t})`: `getPublicProfile()`; uses `.gt-live` dot (success or warning).\n- `TrustMarquee({locale,t})`: `listPublicClientNames(locale)` (work `meta.client` plus testimonial companies). Renders only an h-px div when there are fewer than 2 names. Wrapper is `gt-marquee-wrap mask-fade-x` with `dir=ltr`; items are duplicated, with `aria-hidden` on the second copy. Key: `site.trustedBy`.\n- `FeaturedWork`: `listPublished({locale, types:['work'], pageSize:12})`, sorted featured-first, top 3. `WorkCard size=lg` at `lg:col-span-7 row-span-2`, plus 2 cards at `lg:col-span-5`. Returns null when empty.\n- `ServicesBento`: `listServices(locale)` (returns `highlights` bullets parsed from markdown), max 6. `bentoSpans = [md:col-span-4, 2, 2, 4]` on `md:grid-cols-6`. Big cards get `bg-dots` + `gt-glow` + highlight chips (`site.whatYouGet`). Uses `ServiceIcon(meta.icon)`.\n- `StatsStrip`: `getSiteStats()` gives projectsDelivered, hoursTracked, clients and postsPublished. Keys: `site.statProjects`, `statHours`, `statClients`, `statPosts`. Grid is 2 columns, 4 at lg, with dashed-border index logic.\n- `LatestPosts`: `listPublished({types:['article','vlog','tutorial'], pageSize:3})` + `listSeries(locale)`, then `getSeriesWithLessons(locale, course.slug)`. Shows 2 PostCards plus a dark course card when a course exists. Keys: `site.courseEyebrow`, `courseCta`, `minutesTotal`, `lessonsCount`.\n- `Testimonials`: `listTestimonials(locale, 6)`, CSS columns 1/2/3. Keys: `site.testimonialsEyebrow`, `testimonialsTitle`.\n- `CtaBand({locale,t,className})`: static and also reused on about, work, services and detail pages. Dark `bg-grey-900` panel with `bg-grid mask-radial` and glows. Keys: `site.ctaTitle`, `ctaSubtitle`, `ctaButton` (to /contact), `ctaSecondary` (to /services), `heroProof1..3`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/home/hero-diagram.tsx",
+    "role": "Static animated hero system diagram (Cloudflare-style), no JS",
+    "notes": "An `@container` box with `aspect-[6/5] max-w-[600px]`, sized in `cqw` units. The SVG uses `viewBox 0 0 600 500` with `rtl:-scale-x-100`. Paths come from `inputPath`/`outputPath`, with `.gt-ants` dashed lines and `.gt-packet` traveling dots. The hub orbit spins via `animate-[spin_40s]`.\n\nNode boxes are positioned with `start-0`/`end-0` and `top%`. Keys: `site.diagramIdea`, `diagramDesign`, `diagramCode`, `diagramDeploy`, `diagramPortal`, `diagramAgents`. The hub shows `LogoMark` + `common.appName`. Floating cards use `animate-float`: a terminal (`dir=ltr`, macOS traffic lights #ff5f57/#febc2e/#28c840), a progress card (`site.diagramProgress`, `diagramLive`) and a toast (`site.diagramTasks`). The `#8e33ff` violet is hard-coded. `role=img` with `aria-label={site.diagramLabel}`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/home/how-we-work.tsx",
+    "role": "Tabbed feature showcase with no JS (radio inputs + :has())",
+    "notes": "Tabs: portal, progress, contracts and invoices. Hidden radios `#how-<key>` live inside `fieldset.contents`, with labels as tabs. Panels show via `group-has-[#how-x:checked]:grid`. The literal class map `tabCls` is required because Tailwind cannot see interpolated class names.\n\nKeys: `site.tab{Portal|Progress|Contracts|Invoices}`, `tab{K}Title`, `tab{K}Body`, `tab{K}Point1..3`, plus mock keys `mockProject`, `mockMilestone1-3`, `mockUpdate`, `mockHoursWeek`, `mockSigned`, `mockContract`, `mockInvoice`, `mockPaid`, and `common.total`.\n\nOn mobile the tabs scroll horizontally (`min-w-56 overflow-x-auto`); at lg they stack vertically. The bar chart is forced `dir=ltr`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/site-header.tsx",
+    "role": "Public header (server component), the obvious seat for the macOS menu bar",
+    "notes": "Exports:\n- `siteSections`: /work, /services, /blog, /learn and /about, with nav keys.\n- `staticSitePaths`: those paths plus / and /contact, used by the language toggle.\n- `SiteHeader({locale,t})`: `HeaderShell` > `max-w-7xl` row: `Logo` link, then a pill nav (`hidden md:flex`, `<NavLinks items/>`), then `LanguageMenu`, `ThemeToggle`, a contact CTA (`hidden sm:inline-flex`, label `site.heroPrimaryCta`) and `MobileMenu` (large links with `gt-menu-item` stagger `animationDelay i*40ms`).\n\nThe header is 64px tall (`h-16`), and the dock and menu bar will need to account for that."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/header-client.tsx",
+    "role": "Header client islands",
+    "notes": "- `HeaderShell`: one passive scroll listener sets `data-scrolled`, which turns on `.glass` and a border. The header is `sticky top-0 z-50 h-16`.\n- `NavLinks` / `ActiveLinks`: `usePathname()` inside `<Suspense>`, with fallback links rendered without active state; sets `aria-current`.\n- `LanguageMenu({current,label,staticPaths})`: Radix `DropdownMenu` with an icon trigger. `useSwitchHref` picks the alternates context first, then the same static path, then the section index. It uses a plain `<a>` (full reload) because a `<Link>` prefetch across root params 404s in Next 16.4.\n- `MobileMenu({label,closeLabel,children})`: native `popover=\"auto\"` with `id=\"site-mobile-menu\"`, `popoverTarget` buttons, a `.gt-mobile-menu` full-screen sheet, and `CloseOnNavigate` (usePathname in Suspense calls `hidePopover`).\n\nThe header renders `ThemeToggle` from `components/shared/theme-controls.tsx`, which cycles light and dark and needs the `common` namespace through `useT`. `AppearanceMenu` (mode plus color preset) is used only by the panel header."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/site-footer.tsx",
+    "role": "Footer (static plus 2 dynamic holes)",
+    "notes": "`CurrentYear` is `'use cache'` + `cacheLife('days')` (the pattern for any date or clock in static chrome). `FooterSocials` uses `connection()` + `getPublicProfile()` inside `<Suspense fallback h-9>`.\n\nLayout: a 4-column grid `md:grid-cols-[1.5fr_1fr_1fr_1fr]` with columns `site.footerExplore`, `footerResources` (includes /feed.xml and /llms.txt with `prefetch=false`) and `footerConnect` (/login, /api/v1/openapi.json, /sitemap.xml). Below that sits the giant `.gt-wordmark` showing `common.appName`, then a bottom bar with `site.footerRights`, `footerMadeWith` and an RSS link. The footer has `mt-24` and dashed borders."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/ui.tsx",
+    "role": "Site primitives (server-only)",
+    "notes": "- `Container`: `mx-auto max-w-7xl px-4 sm:px-6`.\n- `Eyebrow`: pill with a `.gt-dot`.\n- `SectionHeading({eyebrow,title,subtitle,action,align,as})`: mb-10/12; with start alignment it becomes `md:flex-row` with the action at the end.\n- `ArrowLink`: `ChevronLeftIcon ltr:rotate-180`.\n- `PageHero({crumbs,eyebrow,title,subtitle,children})`: the hero for index pages, `bg-grid mask-fade-b` + `gt-glow` at `-top-16`.\n- `Chip`: filter pill with `scroll=false`.\n- Formatting helpers: `siteFmt`, `fmtDate(d, locale, 'medium'|'long')` (Jalali for fa), `fmtNum`.\n\nThis file is the natural home for new framed-grid primitives."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/cards.tsx",
+    "role": "Content cards (server-only)",
+    "notes": "- `TypeBadge`.\n- `PostCard` (`gt-lift`, `Cover` 16/10; falls back to `NoteCard` when `type==='note'`).\n- `NoteCard` (dashed).\n- `WorkCard({size:'md'|'lg'})`: metric overlay from `meta.metrics[0]`, client and year, stack chips in `dir=ltr`.\n- `SeriesCard` (`gt-ring`).\n- `TestimonialCard`: sets `lang`/`dir` per testimonial locale; `markdownToText(quote, 600)`.\n\nCards link through `after:absolute after:inset-0` stretched links."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/cover.tsx",
+    "role": "Fixed-aspect cover image (no CLS)",
+    "notes": "Local `/media` and `/brand` images go through `next/image` (fill, sizes); external URLs use a plain lazy `<img>`. When there is no cover it draws a deterministic gradient from a hard-coded palette (#00A76F, #078DEE, …) plus a grid and kind icon. Re-theme the palette for the new brand."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/islands.tsx",
+    "role": "Small client islands for public pages",
+    "notes": "- `LiteYouTube`: click-to-load; the thumbnail is fetched only after window `load`, because the YouTube host is blocked on some networks.\n- `CopyLink`.\n- `ViewTracker`: sessionStorage dedupe, then `requestIdleCallback` calls `recordViewAction`.\n- `Toc`: IntersectionObserver with `rootMargin \"-80px 0px -70% 0px\"`, tied to the 64px header.\n\nLabels arrive as props so the `site` namespace never ships to the client. Follow the same convention for the assistant."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/alternates.tsx",
+    "role": "Client context of language-switch targets",
+    "notes": "`AlternatesProvider` / `useAlternates` / `SetAlternates({value})`. Detail pages register their translations, and `LanguageMenu` reads them. Any new language control in a menu bar must use `useAlternates` and fall back to `staticSitePaths`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/nav-bits.tsx",
+    "role": "Breadcrumbs (+ BreadcrumbList JSON-LD), Pagination, PrevNext",
+    "notes": "Server-only. Chevrons use `ltr:rotate-180`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/article.tsx",
+    "role": "Long-form building blocks",
+    "notes": "`ArticleMeta`, `ArticleHeader`, `Tldr`, `ArticleBody` (`prose-gt` plus a `lg:sticky lg:top-24` TOC aside), `ShareBar`, `Syndicated`, `AuthorBox`. Used by blog, lessons and services."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/lesson.tsx",
+    "role": "Course and lesson views",
+    "notes": "`LessonList`, `LessonView` (sidebar at `lg:sticky lg:top-24`)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/json-ld.tsx",
+    "role": "Typed schema.org JSON-LD",
+    "notes": "`JsonLd({data})` escapes `<`. Also: `ids`, `organizationLd`, `personLd`, `websiteLd`, `breadcrumbLd`, `faqLd`, `articleLd`, `videoLd`. Organization `logo` is `/icon.svg`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/seo.ts",
+    "role": "Metadata builder",
+    "notes": "`pageMetadata({locale,path,title,description,languages,type,image,markdownPath,noindex,absoluteTitle})` covers canonical, hreflang plus x-default, OG/Twitter, and the RSS and `.md` alternates. Also exports `absoluteUrl`, `samePathAlternates` and `postAlternates`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/og.tsx",
+    "role": "OG image renderer (Satori, 1200x630)",
+    "notes": "`renderOgImage({locale,title,eyebrow,brand,footer,domain})`. It hard-codes the old green logo SVG and the green and violet glows and colors (#141A21 background). Fonts are TTF files from `public/fonts/og` (Satori cannot read woff2). Persian text is pre-shaped with `bidiRuns`/`visualRtl` from `src/lib/arabic-shaping.ts`. Used by `(site)/opengraph-image.tsx` (static), `blog/[slug]/opengraph-image.tsx` and `work/[slug]/opengraph-image.tsx` (both `connection()`)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/faq.tsx",
+    "role": "FAQ on native <details> (no JS) + FAQPage JSON-LD",
+    "notes": "`generalFaq(t)` uses `site.faq1Q..5A`. Styled by `.gt-faq`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/contact-form.tsx",
+    "role": "Client contact form",
+    "notes": "Native inputs and selects with no UI library, a honeypot field, posting to `submitContactAction` from leads. Labels come in as props."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/skeletons.tsx",
+    "role": "Layout-matched skeletons",
+    "notes": "`CardSkeleton`, `CardGridSkeleton`, `ArticleSkeleton`, `ChipsSkeleton`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/social-links.tsx, service-icon.tsx, page-utils.ts",
+    "role": "Helpers",
+    "notes": "- social-links.tsx: `SocialLinks`, `SocialGlyph` (inline brand SVG paths).\n- service-icon.tsx: the `serviceIcons` map, also imported by panel `content/_components/editor-data.ts`.\n- page-utils.ts: `decodeParam`, `sp`, `pageParam`, `withQuery`, `notFoundMetadata`, `homeCrumb`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/(site)/{about,services,work,blog,learn,contact}/page.tsx",
+    "role": "Section index pages",
+    "notes": "All share the same skeleton: `PageHero` (breadcrumbs, title, subtitle), then `Container` with `<Suspense>` streamed content, then usually `CtaBand`.\n\n- work: `WorkGrid` with `searchParams` stack/year chips; `listPublished` + `listWorkFacets`.\n- blog: search form, type/tag chips, featured hero card, `Pagination`.\n- learn: `listSeries` + standalone tutorials.\n- services: `ServicesGrid` (`listServices`, ItemList JSON-LD), a static 4-step process, `Faq`.\n- about: `AboutIntro` (profile plus the 'about' page post), values grid, `StatsStrip`, `CtaBand`.\n- contact: `DirectContact` + `ContactForm`, preselecting a service via `?service=`.\n\nDetail pages (`blog/[slug]`, `work/[slug]`, `services/[slug]`, `learn/[series]`, `learn/[series]/[lesson]`) use `<Suspense fallback={<ArticleSkeleton/>}>{params.then(...)}`.\n\nAlso: `not-found.tsx` (404 with a `gt-accent` '404'), `[...rest]/page.tsx` (calls `notFound()`), and `opengraph-image.tsx`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/content/queries.ts",
+    "role": "Cached public data layer",
+    "notes": "Every function is `'use cache'` + `cacheTag(CONTENT_TAG='content')`. `contentLife()` shortens the cache lifetime when a scheduled post is about to go live. Callers must be request-time (`connection()` first).\n\nUsed on home: `getPublicProfile` (tags content and settings; `cacheLife` hours), `listPublicClientNames`, `listPublished`, `listServices`, `getSiteStats` (tags content and stats; `cacheLife` days), `listSeries`, `getSeriesWithLessons`, `listTestimonials` (hours).\n\nTypes: `PostCard`, `PostDetail`, `SeriesCard`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/globals.css",
+    "role": "Design tokens + site utilities",
+    "notes": "- Tokens: `@theme inline` maps CSS vars to Tailwind. `:root` has a green primary (#00a76f) plus `--primary-rgb`. `.dark` overrides. Six `[data-preset]` blocks (cyan, purple, blue, orange, red; orange sets `--primary-foreground:#1c252e`). Minimals greys `--color-grey-50..900`. Shadows `card`, `dropdown`, `dialog`, `primary`. Animations `--animate-marquee`, `float`, `pulse-ring`, `dash`, `shimmer`.\n- Global `prefers-reduced-motion` kill switch in `@layer base`.\n- Utilities: `.bg-soft-primary`, `.bg-grid` (48px, `--surface-grid`), `.bg-dots` (20px), `.mask-fade-b`, `.mask-fade-y`, `.mask-fade-x`, `.mask-radial`, `.text-gradient`, `.glass` (72% background + blur 12px + saturate), `.scrollbar-none`, `.scrollbar-thin`.\n- `.prose-gt` long-form styles (headings `scroll-margin-top: 6rem`; pre forced ltr).\n- Site block `/* ─── site ─── */ … /* ─── /site ─── */` (keep additions inside it): `.gt-wordmark`, `.gt-accent` (+ rtl variant), `.gt-dot`, `.gt-glow` (absolute, blur 80px), `.gt-packet`, `.gt-ants`, `.gt-live`, `.gt-rise`, `.gt-draw`, `.gt-mobile-menu` (+ `:popover-open` + `.gt-menu-item`), `.gt-marquee`, `.gt-marquee-wrap`, `.gt-lift`, `.gt-ring`, `.gt-faq`, plus prose anchor niceties."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/brand/logo.tsx",
+    "role": "Brand mark (needs replacing with the pixel logo)",
+    "notes": "`LogoMark` is an SVG of two rounded squares using `var(--primary)`; `Logo({label})` adds the wordmark text. Used in the site header and footer, hero-diagram, panel `sidebar.tsx`, the (auth) layout, `p/[token]`, `i/[token]`, `sign/[token]`, `contracts/contract-sheet.tsx` and `finance/invoice-document.tsx`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/docs/brand/logo-reference.webp",
+    "role": "New brand reference",
+    "notes": "Pixel wordmark: GOOD in yellow #FFC50D, IN in dark grey #6A6A6C, STUDIO in light grey #CACCCE, inside a window-like frame (top and left bars #B3B5B9, corner #6A6A6C) on #F3F3F3. Includes a swatch row."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/icon.svg, src/app/manifest.ts",
+    "role": "Favicon + PWA manifest",
+    "notes": "Both hard-code the old green mark. The manifest has `theme_color #00a76f`, `short_name` = `common.appName`, and `name` = `site.metaTitle`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/fonts.ts",
+    "role": "Self-hosted fonts via next/font/local",
+    "notes": "Vazirmatn (fa), Public Sans (en) and JetBrains Mono, all from @fontsource-variable woff2 (no network at build time). Exposed as `--font-vazirmatn`, `--font-public-sans` and `--font-jetbrains-mono` through `fontVariables`. A pixel display font would be added here the same way."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/theme.ts, theme-controls.tsx",
+    "role": "Theme, presets and toggles",
+    "notes": "- theme.ts: `colorPresets` (green, cyan, purple, blue, orange, red), `presetSwatches`, `PRESET_STORAGE_KEY='gt-preset'`, `presetInitScript`.\n- theme-controls.tsx: `usePreset` (a MutationObserver on `<html data-preset>`), `ThemeToggle`, `AppearanceMenu` (Popover + ToggleGroup)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/messages/{fa,en}/site.ts, common.ts, nav.ts; src/i18n/server.ts; src/i18n/client.tsx; src/i18n/config.ts",
+    "role": "i18n for the site",
+    "notes": "- fa is the source of truth; en is typed `Record<keyof typeof fa, string>`. site.ts is about 300 lines.\n- Brand strings: `common.appName` is 'گود تیم' / 'Good Team'; `common.appTagline`; `site.metaTitle` / `metaDescription`.\n- `getLocale()` uses `next/root-params`; `getMessages`; `pickMessages`.\n- Client: `useT` / `useLocale` / `useI18n`.\n- config.ts: `localePath(locale, path)` (fa has no prefix), `stripLocale`, `localeMeta` (dir, calendar, label).\n- The `useT` doc comment says the site ships `site`, but the layout actually ships only `common` and `nav`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/settings/service.ts",
+    "role": "Profile settings consumed by the site",
+    "notes": "`settingsSchemas.profile` defaults `brandName` to {fa:'گود تیم', en:'Good Team'}. Fields: `ownerName`, `headline`, `bio`, `avatarUrl`, `email`, `phone`, `location`, `socials` (x, linkedin, github, telegram, instagram, youtube) and `availableForWork`. A virtual-me assistant could reuse `ownerName`, `avatarUrl` and `headline`."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/next.config.ts",
+    "role": "Framework flags",
+    "notes": "`cacheComponents: true`, `partialPrefetching: true`, `output: standalone`. Images: avif and webp; `localPatterns` `/media/**` and `/brand/**`. Sets `X-Accel-Buffering: no` for streaming."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/scripts/shots.mjs",
+    "role": "Visual QA screenshots",
+    "notes": "Playwright screenshots of fa/en pages with `--dark`, `--mobile` and `--full`. The only e2e spec is `e2e/vault.spec.ts`, so the site has no browser tests."
+   }
+  ],
+  "constraints": [
+   "Cache Components: DB reads must happen in an async server component that calls `await connection()` first, inside `<Suspense>`. Use the `'use cache'` functions from content/queries.ts and never query in the static shell.",
+   "Never use `new Date()` or `Date.now()` in static chrome. A menu-bar clock must be a client island that renders the time after mount (useEffect or useSyncExternalStore with a server snapshot) and sits inside `<Suspense>`. Use the `CurrentYear` 'use cache' pattern for date strings that may be cached.",
+   "`usePathname()` and `useSearchParams()` in any new client chrome (dock active state, menu-bar title) must render inside `<Suspense>` with a non-active fallback, the same way `NavLinks` and `LanguageMenu` do.",
+   "The `(site)` route group has no loading.tsx. Pages rely on per-component Suspense with skeletons sized to match the real content (no CLS). Keep that, or add boundaries deliberately; Next 16.4 validates instant navigations.",
+   "Locale switching must stay a plain `<a href hrefLang>`, not a `<Link>`. It is a full reload because html lang, dir and fonts change, and a `<Link>` prefetch across root params 404s in Next 16.4. Reuse `useAlternates` and `staticSitePaths`.",
+   "The 64px sticky header height (`h-16`) is coupled to several places: hero and PageHero background layers at `-top-16`, sticky asides at `top-24` (about, ArticleBody TOC, lesson sidebar), `.prose-gt` headings `scroll-margin-top: 6rem`, Toc `rootMargin -80px`, and the MobileMenu's `h-16` top row. Changing it means updating all of them.",
+   "A fixed bottom dock will cover the footer bottom bar and the last section. Add matching bottom padding or a spacer to `<main>`/footer, respect `env(safe-area-inset-bottom)`, and keep `<main id=\"main\">` as the skip-link target.",
+   "`<main>` has `overflow-x-clip`, which fixed horizontal overflow on phones (commit a6c58c1). Background glow layers (`gt-glow`) and absolutely positioned diagram parts depend on it.",
+   "RTL first: use logical utilities only (`ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`, `inset-inline`). On the site, arrows (`ArrowUpLeftIcon`, `ChevronLeftIcon`) are drawn for RTL and corrected with `ltr:rotate-90` / `ltr:rotate-180`. The hero SVG mirrors with `rtl:-scale-x-100`. Centering with `-translate-x-1/2` needs `rtl:translate-x-1/2`. Marquees, terminals and charts force `dir=ltr`, with items set to `dir=auto`.",
+   "i18n: no hard-coded UI strings. Add keys to `fa/<ns>.ts` (source of truth) and `en/<ns>.ts`, and register new namespaces (for example an `assistant` namespace) in `src/i18n/messages/index.ts`. The public layout ships only `common` and `nav` to the client. Pass assistant copy as props or add the namespace to `pickMessages` deliberately, keeping the payload small.",
+   "Performance: the public site keeps tooltips and toasts out (`InteractiveProviders` is panel-only, commit d203d76). Animations are CSS-only, with a global `prefers-reduced-motion` kill switch. Islands receive labels as props. HowWeWork and FAQ use no JS. New features (dock magnification, assistant) should follow the same rules: CSS-first, one shared IntersectionObserver, idle-time mount (`requestIdleCallback`, as `ViewTracker` does), and no heavy animation libraries.",
+   "Tailwind v4 cannot detect interpolated class names. Use literal maps like `tabCls` in how-we-work.tsx for any per-section or per-state classes.",
+   "Theme: next-themes uses the `.dark` class (`@custom-variant dark`), and the color preset is `<html data-preset>` applied by `presetInitScript` before paint. A yellow #FFC50D primary needs a dark `--primary-foreground` (#1c252e, as in the orange preset). Yellow text on white is low contrast, so review uses of `text-primary` (stats '+', ArrowLink hover, CheckIcons, TypeBadge `text-primary-dark`).",
+   "The brand is hard-coded outside tokens in: `components/brand/logo.tsx`, `src/app/icon.svg`, `og.tsx` (SVG plus green and violet colors), `manifest.ts` `theme_color`, `[locale]/layout.tsx` `viewport.themeColor`, the `cover.tsx` palette, `#8e33ff` in `.gt-accent`, `.gt-ring` and hero-diagram, settings default `brandName`, `common.appName`, and `site.metaTitle`. LogoMark is also used in panel, contract, invoice, sign and portal pages.",
+   "OG images are rendered by Satori: TTF fonts only (`public/fonts/og`), Persian must be pre-shaped with `arabic-shaping.ts`, no CSS `inset`, and glows must be full-canvas layers. A pixel logo there must be inline SVG rects.",
+   "Keep site CSS additions inside the `/* ─── site ─── */ … /* ─── /site ─── */` block in globals.css. If components in `components/ui` or `components/shared` change (for example a shared menu bar or dock), update the `/panel/design-system` catalog examples.",
+   "SEO, AEO and GEO must survive the redesign: JSON-LD (SiteJsonLd in the layout, per-page ItemList, Article, FAQ, Breadcrumb), real `<h1>`/`<h2>` hierarchy (`SectionHeading as`), `.md` mirrors via proxy.ts, the `h-entry` / `p-name` / `e-content` microformats on posts, and `aria-label`s on sections. An assistant bubble must be `aria-live=polite` (or decorative) and must not hijack focus.",
+   "The mobile menu uses the native Popover API (`popover=auto`, `id=site-mobile-menu`, `popoverTarget`), which gives light dismiss, Esc and top layer with no dialog library. It closes on navigation via `CloseOnNavigate`. A replacement (for example a dock on phones) should keep that zero-dependency approach.",
+   "Locale `fa` is served without a URL prefix. Always build hrefs with `localePath(locale, path)`. Numbers go through `fmtNum` or `toPersianDigits`, and dates through `fmtDate` (Jalali for fa)."
+  ],
+  "opportunities": [
+   "Menu bar: replace the internals of `SiteHeader` and `HeaderShell` (site-header.tsx, header-client.tsx) with a thin top bar (about 28 to 32px). The left side gets a brand menu (pixel `LogoMark`, then a 'Good In ▾' Radix DropdownMenu listing Good In Studio, Good In Code and so on, plus About and Contact). The right side reuses `LanguageMenu`, `ThemeToggle` or `AppearanceMenu`, an availability dot (`AvailabilityBadge` data via `getPublicProfile`, streamed) and a client-only clock. Keep the server-component shell with client islands, and keep the `siteSections` / `staticSitePaths` exports. The panel header (`components/panel/header.tsx`) already uses `AppearanceMenu` + `LocaleSwitcher`, so a shared `components/shared/os-menubar` could serve both.",
+   "Dock: add one client island mounted in `(site)/layout.tsx` after `<SiteFooter/>`, built from `siteSections` plus /contact (and /login for the panel). Active state comes from the `ActiveLinks` usePathname-in-Suspense pattern. Do the magnification in CSS (`:hover`, `:has()` sibling scale, `transform` only). It can replace `MobileMenu` below md, or the two can coexist. Reserve bottom space on `<main>` and the footer.",
+   "Cloudflare-style framed grid: add primitives to `components/site/ui.tsx` (for example `Frame` or `GridSection` with vertical rails at the Container edges, dashed horizontal dividers between sections, corner '+' markers, numbered section labels) on top of the existing `bg-grid`, `bg-dots`, `mask-*` utilities and the dashed-border language already used in `TrustMarquee`, `StatsStrip` and the footer. Then wrap each home `<section>` in page.tsx with it. `SectionHeading` becomes the section's title cell.",
+   "Assistant hooks: home sections have no ids today. Add `id` and `data-assistant=\"<key>\"` to each section in page.tsx (hero, trust, work, services, process, stats, latest, testimonials, cta) and in the section index pages. One client island (for example `components/site/assistant.tsx`) observes `[data-assistant]` with a single IntersectionObserver (as `Toc` does in islands.tsx) and listens for pointerenter, then shows a pixel 'virtual me' sprite with a speech bubble. Copy comes from a new `assistant` i18n namespace passed as props, and the island mounts on idle.",
+   "Pixel avatar and logo: replace `LogoMark` and `Logo` in components/brand/logo.tsx with an SVG built from `<rect>` pixels (shape-rendering=crispEdges) using the reference palette. Reuse the same component in og.tsx (inline SVG rects work in Satori), `src/app/icon.svg` and the hero-diagram hub. Use CSS `steps()` animations for blinking or idle sprite frames.",
+   "Brand palette: add a `yellow` preset (#FFC50D with dark foreground) to `colorPresets` / `presetSwatches` in shared/theme.ts and a `[data-preset=\"yellow\"]` block in globals.css, or make it the `:root` default. Map the reference greys #6A6A6C, #B3B5B9, #CACCCE and #F3F3F3 to the background, muted and border tokens. Replace the hard-coded `#8e33ff` accents and the `cover.tsx` palette.",
+   "Sub-brands: services already carry `meta.icon` (`ServiceIcon`/`serviceIcons`) and `listServices(locale)` feeds both the bento and /services. A sub-brand field or mapping (Good In Studio, Good In Code, …) could be added through service meta or a static config. That would drive the brand menu, dock icons and per-section 'Good In X' labels.",
+   "Hero: `HeroDiagram` already follows the Cloudflare product-page idea (inputs, hub, outputs, animated packets, a macOS-style terminal with traffic lights). It can be reworked into an OS 'window' stack or the pixel hub without changing data flow, since it is fully static, has no JS and uses container-query sizing.",
+   "OS window chrome: section cards (`MockFrame` in how-we-work.tsx, the terminal in hero-diagram.tsx, `CtaBand`) can share a `Window` primitive (title bar with traffic lights plus a body). That primitive could also be the dock's open-app metaphor for /work, /blog and other pages.",
+   "Static vs streamed is already separated cleanly. A redesign can change every static part (hero copy, headings, HowWeWork, CtaBand, header, footer) without touching data. Streamed parts only need their markup and skeleton boxes updated together in `home/sections.tsx`.",
+   "Visual QA: run `node scripts/shots.mjs / /work /services /blog --dark --mobile` for fa/en screenshots. Consider a Playwright spec in e2e/ for the dock, menu bar and assistant interactions, since none exists for the site."
+  ]
+ },
+ "content": {
+  "summary": "Content and copy map for the OS-style redesign (read-only, nothing edited).\n\nCopy lives in three static i18n namespaces. `site`, about 300 keys in src/i18n/messages/fa/site.ts, is the source of truth, and en/site.ts is type-checked against it. `common` has appName and the theme and language labels. `nav` has the site and panel labels. The public layout (src/app/[locale]/(site)/layout.tsx) sends only `common` and `nav` to the browser through `pickMessages(locale, [\"common\",\"nav\"])`. Server components receive `t: Messages` as a prop, and client islands get their strings as props (islands.tsx, contact-form.tsx).\n\nThe home page (src/app/[locale]/(site)/page.tsx) has 9 sections in a fixed order. The hero is static. The DB-backed sections load inside Suspense through cached `queries.ts` functions with `cacheTag(\"content\")`.\n\nAll content is in one `posts` table, split by `type` (article/tutorial/vlog/note/work/service/page). Per-type fields go in `meta` JSON:\n- Work: client, year, role, stack, liveUrl, repoUrl, gallery, metrics.\n- Service: `icon` (a lucide key) and `faq`.\n\nOther tables: `series` (courses), `testimonials`, and `settings` (JSON rows `profile` and `business`).\n\nThe site profile (Settings → Site profile) holds brandName, ownerName, headline, bio, location, avatarUrl, email, phone, socials and availableForWork. The public header and footer don't use profile.brandName: they use the static `common.appName` (\"گود تیم\"/\"Good Team\").\n\nThe pixel brand grid already exists but is untracked (src/components/brand/pixel-font.ts: `brandLogoLayout(suffix)`, `BRAND_COLORS`).\n\nRecommendations:\n- **Sub-brands:** a new `brands` settings list, which is what the owner edits. Services point to a brand through `posts.meta.brand`, the same way `meta.icon` works now.\n- **Assistant narration:** a new i18n namespace `guide` for the default text, rendered in the static shell. The server passes the server-picked lines as props to one client island. Owner overrides in settings can come later.",
+  "files": [
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/messages/fa/site.ts",
+    "role": "Source of truth for all public-site copy (home, section pages, footer, FAQ, contact).",
+    "notes": "Home keys by section. Meta: metaTitle, metaDescription. Hero: heroEyebrow (used only in the OG image), heroTitle + heroTitleAccent (accent substring highlighted by HeroTitle), heroSubtitle, heroPrimaryCta, heroSecondaryCta, available/unavailable (badge from profile.availableForWork), heroProof1-3. Hero diagram: diagramLabel, diagramIdea, diagramDesign, diagramCode, diagramDeploy, diagramPortal, diagramAgents, diagramProgress, diagramLive, diagramTasks (diagramBuild is unused). Trust: trustedBy. Work: workEyebrow, workTitle, workSubtitle, viewAllWork (viewCaseStudy is unused). Services: servicesEyebrow, servicesTitle, servicesSubtitle, allServices, whatYouGet. Process: processEyebrow, processTitle, processSubtitle, and per tab {Portal,Progress,Contracts,Invoices}: tabX, tabXTitle, tabXBody, tabXPoint1-3, built dynamically as s[`tab${k}…`]. Mocks: mockProject, mockMilestone1-3, mockUpdate, mockHoursWeek, mockSigned, mockContract, mockInvoice 'GT-1042', mockPaid (mockDue is unused). Stats: statsEyebrow, statProjects, statHours, statClients, statPosts. Latest: latestEyebrow, latestTitle, latestSubtitle, readBlog, courseEyebrow, courseCta, lessonsCount {n}, minutesTotal {n}. Testimonials: testimonialsEyebrow, testimonialsTitle. CTA: ctaTitle, ctaSubtitle, ctaButton, ctaSecondary (it reuses heroProof1-3). Footer: footerAbout, footerRights, footerExplore, footerResources, footerConnect, footerMadeWith, rss, llms, sitemap, apiDocs. Page heroes: workPageTitle/Subtitle, blogTitle/Subtitle, learnTitle/Subtitle, servicesPageTitle/Subtitle, aboutTitle/Subtitle, contactTitle/Subtitle. Services page: processStepsTitle, step1-4Title/Body, faqTitle, faq1-5Q/A (generalFaq). About: valuesTitle, value1-4Title/Body. Genuinely unused keys: diagramBuild, viewCaseStudy, mockDue, readMore, backTo, filterStack, workCtaTitle/Body, backToCourse, serviceCtaTitle/Body, sayHello. Do NOT remove type_*, level_* or budget_*: the panel reads them dynamically (content editor and filters, series table, inbox)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/messages/en/site.ts",
+    "role": "English mirror, typed as Record<keyof typeof fa, string>.",
+    "notes": "English brand copy, e.g. metaTitle 'Good Team — Designing and building digital products'. Every new key must be added here too or typecheck fails."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/messages/fa/common.ts",
+    "role": "App-wide strings shipped to client islands (site and panel).",
+    "notes": "appName 'گود تیم' / en 'Good Team' is the master brand string used by the header Logo, footer, metadata title template, manifest short_name, auth layout and home OG image. appTagline. Menu-bar candidates: language, theme, light, dark, system, colorPreset, toggleTheme, toggleMenu, commandPalette, commandHint, skipToContent, signIn, signOut, close, settings."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/messages/fa/nav.ts",
+    "role": "Navigation labels: public site (dock items) and panel groups and items.",
+    "notes": "Site: home, work, blog, learn, services, about, contact, panel. Panel: groupOverview, groupWork, groupBusiness, groupKnowledge, groupSite, groupSystem, dashboard, time, calendar, tasks, projects, clients, finance, invoices, contracts, vault, docs, content, inbox, media, settings, users, apiTokens, designSystem, portalHome."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/messages/index.ts",
+    "role": "Registers namespaces; Messages type; fa is the key source.",
+    "notes": "A new `guide` namespace (assistant narration) goes here, for both fa and en."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/server.ts",
+    "role": "getLocale/getT/getMessages/pickMessages(locale, namespaces).",
+    "notes": "pickMessages decides what reaches the browser. The public site ships only common and nav."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/client.tsx",
+    "role": "I18nProvider/useT/useLocale for client components.",
+    "notes": "Doc comment says the public site ships common, nav and site, but the layout actually ships only common and nav. Trust the layout."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/(site)/layout.tsx",
+    "role": "Public chrome: I18nProvider(common, nav), SiteHeader, main#main, SiteFooter, JSON-LD in Suspense.",
+    "notes": "The menu bar, dock and a single <GuideAssistant> island would mount here. The static shell is prerendered per locale."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/(site)/page.tsx",
+    "role": "Home page, sections in this order.",
+    "notes": "(1) Hero, static: AvailabilityBadge in Suspense plus HeroDiagram. (2) TrustMarquee: listPublicClientNames, renders a hairline if there are fewer than 2 names. (3) FeaturedWork: 3 work posts, featured first, 7/5 col bento. (4) ServicesBento: listServices, up to 6, spans 4/2/2/4. (5) HowWeWork: CSS-only radio tabs. (6) StatsStrip: getSiteStats. (7) LatestPosts: 2-3 posts plus the first course card. (8) Testimonials: listTestimonials(locale, 6). (9) CtaBand. Each SectionHeading gets eyebrow, title, subtitle and action, so it is a natural anchor for data-guide section ids."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/home/sections.tsx",
+    "role": "Server components for the DB-backed home sections plus their skeletons; CtaBand.",
+    "notes": "Each section calls `await connection()` and then a cached query. CtaBand is also reused on /about."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/home/hero-diagram.tsx",
+    "role": "Cloudflare-style animated SVG/CSS hero diagram (Idea/Design/Build → hub → Deploy/Portal/AI agents).",
+    "notes": "Uses LogoMark at the hub, so the new pixel mark goes there. Works in RTL."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/home/how-we-work.tsx",
+    "role": "Zero-JS tab showcase (portal/progress/contracts/invoices) with mock UI cards.",
+    "notes": "Uses the tab* and mock* keys."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/islands.tsx",
+    "role": "Client islands for public pages.",
+    "notes": "Established pattern: labels come in as props so the site namespace never ships to the client. Follow it for the assistant."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/site-header.tsx",
+    "role": "Current public header (server) plus header-client islands (HeaderShell, NavLinks, LanguageMenu, MobileMenu).",
+    "notes": "siteSections = /work, /services, /blog, /learn, /about. staticSitePaths feeds LanguageMenu. Logo label is t.common.appName, not profile.brandName. Header CTA uses site.heroPrimaryCta. This file gets replaced by the menu bar and dock."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/site-footer.tsx",
+    "role": "Footer columns (Explore, Resources, Connect), FooterSocials (getPublicProfile), wordmark.",
+    "notes": "Uses common.appName, site.footerAbout and the footer* keys."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/ui.tsx",
+    "role": "Container, Eyebrow, SectionHeading, ArrowLink, PageHero, Chip, fmtNum/fmtDate.",
+    "notes": "SectionHeading and PageHero are the shared spots to add a section id or data-guide attribute for the assistant."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/db/schema/content.ts",
+    "role": "CMS tables: posts, series, media, syndications, leads, testimonials.",
+    "notes": "posts fields: type (article|tutorial|vlog|note|work|service|page), locale fa|en, translationKey (links translations), slug, title, excerpt, contentMd, coverUrl/Alt, videoUrl, status, publishedAt, featured, seriesId/seriesOrder, projectId, tags[], seo*, readingMinutes, meta JSON (WorkMeta & Record), sort, views. series: locale, slug, title, description, coverUrl, level beginner|intermediate|advanced, status, sort. testimonials: locale, author, role, company, avatarUrl, quote, rating 1-5, projectId, clientId, published, sort."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/content/schemas.ts",
+    "role": "zod inputs; postMetaInput defines the allowed meta keys.",
+    "notes": "meta: client, year, role, stack, liveUrl, repoUrl, gallery[≤24], metrics[{label,value}≤8], icon (lucide key ≤40), faq[{q,a}≤20]. Add `brand: zOptString(40)` here (and optionally `guide`)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/content/queries.ts",
+    "role": "Public cached reads, all 'use cache' + cacheTag('content').",
+    "notes": "listPublished, listServices (adds highlights from markdown bullets ≤5), listTags, listWorkFacets, getPublishedPost, getTranslations, getAdjacent, getRelated, listSeries, getSeriesWithLessons, listTestimonials (own locale first but other-locale rows are mixed in), getTestimonialForProject, getSiteStats (projectsDelivered, hoursTracked, clients, postsPublished; tags content+stats, cacheLife days), getPublicProfile (tags content+settings), listPublicClientNames (meta.client plus testimonial companies). The PostCard.meta type also needs `brand?`. Add getPublicBrands() and getPublicGuide() here with the same pattern."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/lib/content.ts",
+    "role": "Pure helpers: contentTypes, blogTypes (article, vlog, note), sectionPath, postPath/postHref, SEO_LIMITS, budgetRanges, youtubeId.",
+    "notes": "page type maps to /<slug>, but only /about is routed. The (site)/[...rest] route always 404s, so sub-brand landing pages such as /studio need a real route."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/service-icon.tsx",
+    "role": "serviceIcons map: globe, smartphone, bot, compass, code, palette, rocket, workflow, brain, server, shield, gauge, search, shop, layout, megaphone, sparkles (fallback).",
+    "notes": "Template for a brand registry. A pixel-art icon set could replace these lucide icons."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/faq.tsx",
+    "role": "Faq component plus generalFaq(t) (site.faq1-5) and FAQPage JSON-LD.",
+    "notes": "Used by /services and by /services/[slug], which uses post.meta.faq when present and generalFaq otherwise. No service in the seed has its own meta.faq."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/settings/service.ts",
+    "role": "settingsSchemas (profile, business) with zod defaults; getSettings/saveSettings; updateProfile/updateBusiness (assertAdmin + logActivity).",
+    "notes": "Profile defaults: brandName {fa:'گود تیم',en:'Good Team'}, ownerName, headline, bio (all {fa,en}), avatarUrl, email, phone, location default Tehran, socials {x, linkedin, github, telegram, instagram, youtube}, availableForWork true. To add sub-brands or narration overrides, add keys `brands` / `guide` to settingsSchemas; defaults keep reads total."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/settings/schemas.ts",
+    "role": "profileFormInput (flat dotted keys such as 'brandName.fa', expanded with unflatten) and profilePatchInput (REST/MCP).",
+    "notes": "brandName is required, max 80. headline max 200. bio max 5000."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/settings/actions.ts",
+    "role": "updateProfileAction / updateBusinessAction (roles owner+admin), each followed by updateTag('content') and refresh().",
+    "notes": "Add updateBrandsAction / updateGuideAction with the same invalidation."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/settings/tools.ts",
+    "role": "MCP/REST tools: settings_get, settings_update_profile, settings_update_business, activity_list.",
+    "notes": "Expose settings_update_brands (and guide) here (golden rule 10)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/settings/_components/profile-form.tsx",
+    "role": "Settings → Site profile form (BilingualField, live preview, SaveBar).",
+    "notes": "Natural place for a Brands card, or add a new Settings page via nav-items.ts."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/settings/_components/nav-items.ts",
+    "role": "Settings sidebar: account, security, appearance, api (personal); profile, business, team, data (workspace).",
+    "notes": "Add key 'brand' (ADMIN) for a Brand & assistant page. It needs settings i18n keys and a loading.tsx."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/content/_components/post-editor.tsx",
+    "role": "CMS editor; service icon select and FAQ card (lines ~299, ~560).",
+    "notes": "Add a brand select next to icon. Also touch editor-types.ts (EditorPost.meta, EditorContext.serviceIcons gets a brands list) and editor-data.ts (default plus toEditorPost)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/scripts/seed.ts",
+    "role": "Demo data.",
+    "notes": "Profile (lines 71-100): brandName گود تیم/Good Team, ownerName = owner.name (env OWNER_NAME, default 'مهدی رضایی') / 'Mahdi Rezaei', headline 'طراحی و توسعه محصولات دیجیتال' / 'Designing & building digital products', bio, avatarUrl '', email hello@goodteam.local, socials x/linkedin/github/telegram as placeholder URLs, availableForWork true. Services (lines 1088-1189, fa+en sharing translationKey): svc-web/web-development (icon globe; only one with bullets), svc-mobile/mobile-apps (smartphone), svc-ai/ai-agents-automation (bot), svc-consult/technical-consulting (compass); sort 1-4. Work: acme-learning-platform (featured, fa+en), narenj-commerce-app (featured, fa+en), perse-booking-bot (fa only); meta has client, year, role, stack, liveUrl, metrics; covers /brand/work-*.svg. Blog: articles sqlite-is-enough (featured, fa+en), parallel-time-tracking (fa), working-with-ai-agents (fa); vlog studio-week-vlog (fa); notes note-lighthouse-98 (fa), note-mcp (en). Series nextjs-zero-to-deploy (fa only, beginner): nextjs-01-setup, 02-data, 03-docker. Pages: about (fa+en). Testimonials: Acme Academy, Narenj, Rivera Clinic (en), Safarino… Seeding a `brands` default and meta.brand on the services goes here."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/brand/pixel-font.ts",
+    "role": "UNTRACKED, in-progress: Good In pixel alphabet, BRAND_COLORS {yellow #FFC50D, ink #6A6A6C, frame #B3B5B9, soft #CACCCE, paper #F3F3F3}, brandLogoLayout(suffix='STUDIO'), brandMarkLayout(), toRects().",
+    "notes": "Glyphs cover A-Z, 0-9, '-' and space only. toPixelText drops other characters and an empty suffix falls back to 'TEAM'. Sub-brand suffixes must be Latin; Persian names need a separate text field. Reference: docs/brand/logo-reference.webp (also untracked)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/brand/logo.tsx",
+    "role": "Current Logo/LogoMark: rounded squares in var(--primary).",
+    "notes": "To be replaced by the pixel logo. Used in the site header, footer, auth layout and hero diagram."
+   }
+  ],
+  "constraints": [
+   "Don't ship the whole `site` namespace (about 300 keys) or a new `guide` namespace to the client. Follow the islands.tsx pattern: the server picks only the lines a page needs and passes them as a small serializable prop (e.g. Record<sectionId, {title, body}>) to one client island.",
+   "Cache Components: the hero, header and footer are prerendered per locale. Narration and labels from i18n can stay in the static shell. Anything from `settings` or `posts` (profile, brands, narration overrides) must be read inside <Suspense> after `await connection()`, through 'use cache' functions tagged 'content' (and 'settings'). Mutations call updateTag('content') and refresh().",
+   "i18n parity: fa is the key source. en files are typed Record<keyof typeof fa, string>, so every new key goes in both. A new namespace must be registered in src/i18n/messages/index.ts. Interpolate with format(template, vars), e.g. '{brand}', '{owner}', '{n}'.",
+   "The panel uses site.type_*, site.level_* and site.budget_* dynamically (content editor and filters, series table, inbox, feed.xml), so renaming the site namespace breaks the panel.",
+   "Brand string duplication: the static common.appName drives the header, footer, metadata title template, manifest, auth layout and home OG image. profile.brandName (settings) drives feeds, about, post OG images, invoices, contracts and /sign. Renaming to 'Good In Team' means changing: common.appName (fa+en), site.metaTitle, the settingsSchemas.profile.brandName default, the seed profile, plus 'Good Team' in api/mcp/route.ts SERVER_INFO, api/v1/openapi.json title, feed.xml generator, calendar ics PRODID and feeds name, and the globals.css and logo.tsx comments.",
+   "Pixel font: Latin A-Z, 0-9, '-' and space only. Sub-brand suffixes used by brandLogoLayout must be validated against that alphabet, e.g. z.string().regex(/^[A-Z0-9 -]{1,12}$/). Persian display names are separate {fa,en} fields.",
+   "Services are per-locale rows linked by translationKey (svc-web, svc-mobile, svc-ai, svc-consult). meta.brand must be set on both rows, or resolved by translationKey at read time.",
+   "RTL first: the assistant bubble, dock and menu bar must use logical properties (start/end, ms/me). The hero diagram already mirrors its connector layer.",
+   "listTestimonials returns rows in both locales (own locale first), so narration about testimonials must not assume one language.",
+   "page-type posts other than /about are not routed (the [...rest] route always 404s). Sub-brand landing pages need explicit routes such as /studio and /code, or a [brand] segment, plus loading.tsx and staticSitePaths entries.",
+   "Golden rules: settings changes go through settingsSchemas, then service (assertAdmin + logActivity), then actions (defineAction, roles owner/admin), then a tools.ts tool. Update docs/modules/settings.md and docs/modules/content.md. Every panel route needs loading.tsx."
+  ],
+  "opportunities": [
+   "Sub-brand registry (recommended): add a `brands` key to settingsSchemas in src/server/modules/settings/service.ts, as an array of {key: 'team'|'studio'|'code'|…, suffix: 'TEAM'|'STUDIO'|'CODE' (pixel), name: {fa,en} e.g. 'Good In Studio'/'گود این استودیو', tagline: {fa,en}, href, order, visible}. Defaults: team (master), studio, code. Edit it in a new Settings → Brand page (nav-items.ts key 'brand') or a Brands card in profile-form.tsx. Read it publicly via a cached getPublicBrands() in content/queries.ts. The menu-bar brand menu and the dock read the same list.",
+   "Link services to sub-brands with posts.meta.brand, holding the brand key and following the meta.icon pattern. Touch: postMetaInput (content/schemas.ts), the PostCard.meta type (queries.ts), EditorPost.meta + EditorContext (editor-types.ts), editor-data.ts defaults and toEditorPost, a select in post-editor.tsx, and docs/modules/content.md. Then ServicesBento and /services can group by brand and draw brandLogoLayout(brand.suffix) per card. A possible seed mapping, which the owner should confirm: web-development and mobile-apps → Good In Code; technical-consulting → Good In Code or Consult; ai-agents-automation → Code or a new 'AI'/'AGENTS'; design work → Good In Studio.",
+   "Assistant narration defaults: create src/i18n/messages/{fa,en}/guide.ts and register it in messages/index.ts. Suggested keys: assistantName, greeting ('{owner}' and '{brand}' interpolation), idle, dismiss, mute, open. Home: home_hero, home_trust, home_work, home_services, home_process (plus home_process_portal/progress/contracts/invoices for the tabs), home_stats, home_latest, home_testimonials, home_cta. Pages: work_index, work_detail, services_index, service_detail, blog_index, post_detail, learn_index, course, lesson, about, contact, notFound. Chrome: menubar_brand, menubar_language, menubar_theme, menubar_search, dock_<navKey>. The (site) layout or page picks the subset with getMessages(locale).guide and passes it as a prop to a single <GuideAssistant> client island.",
+   "Optional owner overrides, later: a `guide` settings key {enabled, name:{fa,en}, lines: Record<sectionId,{fa,en}>} read with a cached getPublicGuide() inside Suspense and merged over the i18n defaults. Per-item narration for cards can use posts.excerpt today, or an optional meta.guide string on work and service posts.",
+   "Section anchors: add an `id`/`guideId` prop to SectionHeading and PageHero in src/components/site/ui.tsx and wrap each home <section> with a data-guide attribute. One IntersectionObserver in the island maps the visible section to its line; no per-section JS is needed.",
+   "Persona data the assistant can quote, from the cached getPublicProfile(): ownerName[locale], headline[locale] (only shown on /about today, even though the settings hint says home), bio, avatarUrl (empty in the seed, so the pixel sprite is the default), availableForWork (for a 'taking projects' line), location, socials and email. getSiteStats() numbers can feed a stats line through format(..., {n}).",
+   "Menu bar and dock labels already exist: nav.* (home, work, services, blog, learn, about, contact, panel) and common.* (language, theme, light, dark, system, colorPreset, commandPalette, commandHint, toggleMenu, signIn). Reuse LanguageMenu (header-client.tsx, which takes staticSitePaths) and ThemeToggle/AppearanceMenu (components/shared/theme-controls.tsx, which uses useT().common).",
+   "Clean up during the copy rewrite: unused site keys (diagramBuild, viewCaseStudy, mockDue, readMore, backTo, filterStack, workCtaTitle/Body, backToCourse, serviceCtaTitle/Body, sayHello). Unused hero copy can be repurposed: heroEyebrow currently appears only in the OG image."
+  ]
+ },
+ "panel": {
+  "summary": "The panel chrome is one layout, `src/app/[locale]/panel/layout.tsx`. It wraps I18nProvider (all message namespaces), then the pre-paint `InlineScript(sidebarInitScript)`, then InteractiveProviders (TooltipProvider and Toaster; the public site has neither), then PanelUIProvider. Inside that is a flex row with the sidebar on the start side and a column holding the header and `<main id=\"main\">`.\n\nThe frame itself is static and prerendered. Anything that needs the session streams in through two Suspense islands:\n- **`<SessionSidebar/>`**, which falls back to `<SidebarSkeleton/>`. It reads the actor plus the `gt-sidebar-collapsed` cookie and renders PanelSidebar and the ⌘K CommandPalette.\n- **`<SessionHeaderSlot/>`**, which falls back to `<HeaderSlotSkeleton/>`. It renders HeaderWidgets (HeaderLive: TimerPill for staff and NotificationsBell, polling every 60 s) and UserMenu.\n\n`PanelHeader` is a client component, sticky and glass, 64px tall (72px on lg). From the start side it holds: the mobile hamburger (opens a Sheet drawer), a search button that opens ⌘K, then LocaleSwitcher, AppearanceMenu and the session slot.\n\nNavigation comes from `nav-config.ts` (`panelNav` filtered by `navForRole`). It feeds the sidebar, the mobile sheet and the palette:\n- owner/admin: 16 items\n- member: 9 items\n- client: 5 items (My projects, Projects, Invoices, Contracts, Settings)\n\nClient users land on `ClientPortalHome`, and their header hides the timers.\n\nA macOS-style shell maps cleanly onto this:\n- **Menu bar:** replaces PanelHeader. The nav groups become its menus, and the existing widgets become the status icons on its end side.\n- **Dock:** replaces the desktop sidebar and keeps the role filter. On phones it becomes a tab bar plus a Sheet.\n\nThe redesign must keep the Suspense and cookie/pre-paint patterns, ⌘K, the `#main` landmark and the i18n aria labels. It must also re-home CommandPalette and fix the sticky offsets that depend on header height. Finally, nothing it adds may break `e2e/vault.spec.ts` (an unscoped `getByRole('dialog')`, and clicks that the dock could cover) or `scripts/shots.mjs` (which fails on console errors and 4xx responses).",
+  "files": [
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/layout.tsx",
+    "role": "Panel shell (the root of the chrome)",
+    "notes": "Order: I18nProvider(getMessages(locale), every namespace) > InlineScript(sidebarInitScript) > InteractiveProviders > PanelUIProvider > div.flex.min-h-dvh.bg-background > [Suspense(SidebarSkeleton) SessionSidebar] + column [PanelHeader slot=Suspense(HeaderSlotSkeleton) SessionHeaderSlot] + <main id=\"main\" class=\"mx-auto w-full max-w-[1400px] flex-1 px-4 pt-4 pb-20 sm:px-6 lg:px-10\">. The menu bar and dock belong here. metadata sets robots noindex."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/loading.tsx",
+    "role": "Default page Suspense boundary",
+    "notes": "Returns <PageSkeleton/>. There are 56 loading.tsx files for 53 panel pages and every page folder has one; Next 16.4 instant-navigation validation requires them. Pages call panelContext() at the top because they render inside this boundary."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/error.tsx",
+    "role": "Panel error boundary (client)",
+    "notes": "EmptyState plus a retry button. It renders inside the layout, so the chrome stays visible on error."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/header.tsx",
+    "role": "PanelHeader top bar (client component, static)",
+    "notes": "<header class=\"glass sticky top-0 z-40 flex h-16 … lg:h-[72px]\">. Elements: (1) MenuIcon ghost button, lg:hidden, onClick setMobileOpen(true), aria-label t.common.toggleMenu. (2) Search button, onClick setPaletteOpen(true), aria-label t.common.search, aria-haspopup=dialog, aria-keyshortcuts=\"Meta+K Control+K\"; visible text t.common.searchPlaceholder plus <Kbd dir=ltr>⌘K</Kbd> (both hidden below sm). (3) In a ms-auto group: <LocaleSwitcher/>, <AppearanceMenu/>, then {slot}. This is what a macOS menu bar replaces."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/session-chrome.tsx",
+    "role": "Session-dependent chrome (server components)",
+    "notes": "SessionSidebar: requireActor({locale}), then cookies().get(SIDEBAR_COOKIE); renders <PanelSidebar role defaultCollapsed/> and <CommandPalette role/>. SessionHeaderSlot: requireActor, then <HeaderWidgets actor/> and <UserMenu user/>. HeaderSlotSkeleton is a single size-9 pulsing circle, so the bar shifts when the timer and bell arrive. Pattern to keep: SessionDock and SessionMenuExtras."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/header-widgets.tsx",
+    "role": "Extension point for status widgets (server)",
+    "notes": "headerSnapshot(actor) and timeProjectOptions(actor) (staff only), rendered into <HeaderLive initial projects tz=appTimezone() showTimers={isStaff}/>. The comment marks it as the place modules add widgets. It maps directly to the menu bar's status icons on the end side."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/sidebar.tsx",
+    "role": "Desktop sidebar, mobile Sheet drawer, SidebarSkeleton (client)",
+    "notes": "<aside data-collapsed class=\"sticky top-0 hidden h-dvh … border-e border-dashed bg-sidebar lg:flex\"> is w-[280px] expanded and w-[88px] collapsed. It contains Brand (LogoMark plus t.common.appName, links to /panel), the collapse toggle (absolute -end-3.5 top-5, aria-label t.panel.collapseSidebar/expandSidebar, aria-expanded, ChevronsLeftIcon rtl:rotate-180), NavList, and a 'View site' card (target=_blank, expanded only). NavList: nav aria-label=t.panel.mainNav; group labels are 11px uppercase and hidden when collapsed; links carry data-active, aria-current=page, and aria-label only when collapsed; Tooltip side is chosen from dir; usePathname() is used for isActive (exact or prefix). The mobile drawer is <Sheet open={mobileOpen}> with SheetContent side=\"start\" w-[280px], showCloseButton=false, an sr-only SheetTitle, and closes onNavigate. SidebarSkeleton uses in-data-sidebar-collapsed:w-[88px]."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/panel-ui.tsx",
+    "role": "PanelUIProvider / usePanelUI context (client)",
+    "notes": "State: collapsed, collapsedPref (null until hydrated), setCollapsed, toggleCollapsed, mobileOpen/setMobileOpen, paletteOpen/setPaletteOpen. persist() writes the cookie and toggles <html data-sidebar-collapsed>; it also migrates the legacy localStorage key gt-sidebar-collapsed. The global window keydown listener toggles the palette via isCommandPaletteShortcut, and it is mounted statically, so ⌘K works before the session streams in. Consumers outside components/panel: settings/_components/appearance-settings.tsx (collapsed, toggleCollapsed) and design-system/_components/demos.tsx plus sections/interactive.tsx (setPaletteOpen)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/panel-prefs.ts",
+    "role": "Pure chrome helpers (unit-tested)",
+    "notes": "isCommandPaletteShortcut(e) matches by layout: a Latin e.key is trusted, otherwise e.code==='KeyK', so it works on a Persian keyboard and does not hijack Dvorak's ⌘T. Also exports SIDEBAR_COOKIE='gt-sidebar-collapsed', sidebarCookie(bool) (1 year, path=/, samesite=lax), readSidebarCookie(header), and sidebarInitScript (a pre-paint regex check on the cookie that sets the html attribute). Tested in panel-prefs.test.ts. Reuse this pattern for dock prefs."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/panel-prefs.test.ts",
+    "role": "Vitest for the shortcut and cookie helpers",
+    "notes": "Part of pnpm check. Update or replace it if the sidebar cookie is renamed or removed."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/nav-config.ts",
+    "role": "Single source of truth for navigation and role filtering",
+    "notes": "NavItem {href, label: keyof Messages['nav'], icon: LucideIcon, roles, exact?}. Groups: groupOverview (dashboard for STAFF, portalHome for CLIENT, both /panel exact), groupWork (time, calendar, tasks for STAFF; projects for ALL), groupBusiness (clients and finance for ADMIN; invoices for ALL; contracts for owner/admin/client), groupKnowledge (docs and vault for STAFF), groupSite (content, inbox, media for ADMIN), groupSystem (settings for ALL; designSystem for ADMIN). navForRole(role) filters items and drops empty groups. Result: owner/admin 16 items, member 9, client 5. Also exports moduleIcons. The dock and the menu bar's 'Go' menus should read from this file."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/command-palette.tsx",
+    "role": "⌘K CommandDialog (cmdk)",
+    "notes": "Props {role, extraCommands?} (extraCommands is an unused extension point). Groups come from navForRole, navigate with router.push(localePath()), and end with a theme-toggle item. title=t.common.commandPalette. It is mounted inside SessionSidebar, so it must move if the sidebar is removed. It does not pass a description, so CommandDialog's hard-coded English sr-only text ('Search for a command to run...') is announced. This is the Spotlight equivalent."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/user-menu.tsx",
+    "role": "Avatar dropdown (client)",
+    "notes": "Trigger aria-label t.panel.profile, size-9 avatar with a primary ring. The label area shows name, email (dir=ltr) and t.panel.role_<role>. Items: Profile and Settings (both go to /panel/settings), then a destructive Sign out calling void logout(), a server action that redirects to /login. A natural fit for a brand or apple-style menu."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/page-header.tsx",
+    "role": "PageHeader + BackLink (used on every page)",
+    "notes": "h1 text-2xl extrabold, CrumbsNav (aria-label t.common.breadcrumb), description, actions. mb-8. A window title bar could absorb it, but every page renders it, so keep the API."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/page-skeleton.tsx",
+    "role": "Generic loading skeleton",
+    "notes": "Title lines, 4 KPI tiles, one big block. A window-frame skeleton would go here."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/notifications/header-live.tsx",
+    "role": "Live state for the top-bar widgets (client)",
+    "notes": "Holds snap state seeded from the server; it adopts a new initial when the server re-renders. Polls pollHeaderAction every 60 s (POLL_MS) and on visibilitychange. announce() shows a sonner toast when the tab is visible, or a native Notification when hidden. markRead is optimistic, then calls markNotificationsReadAction (which does not refresh). Renders TimerPill (if showTimers) and NotificationsBell."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/notifications/notifications-bell.tsx",
+    "role": "Bell popover",
+    "notes": "Ghost icon button, rounded-full; aria-label is format(n.open,{n}) or n.title. Badge is bg-destructive and shows 9+. Popover align=end, max-w-sm. The list uses kindStyle per kind (task/event/time). Footer has the desktop-notification permission control (useSyncExternalStore)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/time/timer-pill.tsx",
+    "role": "Running-timer pill and quick-start popover",
+    "notes": "Uses useOptimistic over start/stop/stopAll via startTimerAction and stopTimerAction. Idle: icon button with aria-label tt.quickStart. Running: a pill with PulseDot, a count badge and LiveDuration (font-mono, hidden below sm), aria-label format(tt.runningCount). The popover lists timers with stop buttons, a quick-start form (Input plus ProjectSelect) and a link to /panel/time. A good menu-bar item (macOS timer style)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/time/pulse-dot.tsx",
+    "role": "Live indicator dot",
+    "notes": "animate-ping; the global reduced-motion rule neutralizes it."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/theme-controls.tsx",
+    "role": "usePreset, ThemeToggle, AppearanceMenu",
+    "notes": "usePreset watches <html data-preset> with a MutationObserver and persists to localStorage 'gt-preset'. AppearanceMenu is a Popover (trigger aria-label t.common.theme) with a light/dark/system ToggleGroup and a 6-swatch preset grid; the swatch aria-label is the raw preset id, which is not localized. ThemeToggle is used on the site and auth pages."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/theme.ts",
+    "role": "Color presets",
+    "notes": "colorPresets green/cyan/purple/blue/orange/red, presetSwatches, PRESET_STORAGE_KEY, presetInitScript (green is the default and gets no attribute). A brand yellow #FFC50D preset or default must also change globals.css, design-tokens.ts (verified by design-tokens.test.ts) and the settings preset_* i18n keys."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/locale-switcher.tsx",
+    "role": "Panel and auth language dropdown",
+    "notes": "Icon button with aria-label t.common.language. Items are plain <a href hrefLang lang> (a full page load, because lang, dir and fonts change). usePathname is wrapped in Suspense with a fallback that links to '/'. The site uses a separate LanguageMenu in components/site/header-client.tsx that is aware of page alternates."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/interactive-providers.tsx",
+    "role": "TooltipProvider + Toaster (panel only)",
+    "notes": "Toaster position is bottom-left in RTL and bottom-right in LTR, so a bottom dock will overlap toasts and they need an offset. The public site deliberately omits both providers (commit d203d76)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/inline-script.tsx",
+    "role": "Pre-paint script helper",
+    "notes": "Executable during SSR, inert text/plain on the client. Use it for any dock or menu-bar layout preference to avoid a flash."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/page.tsx",
+    "role": "Dashboard route; branches by role",
+    "notes": "panelContext(), then client users get ClientPortalHome and everyone else gets StaffDashboard (greeting from ctx.now/tz, StatCards; admin-only income and an unpaid/contracts/leads row)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/portal-home.tsx",
+    "role": "Client portal home",
+    "notes": "listProjects(actor) (share flags applied in the service) rendered as Card links to /panel/projects/[id] with progress when shared, plus an EmptyState. Title t.panel.portalWelcome. Client users see 5 nav items and no TimerPill; the bell stays."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/settings/_components/appearance-settings.tsx",
+    "role": "Settings → Appearance (mode, preset, sidebar mode)",
+    "notes": "Uses usePanelUI().collapsed/toggleCollapsed and a PanelMock preview of the sidebar layout. i18n keys settings.sidebar, sidebarHint, sidebar_expanded, sidebar_collapsed. Becomes dock preferences."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/settings/_components/nav-items.ts",
+    "role": "Second role-filtered nav (settings)",
+    "notes": "settingsNavFor(role). Clients get account, security and appearance only; api is STAFF; profile, business and team are ADMIN; data is OWNER."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/page-context.ts",
+    "role": "panelContext()",
+    "notes": "Returns {actor, locale, tz, fmt, t, now: Date.now(), href}. It is request-time because it reads the session cookie."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/auth/session.ts",
+    "role": "getSessionUser/requireActor",
+    "notes": "React.cache per request; await connection() before new Date() (needed for the PPR App Shell); requireActor redirects to /login, and on a role mismatch redirects to /panel."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/notifications/header.ts",
+    "role": "headerSnapshot(actor)",
+    "notes": "{unread, items(15), running (staff only), now}. Typed HeaderNotification and HeaderTimer."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/proxy.ts",
+    "role": "Optimistic auth gate",
+    "notes": "/panel/* without the gt_session cookie redirects to /login?next=…; the session cookie is renewed on panel requests."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/brand/logo.tsx",
+    "role": "LogoMark/Logo (current two-squares mark using var(--primary))",
+    "notes": "Used by the panel sidebar Brand, site header and footer, auth layout, p/[token], sign/[token], i/[token], contract-sheet, invoice-document and hero-diagram. A pixel 'Good In' logo should keep the same exports and props (className, label)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/globals.css",
+    "role": "Tokens and utilities",
+    "notes": "Defines --sidebar* tokens, .glass (72% background with saturate(180%) blur(12px)), shadow-card/dropdown, the grey scale, data-preset blocks, and a global prefers-reduced-motion rule that shrinks every animation and transition to 0.01ms. The .dark class comes from next-themes."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/e2e/vault.spec.ts",
+    "role": "Only Playwright test (runs in CI against pnpm start)",
+    "notes": "Desktop Chrome viewport (1280x720), member account sara@goodteam.local. Login uses #email, #password and an Enter press. It uses an unscoped page.getByRole('dialog') (fill and toBeHidden after Escape) and exact button names 'Lock', 'Unlock', 'Let's start', 'Continue', 'Create vault', 'Save', 'New item' (.first()), 'Erase vault completely' (.first()), plus menuitem 'Login' and tab 'Security & backup'."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/scripts/shots.mjs",
+    "role": "Visual QA screenshots",
+    "notes": "Viewports 1440x900 (desktop) and 390x844 at 2x (mobile), with fa/en, light/dark and --mobile variants. Logs in via #email, #password and button[type=submit], then waitForURL(/panel/). Uses goto with networkidle plus a 400 ms wait. Exits 1 on any console error, pageerror or response ≥400."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/design-system/_components/sections/",
+    "role": "Living component catalog (golden rule 9)",
+    "notes": "New ui or shared components (Menubar, Dock, PixelLogo, Assistant) need examples here. demos.tsx CommandDemo calls setPaletteOpen."
+   }
+  ],
+  "constraints": [
+   "Cache Components: anything that needs the session (role-filtered dock items, avatar, timers, bell, CommandPalette role) must render inside <Suspense> in the layout, the way SessionSidebar and SessionHeaderSlot do now. The static frame (menu-bar shell, dock container, skeletons) stays outside Suspense so it lands in the prerendered App Shell, and panel-to-panel navigation keeps it mounted.",
+   "usePathname() (active dock item, current-app name in the menu bar) is URL data and must sit inside <Suspense> or a session island. Same for useSearchParams.",
+   "No Date.now()/new Date() during render of static parts. A menu-bar clock must start after mount (the LiveDuration pattern: render a stable value or nothing on the server, tick in useEffect, suppressHydrationWarning). shots.mjs fails on any hydration or console error.",
+   "Layout-changing client prefs (dock size, autohide, magnification, position, the replacement for sidebar collapse) go in a cookie read on the server inside Suspense, plus an InlineScript before paint (panel-prefs.ts pattern, with unit tests). Never localStorage plus an effect (docs/design-system.md).",
+   "Every panel route folder keeps a loading.tsx (56 today). Instant-navigation validation in Next 16.4 blocks routes without one. PageSkeleton renders inside <main>.",
+   "Keep <main id=\"main\"> and add a skip link (t.common.skipToContent already exists; the site layout has one, the panel does not). A menu bar plus a dock add many tab stops before the content.",
+   "Keep ⌘K/Ctrl+K through isCommandPaletteShortcut (layout-independent, so it works on a Persian keyboard) and aria-keyshortcuts. Other global shortcuts already exist and must not be shadowed: tasks-app uses KeyN without modifiers; calendar-view uses arrows (RTL-swapped), KeyT, KeyN and view keys, skipping when defaultPrevented or a modifier is held; vault-app uses '/'; doc-editor uses ⌘S. New menu-bar shortcuts need modifiers, an e.code fallback, and should respect defaultPrevented.",
+   "Every icon-only control needs an i18n aria-label, with no hard-coded English in components (rule 4 and docs). Existing labels to carry over: t.common.toggleMenu, search, language, theme, toggleTheme, commandPalette; t.panel.profile, mainNav, collapseSidebar/expandSidebar, viewSite; t.time.quickStart, runningCount; t.notifications.open, title. Add fa (source of truth) and en keys for new strings. Already broken today: the CommandDialog description is default English, and the preset swatch aria-label is a raw id.",
+   "RTL first: use logical utilities only. The dock order and the menu bar mirror in fa (brand on the right). Sheet uses side=\"start\". Tooltip side must be chosen from dir. Directional icons get rtl:rotate-180. Radix reads direction from DirectionProvider (root Providers).",
+   "Locale switching stays a plain <a href hrefLang lang> (a full page load; a <Link> prefetch across root params 404s in 16.4, commit a6c58c1).",
+   "The public site intentionally ships no TooltipProvider or Toaster (commit d203d76) and only pickMessages(['common','nav']). A menu bar or dock shared with the site must use CSS, the native popover API or title-based tooltips there, and take labels as props or use only common/nav keys. The panel I18nProvider ships every namespace.",
+   "Header height is hard-coded elsewhere: settings/security/activity/page.tsx (sticky top-16 lg:top-[72px]), design-system/_components/toc.tsx (top-16 lg:top-[72px] and top-24), settings-nav.tsx (top-24), docs/[id]/page.tsx (top-24), components/docs/docs-sidebar.tsx (top-[88px], max-h-[calc(100dvh-112px)]). Introduce CSS vars (e.g. --menubar-h, --dock-h) and update all of them.",
+   "Bottom-anchored UI that will collide with a dock: settings SaveBar (sticky bottom-4 z-20), contract-editor action bar (sticky bottom-3), doc-editor mobile bar (fixed bottom-0 sm:hidden z-30), sonner Toaster (bottom-left/right; needs an offset), and main pb-20. Respect env(safe-area-inset-bottom) on phones.",
+   "e2e/vault.spec.ts: never keep an always-mounted role=\"dialog\" or aria-modal element in the chrome (an assistant bubble or dock popover), because page.getByRole('dialog') is unscoped and must reach toBeHidden. Do not give chrome buttons the exact names 'Lock', 'Unlock', 'Save', 'Continue', 'New item' or 'Let's start', and no menuitem named 'Login'. A fixed dock must not cover the vault buttons the test clicks at 1280x720 (Playwright reports 'element intercepts pointer events'), so content needs bottom padding of at least the dock height.",
+   "scripts/shots.mjs and the login flow depend on #email, #password, button[type=submit] and a redirect to /panel. Pages are captured after networkidle plus 400 ms, so the chrome must not poll or fetch continuously (HeaderLive polls every 60 s, which is fine) and must not request missing assets (any ≥400 counts as a failure).",
+   "Performance: a dock magnifier should be CSS-only, or a single rAF-throttled pointermove on the dock writing CSS vars, not React state per frame. Keep backdrop-filter (.glass) to small fixed surfaces. The global prefers-reduced-motion CSS already zeroes CSS animations; JS-driven motion must check matchMedia itself. Radix Menubar is available in the installed radix-ui package but has no src/components/ui wrapper yet; add one in shadcn style and catalog it.",
+   "Role and authorization: the chrome only hides links. Pages still enforce roles via panelContext({roles}) and services. Client users must never see staff or admin items: drive everything from navForRole and settingsNavFor, and hide timers when !isStaff.",
+   "If the desktop sidebar is removed, also move or replace: the CommandPalette mount (now inside SessionSidebar), the 'View site' link, the Brand link to /panel, the SIDEBAR_COOKIE, sidebarInitScript and the data-sidebar-collapsed variant used in SidebarSkeleton, the PanelUIProvider collapsed API, the Appearance settings sidebar card and its i18n keys, and panel-prefs.test.ts.",
+   "Theme: next-themes uses attribute=class and disableTransitionOnChange. Presets come from <html data-preset> plus presetInitScript. Changing the default or brand color must update globals.css, design-tokens.ts (design-tokens.test.ts checks every preset against the CSS) and the settings preset_* keys.",
+   "Docs and catalog: per AGENTS.md rules 9 and 10, update docs/design-system.md (Panel table: nav-config, panel-prefs), docs/modules/settings.md (Appearance: sidebar mode) and docs/architecture.md, and add examples under panel/design-system/_components/sections/*. pnpm check and pnpm build must pass."
+  ],
+  "opportunities": [
+   "Menu bar = new <PanelMenuBar> replacing PanelHeader in panel/layout.tsx. Start side: a brand menu (pixel 'Good In' logo) holding About, View site (from the sidebar 'viewSite' card), Settings (/panel/settings), Appearance and Sign out (logout()). Next to it, the current app name, derived from navForRole plus usePathname inside Suspense. Then menus generated from nav-config groups (groupWork, groupBusiness, groupKnowledge, groupSite, groupSystem) through Radix Menubar.",
+   "Status icons on the end side = the existing widgets in this order: Spotlight search (⌘K, the current search button, which keeps aria-keyshortcuts), TimerPill, NotificationsBell, LocaleSwitcher, AppearanceMenu, a client-only clock, and the UserMenu avatar. They render through HeaderWidgets and HeaderLive, whose comment already marks them as the place modules add widgets. Give HeaderSlotSkeleton fixed-width placeholders so the bar does not shift.",
+   "Dock = new <SessionDock role> inside <Suspense fallback={<DockSkeleton/>}>, built from navForRole(role). Use moduleIcons or new pixel icons, separators between groups, a 'running' dot from isActive (data-active and aria-current=page carried over), and a trailing 'View site' item. Wrap it in <nav aria-label={t.panel.mainNav}>. Persist size, autohide and magnify in a cookie read in SessionDock, with a pre-paint InlineScript setting <html data-dock-*> so DockSkeleton matches (mirroring sidebarInitScript and readSidebarCookie).",
+   "Move <CommandPalette role/> into SessionDock or SessionHeaderSlot, and pass extraCommands (the prop exists but is never used) for quick actions. The unused i18n keys panel.quickAdd, quickTask, quickEvent, quickTransaction and quickNote, plus common.commandHint, fit a menu-bar 'File → New…' menu and the palette.",
+   "Mobile (<lg): the menu bar collapses to the brand plus key status icons. The dock becomes a bottom tab bar of at most 5 role items plus 'More', which opens the existing <Sheet side=\"start\"> NavList (keep mobileOpen and setMobileOpen in PanelUIProvider). Client role has exactly 5 items and fits without 'More'.",
+   "Extend PanelUIProvider with dock state (magnify, autohide, active window) and assistant state, keeping its static global keydown listener. Add pure helpers and tests in panel-prefs.ts (dockCookie, readDockCookie, dockInitScript). Also add a CSS var contract (--menubar-h, --dock-h) consumed by the sticky offsets listed in constraints and by main's padding.",
+   "Window feel: wrap page content in a 'window' surface (rounded-2xl, shadow-card, title bar using the page title) inside main. Use React 19.3 <ViewTransition> (no config needed, per node_modules/next/dist/docs/01-app/02-guides/view-transitions.md) to animate panel navigations as window open/close, with viewTransitionName set on the menu bar and dock so they stay fixed. Fall back gracefully without browser support.",
+   "Pixel 'virtual me' assistant in the panel: one client island mounted once in the layout (not role=dialog; use role=status or aria-live=polite plus a non-modal popover). Show tips keyed by the active nav-config item or PageHeader section, with copy from i18n and no network fetching, so networkidle and e2e stay stable. It can reuse the toast channel from InteractiveProviders for announcements.",
+   "Settings → Appearance (appearance-settings.tsx): replace the 'Sidebar' card (PanelMock collapsed/expanded) with dock and menu-bar options (dock size, magnification, autohide), plus a new 'Good In' yellow #FFC50D preset or default (theme.ts colorPresets, globals.css [data-preset], design-tokens.ts presetScales, settings preset_* keys).",
+   "Brand: replace LogoMark and Logo in src/components/brand/logo.tsx with the pixel logo (SVG rects on a grid, colors #FFC50D, #6A6A6C, #B3B5B9, #CACCCE on #F3F3F3) while keeping the export names and props. Every surface updates at once: sidebar or dock brand, site header and footer, auth, invoice, contract, and the share pages. Sub-brand variants ('Good In Studio', 'Good In Code') can be a `suffix` prop. Update t.common.appName in fa and en.",
+   "Shared OS shell for the site and panel: put the menu-bar and dock visuals in a server-safe shared component (e.g. components/shell/*) that takes labels as props. The panel version adds the Radix Menubar, Tooltips and session islands. The site version uses native popover and CSS tooltips (site-header's MobileMenu already uses the Popover API) to keep public pages light.",
+   "Add Playwright coverage for the new chrome under e2e/ (open the dock app, ⌘K, a menu-bar menu with keyboard arrows, a client-role dock with 5 items). Add new shots.mjs runs for /panel and /panel/time in fa and en with --mobile and --dark for visual QA."
+  ]
+ },
+ "theme": {
+  "summary": "Theming is plain CSS variables in src/app/globals.css, with shadcn-style semantic tokens mapped to Tailwind v4 in `@theme inline`. The look follows Minimals: blue-grey neutrals and a green #00a76f primary. Dark mode is the `.dark` class set by next-themes (attribute=\"class\", defaultTheme=\"system\"). The primary colour scale (lighter/light/main/dark/darker/foreground/rgb) changes per preset through `<html data-preset>`. The default (\"green\") lives in `:root` and is applied before paint by `presetInitScript` (theme.ts), which runs in the head of src/app/[locale]/layout.tsx. design-tokens.ts repeats every token value as data, and design-tokens.test.ts parses globals.css to block any drift between the two. The brand mark is one SVG component, LogoMark/Logo in src/components/brand/logo.tsx, coloured with var(--primary) and used in 11 places. Copies of it with hard-coded colours sit in src/app/icon.svg and og.tsx. The brand name has two sources. The first is the i18n constant `common.appName` (\"گود تیم\" / \"Good Team\"), used for the site and panel chrome and metadata. The second is the editable DB value `settings.profile.brandName`, used for invoices, contracts, the RSS feed, llms.txt and JSON-LD, with appName as the fallback. Many `gt_`/`gt-`/`good-team`/`goodteam` identifiers are cookies, the API token prefix, storage keys, the vault backup format, calendar UIDs, the Docker volume and demo credentials. These must not be renamed. Brand yellow #FFC50D fails as text in light mode: 1.59:1 on white and 1.43:1 on #F3F3F3. White text on yellow is also 1.59:1. So yellow can be a fill, a fill behind dark text, or a text/accent colour in dark mode (11:1 on #141a21). Light-mode text, links, rings and chart marks need a darker shade: #7A5A00 for text (6.4:1 on white) and #9A7200 for rings and chart marks. The 128 `text-primary` uses and the Button hover state need new tokens.",
+  "files": [
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/globals.css",
+    "role": "Single source of truth for all design tokens + public-site utility classes",
+    "notes": "L17 `@custom-variant dark (&:is(.dark *))`. L19-100 `@theme inline`: fonts (--font-sans = Public Sans→Vazirmatn, --font-fa = Vazirmatn→Public Sans, --font-mono = JetBrains), semantic color map (--color-*: var(--*)) incl. primary-lighter/light/dark/darker, success/warning/info/violet, chart-1..5, sidebar-*; HARD-CODED Minimals grey scale --color-grey-50..900 (L72-81, #fcfdfd…#141a21); radius scale from --radius (L83-88: sm -4px, md -2px, lg, xl +4, 2xl +8, 3xl +16); shadows L90-93; animations L95-99 (marquee, float, pulse-ring, dash, shimmer). L102-165 `:root` (light + default green preset): --radius .75rem; primary #c8fad6/#5be49b/#00a76f/#007867/#004b50, --primary-foreground #fff, --primary-rgb '0 167 111'; background/card/popover #fff, foreground #1c252e, muted #f4f6f8, muted-foreground #637381, accent/border/input = rgb(145 158 171 / .08/.2/.32), --ring: var(--primary); status success #22c55e, warning #ffab00 (fg #1c252e), info #00b8d9, destructive #ff5630, violet #8e33ff; chart-1 var(--primary), chart-2 #8e33ff, chart-3 #0086a8, chart-4 #c27a00, chart-5 #ff5630; sidebar-* (sidebar-accent-foreground: var(--primary) in light); shadows card/dropdown/dialog/primary; --surface-grid, --surface-glow. L167-199 `.dark`: bg #141a21, card/popover #1c252e, muted #28323d, muted-fg #919eab, chart-3/4 brighter, sidebar-accent-foreground var(--primary-light), darker shadows. L201-242 presets [data-preset=cyan|purple|blue|orange|red] (orange also sets --primary-foreground #1c252e). L244-287 base layer (lang-based font-family, ::selection uses primary-rgb, global prefers-reduced-motion kill switch L277-286 → animation-duration .01ms, iteration 1). L289-345 utilities: .bg-soft-primary, .bg-grid (48px), .bg-dots, .mask-fade-*, .text-gradient (primary→primary-light→chart-2), .glass (L331-334: bg 72% + blur 12px saturate 180%), scrollbar-*. L347-387 keyframes. L389-504 .prose-gt (links + blockquote border use var(--primary)). L506-706 `/* ─── site ─── */` block: .gt-wordmark (footer giant name), .gt-accent (gradient text with #8e33ff, RTL flipped), .gt-dot, .gt-glow, .gt-packet/.gt-ants/.gt-draw (SVG diagram motion), .gt-live, .gt-rise, .gt-mobile-menu (Popover API), .gt-marquee, .gt-lift, .gt-ring (gradient hairline with hard-coded 142 51 255), .gt-faq. 17 hard-coded `rgb(145 158 171 / α)` greys. L5 comment 'Good Team design tokens'."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/theme.ts",
+    "role": "Preset registry + pre-paint script",
+    "notes": "L1 `colorPresets = ['green','cyan','purple','blue','orange','red'] as const`, `ColorPreset` type; L4-11 `presetSwatches` (uppercase hex, used in AppearanceMenu); L13 `PRESET_STORAGE_KEY = 'gt-preset'` (localStorage, keep); L16 `presetInitScript` hard-codes default `p!==\"green\"`. Rendered via <InlineScript> in src/app/[locale]/layout.tsx:62 (no CSP present)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/theme-controls.tsx",
+    "role": "Client theme UI: usePreset(), ThemeToggle, AppearanceMenu",
+    "notes": "usePreset uses useSyncExternalStore + MutationObserver on <html data-preset>; 'green' default hard-coded at L21 (readPreset fallback), L25 (server snapshot), L27 (setPreset removes attribute). ThemeToggle L37 (light↔dark). AppearanceMenu L55 (Popover: light/dark/system ToggleGroup + swatch grid `grid-cols-6` at L93, which needs changing if a 7th preset is added; swatch aria-label is the raw preset id). Mounted in site-header.tsx:48 (ThemeToggle), panel/header.tsx:46 (AppearanceMenu), (auth)/layout.tsx:40, sign/[token]/page.tsx:130. These are the controls a macOS menu bar would host."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/design-tokens.ts",
+    "role": "Tokens as data for catalog/previews; must mirror globals.css",
+    "notes": "`PresetScale` {lighter, light, main, dark, darker, contrast, rgb}; `presetScales` (L22-77); `presetStyle(p)` (L80) → inline CSS vars to re-skin a subtree (used in Settings→Appearance and the catalog); `surfaceTokens` (L103), `statusTokens` (L127), `chartTokens` (L136), `greyScale` (L145), `themeStyle(mode)` (L159, currently unused). Five hard-coded rgb(145 158 171) values."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/shared/design-tokens.test.ts",
+    "role": "Drift guard between design-tokens.ts and globals.css",
+    "notes": "The parser `block(selector)` finds the first `${selector} {` and reads up to the FIRST `}`. So `:root`, `.dark`, `@theme inline` and every `[data-preset=\"x\"]` block must stay flat, with no nested rules or @media inside. L45 assumes the default preset is 'green' (`p === 'green' ? root : …`). Covers surface (light+dark), status, chart, grey scale and every preset scale. Changing any token value means updating both files."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/fonts.ts",
+    "role": "Self-hosted fonts via next/font/local from node_modules",
+    "notes": "vazirmatn (--font-vazirmatn, 100-900, adjustFontFallback false), publicSans (--font-public-sans), jetbrainsMono (--font-jetbrains-mono, preload:false). `fontVariables` is applied to <html> in [locale]/layout.tsx:57. Only @fontsource-variable/{vazirmatn,public-sans,jetbrains-mono} are installed. A pixel display font would need a new @fontsource package and should load with preload:false."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/brand/logo.tsx",
+    "role": "Brand mark + wordmark",
+    "notes": "`LogoMark({className})`: 40×40 SVG with two rounded rects in var(--primary)/var(--primary-dark), a corner in var(--primary-light) and white dots; default size-8. `Logo({label, className})`: LogoMark + `text-lg font-extrabold` label. Used at: site-header.tsx:38, site-footer.tsx:53, (auth)/layout.tsx:22,36 (Logo); panel/sidebar.tsx:94, hero-diagram.tsx:161, p/[token]/page.tsx:102, i/[token]/page.tsx:49, sign/[token]/page.tsx:120, contracts/contract-sheet.tsx:158, finance/invoice-document.tsx:92 (LogoMark; print docs). L3 comment says 'Good Team mark'."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/icon.svg",
+    "role": "Favicon / PWA icon / JSON-LD logo / RSS image",
+    "notes": "Static copy of LogoMark with hard-coded #00A76F/#007867/#5BE49B. Referenced by manifest.ts icons, json-ld.tsx organization logo (/icon.svg), feed.xml <image>."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/manifest.ts",
+    "role": "PWA manifest",
+    "notes": "name = fa.site.metaTitle, short_name = fa.common.appName, background_color '#ffffff' (L16), theme_color '#00a76f' (L17)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/layout.tsx",
+    "role": "Root layout: html attrs, fonts, preset script, metadata, viewport",
+    "notes": "L22 title template `%s | ${t.common.appName}`, L24 applicationName, L32 og siteName; L42-45 viewport.themeColor #ffffff / #141a21 (the browser chrome tint; update for the new backgrounds); L62 InlineScript presetInitScript; Providers (next-themes attribute=class, defaultTheme=system, disableTransitionOnChange; Radix DirectionProvider)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/og.tsx",
+    "role": "Satori OG image renderer (1200×630) for site/blog/work",
+    "notes": "Hard-coded colors: bg #141A21 (L78), grid rgba(145,158,171,.10) (L94), green glow rgba(0,167,111,.45) (L107), violet glow rgba(142,51,255,.3) (L118), inline LogoMark copy #00A76F/#007867/#5BE49B (L131-137), eyebrow pill rgba(0,167,111,.18)/#5BE49B (L149-151), footer text #C4CDD5 (L187), dot #637381 (L214), domain #5BE49B (L225), bottom bar gradient #00A76F→#5BE49B→#8E33FF (L239). Fonts are TTF files in public/fonts/og (vazirmatn-500/800, public-sans-500/800), because Satori can't read woff2. `brand` input comes from callers: (site)/opengraph-image.tsx:18 (appName), blog/[slug] & work/[slug] opengraph-image (profile.brandName || appName)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/design-system/_components/sections/colors.tsx",
+    "role": "Catalog: preset scales, surfaces, status, charts, greys, elevation/radii",
+    "notes": "Iterates colorPresets × presetScales automatically. `split()` L18-19 hard-codes page colors #ffffff/#141a21. `short()` assumes alpha greys. The usage snippet L27-36 hard-codes success text #118d57/#77ed8b."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/design-system/_components/sections/typography.tsx",
+    "role": "Catalog: type scale, weights, fa/en/mono fonts, prose",
+    "notes": "L51 weights sample uses t.common.appName; L76 HARD-CODED 'Good Team' (should use t.common.appName). Add a pixel/display font example here if one is introduced."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/design-system/_components/sections/buttons-badges.tsx",
+    "role": "Catalog: Button variants/sizes, Badge variants",
+    "notes": "Must be updated if Button hover or the primary-text token changes."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/design-system/_components/sections/surfaces.tsx",
+    "role": "Catalog: Card, PageHeader, StatCard, EmptyState, Progress",
+    "notes": "The place to document new OS-shell surfaces (window, menu bar, dock) if they become shared components."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/design-system/_components/sections/interactive.tsx",
+    "role": "Catalog: Forms, Overlays, Navigation, Charts, Markdown, Feedback",
+    "notes": "L72 placeholder hello@goodteam.ir (cosmetic)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/design-system/_components/sections/data-display.tsx",
+    "role": "Catalog: tables, lists, ColorDot",
+    "notes": "L142 hard-coded color list ['#00A76F','#078DEE','#7635DC','#FDA92D','#FF5630']."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/design-system/page.tsx",
+    "role": "Catalog page (owner/admin) wiring all sections + TOC",
+    "notes": "A new 'brand' or 'OS shell' section must be added to both the `toc` array and the render list."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/app/[locale]/panel/settings/_components/appearance-settings.tsx",
+    "role": "Settings → Appearance: mode, preset previews, sidebar mode",
+    "notes": "Iterates colorPresets with presetStyle(p) previews (L188-205); labels come from i18n `settings.preset_<id>` (fa/en settings.ts ~L302-308), so a new preset needs both keys. PanelMock (L81-128) uses bg-white/grey-* utilities for light/dark mocks."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/ui/button.tsx",
+    "role": "Button primitive",
+    "notes": "L13 default variant `bg-primary text-primary-foreground hover:bg-primary-dark`. With a yellow primary and dark ink, hover text contrast drops to about 2.4:1 (#1c1c1e on #7A5A00). The orange preset already fails today: #1c252e on #b66816 is 3.68:1. L18 soft variant uses text-primary-dark / dark:text-primary-light (good pattern). L25 link variant uses text-primary (fails in light mode with yellow)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/ui/badge.tsx",
+    "role": "Badge primitive",
+    "notes": "L12 default `bg-primary/16 text-primary-dark dark:text-primary-light` is AA with primary-dark #7A5A00 (5.4:1 on yellow/16 over #F3F3F3). L13 solid uses primary-foreground."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/site-header.tsx",
+    "role": "Public header (to become the macOS menu bar)",
+    "notes": "L35-38 Logo + aria-label t.common.appName; L47 LanguageMenu (header-client.tsx:127), L48 ThemeToggle; the CTA uses bg-grey-800. HeaderShell (header-client.tsx:30) applies `.glass` on scroll."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/site/site-footer.tsx",
+    "role": "Public footer",
+    "notes": "L53 Logo, L81 `.gt-wordmark` giant appName, L86 © appName."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/sidebar.tsx",
+    "role": "Panel sidebar brand + nav (candidate for the Dock)",
+    "notes": "Brand() L85-101: LogoMark + t.common.appName. Active item uses sidebar-accent tokens (L57); in light mode sidebar-accent-foreground = var(--primary), which fails with yellow."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/components/panel/header.tsx",
+    "role": "Panel top bar (candidate for the menu bar)",
+    "notes": "L17 `glass sticky top-0 h-16 lg:h-[72px]`; L45 LocaleSwitcher, L46 AppearanceMenu."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/messages/fa/common.ts",
+    "role": "appName source (fa)",
+    "notes": "L2 appName 'گود تیم', L3 appTagline. en/common.ts:4 appName 'Good Team'. Renaming here relabels: metadata (layout.tsx:22,24,32), manifest short_name, site header/footer, panel sidebar, auth layout (L22,28,36), hero-diagram.tsx:163, seo.ts:82 og siteName, (site)/opengraph-image.tsx:18, post-editor.tsx:686 SEO preview, typography catalog, and the fallbacks in feed.xml/route.ts:62,69, invoices/[id]/page.tsx:125, i/[token]/page.tsx:41, about/page.tsx:54, blog+work opengraph-image, content/geo.ts:151,153."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/i18n/messages/fa/site.ts",
+    "role": "Site copy incl. metaTitle",
+    "notes": "fa L3 / en L4 metaTitle contains the brand (also manifest name and OG alt)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/src/server/modules/settings/service.ts",
+    "role": "Settings schemas with defaults (DB-backed brand)",
+    "notes": "L29-31 profile.brandName default {fa:'گود تیم', en:'Good Team'} applies only when no profile row is saved. Production and seeded DBs keep their stored value, which must be edited in Panel → Settings → Profile (profile-form.tsx:155) or by a data update. L56 business.invoicePrefix default 'GT-' is data that existing invoice numbers depend on. brandName drives the contracts `{{brand.name}}` placeholder (contracts/service.ts:212,251), invoices, the sign page, feed.xml, llms.txt (content/geo.ts:151-153,228) and JSON-LD (site/json-ld.tsx:48-49,83)."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/scripts/seed.ts",
+    "role": "Demo data (brand appears as data and credentials)",
+    "notes": "L40-41 owner@goodteam.local / goodteam-demo-pass, L61,65,165 (sara@, client passwords), L87 hello@goodteam.local, L1518-1519 console hints: keep (e2e/docs depend on them). Data copy that can be rebranded: L76 brandName, L110 payment instructions 'به نام گود تیم', L190 repoUrl github.com/goodteam, L235 project name 'وب‌سایت و پنل Good Team', L236 slug 'good-team-site' (also used in quick-add examples: lib/quick-add.ts:5,7; tasks/tools.ts:60; tasks/schemas.ts:69; docs/modules/time-tasks.md:112), L912 contract text, L1434-1448 about posts."
+   },
+   {
+    "path": "/Users/goodinmahdi/Desktop/git/GoodInTeam/docs/design-system.md",
+    "role": "Design-system doc to keep in sync",
+    "notes": "L5 'green primary', L15-31 token table + presets list (green default), L33 dark mode, L35-40 typography, L106-113 motion rules (CSS only on the public site, reduced-motion handled globally), L115-127 chart palette rule (chart-1 follows primary; chart-3/4 contrast caveats). docs/modules/settings.md:105-108,144 also describe usePreset and the catalog."
+   }
+  ],
+  "constraints": [
+   "Keep these brand identifiers unchanged, or ship a migration or back-compat path. Session cookie `gt_session` (src/server/auth/cookie.ts:6; proxy optimistic gate; cookie.test.ts:30, proxy.test.ts:131): renaming it logs everyone out. API token prefix `TOKEN_PREFIX = 'gt_'` (src/server/api/auth.ts:12, api-tokens/service.ts:41): renaming it breaks every issued token and MCP config. Cookies `gt_cal_hidden` (components/calendar/types.ts:14) and `gt-sidebar-collapsed` (panel/panel-prefs.ts:23, panel-ui.tsx:24). Storage keys `gt-preset` (theme.ts:13), `gt-docs-filter`/`gt-docs-expanded` (docs-sidebar.tsx:183-184), `gt-doc-draft:` (doc-editor.tsx:49; renaming loses unsaved drafts), `gt-view:` (site/islands.tsx:119) and `gt-contract-signed:` (sign-panel.tsx:60).",
+   "Vault backup format id `BACKUP_FORMAT = 'good-team-vault-backup'` (src/components/vault/formats.ts:82) is checked by parseBackup (L122). Changing it makes existing encrypted backups unimportable. Keep it, or accept both old and new values. The backup and recovery file names (vault-settings.tsx:419,638,683; recovery-key-panel.tsx:35) are cosmetic but should stay for continuity. vault-settings.tsx:622 `source: 'Good Team vault'` and the vault.ts i18n strings (fa:41,257 / en:43,248) are labels and can change.",
+   "Calendar UID host fallback 'goodteam' (src/server/modules/calendar/feeds.ts:146,148) feeds event UIDs. Changing it duplicates events in subscribed calendars. The feed name at feeds.ts:268 (`Good Team — …`) and PRODID at ics.ts:187 are cosmetic.",
+   "MCP and HTTP protocol identifiers: SERVER_INFO name 'good-team' (src/app/api/mcp/route.ts:16) and the `Bearer realm=\"good-team\"` header (mcp/route.ts:58, server/api/http.ts:13). The `title` and the instructions text (mcp/route.ts:16,18) and the openapi title 'Good Team API' (api/v1/openapi.json/route.ts:40) can be relabelled. The `claude mcp add … good-team` command strings (settings/_components/api-tokens.tsx:79, settings/api/page.tsx:53, docs/api.md:21, docs/HANDOFF.md:117, docs/modules/settings.md:98) set a client-side alias. Renaming the alias is optional.",
+   "Infrastructure names: Docker volume `goodteam-data` (docker-compose.yml:2,25,28; README.md:36). Renaming it orphans production data. Also keep `/srv/goodteam` and the backup filename `goodteam-backup-*.db` (api/backup/route.ts:58; docs/deployment.md:79 cron; docs/modules/settings.md:117) and package.json:2 `good-team`. Demo credentials `@goodteam.local` / `goodteam-demo-pass` (seed.ts, e2e/vault.spec.ts:12-13, scripts/shots.mjs:4, AGENTS.md:27, docs/HANDOFF.md:20-25) and test domains `goodteam.ir` (cookie.test.ts, proxy.test.ts:143, settings/utils.test.ts, ics.test.ts, contracts/placeholders.test.ts) are fixtures. Leave them as they are.",
+   "Weak-password lists contain 'goodteam' (settings/_components/password-strength.ts:14, vault/strength.ts:47). Add new brand words such as 'goodin' and 'goodinteam' instead of replacing the old one.",
+   "Brand name has two sources. The UI chrome reads the i18n constant `common.appName` (fa/common.ts:2, en/common.ts:4). Documents, feeds and SEO read `settings.profile.brandName` from the DB, with appName as the fallback. A rename must update both the i18n strings and the stored profile row (Settings → Profile, or a seed/data update); changing the zod default only affects empty installs. No sub-brand concept exists yet ('Good In Studio', 'Good In Code'), and the Persian rendering of 'Good In Team' is the owner's decision.",
+   "Yellow #FFC50D is never a text, link, focus-ring or thin-line color in light mode. It measures 1.59:1 on #FFFFFF and 1.43:1 on #F3F3F3, which fails both AA text (4.5) and non-text (3:1). White on yellow is 1.59:1, so `--primary-foreground` must be dark (#1C1C1E or #1c252e: 9.8–10.7:1). In dark mode yellow is fine as text: 11.0:1 on #141a21 and 10.4:1 on #1F1F22.",
+   "Proposed yellow scale: lighter #FFF3C4, light #FFDB66 (dark-mode accent text, ~13:1), main #FFC50D, dark #7A5A00 (light-mode text-safe: 6.38:1 on white, 5.75 on #F3F3F3, 5.40 on yellow/16 soft over #F3F3F3), darker #4D3800, contrast #1C1C1E, rgb '255 197 13'. #8A6500 is the lightest shade that still passes, but only by a thin margin (4.51:1 on soft-over-#F3F3F3). Light-mode `--ring` and chart-1 need ≥3:1, so use #9A7200 (4.39 on white, 3.96 on #F3F3F3) or primary-dark.",
+   "Brand greys: #6A6A6C works as light muted-foreground (5.40 on white, 4.86 on #F3F3F3) but fails in dark mode (3.24 on #141a21). Use #B3B5B9 for dark muted-foreground (8.0–8.8:1 on #1F1F22/#161618). #B3B5B9 (1.85) and #CACCCE (1.45) on #F3F3F3 are for borders, fills and decoration only, never text or meaningful icons.",
+   "Existing rules a yellow primary breaks in light mode: 128 `text-primary` and about 50 `hover:text-primary` uses, Button `link` variant, `.prose-gt a` and blockquote border, `.gt-dot`, `--sidebar-accent-foreground: var(--primary)`, `.text-gradient` and `.gt-accent` gradient text, `--ring`, `chart-1`, `border-primary` (51 uses, needs 3:1 where it marks state), and Button default `hover:bg-primary-dark`. The fix needs a new token, not just a palette swap.",
+   "Hue collisions: `--warning` #ffab00 and chart-4 (#c27a00 light / #ffab00 dark) sit next to brand yellow. Warning badges, charts and the primary would be confusable. Shift warning and chart-4 to another hue, then re-run the dataviz check described in docs/design-system.md L115-127.",
+   "design-tokens.test.ts parser rules: keep `:root {`, `.dark {`, `@theme inline {` and each `[data-preset=\"x\"] {` as flat blocks with no nested braces or @media inside, because the parser reads up to the first `}`. Every token change must be mirrored in design-tokens.ts. Replace the hard-coded default 'green' in theme.ts:16, theme-controls.tsx:21,25,27 and design-tokens.test.ts:45 with a single exported DEFAULT_PRESET.",
+   "The default preset must live in `:root` with no attribute, so first paint is correct without JS (no FOUC). presetInitScript only sets data-preset for non-default saved values. A visitor with a saved 'gt-preset'='green' keeps green after the switch.",
+   "Tailwind v4 wiring: every new semantic token needs `--x` in :root/.dark (and in presets if it is preset-dependent) plus `--color-x: var(--x)` in `@theme inline` to become a utility. The dark variant is `&:is(.dark *)`, set by next-themes on <html>.",
+   "Performance and motion: docs require CSS-only motion on the public site, and no motion library is installed. The global prefers-reduced-motion rule (globals.css:277-286) forces animation-duration .01ms with one iteration, so sprite-sheet `steps()` animations for the pixel assistant stop on their first frame. Design a meaningful static frame. Public pages deliberately exclude tooltip and toast providers (providers.tsx comment), so the assistant's speech bubble should be a light island, not a Radix Tooltip on every section.",
+   "Fonts are self-hosted through next/font/local from node_modules (no network at build). A pixel font needs a new @fontsource package and should use preload:false and Latin-only. No Persian pixel font exists, so keep Vazirmatn for fa. OG images need TTF files in public/fonts/og (Satori can't read woff2), and og.tsx has to pre-shape Persian text.",
+   "RTL-first: menu bar and dock ordering must use logical properties. `.gt-accent` already flips its gradient direction for [dir=rtl]. The OG renderer mirrors with row-reverse.",
+   "Print documents (contracts/contract-sheet.tsx, contracts/print-styles.tsx, finance/invoice-document.tsx, contracts/signature-pad.tsx) hard-code #1c252e/#141a21 and rgb(145 158 171). LogoMark inside them inherits var(--primary). Check that a yellow mark still reads on white paper; it can use grey #6A6A6C pixels for definition.",
+   "AGENTS.md rule 9: every change to components/ui or components/shared must update its /panel/design-system example. Rule 10: keep docs/design-system.md and docs/modules/settings.md in sync. Run `pnpm check` (which includes design-tokens.test.ts) and `pnpm build`."
+  ],
+  "opportunities": [
+   "Introduce the new default by moving the green values from :root (globals.css:106-112) into a new flat `[data-preset=\"green\"]` block, then putting the yellow scale in :root. Add the new id first in `colorPresets`, add it to `presetSwatches` (theme.ts:1-11) and `presetScales` (design-tokens.ts:22), and export `DEFAULT_PRESET`. Use it in presetInitScript, usePreset (theme-controls.tsx:21,25,27) and design-tokens.test.ts:45. Add i18n `settings.preset_<id>` in fa/en settings.ts (~L302-308). Change AppearanceMenu `grid-cols-6` (theme-controls.tsx:93) to fit 7 presets.",
+   "Add semantic tokens instead of patching call sites one by one. `--primary-ink` (Tailwind `text-primary-ink`) is the text-safe primary: light = #7A5A00, dark = var(--primary) or primary-light; other presets map it to their main/dark. `--primary-hover` is the filled-button hover: #E6AC00 gives dark ink 8.3:1. Then codemod `text-primary`/`hover:text-primary` → `text-primary-ink`, Button default `hover:bg-primary-dark` → `hover:bg-primary-hover` (button.tsx:13), Button link (L25), `.prose-gt a`, light `--sidebar-accent-foreground`, and light `--ring` → #9A7200 or primary-dark. This also fixes the existing orange-preset hover contrast bug.",
+   "Neutral, macOS-like surfaces from the brand greys: light `--background` #F3F3F3 (desktop/wallpaper), card/window #FFFFFF, muted #E8E8EA, muted-foreground #6A6A6C. Dark: background #161618, card #1F1F22, muted #2A2A2D, muted-foreground #B3B5B9. Replace the blue-grey `--color-grey-*` scale (globals.css:72-81) with a neutral scale anchored at 100 #F3F3F3, 300 #CACCCE, 400 #B3B5B9, 600 #6A6A6C. Add a `--grey-rgb` channel variable to replace the 17 hard-coded `rgb(145 158 171 / α)` in globals.css and the copies in design-tokens.ts, og.tsx and the print components. Update surfaceTokens/greyScale, viewport.themeColor (layout.tsx:42-45) and manifest background/theme color (manifest.ts:16-17).",
+   "OS shell primitives already exist. `.glass` (globals.css:331) is the menu-bar and dock material, already used by panel/header.tsx:17 and site header-client.tsx:30. `--shadow-dropdown`/`--shadow-dialog` work as window shadows, and the radius scale comes from `--radius`. ThemeToggle, AppearanceMenu, LocaleSwitcher and LanguageMenu are drop-in menu-bar extras (current mounts: site-header.tsx:47-48, panel/header.tsx:45-46). Add `--menubar-h`, `--dock-h` and `--window-radius` tokens in :root so page layouts can pad around the fixed bars.",
+   "Cloudflare-style framed grid: `.bg-grid` (48px), `.bg-dots`, `--surface-grid`, `--surface-glow`, `.mask-fade-*`, `.gt-glow`, `.gt-packet`/`.gt-draw`/`.gt-ants` SVG diagram animations and `.gt-ring` hairlines are all in globals.css (site block L506-706). Retint them with the brand tokens. `.gt-ring` and `.gt-accent` hard-code violet #8e33ff and should switch to grey or a darker-yellow pair.",
+   "Pixel logo: rebuild LogoMark (logo.tsx) as an SVG grid of `<rect>` cells with `shape-rendering=\"crispEdges\"`, filled with var(--primary) yellow plus grey CSS variables so it re-themes per preset and mode. Keep the `LogoMark({className})` / `Logo({label})` API so the 11 call sites keep working. Extend Logo with an optional `sub` prop ('Team' | 'Studio' | 'Code' …) to render the 'Good In' + suffix family. Export the cell data so og.tsx (L131-137) and icon.svg can share it; icon.svg can carry a `@media (prefers-color-scheme: dark)` style block.",
+   "Brand rename checklist (UI labels only): fa/en common.appName (+ appTagline), fa/en site.metaTitle, fa/en settings.ts subtitle/apiSubtitle (fa:4,239 / en:5,240), fa/en vault.ts recoveryFileHeader/importInvalid, fa/en designSystem.ts (fa:5,44,45 / en:6,45,46), typography.tsx:76 hard-coded 'Good Team' (switch it to t.common.appName), feed.xml/route.ts:67 generator, openapi title, MCP title and instructions, calendar feed name, OG colors, README/AGENTS/Dockerfile/.env.example/package.json description headings, docs/roadmap.md:1. Then update the stored profile brandName through Settings → Profile and in seed.ts:76.",
+   "Sub-brands: add a small typed brand registry (e.g. src/components/brand/brands.ts mapping id → {fa, en, accent?}) plus i18n keys, rather than more hard-coded strings. Services, dock items and the assistant's section explanations can reference sub-brand ids. Optionally give each sub-brand a preset via `presetStyle()` (design-tokens.ts:80) to re-skin a subtree, as Settings → Appearance already does.",
+   "Chart and status palette: give light mode `--chart-1` a ≥3:1 shade (#9A7200 or #A67C00). Move `--warning` and chart-4 off the yellow hue and re-validate. Update chartTokens/statusTokens and the docs chart section.",
+   "OG image (og.tsx): switch the bg to the new dark neutral, the glows to rgba(255,197,13,…), the eyebrow pill and domain text to #FFDB66 (dark-on-dark is safe), and the bottom bar gradient to yellow→grey. Inline the pixel logo cells. Optionally add a pixel-font TTF to public/fonts/og for the brand line only.",
+   "Living catalog: add a 'Brand' section (pixel logo sizes, sub-brand lockups, palette with contrast notes) and an 'OS shell' section (menu bar, dock, window, assistant bubble) under panel/design-system/_components/sections. Register both in the page.tsx `toc` and the render list, and update the colors.tsx `split()` page colors (L19) and the data-display.tsx:142 swatch list."
+  ]
+ },
+ "reference": {
+  "summary": "The reference page (cloudflare.com/products/agents/) was measured live in the browser at 1440×900 and 375×812, in dark and light themes. Notes come from computed styles and stylesheets. WebFetch only returned the AI-facing markdown mirror, so it was not useful.\n\n**How the reference is built**\n- One 1200px column with two full-height dashed rails, drawn with CSS (dashes 16px long, 16px apart).\n- Every section is a separate box with a 1px border, sitting 48, 64 or 80px apart depending on screen width.\n- Inside the boxes, grids go from 1 to 3 columns. Cells are split by 1px lines, and every cell corner has a 14px square marker.\n- A 12px dot texture fills only the margins and bands, never the area behind text.\n- Type is one grotesk in weights 400/500 plus one mono font, at 56/48/32/19/16/13px.\n- There is one accent colour, plus a pill-shaped orange CTA panel at the end.\n\n**The pattern that fits the \"virtual me\" assistant**\nCloudflare runs fake multiplayer \"agent cursors\". Each is an orange arrow with a label like \"Editing card…\" or \"Setting section title…\". The arrow moves with `translate3d` on a page-sized overlay that ignores clicks. The section it reaches gets CSS-only selection effects: a dashed outline, 7px corner handles, a tint, and a lift with a small wiggle. Sections fade in through CSS scroll-driven animations (`animation-timeline: view()`) with a fallback for older browsers. Everything is turned off for reduced-motion users, and the cursors are hidden below 768px.\n\n**Repo map**\n- **Public site:** `SiteHeader`/`HeaderShell`, `SiteFooter`, `home/sections.tsx`, which already uses Suspense and skeletons, and `hero-diagram.tsx`, which is already a Cloudflare-style diagram.\n- **Panel:** `PanelSidebar`, `PanelHeader`, `CommandPalette`, and `nav-config.ts`, which is the single source of panel navigation.\n- **Theme:** `theme-controls.tsx`, with green as the default preset.\n- **Brand files (untracked):** `pixel-logo.tsx`, `pixel-font.ts` and `docs/brand/logo-reference.webp` appeared during this run, probably from a parallel step. They draw `PixelLogo({suffix})` for any sub-brand, but `globals.css` does not define the `--brand-*` variables they use yet.",
+  "files": [
+   {
+    "path": "https://www.cloudflare.com/products/agents/",
+    "role": "Reference design. Measured live; structure only, no copy reused.",
+    "notes": "FRAME: dark page bg #151414 (light: #FFFFFF). Text #F0E3DE (light #262626). Secondary text is foreground at 70% or #9A9390. Hairline #F0E3DE at 12.5% alpha (light #F0F0F0). Single accent #FF5E1F. Two 1px vertical rails run the full page height at the edges of the 1200px column (x=120 and x=1319 at 1440 width), drawn as linear-gradient(hairline 50%, transparent 50%) with background-size 1px 32px. A second pair sits on the 1480px outer frame. Sections are separate boxes: 'max-w-[1200px] mx-auto border' (1px solid hairline). They are stacked with gap-section 48/64/80px (base/lg/xl). Page gutter px-section is 16/16/24/32px. Inside a box: grid 1 col → 3 cols (~399px each). Cells are divided by '*:border-t lg:*:border-l' with first-row/first-col resets. CORNER MARKERS: 14×14 squares, 1px hairline border, filled bg-200 #191817, centred on each cell corner (offset -7px). Each cell has an overlay that ignores clicks and selection. No plus signs. DOTS: SVG <pattern> 12×12, circle r=0.75, colour --decor-dots (#f0e3de20 dark, #ebebeb light). Used only in the margins outside the frame and in the band under the hero. Unframed centred heading blocks are max-w 1080. Full-bleed blocks (hero, CTA) are max-w 1480 with an 8px inset. SECTIONS IN ORDER: (1) Fixed header, 72px, solid bg, no blur. Logo at start, 4 centred nav items with chevrons that open mega menus, end has 38px pill Login/Contact buttons and a search icon. After scrolling it collapses to logo plus an orange 'Start building' pill. (2) Hero, about 538px under an 80px spacer, centred stack: line-art cloud (hatched fill, orange square nodes) drawn on a 2×DPR canvas that fades in. Headline 56px/500, tracking -1.4px, line-height 1.0. Lead 16px, max-w 660, balanced. Two 50px pills: filled accent, and outlined hairline. Radial accent glow at 6%. Headline has an animated noise-glow layer. (3) Benefits: framed 3-col strip. Cell padding 32px; 24px line icon → 16px medium title → 16px description at 70%. (4) 'How it works', desktop only: centred 56px H2. Four items placed along big concentric dashed arcs, each with a circular node marker. A partial illustration bleeds in from the start edge. Mobile gets a plain list instead. (5) Use cases: framed 3-col grid. The FIRST cell is the section header: dashed accent chip with mono label and spinner, 32px H, subtitle, outlined pill CTA. The other cells are items (2 + 1 spanning 2 columns). (6) Centred heading block, 48px/500, with a 19.2px subtitle at 70%. (7) Code showcase: framed 2/3 + 1/3 split. Left is an editor panel: 12px mono file tabs, sticky line-number gutter, Shiki-style colours, copy button at bottom end. Right is a vertical tab list: each tab is a cell with border-b and p-8; active tab gets an accent bar on the start edge and a tinted bg. Tabs swap the code. (8) Centred heading plus a framed 3-col directory. Each column has a 13px grey category eyebrow and rows of icon + name + subtitle. Hover shows a rounded bordered tile on bg-200. (9) Final CTA: accent-orange rounded-2xl panel inset 8px, fine dot texture, tilted translucent icon tiles, sunrise radial glow at the bottom. White primary pill and translucent secondary pill. Below it, an infinite marquee of value props separated by icons. (10) Footer, a full viewport tall: wordmark at start, then a 4-col link grid in 2 rows with 13px grey headings. Dashed rule, then a legal row. The wordmark slides 56px through a CSS scroll-driven animation (view-timeline-name --footer-progress; animation-range entry 92%). TYPE: FT Kunst Grotesk, only 400 and 500 loaded; Apercu Mono for code and chips. Headings weight 500, tracking -0.025 to -0.035em. Body 16px, line-height 1.2–1.28. MOTION / ASSISTANT ANALOGUE: two fake 'agent cursors' (orange arrow SVG + pill label with a 2.4s shimmer) on an absolute inset-0 overlay that ignores clicks. JS sets transform: translate3d() with will-change: transform and rotates the arrow toward its direction of travel. Targets are marked [data-agents-cursor-target]. Effect classes: .agents-effect-text (inset tint via box-shadow; ::before 1.5px dashed outline at inset -8px; ::after four 7×7 handles drawn with 4 linear-gradients), -container, -code, -highlight (outline 2px, offset 4px), -lift (3s keyframe: lift, scale .97, rotate 2deg wiggle, accent shadow, drop back), -exit (fade). Typing effect: .agents-typing tinted span plus a 2px caret blinking with steps(). Cursors hidden below md. Section reveal: .agents-reveal-target (opacity 0 → 1, translateY 1.25rem → 0, .65s cubic-bezier(.22,1,.36,1)) with animation-timeline: view(), an @supports-not fallback that renders it static, and reduced-motion that renders it static. PERF: Astro islands (23); about 2,235 DOM nodes; 3 font files; one canvas; header has no backdrop-filter. MOBILE (375): 16px gutters, frame box 343px, grids collapse to 1 column, rails and markers kept, heading 32px, no horizontal overflow."
+   },
+   {
+    "path": "reference:macOS-visual-language",
+    "role": "Spec of the macOS chrome to emulate on the web (Sonoma/Sequoia, with notes on Tahoe 26).",
+    "notes": "MENU BAR: about 24px tall on non-notch screens (use 28px on the web for touch-friendlier targets), fixed top, full width. Material is translucent: light ≈ rgba(246,246,246,.72), dark ≈ rgba(30,30,30,.6), plus blur(20–30px) saturate(180%). In Tahoe the bar is fully transparent over the wallpaper. Leading side: logo menu (≈14px glyph), then the app name (13px semibold), then app menus (13px regular), each padded 8–10px. Hover/open state is a rounded 4–6px highlight. Trailing side: 16px monochrome status glyphs (Control Center, Wi-Fi, battery, search), then the clock (13px, e.g. 'Wed 15 Oct 14:32'). Dropdowns: 6–10px radius material panel with a hairline border, 1px inner highlight and shadow ≈0 10px 30px rgba(0,0,0,.25). Rows 22px, 13px text. Hover uses accent bg with white text. 1px separators; shortcut glyphs (⌘⇧⌥) end-aligned in secondary colour; submenu chevrons. In RTL macOS the whole bar mirrors: logo menu on the right, status items and clock on the left. DOCK: centred at the bottom, 4–8px above the screen edge. Container radius ≈18px (Tahoe ≈24–28), translucent with blur, hairline border (white at .2–.3 as an inner highlight in dark), padding 4–6px. Icons 48–64px with 4–8px gaps. Magnification up to 1.5–2× with a falloff over ±2 neighbours, growing from the bottom; icons rise above the container. Running indicator: a 4px dot under the icon. Separators: 1px vertical line between the apps group and folders/trash. Label bubble above the hovered icon (rounded 6px, 13px, material bg, small caret). Launch bounce: translateY -20px, 2–3 times. Genie effect on minimise. Optional auto-hide. WINDOWS: radius 10–12px (Tahoe 16–26). Title bar 28px, or a 52px unified toolbar. Traffic lights: 12px circles, 8px gap, 12–20px leading inset, vertically centred. Close #FF5F57, minimise #FEBC2E, zoom #28C840, each with a darker 0.5px ring. Glyphs (× − ⤢) appear only while the group is hovered. Unfocused windows show all three grey. Title 13px semibold, centred. Focused shadow ≈0 20px 60px rgba(0,0,0,.35) plus a 0.5px outline. In RTL macOS the traffic lights move to the right. OTHER METAPHORS: Spotlight = the existing ⌘K CommandPalette. Launchpad = a full-screen icon grid ('all modules' / mobile 'More'). Control Center = a tile grid for theme, language, colour preset and a mute switch for the assistant. Notification Center = the panel's HeaderWidgets. Wallpaper = the dotted, framed desktop canvas."
+   },
+   {
+    "path": "docs/brand/logo-reference.webp",
+    "role": "Brand reference (UNTRACKED; appeared during this run).",
+    "notes": "Pixel lettering 'GOOD IN / STUDIO' inside an L-shaped frame: a top bar and a start-side bar in #B3B5B9, with a dark corner pixel #6A6A6C at the top-left. 'GOOD' in yellow #FFC50D, 'IN' in #6A6A6C, the suffix in #CACCCE, on #F3F3F3 paper. The corner bracket and corner pixel are a natural source for the framed-grid corner markers and the window title bar."
+   },
+   {
+    "path": "src/components/brand/pixel-logo.tsx",
+    "role": "Pixel logo components (UNTRACKED, new).",
+    "notes": "PixelLogo({suffix='TEAM', title, paper, className}) draws any sub-brand (STUDIO, CODE…). PixelMark is a square 'GI' mark meant for favicon, menu bar and dock. SVG with crispEdges. Fills come from var(--brand-yellow|ink|soft|frame|paper) with hex fallbacks; these variables are not yet in globals.css. Layout comes from pixel-font.ts (brandLogoLayout, brandMarkLayout, toRects; 5×7 glyphs). Latin only: there are no Persian pixel glyphs."
+   },
+   {
+    "path": "src/components/brand/logo.tsx",
+    "role": "Current logo used everywhere (header, sidebar, footer).",
+    "notes": "LogoMark is two rounded squares in var(--primary) green; Logo = mark + text label. Used by SiteHeader, SiteFooter and the PanelSidebar Brand. To be replaced by PixelLogo/PixelMark."
+   },
+   {
+    "path": "src/app/[locale]/layout.tsx",
+    "role": "Root <html> (lang/dir/fonts) and Providers.",
+    "notes": "Sets dir from localeMeta. Runs presetInitScript before paint. viewport.themeColor is #ffffff / #141a21 and should match the new menu-bar colour. html has data-scroll-behavior=smooth."
+   },
+   {
+    "path": "src/app/[locale]/(site)/layout.tsx",
+    "role": "Public site chrome. Mount point for MenuBar, Dock, desktop frame and assistant overlay.",
+    "notes": "Currently: skip link → SiteHeader → main#main (min-h-[60dvh] overflow-x-clip) → SiteFooter → JSON-LD in Suspense. I18nProvider ships only the common and nav namespaces."
+   },
+   {
+    "path": "src/app/[locale]/(site)/page.tsx",
+    "role": "Home page to restructure into framed sections.",
+    "notes": "Current order: hero (2-col text + HeroDiagram, bg-grid/gt-glow), TrustMarquee, FeaturedWork, ServicesBento, HowWeWork, StatsStrip (bg-dots card), LatestPosts, Testimonials, CtaBand. Each DB-backed block is already Suspense plus a matching skeleton; keep that."
+   },
+   {
+    "path": "src/components/site/home/sections.tsx",
+    "role": "Server sections (DB-backed, each calls await connection()) plus skeletons.",
+    "notes": "AvailabilityBadge, TrustMarquee (gt-marquee, dir=ltr), FeaturedWork (12-col bento), ServicesBento (6-col spans), StatsStrip, LatestPosts, Testimonials, CtaBand. Contents to re-skin into FrameGrid cells."
+   },
+   {
+    "path": "src/components/site/home/hero-diagram.tsx",
+    "role": "Existing Cloudflare-style hero diagram.",
+    "notes": "Pure SVG + CSS dash animations in a 600×500 space; the connector layer mirrors itself in RTL. A good candidate to sit inside a 'window' in the hero."
+   },
+   {
+    "path": "src/components/site/home/how-we-work.tsx",
+    "role": "Process section.",
+    "notes": "Candidate for the arc layout or the code-showcase tab pattern (vertical tab list with an accent bar on the start edge)."
+   },
+   {
+    "path": "src/components/site/site-header.tsx",
+    "role": "Current public header (server).",
+    "notes": "siteSections (/work, /services, /blog, /learn, /about) and staticSitePaths are exported and reusable as menu-bar menus and dock items. Contact CTA uses t.site.heroPrimaryCta."
+   },
+   {
+    "path": "src/components/site/header-client.tsx",
+    "role": "Header client islands to reuse in the menu bar.",
+    "notes": "HeaderShell: one passive scroll listener toggling .glass; to be replaced. NavLinks/ActiveLinks: usePathname inside Suspense. LanguageMenu: switches locale with a plain <a hrefLang> (a full page load is required; a Link prefetch across root params returns 404), via useSwitchHref + useAlternates. MobileMenu: native Popover API."
+   },
+   {
+    "path": "src/components/site/site-footer.tsx",
+    "role": "Footer.",
+    "notes": "4 columns (1.5fr + 3×1fr), giant gt-wordmark, CurrentYear as a 'use cache' component (the Cache Components-safe way to get a date). Needs bottom padding so the dock never covers it."
+   },
+   {
+    "path": "src/components/site/ui.tsx",
+    "role": "Site layout primitives.",
+    "notes": "Container (max-w-7xl px-4 sm:px-6), Eyebrow, SectionHeading, ArrowLink, fmtDate/fmtNum. Replace with or extend into Frame/FrameSection/FrameGrid/FrameCell tokens."
+   },
+   {
+    "path": "src/components/site/islands.tsx",
+    "role": "Pattern for small public client islands.",
+    "notes": "Labels arrive as props so the site namespace isn't shipped to the browser. The assistant and dock islands should follow this."
+   },
+   {
+    "path": "src/app/globals.css",
+    "role": "Design tokens and utilities (706 lines).",
+    "notes": "Minimals tokens: green --primary with data-preset overrides, grey-50..900, .dark overrides, shadow-card. Utilities: .glass (color-mix 72% + saturate(180%) blur(12px)), .bg-grid (48px), .bg-dots (20px), mask-*, gt-* keyframes (marquee, gt-rise, gt-draw, gt-live). A global prefers-reduced-motion reset sits around lines 277–285. New --brand-*, --frame/--hairline/--dots, --menubar-h and --dock-h tokens go here."
+   },
+   {
+    "path": "src/components/shared/theme.ts",
+    "role": "Colour presets.",
+    "notes": "colorPresets green|cyan|purple|blue|orange|red; PRESET_STORAGE_KEY 'gt-preset'; presetInitScript runs before paint. Brand yellow needs either a new preset or a fixed brand accent separate from presets."
+   },
+   {
+    "path": "src/components/shared/theme-controls.tsx",
+    "role": "Theme UI. The source for a Control Center panel.",
+    "notes": "usePreset (MutationObserver on data-preset), ThemeToggle, AppearanceMenu (Popover with light/dark/system ToggleGroup and a preset swatch grid)."
+   },
+   {
+    "path": "src/components/shared/providers.tsx",
+    "role": "App-wide providers.",
+    "notes": "next-themes ThemeProvider (attribute=class, system default, disableTransitionOnChange) and Radix DirectionProvider."
+   },
+   {
+    "path": "src/components/shared/interactive-providers.tsx",
+    "role": "Tooltip + Toaster, panel only.",
+    "notes": "Deliberately kept off public pages. Dock tooltips on the site must therefore be CSS-only."
+   },
+   {
+    "path": "src/components/shared/locale-switcher.tsx",
+    "role": "Panel language dropdown.",
+    "notes": "Same full-page <a> rule as the site LanguageMenu."
+   },
+   {
+    "path": "src/components/shared/design-tokens.ts",
+    "role": "Tokens as data (catalog) plus design-tokens.test.ts.",
+    "notes": "Verified against globals.css by a unit test, so it must be updated whenever tokens change."
+   },
+   {
+    "path": "src/app/[locale]/panel/layout.tsx",
+    "role": "Panel shell. Becomes the OS desktop: menu bar + dock + window.",
+    "notes": "Runs sidebarInitScript, then InteractiveProviders, then PanelUIProvider. Layout: flex with SessionSidebar (in Suspense, falls back to SidebarSkeleton) and a column of PanelHeader (slot = SessionHeaderSlot in Suspense) plus main (max-w-[1400px])."
+   },
+   {
+    "path": "src/components/panel/sidebar.tsx",
+    "role": "Panel sidebar to be replaced or complemented by the dock.",
+    "notes": "PanelSidebar: 280px wide, 88px collapsed, collapsed state stored in a cookie, Radix Tooltip when collapsed, Sheet on mobile, Brand with LogoMark. SidebarSkeleton reads html[data-sidebar-collapsed]."
+   },
+   {
+    "path": "src/components/panel/header.tsx",
+    "role": "Panel top bar. Becomes the menu bar.",
+    "notes": "Glass, sticky, h-16/lg:h-[72px]. ⌘K search button (aria-keyshortcuts), LocaleSwitcher, AppearanceMenu, slot."
+   },
+   {
+    "path": "src/components/panel/nav-config.ts",
+    "role": "Single source for panel navigation. Feeds the dock and Launchpad.",
+    "notes": "panelNav groups (groupOverview/Work/Business/Knowledge/Site/System) with role filters; navForRole(role); moduleIcons. Groups map naturally to dock separators."
+   },
+   {
+    "path": "src/components/panel/session-chrome.tsx",
+    "role": "Session-dependent chrome.",
+    "notes": "SessionSidebar and SessionHeaderSlot call requireActor and must render in Suspense. A role-filtered dock must follow the same pattern."
+   },
+   {
+    "path": "src/components/panel/panel-prefs.ts",
+    "role": "⌘K matcher and cookie-preference pattern.",
+    "notes": "isCommandPaletteShortcut works with any keyboard layout, including Persian. The SIDEBAR_COOKIE plus init-script approach (no flash on first paint) can be reused for dock preferences such as size, auto-hide and assistant mute."
+   },
+   {
+    "path": "src/components/panel/command-palette.tsx",
+    "role": "Spotlight equivalent.",
+    "notes": "Reachable from a search icon in the menu bar, on both the site and the panel."
+   },
+   {
+    "path": "src/components/panel/header-widgets.tsx",
+    "role": "Status items (timers, notifications).",
+    "notes": "Belongs on the trailing side of the menu bar, together with user-menu.tsx."
+   },
+   {
+    "path": "src/i18n/messages/fa/common.ts",
+    "role": "App name and shared strings.",
+    "notes": "appName is 'گود تیم' (en: 'Good Team'). Rename to Good In Team. Assistant texts go in a new namespace (e.g. guide.ts in fa and en) registered in messages/index.ts."
+   },
+   {
+    "path": "src/i18n/config.ts",
+    "role": "Locales.",
+    "notes": "fa is the default (RTL, persian calendar, no URL prefix); en is LTR under /en. localePath, stripLocale."
+   },
+   {
+    "path": "src/app/fonts.ts",
+    "role": "Self-hosted fonts.",
+    "notes": "Vazirmatn (fa), Public Sans (Latin), JetBrains Mono (preload false), all via next/font/local."
+   },
+   {
+    "path": "docs/design-system.md",
+    "role": "Design-system documentation.",
+    "notes": "Already says the public site borrows expressiveness from Cloudflare product pages. Must be rewritten for the Good In palette and the OS shell."
+   },
+   {
+    "path": "src/app/[locale]/panel/design-system/_components/sections/",
+    "role": "Living component catalog.",
+    "notes": "Sections: buttons-badges, colors, data-display, interactive, surfaces, typography. Add MenuBar, Dock, WindowChrome, Frame and the assistant here, as AGENTS.md rule 9 requires."
+   },
+   {
+    "path": "scripts/shots.mjs",
+    "role": "Visual QA screenshots.",
+    "notes": "Flags --only fa|en, --dark, --mobile, --full. Use it to check the RTL mirroring of the menu bar and dock."
+   }
+  ],
+  "constraints": [
+   "Cache Components: the menu bar and dock shells must be static (prerendered). Anything that reads the session (role-filtered panel dock, user menu, timers) renders in <Suspense> through requireActor, like session-chrome.tsx. Anything that reads usePathname (active dock item, active menu) also goes inside <Suspense>.",
+   "The clock must be a client-only island. Calling new Date()/Date.now() during a static render is forbidden. Render a fixed-width placeholder on the server, start ticking in useEffect, then setTimeout to each next minute boundary. Format with Intl 'fa-IR-u-ca-persian' (fa) or 'en-US' (en), with tabular-nums.",
+   "Locale switching must stay a full page load (plain <a href hrefLang>, as in LanguageMenu/LocaleSwitcher). Next 16.4 returns 404 for Link prefetches across root params, and <html lang/dir> and fonts change with the locale.",
+   "Public pages must not import Radix Tooltip or sonner; they are panel-only via InteractiveProviders. Dock labels and menu hints on the site must be CSS-only (::after with attr(data-label) on :hover and :focus-visible) or use the native Popover API.",
+   "RTL first: logical utilities only (ms/me/ps/pe/start/end, border-s, inset-inline). The menu bar mirrors in fa: brand menu on the right, clock and status on the left, as in RTL macOS. Traffic lights sit at inline-start (the right in fa). Directional icons get rtl:rotate-180. Code and latin islands use dir=ltr with unicode-bidi isolate.",
+   "Persian typography: no negative letter-spacing on Vazirmatn (it breaks joins); scope tracking-tight to :lang(en). Persian headings need line-height ≥1.3. The pixel font is Latin only, so Persian brand text uses Vazirmatn next to the pixel mark.",
+   "i18n: every menu label, dock label, window title, clock string and assistant text goes in messages/fa (source of truth) and messages/en. Add a new namespace (e.g. guide) and register it in messages/index.ts. Client islands receive labels as props (islands.tsx pattern) so whole namespaces are not shipped.",
+   "Contrast: brand yellow #FFC50D on #F3F3F3 or white is ≈1.5:1, so never use it for text or icons on light surfaces. Use it for fills, markers, active indicators, focus rings and the assistant. Text on yellow should be ink (#1C1C1E or similar). #6A6A6C on #F3F3F3 is ≈5:1 (OK for text). #B3B5B9 and #CACCCE are decorative only (lines, frames).",
+   "backdrop-filter is costly: the area behind it is re-blurred every frame while content scrolls under it. Limit it to the menu bar and dock, blur ≤20px. Never animate the blur radius and never stack blurred layers (dropdowns over the bar use ~95% opaque backgrounds). Add @supports not (backdrop-filter) and @media (prefers-reduced-transparency: reduce) fallbacks with a solid color-mix background. Prefer a solid background on small mobile screens.",
+   "Motion: magnification, assistant walking, reveals and lift effects all turn off under prefers-reduced-motion. A global reset already exists in globals.css (~line 277); scroll-driven animations also need animation-timeline: none or a static end state. Apply hover magnification only under @media (hover:hover) and (pointer:fine). Add will-change only while the dock is hovered, never permanently.",
+   "Use no per-frame JS: no scroll listeners for reveals (CSS animation-timeline: view() with an @supports fallback) and IntersectionObserver for the assistant's active section. The existing HeaderShell scroll listener can go once the menu bar is fixed and always in its material.",
+   "Layout safety: the fixed bars must reserve space. Set html scroll-padding-top = menubar height + 16px. main and the footer get padding-bottom = dock height + gap + env(safe-area-inset-bottom). Keep main's overflow-x-clip and the no-horizontal-overflow fix on phones (commit a6c58c1). Keep a 16px gutter on mobile.",
+   "No layout shift: menu bar and dock skeletons must match the final sizes exactly. Replace SidebarSkeleton/HeaderSlotSkeleton and the sidebarInitScript cookie flow with equivalents for any dock preference. Every panel route keeps its loading.tsx.",
+   "LCP: keep the hero headline as real text (the LCP element). Decorative canvases/SVGs load or fade in after it. Load the assistant sprite lazily (requestIdleCallback or after first interaction), as one small sprite sheet or SVG with image-rendering: pixelated and steps() animation. Skip it under Save-Data.",
+   "Accessibility: the menu bar is a <nav> with Radix DropdownMenu triggers (roving focus, Esc). The dock is a <nav aria-label> list of links with aria-current; focus-visible must show the label too. Magnification must never be the only active-state signal; keep the running dot. The assistant bubble must not steal focus or spam aria-live, must be dismissible and mutable (persisted), and its content must also exist as normal page text. The skip link stays first.",
+   "Tokens: when tokens change, update design-tokens.ts and its test, docs/design-system.md and the panel design-system catalog sections. Run pnpm check and pnpm build (the build validates Cache Components). Do visual QA with scripts/shots.mjs in fa/en, --dark and --mobile.",
+   "Brand rename: appName 'گود تیم'/'Good Team' becomes Good In Team. Sub-brands are rendered by PixelLogo suffix (STUDIO, CODE…). pixel-logo.tsx and pixel-font.ts are untracked work in progress; coordinate with whoever is committing them, and add the --brand-* vars they reference to globals.css."
+  ],
+  "opportunities": [
+   "LAYOUT RULE 1 – One page frame: a --frame-max: 1200px column with two full-height 1px dashed rails on its inline edges: background: linear-gradient(var(--hairline) 50%, transparent 50%) 0 0/1px 32px, positioned with inset-inline-start/end so they mirror in RTL. Add an outer --frame-wide: 1480px frame for full-bleed hero/CTA, inset 8px.",
+   "LAYOUT RULE 2 – Spacing tokens: --gutter 16px (<1024), 24px (≥1024), 32px (≥1280). --section-gap 48/64/80px. Every Frame* component consumes these, so pages contain no ad-hoc px/py.",
+   "LAYOUT RULE 3 – Sections are 'windows' on the frame: a 1px hairline box (--hairline = foreground at ~12% alpha) whose cells are a CSS grid. Cell dividers use border-block-start and border-inline-start (logical, so they flip in fa), with :nth-child resets for the first row and column. Columns go 1 → 2 (md) → 3 (lg).",
+   "LAYOUT RULE 4 – Corner markers taken from the logo: 12–14px squares (or 2×2 'pixels' in #6A6A6C with a #B3B5B9 ring) centred on every cell intersection, drawn by one aria-hidden overlay per section that ignores clicks, using inset-inline-start: -7px. One FrameCorners server component, pure CSS.",
+   "LAYOUT RULE 5 – Window title strip as section header: each framed section opens with a 28–32px strip holding traffic-light dots at inline-start (the right in fa, as in RTL macOS) and a centred mono label (e.g. 'good-in/studio'). This joins the 'OS window' and 'framed grid' ideas, and gives the assistant a natural place to point at.",
+   "LAYOUT RULE 6 – Header-in-a-cell: in 3-column sections the first cell (inline-start, the right in fa) holds eyebrow chip + H2 + lead + CTA, and the remaining cells hold items. Use the dashed accent chip in brand yellow (yellow/10 bg, dashed yellow border, ink text).",
+   "LAYOUT RULE 7 – Fixed chrome budget: menu bar 28px desktop / 44px mobile; dock 64px tall + 12px offset (mobile: 56px tab bar + safe area). Expose --menubar-h and --dock-h as CSS variables used by scroll-padding-top, main/footer padding-bottom and the assistant's clamp area.",
+   "LAYOUT RULE 8 – Menu bar order follows dir via flex with logical gaps only: [PixelMark + 'Good In Team' ▾ brand menu (sub-brands: Studio, Code, … and About/Contact)] [section menus from siteSections] [spacer] [search ⌘K] [language ▾] [Control Center (theme, colour preset, assistant on/off)] [clock]. In fa the brand sits on the right and the clock on the left.",
+   "LAYOUT RULE 9 – Dock is always centred (position: fixed; inset-inline: 0; margin-inline: auto; width: max-content). DOM order mirrors automatically in fa. Groups: site sections | sub-brands | contact/panel, split by 1px separators. In the panel, groups come from nav-config.ts panelNav groups via navForRole(role).",
+   "LAYOUT RULE 10 – CSS-only magnification: .dock a:hover {--s:1.5}, its immediate neighbours (a:hover + a, a:has(+ a:hover)) {--s:1.25}, and the next ones {--s:1.1}. Apply scale: var(--s,1) with transform-origin: bottom center and transition: scale 160ms cubic-bezier(.2,.8,.2,1). Guard with (hover:hover) and (pointer:fine) and reduced motion. contain: layout paint on the dock, so scaling never reflows the page.",
+   "LAYOUT RULE 11 – Type scale with two weights per family: desktop 56/48/32/20/16/13, mobile 32/28/24/18/16/13. Persian headings at line-height 1.3–1.4 with no tracking; English headings at -0.03em. text-balance on headings, text-pretty on leads. Mono only for chips, window labels and code.",
+   "LAYOUT RULE 12 – Dot texture via one CSS background (radial-gradient(var(--dots) .75px, transparent .75px) 0 0/12px 12px) on the desktop wrapper outside the frame and in hero/CTA bands. Never behind body text. Replaces the per-section .bg-dots/.bg-grid.",
+   "LAYOUT RULE 13 – Mobile (<768): keep the rails at the 16px gutter, collapse grids to 1 column, show corner markers only at box corners, keep the title-strip dots. The dock becomes a 5-item bottom tab bar plus a 'More' item that opens a Launchpad sheet. No hover effects; :active scale(.92) for feedback.",
+   "LAYOUT RULE 14 – Assistant layer: one page-level overlay (absolute inset-0, ignores clicks, z above content and below menus). Sections and cells opt in with data-guide=\"key\". An IntersectionObserver picks the active section; hover or focus-within of a [data-guide] target moves the pixel sprite with transform: translate3d, and the bubble text comes from the i18n guide namespace. The target gets Cloudflare-style selection styling (dashed outline at -8px, four 7px corner handles in brand yellow via ::before/::after, light tint). Reduced motion: no walking, the bubble appears in place. Mobile: the sprite is pinned at inline-end above the tab bar, and the bubble is a tap-to-open sheet.",
+   "LAYOUT RULE 15 – Reveals and footer wordmark use CSS scroll-driven animations (animation-timeline: view(); animation-range: entry 0% cover 30%), with @supports not → static and reduced motion → static. Below-the-fold framed sections get content-visibility: auto; contain-intrinsic-size: auto 800px.",
+   "HOOK – Replace SiteHeader/HeaderShell (src/components/site/site-header.tsx, header-client.tsx) with a server MenuBar shell plus client islands: reuse LanguageMenu (keeps useSwitchHref/useAlternates and the full-page <a>), NavLinks' Suspense pattern for active state, AppearanceMenu internals for a Control Center popover, and a new Clock island.",
+   "HOOK – Add <Dock> in src/app/[locale]/(site)/layout.tsx built from siteSections plus sub-brands (PixelLogo suffix), using CSS tooltips. In the panel, render a role-filtered Dock inside Suspense from session-chrome.tsx using navForRole(role) and moduleIcons. Optionally keep PanelSidebar as a 'Finder sidebar' inside the main window on desktop, with its collapse cookie pattern reused for dock preferences.",
+   "HOOK – A WindowChrome component (traffic lights + title + optional toolbar slot) in components/shared, reused by framed site sections, the code/process showcase, panel PageHeader (as the window title bar) and Dialog/Sheet headers. Update the design-system catalog sections.",
+   "HOOK – Frame primitives in components/site (Frame, FrameSection, FrameGrid, FrameCell, FrameCorners) replacing Container/SectionHeading from site/ui.tsx. The home sections in home/sections.tsx keep their Suspense and skeletons and are only re-wrapped. HeroDiagram goes inside the hero window; HowWeWork maps to the arc layout or the vertical tab-list showcase (accent bar on the start edge).",
+   "HOOK – Brand: wire PixelLogo/PixelMark (src/components/brand/pixel-logo.tsx) into the menu-bar brand menu, dock 'home' icon, src/app/icon.svg, OG images (components/site/og.tsx) and the footer wordmark. Define --brand-yellow #FFC50D, --brand-ink #6A6A6C, --brand-frame #B3B5B9, --brand-soft #CACCCE and --brand-paper #F3F3F3 (plus dark variants) in globals.css. Add a brand-yellow default preset in theme.ts, or decouple the brand accent from data-preset.",
+   "HOOK – Spotlight: the menu-bar search icon and ⌘K open the existing CommandPalette in the panel. The public site can get a lightweight Popover-API search, so Radix/cmdk stays out of public bundles.",
+   "HOOK – i18n: add a guide namespace (fa/en) keyed by data-guide ids (hero, studio, code, work, process, contact…), plus menu-bar and dock labels in nav/common. Rename appName to Good In Team in fa and en common.ts. Update docs/design-system.md and add a short docs page for the OS shell."
+  ]
+ }
+}
