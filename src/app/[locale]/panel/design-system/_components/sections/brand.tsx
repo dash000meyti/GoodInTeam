@@ -350,7 +350,7 @@ export function BrandSection({ t }: { t: Messages }) {
         </span>
       </Example>
 
-      <div className="space-y-3">
+      <div className="min-w-0 space-y-3">
         <DsSubheading hint={d.brandTokensHint}>{d.brandTokens}</DsSubheading>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
           {[...inkTokens, ...chromeTokens].map((tok) => (

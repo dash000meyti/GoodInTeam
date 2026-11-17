@@ -18,10 +18,6 @@ import { ClockDemo, MenubarDemo } from "../demos";
 import { Example } from "../example";
 import { DsSection } from "../section";
 
-// TODO(foundation): sections/brand.tsx — the "Chrome tokens" wrapper (`<div className="space-y-3">`
-// holding the bare <CodeBlock>) needs `min-w-0`: the code's min-content (657px) widens the Brand
-// DsSection's grid track, so /panel/design-system scrolls 283px sideways at 390px.
-
 /**
  * Catalog → OS shell: the menu bar (MenuBarShell + Radix Menubar), the dock
  * (a non-fixed demo via `pm-dock-demo`), windows, lights, the clock and the
