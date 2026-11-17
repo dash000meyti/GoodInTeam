@@ -12,6 +12,8 @@ const COMMON = [
   "111111",
   "abcdef",
   "goodteam",
+  "goodin",
+  "goodinteam",
   "iloveyou",
   "admin",
   "letmein",

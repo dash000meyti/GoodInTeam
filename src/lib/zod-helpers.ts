@@ -5,7 +5,8 @@ import { currencyCodes, parseDecimalInput } from "@/lib/money";
  * Zod helpers that accept both JSON (from client code / API) and FormData
  * strings (from <form action>). Use them in module `schemas.ts` files.
  */
-const emptyToUndefined = (v: unknown) => (v === "" || v === null ? undefined : v);
+/** "" or null → undefined (so optional fields and enums accept an empty form value). */
+export const emptyToUndefined = (v: unknown) => (v === "" || v === null ? undefined : v);
 
 /** Optional trimmed string; "" → undefined. */
 export const zOptString = (max = 5000) =>

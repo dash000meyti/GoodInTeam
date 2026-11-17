@@ -1,6 +1,16 @@
 import { z } from "zod";
 import { postStatuses, postTypes, socialNetworks } from "@/server/db/schema";
-import { zBool, zId, zNullString, zOptInt, zOptNumber, zOptString, zTags } from "@/lib/zod-helpers";
+import { brandIds } from "@/components/brand/brands";
+import {
+  emptyToUndefined,
+  zBool,
+  zId,
+  zNullString,
+  zOptInt,
+  zOptNumber,
+  zOptString,
+  zTags,
+} from "@/lib/zod-helpers";
 
 const zLocale = z.enum(["fa", "en"]);
 
@@ -49,6 +59,11 @@ export const postMetaInput = z.object({
   metrics: jsonArray(metric, 8).optional(),
   /** lucide icon name for services (globe, smartphone, bot, compass…). */
   icon: zOptString(40),
+  /**
+   * Services: the Good In brand (team | studio | code). "" (the editor's
+   * "None") clears it; createPost/updatePost sync it to translation siblings.
+   */
+  brand: z.preprocess(emptyToUndefined, z.enum(brandIds).optional()),
   /** FAQ for services / pillar articles → FAQPage JSON-LD. */
   faq: jsonArray(
     z.object({ q: z.string().trim().min(1).max(300), a: z.string().trim().min(1).max(3000) }),
@@ -85,7 +100,22 @@ export const postInput = z.object({
 });
 export type PostInput = z.input<typeof postInput>;
 
-export const updatePostInput = postInput.partial().extend({ id: zId });
+/**
+ * Partial update: a field that is absent stays as it is. The defaults of
+ * `postInput` (type, locale, contentMd, status) must not apply here — zod 4
+ * still applies `.default()` inside `.partial()`, which made a partial update
+ * (e.g. the MCP `content_update_post` tool with just a title) reset the type
+ * to "article", the locale to "fa", the status to "draft" and wipe the body.
+ */
+export const updatePostInput = postInput
+  .extend({
+    type: z.enum(postTypes).optional(),
+    locale: zLocale.optional(),
+    contentMd: z.string().max(400_000).optional(),
+    status: z.enum(postStatuses).optional(),
+  })
+  .partial()
+  .extend({ id: zId });
 
 export const listPostsInput = z.object({
   type: z.enum(postTypes).optional(),

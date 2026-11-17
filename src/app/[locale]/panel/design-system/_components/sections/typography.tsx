@@ -1,6 +1,6 @@
 import { TypeIcon } from "lucide-react";
 import { Markdown } from "@/components/shared/markdown";
-import type { Messages } from "@/i18n/messages";
+import { messages, type Messages } from "@/i18n/messages";
 import { Example } from "../example";
 import { DsSection } from "../section";
 
@@ -73,7 +73,7 @@ export function TypographySection({ t }: { t: Messages }) {
           code={`<html lang="en"> → font-sans (Public Sans)`}
         >
           <p lang="en" dir="ltr" className="font-sans text-2xl font-extrabold">
-            Good Team
+            {messages.en.common.appName}
           </p>
           <p lang="en" dir="ltr" className="font-sans text-sm leading-7 text-muted-foreground">
             {d.sampleEn} 0123456789

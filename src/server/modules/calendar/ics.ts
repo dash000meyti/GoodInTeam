@@ -184,7 +184,7 @@ export function buildCalendar(events: IcsEvent[], cal: IcsCalendar) {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    prop("PRODID", cal.prodId ?? "-//Good Team//Calendar//EN"),
+    prop("PRODID", cal.prodId ?? "-//Good In Team//Calendar//EN"),
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     prop("X-WR-CALNAME", escapeText(cal.name)),

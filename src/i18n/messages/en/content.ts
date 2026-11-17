@@ -97,6 +97,7 @@ export const content: Record<keyof typeof fa, string> = {
   noProject: "No project",
   serviceCard: "Service details",
   serviceIcon: "Icon",
+  serviceBrand: "Good In brand",
   faqCard: "FAQ",
   faqHint: "Rendered as FAQPage rich results in Google.",
   faqQuestion: "Question",

@@ -33,6 +33,8 @@ export interface EditorPost {
     gallery: string[];
     metrics: { label: string; value: string }[];
     icon: string;
+    /** Services: Good In brand id, or "" (none → falls back to team). */
+    brand: string;
     faq: { q: string; a: string }[];
   };
   readingMinutes: number | null;

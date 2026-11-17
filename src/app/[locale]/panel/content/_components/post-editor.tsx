@@ -38,6 +38,7 @@ import { SelectField } from "@/components/shared/select-field";
 import { useAction, useActionForm } from "@/components/shared/use-action-form";
 import { format } from "@/i18n/format-message";
 import { localePath } from "@/i18n/config";
+import { brands } from "@/components/brand/brands";
 import { useLocale, useT } from "@/i18n/client";
 import { contentTypes, postPath, SEO_LIMITS } from "@/lib/content";
 import { cn, slugify } from "@/lib/utils";
@@ -297,6 +298,7 @@ export function PostEditor({ initial, ctx }: { initial: EditorPost; ctx: EditorC
       gallery: v.meta.gallery,
       metrics: v.meta.metrics.filter((m) => m.label.trim() && m.value.trim()),
       icon: v.meta.icon,
+      ...(v.type === "service" && { brand: v.meta.brand }),
       faq: v.meta.faq.filter((f) => f.q.trim() && f.a.trim()),
     },
   });
@@ -550,6 +552,14 @@ export function PostEditor({ initial, ctx }: { initial: EditorPost; ctx: EditorC
                   onChange={(x) => setMeta("icon", x)}
                   options={ctx.serviceIcons.map((n) => ({ value: n, label: n }))}
                   placeholder="sparkles"
+                />
+              </Field>
+              <Field label={c.serviceBrand}>
+                <SelectField
+                  value={v.meta.brand}
+                  onChange={(x) => setMeta("brand", x)}
+                  noneLabel={t.common.none}
+                  options={brands.map((b) => ({ value: b.id, label: t.nav[b.label] }))}
                 />
               </Field>
             </CardContent>

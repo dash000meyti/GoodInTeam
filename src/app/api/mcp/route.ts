@@ -13,9 +13,10 @@ import { AppError, httpStatus } from "@/server/errors";
  */
 // 2025-03-26 is deliberately absent: it requires JSON-RPC batching, which we don't implement.
 const SUPPORTED = ["2025-11-25", "2025-06-18"];
-const SERVER_INFO = { name: "good-team", title: "Good Team", version: "1.0.0" };
+// `name` and the Bearer realm stay "good-team" (client configs depend on them); only the title is the brand.
+const SERVER_INFO = { name: "good-team", title: "Good In Team", version: "1.0.0" };
 const INSTRUCTIONS =
-  "Good Team is a private work OS: projects, clients, time tracking, tasks, calendar, finance, contracts, docs and website content. " +
+  "Good In Team is a private work OS: projects, clients, time tracking, tasks, calendar, finance, contracts, docs and website content. " +
   "Call `whoami` first. Money is in minor units unless a tool says 'major units'. Dates are ISO strings; day-only inputs use 'YYYY-MM-DD' in the app timezone. " +
   "Prefer read tools before write tools, and confirm destructive actions with the user.";
 

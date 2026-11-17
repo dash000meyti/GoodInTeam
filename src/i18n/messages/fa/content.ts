@@ -99,6 +99,7 @@ export const content = {
   noProject: "بدون پروژه",
   serviceCard: "اطلاعات خدمت",
   serviceIcon: "آیکون",
+  serviceBrand: "برند گودین",
   faqCard: "سؤالات پرتکرار (FAQ)",
   faqHint: "به صورت FAQPage در نتایج گوگل نمایش داده می‌شود.",
   faqQuestion: "سؤال",

@@ -115,6 +115,36 @@ function cleanMeta(meta: PostIn["meta"] | undefined, prev: Record<string, unknow
   return out;
 }
 
+/**
+ * A service's brand is shared by its translation siblings (spec §2): the
+ * editor saves one locale row, so the sync lives here, under every adapter.
+ * Three states from the PARSED meta (zod keeps a present key even when it
+ * parses to undefined): set (`brand !== undefined`), cleared (`"brand" in
+ * meta` with undefined — the editor sent ""), absent (no key: no sync).
+ * Last write wins. Call inside the write's transaction.
+ */
+function syncServiceBrand(
+  row: { id: string; type: PostType; translationKey: string | null },
+  meta: PostIn["meta"] | undefined,
+) {
+  if (row.type !== "service" || !row.translationKey || !meta || !("brand" in meta)) return;
+  db.update(posts)
+    .set({
+      meta:
+        meta.brand !== undefined
+          ? sql`json_set(${posts.meta}, '$.brand', ${meta.brand})`
+          : sql`json_remove(${posts.meta}, '$.brand')`,
+    })
+    .where(
+      and(
+        eq(posts.translationKey, row.translationKey),
+        ne(posts.id, row.id),
+        eq(posts.type, "service"),
+      ),
+    )
+    .run();
+}
+
 function assertSeries(seriesId: string | null | undefined) {
   if (!seriesId) return;
   const s = db.select({ id: series.id }).from(series).where(eq(series.id, seriesId)).get();
@@ -219,37 +249,40 @@ export function createPost(actor: Actor, input: PostIn) {
     throw new AppError("conflict", "Slug already used", { slug: ["slug_taken"] });
   }
   const { status, publishedAt } = normalizeStatus(input.status, input.publishedAt ?? null);
-  const row = db
-    .insert(posts)
-    .values({
-      type: input.type,
-      locale: input.locale,
-      title: input.title,
-      slug,
-      excerpt: input.excerpt ?? null,
-      contentMd: input.contentMd,
-      coverUrl: input.coverUrl ?? null,
-      coverAlt: input.coverAlt ?? null,
-      videoUrl: input.videoUrl ?? null,
-      status,
-      publishedAt: publishedAt ?? null,
-      featured: input.featured ?? false,
-      seriesId: input.type === "tutorial" ? (input.seriesId ?? null) : null,
-      seriesOrder: input.type === "tutorial" ? (input.seriesOrder ?? null) : null,
-      projectId: input.projectId ?? null,
-      tags: input.tags ?? [],
-      seoTitle: input.seoTitle ?? null,
-      seoDescription: input.seoDescription ?? null,
-      readingMinutes: readingMinutes(input.contentMd),
-      translationKey: input.translationKey ?? newId(),
-      sort: input.sort ?? 0,
-      meta: cleanMeta(input.meta),
-      authorId: actor.user.id,
-    })
-    .returning()
-    .get();
-  logActivity(actor, "content.create", "post", row.id, row.title, { type: row.type });
-  return row;
+  return db.transaction(() => {
+    const row = db
+      .insert(posts)
+      .values({
+        type: input.type,
+        locale: input.locale,
+        title: input.title,
+        slug,
+        excerpt: input.excerpt ?? null,
+        contentMd: input.contentMd,
+        coverUrl: input.coverUrl ?? null,
+        coverAlt: input.coverAlt ?? null,
+        videoUrl: input.videoUrl ?? null,
+        status,
+        publishedAt: publishedAt ?? null,
+        featured: input.featured ?? false,
+        seriesId: input.type === "tutorial" ? (input.seriesId ?? null) : null,
+        seriesOrder: input.type === "tutorial" ? (input.seriesOrder ?? null) : null,
+        projectId: input.projectId ?? null,
+        tags: input.tags ?? [],
+        seoTitle: input.seoTitle ?? null,
+        seoDescription: input.seoDescription ?? null,
+        readingMinutes: readingMinutes(input.contentMd),
+        translationKey: input.translationKey ?? newId(),
+        sort: input.sort ?? 0,
+        meta: cleanMeta(input.meta),
+        authorId: actor.user.id,
+      })
+      .returning()
+      .get();
+    syncServiceBrand(row, input.meta);
+    logActivity(actor, "content.create", "post", row.id, row.title, { type: row.type });
+    return row;
+  });
 }
 
 export function updatePost(actor: Actor, { id, ...input }: z.output<typeof updatePostInput>) {
@@ -278,24 +311,27 @@ export function updatePost(actor: Actor, { id, ...input }: z.output<typeof updat
   void _slug;
   void _p;
   void _s;
-  const row = db
-    .update(posts)
-    .set({
-      ...rest,
-      type,
-      locale,
-      slug,
-      ...statusPatch,
-      ...(contentMd !== undefined && { contentMd, readingMinutes: readingMinutes(contentMd) }),
-      ...(meta !== undefined && { meta: cleanMeta(meta, prev.meta) }),
-      ...(type !== "tutorial" && { seriesId: null, seriesOrder: null }),
-      updatedAt: new Date(),
-    })
-    .where(eq(posts.id, id))
-    .returning()
-    .get();
-  logActivity(actor, "content.update", "post", id, row.title);
-  return row;
+  return db.transaction(() => {
+    const row = db
+      .update(posts)
+      .set({
+        ...rest,
+        type,
+        locale,
+        slug,
+        ...statusPatch,
+        ...(contentMd !== undefined && { contentMd, readingMinutes: readingMinutes(contentMd) }),
+        ...(meta !== undefined && { meta: cleanMeta(meta, prev.meta) }),
+        ...(type !== "tutorial" && { seriesId: null, seriesOrder: null }),
+        updatedAt: new Date(),
+      })
+      .where(eq(posts.id, id))
+      .returning()
+      .get();
+    syncServiceBrand(row, meta);
+    logActivity(actor, "content.update", "post", id, row.title);
+    return row;
+  });
 }
 
 export function setPostStatus(actor: Actor, input: z.output<typeof setStatusInput>) {

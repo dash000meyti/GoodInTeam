@@ -45,6 +45,8 @@ const COMMON = [
   "changeme",
   "secret",
   "goodteam",
+  "goodin",
+  "goodinteam",
   "login",
 ];
 

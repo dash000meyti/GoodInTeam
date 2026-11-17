@@ -28,7 +28,7 @@ export const settingsSchemas = {
   profile: z.object({
     brandName: z
       .object({ fa: z.string(), en: z.string() })
-      .default({ fa: "گود تیم", en: "Good Team" }),
+      .default({ fa: "گودین تیم", en: "Good In Team" }),
     ownerName: z.object({ fa: z.string(), en: z.string() }).default({ fa: "", en: "" }),
     headline: z.object({ fa: z.string(), en: z.string() }).default({ fa: "", en: "" }),
     bio: z.object({ fa: z.string(), en: z.string() }).default({ fa: "", en: "" }),

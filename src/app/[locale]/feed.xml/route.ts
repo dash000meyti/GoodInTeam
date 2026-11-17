@@ -64,7 +64,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/[locale]/feed.xml">
 <description>${esc(t.site.metaDescription)}</description>
 <language>${localeMeta[locale].intl}</language>
 <lastBuildDate>${lastBuild.toUTCString()}</lastBuildDate>
-<generator>Good Team (Next.js)</generator>
+<generator>Good In Team (Next.js)</generator>
 <atom:link href="${esc(self)}" rel="self" type="application/rss+xml"/>
 <image><url>${esc(`${env.siteUrl}/icon.svg`)}</url><title>${esc(profile.brandName[locale] || t.common.appName)}</title><link>${esc(site)}</link></image>
 ${items.join("\n")}

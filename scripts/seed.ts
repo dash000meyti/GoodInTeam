@@ -73,7 +73,7 @@ async function main() {
       {
         key: "profile",
         value: {
-          brandName: { fa: "گود تیم", en: "Good Team" },
+          brandName: { fa: "گودین تیم", en: "Good In Team" },
           ownerName: { fa: owner.name, en: "Mahdi Rezaei" },
           headline: {
             fa: "طراحی و توسعه محصولات دیجیتال",
@@ -107,7 +107,7 @@ async function main() {
           defaultTaxBps: 1000,
           defaultHourlyRateMinor: 450_000,
           paymentInstructions: {
-            fa: "واریز به شماره کارت ۶۱۰۴-۳۳۷۷-****-**** به نام گود تیم",
+            fa: "واریز به شماره کارت ۶۱۰۴-۳۳۷۷-****-**** به نام گودین تیم",
             en: "Bank transfer — details on request.",
           },
         },
@@ -232,7 +232,7 @@ async function main() {
         progressMode: "tasks",
       },
       {
-        name: "وب‌سایت و پنل Good Team",
+        name: "وب‌سایت و پنل Good In Team",
         slug: "good-team-site",
         status: "active",
         color: "#00A76F",
@@ -909,7 +909,7 @@ async function main() {
   // ─── Contracts ────────────────────────────────────────────────────────────
   const contractBody = `# قرارداد طراحی و توسعه پلتفرم آموزش آنلاین
 
-**طرف اول:** گود تیم
+**طرف اول:** گودین تیم
 **طرف دوم:** آکادمی آکمه
 
 ## ۱. موضوع قرارداد
@@ -1097,7 +1097,7 @@ async function main() {
           "وب‌اپلیکیشن‌هایی می‌سازیم که سریع بارگذاری می‌شوند، در گوگل دیده می‌شوند و نگهداری‌شان ساده است.\n\n- Next.js و React\n- طراحی سیستم و UI\n- سئو، AEO و GEO\n- استقرار و پایش",
         publishedAt: day(-200),
         sort: 1,
-        meta: { icon: "globe" },
+        meta: { icon: "globe", brand: "code" },
       }),
       post({
         type: "service",
@@ -1110,7 +1110,7 @@ async function main() {
           "با React Native و Expo اپلیکیشن‌هایی می‌سازیم که روی هر دو پلتفرم روان اجرا می‌شوند.",
         publishedAt: day(-200),
         sort: 2,
-        meta: { icon: "smartphone" },
+        meta: { icon: "smartphone", brand: "code" },
       }),
       post({
         type: "service",
@@ -1123,7 +1123,7 @@ async function main() {
           "از ربات‌های پشتیبانی تا عامل‌هایی که با سیستم‌های داخلی شما کار می‌کنند (MCP، API و ابزارها).",
         publishedAt: day(-200),
         sort: 3,
-        meta: { icon: "bot" },
+        meta: { icon: "bot", brand: "code" },
       }),
       post({
         type: "service",
@@ -1135,7 +1135,33 @@ async function main() {
         contentMd: "قبل از نوشتن اولین خط کد، مسیر درست را با هم طراحی می‌کنیم.",
         publishedAt: day(-200),
         sort: 4,
-        meta: { icon: "compass" },
+        meta: { icon: "compass", brand: "team" },
+      }),
+      post({
+        type: "service",
+        locale: "fa",
+        translationKey: "svc-design",
+        slug: "product-design",
+        title: "طراحی محصول و رابط کاربری",
+        excerpt: "از تحقیق کاربر تا سیستم طراحی؛ رابطی که کاربر بی‌دردسر با آن کار می‌کند.",
+        contentMd:
+          "پیش از کد، تجربه را طراحی می‌کنیم: مسیر کاربر، رابط و برندی که در همه‌جا یکدست است.\n\n- تحقیق کاربر و معماری اطلاعات\n- طراحی رابط و نمونهٔ اولیهٔ تعاملی\n- سیستم طراحی و کتابخانهٔ اجزا\n- هویت بصری و موشن",
+        publishedAt: day(-200),
+        sort: 5,
+        meta: {
+          icon: "palette",
+          brand: "studio",
+          faq: [
+            {
+              q: "خروجی کار طراحی چیست؟",
+              a: "فایل‌های فیگما، نمونهٔ اولیهٔ قابل کلیک و یک سیستم طراحی مستند که تیم توسعه مستقیم از آن استفاده می‌کند.",
+            },
+            {
+              q: "طراحی بدون توسعه هم انجام می‌دهید؟",
+              a: "بله؛ می‌توانیم فقط طراحی را تحویل دهیم یا هم‌زمان با گودین کد آن را بسازیم.",
+            },
+          ],
+        },
       }),
       post({
         type: "service",
@@ -1148,7 +1174,7 @@ async function main() {
           "We build web apps that load fast, rank well and are easy to maintain.\n\n- Next.js & React\n- Design systems & UI\n- SEO, AEO & GEO\n- Deployment & monitoring",
         publishedAt: day(-200),
         sort: 1,
-        meta: { icon: "globe" },
+        meta: { icon: "globe", brand: "code" },
       }),
       post({
         type: "service",
@@ -1160,7 +1186,7 @@ async function main() {
         contentMd: "React Native and Expo apps that run smoothly on both platforms.",
         publishedAt: day(-200),
         sort: 2,
-        meta: { icon: "smartphone" },
+        meta: { icon: "smartphone", brand: "code" },
       }),
       post({
         type: "service",
@@ -1173,7 +1199,7 @@ async function main() {
           "From support bots to agents that operate your internal systems (MCP, APIs and tools).",
         publishedAt: day(-200),
         sort: 3,
-        meta: { icon: "bot" },
+        meta: { icon: "bot", brand: "code" },
       }),
       post({
         type: "service",
@@ -1185,7 +1211,33 @@ async function main() {
         contentMd: "Before the first line of code, we design the right path together.",
         publishedAt: day(-200),
         sort: 4,
-        meta: { icon: "compass" },
+        meta: { icon: "compass", brand: "team" },
+      }),
+      post({
+        type: "service",
+        locale: "en",
+        translationKey: "svc-design",
+        slug: "product-design",
+        title: "Product & interface design",
+        excerpt: "From user research to a design system: interfaces people use without friction.",
+        contentMd:
+          "Before code, we design the experience: the user journey, the interface and a brand that stays consistent everywhere.\n\n- User research & information architecture\n- Interface design & interactive prototypes\n- Design systems & component libraries\n- Visual identity & motion",
+        publishedAt: day(-200),
+        sort: 5,
+        meta: {
+          icon: "palette",
+          brand: "studio",
+          faq: [
+            {
+              q: "What do I get from a design engagement?",
+              a: "Figma files, a clickable prototype and a documented design system your developers can build from directly.",
+            },
+            {
+              q: "Do you design without building?",
+              a: "Yes. We can hand over the design alone, or build it alongside Good In Code.",
+            },
+          ],
+        },
       }),
 
       // Portfolio (work)
@@ -1431,10 +1483,10 @@ async function main() {
         translationKey: "about",
         slug: "about",
         title: "درباره ما",
-        excerpt: "داستان گود تیم",
+        excerpt: "داستان گودین تیم",
         publishedAt: day(-300),
         contentMd:
-          "## سلام 👋\nما گود تیم هستیم؛ استودیویی کوچک که محصولات دیجیتال می‌سازد.\n\n## ارزش‌های ما\n- **شفافیت:** مشتری‌ها پیشرفت کار را لحظه‌به‌لحظه می‌بینند.\n- **کیفیت:** کد تمیز، تست و مستندات.\n- **یادگیری:** هرچه یاد می‌گیریم را می‌نویسیم و آموزش می‌دهیم.",
+          "## سلام 👋\nما گودین تیم هستیم؛ استودیویی کوچک که محصولات دیجیتال می‌سازد.\n\n## ارزش‌های ما\n- **شفافیت:** مشتری‌ها پیشرفت کار را لحظه‌به‌لحظه می‌بینند.\n- **کیفیت:** کد تمیز، تست و مستندات.\n- **یادگیری:** هرچه یاد می‌گیریم را می‌نویسیم و آموزش می‌دهیم.",
       }),
       post({
         type: "page",
@@ -1442,10 +1494,10 @@ async function main() {
         translationKey: "about",
         slug: "about",
         title: "About us",
-        excerpt: "The Good Team story",
+        excerpt: "The Good In Team story",
         publishedAt: day(-300),
         contentMd:
-          "## Hi 👋\nWe are Good Team, a small studio building digital products.\n\n## What we value\n- **Transparency:** clients see progress in real time.\n- **Quality:** clean code, tests and docs.\n- **Learning:** we write and teach what we learn.",
+          "## Hi 👋\nWe are Good In Team, a small studio building digital products.\n\n## What we value\n- **Transparency:** clients see progress in real time.\n- **Quality:** clean code, tests and docs.\n- **Learning:** we write and teach what we learn.",
       }),
     ])
     .run();

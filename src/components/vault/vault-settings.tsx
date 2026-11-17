@@ -619,7 +619,7 @@ function PlainExportCard({
       const readable = entries.filter((e) => e.payload);
       if (kind === "json") {
         const data = {
-          source: "Good Team vault",
+          source: "Good In Team vault",
           exportedAt: new Date().toISOString(),
           items: readable.map((e) => ({
             type: e.payload!.type,

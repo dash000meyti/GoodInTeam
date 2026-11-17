@@ -37,7 +37,7 @@ export async function GET() {
   return Response.json({
     openapi: "3.1.0",
     info: {
-      title: "Good Team API",
+      title: "Good In Team API",
       version: "1.0.0",
       description:
         "Every operation is also available as an MCP tool at /api/mcp (Streamable HTTP). Authenticate with `Authorization: Bearer gt_…` (create tokens in Panel → Settings → API tokens).",

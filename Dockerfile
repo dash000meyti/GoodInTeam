@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# ─── Good Team — production image ──────────────────────────────────────────
+# ─── Good In Team — production image ───────────────────────────────────────
 # Runtime data (SQLite DB, uploads, backups) lives in the /data volume.
 # No OS packages needed: better-sqlite3 ships prebuilt N-API binaries.
 

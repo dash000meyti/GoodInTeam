@@ -26,7 +26,8 @@ import {
   users,
   type PostType,
 } from "@/server/db/schema";
-import { getSettings } from "@/server/modules/settings/service";
+import { appTimezone, getSettings } from "@/server/modules/settings/service";
+import type { BrandId } from "@/components/brand/brands";
 import { renderMarkdown } from "@/lib/markdown";
 import type { Locale } from "@/i18n/config";
 
@@ -129,6 +130,8 @@ export interface PostCard {
     gallery?: string[];
     metrics?: { label: string; value: string }[];
     icon?: string;
+    /** Services: the Good In brand (read with `brandOf(meta)`, which falls back to team). */
+    brand?: BrandId;
   };
   views: number;
   seriesId: string | null;
@@ -618,6 +621,18 @@ export async function getPublicProfile() {
   cacheTag(CONTENT_TAG, "settings");
   cacheLife("hours");
   return getSettings("profile");
+}
+
+/**
+ * Studio time zone for the public clocks (menu bar and panel, D19): the
+ * business setting, cached like the profile. Read inside <Suspense> after
+ * `await connection()`.
+ */
+export async function getPublicTimezone() {
+  "use cache";
+  cacheTag(CONTENT_TAG, "settings");
+  cacheLife("hours");
+  return appTimezone();
 }
 
 /** Names shown in the trust marquee: clients of published case studies + testimonial companies. */

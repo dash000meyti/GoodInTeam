@@ -265,7 +265,7 @@ export function buildFeed(token: string, opts: { includeTasks?: boolean; now?: n
   }
 
   return buildCalendar(list, {
-    name: `Good Team — ${actor.user.name}`,
+    name: `Good In Team — ${actor.user.name}`,
     timezone: tz,
     refreshMinutes: 60,
   });
