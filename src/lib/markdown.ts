@@ -40,6 +40,21 @@ const LANGS = [
   "ini",
 ] as const;
 
+/**
+ * GitHub's themes with the token colours that miss WCAG AA (4.5:1) on our
+ * code surfaces (#F8F8F9 / #F0F0F0 light, #222225 / #1C1C1E dark) nudged
+ * just past it: same hues, slightly darker (light) or lighter (dark).
+ */
+const CODE_COLOR_FIXES = {
+  "github-light": {
+    "#22863a": "#1f7a35",
+    "#6a737d": "#646c76",
+    "#d73a49": "#c92938",
+    "#e36209": "#b24d07",
+  },
+  "github-dark": { "#6a737d": "#8e969f" },
+};
+
 async function highlighter() {
   if (!highlighterPromise) {
     highlighterPromise = import("shiki").then(({ createHighlighter }) =>
@@ -105,6 +120,7 @@ export async function renderMarkdown(md: string, opts: { allowHtml?: boolean } =
         return hl.codeToHtml(text, {
           lang: loaded ? language : "text",
           themes: { light: "github-light", dark: "github-dark" },
+          colorReplacements: CODE_COLOR_FIXES,
         });
       },
       link({ href: rawHref, title, tokens }: Tokens.Link) {
