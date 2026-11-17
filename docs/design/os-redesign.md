@@ -1587,6 +1587,11 @@ Lab conditions: home, fa, Moto G Power on 4G. Field p75 targets are in parenthes
 | Animation | no infinite main-thread animation after 20s (packets capped, ants static, diagram float and orbit spin removed, sprite blink capped at 5 iterations per activation); infinite compositor-only allowed for the marquee (pausable) and the live dot |
 | Panel | chrome JS ≤ +10KB gz vs removed sidebar/header; no new polling; 0 CLS across module navigations |
 
+**Measured after all merges (qa-docs, production build; details in `docs/os-shell.md`).**
+- CSS added: the seven partials minify to 45.8KB raw / 9.2KB gz (os-shell 3.5, guide 2.6, site-shell 2.3, frame 1.5, home 0.9, pixel 0.8, site-pages 0.2KB gz), against ≤22KB / ≤6KB. The shipped bundle (one file for every route) went from 27.5KB to 38.7KB gz. Dead legacy rules were deleted; the rest is the shell, frame and guide as designed, and the remaining duplication (the md and lg tab bars) costs little after gzip. **Owner decision** (HANDOFF §3): accept the measured size or ask for a design simplification; the look was not degraded to hit the number.
+- Panel chrome JS: `/panel` first-load JS 245.7KB → 263.9KB gz (+18KB, budget +10KB). **Owner decision** (HANDOFF §3).
+- Site first-load JS on `/`: 206.9KB → 169.5KB gz (net −37KB); LCP is the hero `<h1>` at ≈1.2s under 4× CPU + 4G; CLS 0; DOM 1,619; pixel-art elements 248.
+
 **Blur removal (who removes each existing `backdrop-blur*`/`.glass`; verified with `git grep`)**
 
 | Owner | Files (line) |
