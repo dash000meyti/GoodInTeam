@@ -1,8 +1,10 @@
 import "server-only";
 import type { CSSProperties, ReactNode } from "react";
 import { PixelText } from "@/components/brand/pixel-art";
+import { pixelDigits } from "@/components/brand/pixel-font";
 import { guideAttrs, spotAttrs } from "@/components/shell/guide-events";
 import { OsLights } from "@/components/shell/os-lights";
+import { getLocale } from "@/i18n/server";
 import { cn } from "@/lib/utils";
 import { fillerPlan, type FrameCols, type FrameSpan } from "./frame-plan";
 
@@ -22,7 +24,7 @@ export interface GuideLine {
 }
 
 export interface FrameStripProps {
-  /** Box number shown as pixel digits (01, 02…). */
+  /** Box number shown as pixel digits (01, 02… on en; ۰۱, ۰۲… on fa). */
   index?: number;
   /** Latin pixel path, e.g. framePath("good-in-team", "work"). Hidden below md. */
   path?: string;
@@ -88,12 +90,22 @@ export function FrameSection({
   );
 }
 
-/** 36px strip: lights (lit while the box is centred), pixel index and path, action. */
-export function FrameStrip({ index, path, action }: FrameStripProps) {
+/** The strip's box number: two digits at least, Persian digits on fa ("۰۱", "۴۰۴"). */
+export function stripIndex(index: number, locale: string) {
+  return pixelDigits(String(index).padStart(2, "0"), locale);
+}
+
+/**
+ * 36px strip: lights (lit while the box is centred), pixel index and path,
+ * action. Async only to read the locale (a root param, so it stays static and
+ * is part of any cache key): fa strips number their boxes ۰۱, ۰۲….
+ */
+export async function FrameStrip({ index, path, action }: FrameStripProps) {
+  const locale = await getLocale();
   return (
     <div className="frame-strip">
       <OsLights size={10} />
-      {index !== undefined && <PixelText text={String(index).padStart(2, "0")} cell={2} />}
+      {index !== undefined && <PixelText text={stripIndex(index, locale)} cell={2} />}
       {path && <PixelText text={path} cell={2} className="frame-path" />}
       {action && <div className="frame-strip-action">{action}</div>}
     </div>

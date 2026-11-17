@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ChevronLeftIcon } from "lucide-react";
 import { PixelAvatar, PixelIcon, PixelText } from "@/components/brand/pixel-art";
+import { pixelDigits } from "@/components/brand/pixel-font";
 import type { PixelIconName } from "@/components/brand/pixel-icons";
 import { Window } from "@/components/shell/window";
 import { localeMeta, localePath, type Locale } from "@/i18n/config";
@@ -389,7 +390,7 @@ export function NotFoundBox({ locale, t }: { locale: Locale; t: Messages }) {
           aria-hidden
           className="flex min-h-[240px] flex-col items-center justify-center gap-6"
         >
-          <PixelText text="404" cell={8} />
+          <PixelText text={pixelDigits("404", locale)} cell={8} />
           <PixelAvatar pose="blink" cell={8} />
         </FrameCell>
       </FrameGrid>
