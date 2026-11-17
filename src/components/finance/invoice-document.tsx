@@ -339,6 +339,8 @@ export function InvoicePrintStyles() {
     --background: #fff; --card: #fff; --card-foreground: #1c252e; --foreground: #1c252e;
     --muted: #f4f6f8; --muted-foreground: #637381; --border: rgb(106 106 108 / .3);
     --brand-yellow: #ffc50d; --brand-ink: #6a6a6c; --brand-frame: #b3b5b9; --brand-soft: #caccce; --brand-paper: #ffffff;
+    /* dark: variants still match on paper (html keeps .dark): give them the light ink */
+    --primary-light: var(--primary-dark); --primary-ink: var(--primary-dark);
     background: #fff !important; color: #1c252e;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }

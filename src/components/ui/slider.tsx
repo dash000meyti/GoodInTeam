@@ -34,7 +34,10 @@ function Slider({
         data-slot="slider-track"
         className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-grey-900/10 dark:bg-white/12"
       >
-        <SliderPrimitive.Range data-slot="slider-range" className="absolute h-full bg-primary shadow-[inset_0_0_0_1px_var(--primary-dark)]" />
+        <SliderPrimitive.Range
+          data-slot="slider-range"
+          className="absolute h-full bg-primary shadow-[inset_0_0_0_1px_var(--primary-dark)]"
+        />
       </SliderPrimitive.Track>
       {values.map((_, i) => (
         <SliderPrimitive.Thumb
