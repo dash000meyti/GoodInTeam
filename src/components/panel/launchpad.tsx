@@ -17,12 +17,14 @@ import { cn } from "@/lib/utils";
 import type { UserRole } from "@/server/db/schema/auth";
 import { logout } from "@/server/modules/auth/actions";
 import { navForRole } from "./nav-config";
+import { NavIcon } from "./nav-icon";
 import { useGuideTips } from "./panel-guide";
 import { usePanelUI } from "./panel-ui";
 
 /**
  * Every app of the role, grouped like the nav (folded in from the old sidebar
- * NavList). 72px tiles; `query` filters with Persian-aware matching.
+ * NavList). 72px tiles with the dock's icons (the Desktop/Portal mark, pixel
+ * module icons); `query` filters with Persian-aware matching.
  */
 export function AppGrid({
   role,
@@ -51,7 +53,6 @@ export function AppGrid({
           </h3>
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-x-2 gap-y-3">
             {g.items.map((item) => {
-              const Icon = item.icon;
               const mark = g.label === "groupOverview";
               return (
                 <li key={item.href + item.label} className="flex justify-center">
@@ -65,7 +66,7 @@ export function AppGrid({
                         {mark ? (
                           <PixelMark cell={3} />
                         ) : (
-                          <Icon className="size-6" strokeWidth={1.75} aria-hidden />
+                          <NavIcon item={item} lucideClassName="size-6" />
                         )}
                       </DockTile>
                     </span>

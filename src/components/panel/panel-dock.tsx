@@ -4,12 +4,12 @@ import { useSyncExternalStore } from "react";
 import {
   AppWindowIcon,
   GlobeIcon,
-  LayoutGridIcon,
   LightbulbIcon,
   MagnetIcon,
   Maximize2Icon,
   PanelBottomCloseIcon,
 } from "lucide-react";
+import { PixelIcon } from "@/components/brand/pixel-art";
 import { PixelMark } from "@/components/brand/pixel-logo";
 import { Dock, DockTile, type DockEntry } from "@/components/shell/dock";
 import { DockLinks } from "@/components/shell/dock-links";
@@ -22,6 +22,7 @@ import { getRunning, subscribe } from "./chrome-store";
 import { CommandPalette, type PaletteCommand } from "./command-palette";
 import { Launchpad } from "./launchpad";
 import { mobilePins, navForRole, type NavItem } from "./nav-config";
+import { NavIcon } from "./nav-icon";
 import { MeTile, PanelGuideBubble, useGuideTips, usePanelGuide } from "./panel-guide";
 import type { ShellPrefs } from "./panel-prefs";
 import { usePanelUI } from "./panel-ui";
@@ -33,8 +34,9 @@ const APP = { "data-dock-app": "" } as const;
  * server-read `gt-shell` prefs. Desktop (≥1024px): Me tile · Desktop/Portal
  * mark · one group per `navForRole` group except groupOverview · View site.
  * Below 1024px it is a tab bar of the role's `mobilePins` (+ More → Launchpad
- * for staff). Also mounts the ⌘K palette, the Launchpad (only while open) and
- * the panel guide bubble.
+ * for staff). Module tiles show their pixel icon (`NavItem.pixel`); View site
+ * is `globe` and More is `more`, as on the site. Also mounts the ⌘K palette,
+ * the Launchpad (only while open) and the panel guide bubble.
  */
 export function PanelDock({ role, prefs }: { role: UserRole; prefs: ShellPrefs }) {
   const t = useT();
@@ -60,7 +62,6 @@ export function PanelDock({ role, prefs }: { role: UserRole; prefs: ShellPrefs }
   };
 
   const link = (item: NavItem, mark = false): DockEntry[] => {
-    const Icon = item.icon;
     const entry: DockEntry & { kind: "link" } = {
       kind: "link",
       key: item.label,
@@ -72,7 +73,7 @@ export function PanelDock({ role, prefs }: { role: UserRole; prefs: ShellPrefs }
       icon: mark ? (
         <PixelMark cell={2} className="lg:[--cell:3px]" />
       ) : (
-        <Icon className="pm-dock-icon" strokeWidth={1.75} aria-hidden />
+        <NavIcon item={item} lucideClassName="pm-dock-icon" />
       ),
       show: pins.has(item.label) ? "both" : "desktop",
       srExtra: item.label === "time" ? runningSr : undefined,
@@ -102,7 +103,7 @@ export function PanelDock({ role, prefs }: { role: UserRole; prefs: ShellPrefs }
     key: "site",
     href: localePath(locale, "/"),
     label: t.panel.viewSite,
-    icon: <GlobeIcon className="pm-dock-icon" strokeWidth={1.75} aria-hidden />,
+    icon: <PixelIcon name="globe" cell={2} />,
     variant: "paper",
     external: true,
     show: "desktop",
@@ -120,7 +121,7 @@ export function PanelDock({ role, prefs }: { role: UserRole; prefs: ShellPrefs }
           onClick={() => setLaunchpadOpen(true)}
         >
           <DockTile>
-            <LayoutGridIcon className="pm-dock-icon" strokeWidth={1.75} aria-hidden />
+            <PixelIcon name="more" cell={2} />
           </DockTile>
           <span className="os-dock-label">{t.common.more}</span>
         </button>

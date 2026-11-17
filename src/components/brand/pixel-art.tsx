@@ -89,7 +89,8 @@ export function PixelTextSet({
 /**
  * 12×12 icon (≤3 elements). `mirror` adds the literal `rtl:-scale-x-100` for
  * directional icons (only `arrow`), so the art points to inline-end in both
- * directions.
+ * directions. The root carries `px-icon`: in forced colours `pixel.css` paints
+ * both tones CanvasText (the browser keeps SVG fills, but turns tiles to Canvas).
  */
 export function PixelIcon({
   name,
@@ -108,7 +109,7 @@ export function PixelIcon({
       w={layout.width}
       h={layout.height}
       cell={cell}
-      className={[mirror && "rtl:-scale-x-100", className].filter(Boolean).join(" ") || undefined}
+      className={["px-icon", mirror && "rtl:-scale-x-100", className].filter(Boolean).join(" ")}
     >
       <TonePaths paths={toPaths(layout.cells)} />
     </PixelSvg>

@@ -20,6 +20,17 @@
     display: none;
   }
 
+  /* Forced colours keep SVG fills but turn tiles to Canvas: a PixelIcon (site
+     and panel docks, Launchpads, lists) is drawn in CanvasText, like a lucide
+     icon's currentColor, so no tone can vanish (the yellow tile's #1C1C1E ink).
+     !important: it must beat every tile, tab or window re-tone. */
+  @media (forced-colors: active) {
+    .px-icon {
+      --px-ink: CanvasText !important;
+      --px-accent: CanvasText !important;
+    }
+  }
+
   /* 4px stepped corners (8-point clip-path). Put focus rings on an unclipped parent. */
   .px-corners {
     clip-path: polygon(

@@ -1,12 +1,5 @@
-import {
-  AppWindowIcon,
-  CalendarDaysIcon,
-  CheckSquareIcon,
-  FolderKanbanIcon,
-  GlobeIcon,
-  TimerIcon,
-} from "lucide-react";
-import { PixelAvatar } from "@/components/brand/pixel-art";
+import { AppWindowIcon } from "lucide-react";
+import { PixelAvatar, PixelIcon } from "@/components/brand/pixel-art";
 import { PixelMark } from "@/components/brand/pixel-logo";
 import { Dock, DockTile, type DockEntry } from "@/components/shell/dock";
 import { DockLinks } from "@/components/shell/dock-links";
@@ -61,7 +54,7 @@ const entries: DockEntry[] = [
   { kind: "slot", key: "me", show: "desktop", node: <MeTile guide={guide} /> },
   { kind: "sep", key: "s1", show: "desktop" },
   { kind: "link", key: "time", href, section: "/panel/time", label: t.nav.time,
-    icon: <TimerIcon className="pm-dock-icon" />, variant: "brand",
+    icon: <PixelIcon name="time" cell={2} />, variant: "brand", // nav-config item.pixel
     srExtra: ", 2 running", attrs: { "data-dock-app": "" } },
 ];
 <Dock label={t.panel.mainNav} tabbar="lg" magnify n={18} seps={7}>
@@ -97,20 +90,13 @@ export function OsShellSection({ t }: { t: Messages }) {
       icon: <PixelMark cell={2} className="md:[--cell:3px]" />,
     },
     { kind: "sep", key: "s2" },
-    ...(
-      [
-        ["time", TimerIcon],
-        ["calendar", CalendarDaysIcon],
-        ["tasks", CheckSquareIcon],
-        ["projects", FolderKanbanIcon],
-      ] as const
-    ).map(([key, Icon]): DockEntry => ({
+    ...(["time", "calendar", "tasks", "projects"] as const).map((key): DockEntry => ({
       kind: "link",
       key,
       href: "#os-shell",
       label: t.nav[key],
       variant: "brand",
-      icon: <Icon className="pm-dock-icon" strokeWidth={1.75} aria-hidden />,
+      icon: <PixelIcon name={key} cell={2} />,
     })),
     { kind: "sep", key: "s3" },
     {
@@ -118,7 +104,7 @@ export function OsShellSection({ t }: { t: Messages }) {
       key: "site",
       href: "#os-shell",
       label: t.panel.viewSite,
-      icon: <GlobeIcon className="pm-dock-icon" strokeWidth={1.75} aria-hidden />,
+      icon: <PixelIcon name="globe" cell={2} />,
     },
   ];
   return (

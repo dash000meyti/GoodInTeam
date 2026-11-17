@@ -107,9 +107,9 @@ All pixel art is inline SVG with **one `<path>` per tone** (`toPaths` in `pixel-
 | `PixelLogo suffix`                  | 34×18  | 7 (6 without paper) | framed GOOD IN / SUFFIX                                           |
 | `PixelLogoCycle`                    | 34×18  | 12                  | TEAM → STUDIO → CODE → TEAM **once** in 4.2s (`data-play`)        |
 | `PixelLogoSwap`                     | 34×18  | 12                  | all suffixes; consumers swap with `:has()` on `.gi-sfx[data-sfx]` |
-| `PixelText text`                    | 7 tall | 2                   | Latin only, aria-hidden, LTR                                      |
+| `PixelText text`                    | 7 tall | 2                   | Latin + Persian digits, aria-hidden, LTR                          |
 | `PixelTextSet items`                | 7 tall | 1 + n               | one svg, one `path[data-path-id]` per item, first shown           |
-| `PixelIcon name mirror?`            | 12×12  | ≤3                  | 13 icons; only `arrow` is directional (`mirror`)                  |
+| `PixelIcon name mirror?`            | 12×12  | ≤3                  | 13 site + 17 panel icons; only `arrow` is directional (`mirror`)  |
 | `PixelAvatar pose part`             | 16×16  | ≤5 (head 4)         | static "virtual me"; `part="head"` = 10×10 crop                   |
 | `PixelAvatarSprite state`           | 16×16  | 15                  | guide sprite; frames keyed on its own `svg.px-sprite[data-state]` |
 | `LogoMark cell` / `Logo label cell` | —      | —                   | compatibility layer over `PixelMark` / `PixelLogo TEAM`           |
@@ -151,11 +151,71 @@ must stay empty. Never `%` or `vw` sizing.
 
 ### Icons
 
-12×12, art inside the inner 10×10, ≤2 tones (`#` ink, `y` accent), legible at cell 2 (24px) and
-1 (12px): `work`, `services`, `blog`, `learn`, `about`, `studio`, `code`, `contact`, `sign-in`,
-`more`, `search`, `globe`, `arrow`. They were drawn for the redesign; review them in the catalog
-before relying on them. `more` (one accent square of four) is 25% accent, above the ≤20% rule; the
-owner approved the set, `more` included, on 2026-11-17.
+`src/components/brand/pixel-icons.ts`. 12×12, art inside the inner 10×10, ≤2 tones (`#` ink, `y`
+accent) with the **accent on ≤20% of the filled cells** (`accentShare(rows)`), legible at cell 2
+(24px) and 1 (12px). `pixel-icons.test.ts` enforces the grid, the empty outer ring, the tones and
+the 20% rule for every icon; `more` is the one listed exception. Review both sets in the catalog
+(Brand → Pixel icons, with each icon's accent share, and the panel icons on dock tiles).
+`PixelIcon` is one `<svg class="px-art px-icon">` with ≤2 paths.
+
+**Site icons** (`siteIcons`, 13): `work`, `services`, `blog`, `learn`, `about`, `studio`, `code`,
+`contact`, `sign-in`, `more`, `search`, `globe`, `arrow`. `more` (one accent square of four) is 25%
+accent, above the ≤20% rule; the owner approved the set, `more` included, on 2026-11-17.
+
+**Panel icons** (`panelIcons`, 17): one per panel dock app of every role, drawn to the motif of
+the module's lucide icon so the dock matches the menus and ⌘K. `NavItem.pixel` in
+`components/panel/nav-config.ts` names it (`nav-config.test.ts`: every item has its own); the
+lucide `icon` stays for menus, ⌘K, the window title and lists.
+
+| Icon            | Module (nav key)      | Motif                                      | Accent |
+| --------------- | --------------------- | ------------------------------------------ | ------ |
+| `dashboard`     | Desktop (`dashboard`) | four panes of different heights            | 4%     |
+| `portal`        | Portal (`portalHome`) | house, accent door                         | 15%    |
+| `time`          | Time tracking         | stopwatch, accent crown button             | 6%     |
+| `calendar`      | Calendar              | rings, header band, day dots, accent today | 8%     |
+| `tasks`         | Tasks                 | checked box (ink only)                     | 0%     |
+| `projects`      | Projects              | folder with kanban columns, accent card    | 9%     |
+| `clients`       | Clients               | two people, accent shirt (echoes `about`)  | 9%     |
+| `finance`       | Finance               | wallet, accent coin in the tab             | 4%     |
+| `invoices`      | Invoices              | receipt with a torn edge, accent total     | 7%     |
+| `contracts`     | Contracts             | page signed by an accent pen               | 15%    |
+| `docs`          | Docs                  | open book, accent lines                    | 8%     |
+| `vault`         | Vault                 | padlock, accent keyhole                    | 11%    |
+| `content`       | Content               | newspaper, accent picture                  | 17%    |
+| `inbox`         | Inbox                 | tray, accent slot                          | 11%    |
+| `media`         | Media                 | picture: mountains, accent sun             | 9%     |
+| `settings`      | Settings              | three sliders, accent knob                 | 14%    |
+| `design-system` | Design system         | palette, accent paint, thumb hole          | 9%     |
+
+Where they show: the panel dock and the <1024px tab bar (`NavIcon`, cell 2 = 24px in every dock
+size, like the site dock), and the panel Launchpad. The Desktop/Portal tile keeps the `PixelMark`
+(logo usage map), so `dashboard` and `portal` serve lists and the catalog. View site reuses
+`globe` and the tab bar's More reuses `more`. **Adding a panel module** means drawing its icon
+into `panelIcons` and setting `pixel` on its nav item.
+
+**Tones.** Ink is `--brand-ink` (`#6A6A6C` light, `#A3A4A8` dark, ≥4.8:1 on both tile colours);
+the current tab-bar item inks its icon with `--foreground`. A yellow (`accent`) tile re-tones
+both tones to `#1C1C1E` (10.7:1 on `#FFC50D`). **Forced colours** keep SVG fills but turn tiles to
+Canvas, so `pixel.css` paints every `.px-icon` CanvasText there (both tones): no icon vanishes,
+the site's yellow Contact tile included.
+
+### Pixel digits
+
+`PIXEL_GLYPHS` has the Latin `0`–`9` and the **Persian digits `۰`–`۹`** (U+06F0–U+06F9) on the same
+5×7 grid with the 1-cell gap, drawn from Vazirmatn's forms: `۰` is a small ring at mid height,
+`۲`/`۳` carry one and two teeth on a stem, and `۴ ۵ ۶` are the Persian shapes, not the
+Arabic-Indic `٤ ٥ ٦` (which stay unsupported). `toPixelText` passes them through.
+`pixelDigits(text, locale)` turns Latin digits into Persian ones on `fa` only:
+
+- **Frame strips**: `FrameStrip` reads the locale (`getLocale()`, a root param, so it stays
+  static) and numbers boxes `۰۱`, `۰۲`… on fa, `01`, `02`… on en. The number and the Latin path
+  are separate `aria-hidden` LTR svgs in the strip's flex row, so in RTL the number sits next to
+  the lights at inline-start and every svg reads left to right (`GOOD-IN-TEAM/WORK ۰۳` from the
+  left). The digits live in the existing text path: no extra elements.
+- **404**: `NotFoundBox` draws `۴۰۴` on fa.
+
+Pass any other locale-aware number through `pixelDigits` before `PixelText`. Paths and window
+bars stay Latin data.
 
 ## Colour
 

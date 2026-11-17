@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { matchNav, mobilePins, navForRole, navKeyFor } from "./nav-config";
+import { panelIconNames } from "@/components/brand/pixel-icons";
+import { matchNav, mobilePins, navForRole, navKeyFor, panelNav } from "./nav-config";
 
 const count = (role: Parameters<typeof navForRole>[0]) =>
   navForRole(role).reduce((n, g) => n + g.items.length, 0);
@@ -17,6 +18,17 @@ describe("navForRole", () => {
   it("never shows staff or admin modules to clients", () => {
     const labels = navForRole("client").flatMap((g) => g.items.map((i) => i.label));
     expect(labels).toEqual(["portalHome", "projects", "invoices", "contracts", "settings"]);
+  });
+
+  it("gives every app of every role its own pixel icon from the panel set", () => {
+    const items = panelNav.flatMap((g) => g.items);
+    const pixels = items.map((i) => i.pixel);
+    for (const [i, pixel] of pixels.entries()) {
+      expect(pixel, items[i]!.label).toBeDefined();
+      expect(panelIconNames, items[i]!.label).toContain(pixel);
+    }
+    expect(new Set(pixels).size).toBe(items.length); // no two apps share an icon
+    expect([...panelIconNames].sort()).toEqual([...(pixels as string[])].sort());
   });
 });
 

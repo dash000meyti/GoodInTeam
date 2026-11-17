@@ -247,7 +247,16 @@ export const designSystem: Record<keyof typeof fa, string> = {
     '"Good In" stays; the second word changes. The logo is always Latin and is sized only by cell.',
   brandMark: "GI mark (11×11)",
   brandIcons: "Pixel icons",
-  brandIconsHint: "12×12, two tones at most; only arrow mirrors in RTL. Shown at cell 2 and 1.",
+  brandIconsHint:
+    "12×12, two tones at most, yellow on ≤20% of the cells (the share is next to each name); only arrow mirrors in RTL. Shown at cell 2 and 1.",
+  brandSiteIcons: "Site icons",
+  brandPanelIcons: "Panel icons",
+  brandPanelTiles: "Panel icons on dock tiles",
+  brandPanelTilesHint:
+    "One per panel dock app, drawn to the menu icon's motif; on the brand tile, the same tile in dark mode and the yellow tile (dark ink).",
+  brandDigits: "Pixel digits",
+  brandDigitsHint:
+    "Persian 0–9 on the Latin digits' 5×7 grid; fa pages number their frame strips and the 404 with them.",
   brandAvatar: "Virtual me: poses",
   brandAvatarHint:
     "Literal colours in both modes; the yellow hoodie never sits directly on a yellow surface.",
