@@ -139,7 +139,8 @@ magnification for fine pointers, off for touch and reduced motion). Entries are 
 - `label` is the visible label and the accessible name (no `aria-label`). `srExtra` appends
   visually hidden text (", 2 timers running").
 - `section` + `exact` drive `aria-current` (via `isActivePath`) and the square active dot; an
-  entry without `section` is never active (brand tiles).
+  entry without `section` is never active. The Studio and Code tiles carry `section`
+  (`/studio`, `/code`), so they light up on their own brand pages.
 - `show: "desktop" | "mobile"` limits an entry to one mode; the tab bar shows 5 slots.
 - `DockLinks({ entries, running })` renders the links (client, internal Suspense); keys in
   `running` get `data-running` (the dot). Each internal link bounces while it loads

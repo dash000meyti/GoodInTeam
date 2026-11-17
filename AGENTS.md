@@ -26,7 +26,9 @@ pnpm build               # production build (also validates Cache Components rul
 pnpm db:generate         # after editing src/server/db/schema/* → creates a migration in drizzle/
 pnpm db:reset && pnpm db:seed   # fresh local DB with demo data (owner@goodteam.local / goodteam-demo-pass)
 pnpm test:e2e            # Playwright browser tests (e2e/) against a running server with demo data
-                         #   (BASE_URL=…; CI uses `pnpm start`; `@perf` timing checks need PERF=1)
+                         #   (BASE_URL=…; CI uses `pnpm start`; `@perf` timing checks need PERF=1;
+                         #   BROWSERS=all adds firefox, webkit and mobile-safari — run
+                         #   `pnpm exec playwright install webkit firefox` once)
 node scripts/shots.mjs   # screenshots of pages (fa/en, --dark, --mobile, --full) for visual QA
 ```
 
