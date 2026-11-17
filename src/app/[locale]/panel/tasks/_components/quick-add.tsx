@@ -117,7 +117,12 @@ export function QuickAdd({
               tk[`priority_${tok.value}` as "priority_1"],
             );
           case "tag":
-            return chip(key, <HashIcon className="size-3 text-info-ink" />, tok.value, "text-info-ink");
+            return chip(
+              key,
+              <HashIcon className="size-3 text-info-ink" />,
+              tok.value,
+              "text-info-ink",
+            );
           case "project":
             return project
               ? chip(key, <ColorDot color={project.color} className="size-2" />, project.name)

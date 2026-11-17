@@ -706,7 +706,7 @@ export function PostEditor({ initial, ctx }: { initial: EditorPost; ctx: EditorC
 
       {/* ── Side column ── */}
       <div className="space-y-6">
-        <Card className="lg:sticky lg:top-20">
+        <Card className="lg:sticky lg:below-chrome">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               {c.publishCard}

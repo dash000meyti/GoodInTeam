@@ -178,7 +178,7 @@ export function TasksApp(props: TasksAppProps) {
         }
       >
         {view === "list" && (
-          <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
+          <aside className="min-w-0 lg:sticky lg:below-chrome lg:self-start">
             <SmartListNav active={list} counts={counts} onSelect={setList} />
           </aside>
         )}

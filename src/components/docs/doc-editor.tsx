@@ -339,7 +339,7 @@ export function DocEditor({
           />
         </Card>
 
-        <Card className="h-fit gap-5 p-5 xl:sticky xl:top-24">
+        <Card className="h-fit gap-5 p-5 xl:sticky xl:below-chrome">
           <h2 className="text-sm font-bold">{d.settings}</h2>
           <fieldset className="grid gap-2">
             <legend className="mb-2 text-sm font-semibold">{d.visibility}</legend>
@@ -442,7 +442,7 @@ export function DocEditor({
       </div>
 
       {/* Phones: keep save within reach while scrolling a long page. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur sm:hidden dark:bg-card/95">
+      <div className="fixed inset-x-0 bottom-[var(--dock-space)] z-30 flex items-center gap-3 border-t bg-background/95 px-4 py-3 sm:hidden dark:bg-card/95">
         <div className="min-w-0 flex-1">{status}</div>
         <Button onClick={save} disabled={pending}>
           {pending ? <Loader2Icon className="animate-spin" /> : <SaveIcon />}

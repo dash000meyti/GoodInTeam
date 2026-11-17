@@ -19,7 +19,7 @@ export function DsSection({
   className?: string;
 }) {
   return (
-    <section id={id} data-ds-section className="scroll-mt-32 space-y-5 xl:scroll-mt-24">
+    <section id={id} data-ds-section className="scroll-mt-14 space-y-5 xl:scroll-mt-0">
       <header className="flex items-start gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-ink">
           <Icon className="size-5" />

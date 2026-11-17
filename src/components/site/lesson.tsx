@@ -182,7 +182,7 @@ export async function LessonView({
         >
           {series && (
             <aside className="order-last lg:order-first">
-              <div className="rounded-2xl border border-border bg-card p-4 lg:sticky lg:top-24">
+              <div className="rounded-2xl border border-border bg-card p-4 lg:sticky lg:below-chrome">
                 <Link
                   href={localePath(locale, `/learn/${encodeURIComponent(series.slug)}`)}
                   className="mb-3 flex items-center gap-2 px-2.5 text-sm font-extrabold hover:text-primary-ink"

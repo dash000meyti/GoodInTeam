@@ -60,7 +60,7 @@ export function SettingsNav({ role }: { role: UserRole }) {
 
       {/* Desktop */}
       <nav aria-label={t.settings.title} className="hidden lg:block">
-        <div className="sticky top-24 space-y-6">
+        <div className="sticky below-chrome space-y-6">
           {groups.map((g) => (
             <div key={g.group} className="space-y-1">
               <p className="px-3 pb-1 text-[11px] font-bold tracking-wide text-muted-foreground/80 uppercase">

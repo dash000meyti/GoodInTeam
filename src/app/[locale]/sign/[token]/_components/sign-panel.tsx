@@ -327,7 +327,7 @@ export function MobileSignBar({ target, status }: { target: SignTarget; status: 
   return (
     <div
       data-print-hide
-      className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-dropdown backdrop-blur lg:hidden dark:bg-card/95 print:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-dropdown lg:hidden dark:bg-card/95 print:hidden"
     >
       <div className="mx-auto flex max-w-3xl items-center gap-3">
         <div className="min-w-0 flex-1">

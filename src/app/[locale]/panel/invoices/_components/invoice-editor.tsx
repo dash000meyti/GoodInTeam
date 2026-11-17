@@ -416,7 +416,7 @@ export function InvoiceEditor({
         </Card>
       </div>
 
-      <aside className="space-y-4 xl:sticky xl:top-24">
+      <aside className="space-y-4 xl:sticky xl:below-chrome">
         <Card className="gap-4">
           <CardHeader>
             <CardTitle>{f.summary}</CardTitle>

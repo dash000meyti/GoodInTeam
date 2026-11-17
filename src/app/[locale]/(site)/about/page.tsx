@@ -86,7 +86,7 @@ async function AboutIntro({ locale, t }: { locale: Locale; t: Messages }) {
           )}
         </div>
         <aside className="lg:pt-4">
-          <div className="gt-ring relative overflow-hidden rounded-3xl bg-card p-7 shadow-card lg:sticky lg:top-24">
+          <div className="gt-ring relative overflow-hidden rounded-3xl bg-card p-7 shadow-card lg:sticky lg:below-chrome">
             <div aria-hidden className="gt-glow -end-16 -top-16 size-48 bg-primary/25" />
             <div className="relative flex items-center gap-4">
               {profile.avatarUrl ? (

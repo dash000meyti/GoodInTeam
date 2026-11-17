@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 export function SaveBar({ pending, dirty }: { pending: boolean; dirty: boolean }) {
   const t = useT();
   return (
-    <div className="sticky bottom-4 z-20">
+    <div className="sticky above-dock z-20">
       <div
         className={cn(
-          "glass flex items-center justify-end gap-3 rounded-2xl border p-2.5 shadow-dropdown transition-colors",
+          "flex items-center justify-end gap-3 rounded-2xl border bg-background/95 p-2.5 shadow-dropdown transition-colors dark:bg-card/95",
           dirty && "border-primary/30",
         )}
       >

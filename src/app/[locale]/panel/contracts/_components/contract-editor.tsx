@@ -375,7 +375,10 @@ export function ContractEditor({
                     className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-start text-sm hover:bg-accent"
                   >
                     <span className="text-muted-foreground">{placeholderLabel(k, c)}</span>
-                    <code dir="ltr" className="font-mono text-xs text-primary-ink">{`{{${k}}}`}</code>
+                    <code
+                      dir="ltr"
+                      className="font-mono text-xs text-primary-ink"
+                    >{`{{${k}}}`}</code>
                   </button>
                 </li>
               ))}
@@ -384,7 +387,7 @@ export function ContractEditor({
         </Card>
       </div>
 
-      <div className="sticky bottom-3 z-20 flex flex-wrap items-center justify-end gap-2 rounded-2xl border bg-background/90 p-3 shadow-dropdown backdrop-blur lg:col-span-2 dark:bg-card/90">
+      <div className="sticky above-dock z-20 flex flex-wrap items-center justify-end gap-2 rounded-2xl border bg-background/95 p-3 shadow-dropdown lg:col-span-2 dark:bg-card/95">
         <Button asChild type="button" variant="ghost">
           <Link href={cancelHref}>{t.common.cancel}</Link>
         </Button>

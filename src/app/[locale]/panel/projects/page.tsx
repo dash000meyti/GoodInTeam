@@ -69,7 +69,9 @@ export default async function ProjectsPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <ColorDot color={proj.color} />
-                        <h2 className="truncate font-bold group-hover:text-primary-ink">{proj.name}</h2>
+                        <h2 className="truncate font-bold group-hover:text-primary-ink">
+                          {proj.name}
+                        </h2>
                       </div>
                       <p className="mt-1 truncate text-sm text-muted-foreground">
                         {proj.client?.name ?? p.noClient}

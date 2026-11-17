@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { chromeRootMargin } from "@/components/shell/chrome-vars";
 
 export interface TocItem {
   id: string;
@@ -36,7 +37,7 @@ export function Toc({
         const first = sections.find((s) => (visible.get(s.id) ?? 0) > 0);
         if (first) setActive(first.id);
       },
-      { rootMargin: "-96px 0px -55% 0px", threshold: [0, 0.01, 0.25] },
+      { rootMargin: chromeRootMargin("-55%"), threshold: [0, 0.01, 0.25] },
     );
     sections.forEach((s) => io.observe(s));
     return () => io.disconnect();
@@ -66,13 +67,13 @@ export function Toc({
     return (
       <nav
         aria-label={title}
-        className="glass sticky top-16 z-30 -mx-4 flex scrollbar-none gap-2 overflow-x-auto px-4 py-2 sm:-mx-6 sm:px-6 lg:top-[72px] xl:hidden"
+        className="sticky top-chrome z-30 -mx-4 flex scrollbar-none gap-2 overflow-x-auto bg-background/95 px-4 py-2 sm:-mx-6 sm:px-6 xl:hidden"
       >
         {items.map((i) => link(i, true))}
       </nav>
     );
   return (
-    <nav aria-label={title} className="sticky top-24">
+    <nav aria-label={title} className="sticky below-chrome">
       <p className="mb-2 text-[11px] font-bold tracking-wide text-muted-foreground/80 uppercase">
         {title}
       </p>

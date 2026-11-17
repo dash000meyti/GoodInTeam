@@ -129,7 +129,9 @@ export function TaskCheck({
       }}
       className={cn(
         "relative flex size-[22px] shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-200 outline-none hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring",
-        done ? "scale-110 border-primary-ink bg-primary text-primary-foreground" : ringTone[priority],
+        done
+          ? "scale-110 border-primary-ink bg-primary text-primary-foreground"
+          : ringTone[priority],
       )}
     >
       {checking && (

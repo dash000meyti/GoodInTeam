@@ -165,7 +165,7 @@ export default async function DocPage({ params }: PageProps<"/[locale]/panel/doc
         </Card>
         {toc.length >= 2 && (
           <aside className="hidden 2xl:block print:hidden">
-            <div className="sticky top-24">
+            <div className="sticky below-chrome">
               <DocToc headings={toc} />
             </div>
           </aside>

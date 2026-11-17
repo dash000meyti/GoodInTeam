@@ -118,7 +118,7 @@ export function DocsSidebar({
       </div>
       {/* Desktop: sticky card */}
       <aside className="hidden lg:block">
-        <div className="sticky top-[88px] flex max-h-[calc(100dvh-112px)] flex-col overflow-hidden rounded-2xl bg-card shadow-card dark:border dark:border-border">
+        <div className="sticky below-chrome flex max-h-chrome flex-col overflow-hidden rounded-2xl bg-card shadow-card dark:border dark:border-border">
           <TreePanel items={items} canEdit={canEdit} archivedCount={archivedCount} />
         </div>
       </aside>

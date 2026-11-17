@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ListIcon } from "lucide-react";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
+import { chromeRootMargin } from "@/components/shell/chrome-vars";
 
 export interface TocHeading {
   id: string;
@@ -29,7 +30,7 @@ export function DocToc({ headings, className }: { headings: TocHeading[]; classN
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
         if (visible[0]) setActive(visible[0].target.id);
       },
-      { rootMargin: "-88px 0px -65% 0px", threshold: [0, 1] },
+      { rootMargin: chromeRootMargin("-70%"), threshold: [0, 1] },
     );
     for (const el of els) observer.observe(el);
     return () => observer.disconnect();

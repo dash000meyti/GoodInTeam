@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { CheckIcon, LinkIcon, PlayIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { recordViewAction } from "@/server/modules/content/actions";
+import { chromeRootMargin } from "@/components/shell/chrome-vars";
 
 /**
  * Tiny client islands for public pages. Labels arrive as props so the public
@@ -149,7 +150,7 @@ export function Toc({
         const visible = entries.filter((e) => e.isIntersecting);
         if (visible[0]) setActive(visible[0].target.id);
       },
-      { rootMargin: "-80px 0px -70% 0px" },
+      { rootMargin: chromeRootMargin("-70%") },
     );
     els.forEach((e) => io.observe(e));
     return () => io.disconnect();

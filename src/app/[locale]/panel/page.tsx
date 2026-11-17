@@ -214,7 +214,9 @@ async function StaffDashboard({ ctx }: { ctx: PanelContext }) {
                   >
                     <div className="mb-3 flex items-center gap-2">
                       <ColorDot color={p.color} />
-                      <span className="truncate font-bold group-hover:text-primary-ink">{p.name}</span>
+                      <span className="truncate font-bold group-hover:text-primary-ink">
+                        {p.name}
+                      </span>
                     </div>
                     <p className="mb-3 truncate text-xs text-muted-foreground">
                       {p.client?.name ?? "—"}

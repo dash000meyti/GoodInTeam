@@ -103,7 +103,7 @@ export default async function ActivityLogPage({
           <div className="space-y-6">
             {groups.map((g) => (
               <section key={g.key} className="space-y-1">
-                <h3 className="sticky top-16 z-10 -mx-2 bg-card/90 px-2 py-1.5 text-xs font-bold text-muted-foreground backdrop-blur lg:top-[72px]">
+                <h3 className="sticky top-chrome z-10 -mx-2 bg-card px-2 py-1.5 text-xs font-bold text-muted-foreground">
                   {g.label}
                 </h3>
                 <ol className="relative space-y-1 before:absolute before:inset-y-2 before:start-[17px] before:w-px before:bg-border">

@@ -137,7 +137,7 @@ export function ArticleBody({
       <div className="prose-gt e-content min-w-0" dangerouslySetInnerHTML={{ __html: html }} />
       {hasAside && (
         <div className="hidden lg:block">
-          <div className="sticky top-24 space-y-8">
+          <div className="sticky below-chrome space-y-8">
             {toc.length >= 2 && (
               <Toc
                 headings={toc.map((h) => ({ id: h.id, text: h.text, depth: h.depth }))}
