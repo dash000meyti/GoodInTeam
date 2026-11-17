@@ -17,7 +17,7 @@ The brand family, the pixel assets and the rules for using them. The full ration
 - Latin brand text inside a Persian sentence is wrapped in `<span lang="en" dir="ltr">`.
   Attribute strings (`data-guide-say`) use the Persian form.
 
-### Persian name — owner sign-off pending
+### Persian name — approved by the owner (2026-11-17)
 
 «گودین تیم» follows the «لینکدین» pattern. «گود این» (with a space) reads as "the pit of this"
 and is rejected; the alternatives are «گوداین تیم» or Latin-only. `src/i18n/messages/brand-form.test.ts`
@@ -149,7 +149,8 @@ must stay empty. Never `%` or `vw` sizing.
 12×12, art inside the inner 10×10, ≤2 tones (`#` ink, `y` accent), legible at cell 2 (24px) and
 1 (12px): `work`, `services`, `blog`, `learn`, `about`, `studio`, `code`, `contact`, `sign-in`,
 `more`, `search`, `globe`, `arrow`. They were drawn for the redesign; review them in the catalog
-before relying on them. `more` (one accent square of four) is 25% accent, above the ≤20% rule.
+before relying on them. `more` (one accent square of four) is 25% accent, above the ≤20% rule; the
+owner approved the set, `more` included, on 2026-11-17.
 
 ## Colour
 
