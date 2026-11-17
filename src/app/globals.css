@@ -419,13 +419,6 @@
 
 @layer utilities {
   /* Soft "alpha" surfaces — the signature Minimals look. */
-  .bg-soft-primary {
-    background-color: color-mix(in oklab, var(--primary) 12%, transparent);
-    color: var(--primary-dark);
-  }
-  .dark .bg-soft-primary {
-    color: var(--primary-light);
-  }
   .bg-grid {
     background-image:
       linear-gradient(to right, var(--surface-grid) 1px, transparent 1px),
@@ -438,25 +431,6 @@
   }
   .mask-fade-b {
     mask-image: linear-gradient(to bottom, black 55%, transparent);
-  }
-  .mask-fade-y {
-    mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
-  }
-  .mask-fade-x {
-    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
-  }
-  .mask-radial {
-    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
-  }
-  .text-gradient {
-    background-image: linear-gradient(100deg, var(--primary-ink) 0%, var(--foreground) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .glass {
-    background-color: color-mix(in oklab, var(--background) 72%, transparent);
-    backdrop-filter: saturate(180%) blur(12px);
   }
   .scrollbar-none {
     scrollbar-width: none;
@@ -629,16 +603,6 @@
   /* ─── site ─── */
   /* Legacy site utilities, layered. New site CSS goes in src/app/styles/*.css (D17); never add rules here. */
 
-  /* Giant faded brand wordmark at the bottom of the footer. */
-  .gt-wordmark {
-    font-size: clamp(4rem, 17vw, 15rem);
-    margin-bottom: -0.18em;
-    background: linear-gradient(to bottom, rgb(var(--grey-rgb) / 0.22), rgb(var(--grey-rgb) / 0));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
   /* Accent words: a yellow highlighter stroke in light mode, yellow text in dark mode. */
   .gt-accent {
     background: linear-gradient(
@@ -653,22 +617,6 @@
   .dark .gt-accent {
     color: var(--primary);
     background: none;
-  }
-
-  /* Section eyebrow dot */
-  .gt-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--primary);
-    box-shadow: 0 0 0 1px var(--brand-ink);
-  }
-
-  /* Soft glow blobs behind heroes */
-  .gt-glow {
-    position: absolute;
-    border-radius: 9999px;
-    filter: blur(80px);
-    pointer-events: none;
   }
 
   /* Hero system diagram: traveling packets along connector paths (pathLength=100). */
@@ -705,19 +653,6 @@
   .gt-draw {
     stroke-dasharray: 100;
     animation: gt-draw 1.6s ease-out both;
-  }
-
-  /* Mobile menu on the Popover API */
-  .gt-mobile-menu {
-    inset: 0;
-    border: 0;
-  }
-  .gt-mobile-menu:popover-open {
-    display: block;
-    animation: gt-menu-in 0.22s ease-out;
-  }
-  .gt-mobile-menu:popover-open .gt-menu-item {
-    animation: gt-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   /* Marquee track (always LTR so it scrolls the same way in both directions). */
@@ -838,10 +773,5 @@
   }
   to {
     stroke-dashoffset: 0;
-  }
-}
-@keyframes gt-menu-in {
-  from {
-    opacity: 0;
   }
 }
