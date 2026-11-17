@@ -1,29 +1,25 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowUpLeftIcon, CheckIcon } from "lucide-react";
-import { HeroDiagram } from "@/components/site/home/hero-diagram";
-import { HowWeWork } from "@/components/site/home/how-we-work";
-import { guideAttrs } from "@/components/shell/guide-events";
 import { CtaBand } from "@/components/site/cta-band";
+import { FrameGrid, FrameHeaderCell, FrameSection, framePath } from "@/components/site/frame";
+import { BrandFamily } from "@/components/site/home/brand-family";
+import { HomeHero } from "@/components/site/home/hero";
+import { HowWeWork } from "@/components/site/home/how-we-work";
 import {
-  AvailabilityBadge,
-  AvailabilityBadgeSkeleton,
-  FeaturedWork,
-  FeaturedWorkSkeleton,
-  LatestPosts,
-  LatestPostsSkeleton,
-  ServicesBento,
-  ServicesBentoSkeleton,
-  StatsStrip,
-  StatsStripSkeleton,
-  Testimonials,
-  TestimonialsSkeleton,
-  TrustMarquee,
-  TrustMarqueeSkeleton,
+  FeaturedWorkCells,
+  FeaturedWorkCellsSkeleton,
+  LatestCells,
+  LatestCellsSkeleton,
+  ServicesCells,
+  ServicesCellsSkeleton,
+  TestimonialCells,
+  TestimonialCellsSkeleton,
+  TrustBox,
+  TrustBoxSkeleton,
 } from "@/components/site/home/sections";
 import { pageMetadata } from "@/components/site/seo";
-import { ArrowLink, Container, SectionHeading } from "@/components/site/ui";
+import { StatsCells, StatsCellsSkeleton } from "@/components/site/stats-cells";
+import { ArrowLink } from "@/components/site/ui";
 import { localePath } from "@/i18n/config";
 import { getLocale, getMessages } from "@/i18n/server";
 
@@ -39,181 +35,148 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-function HeroTitle({ title, accent }: { title: string; accent: string }) {
-  const i = title.indexOf(accent);
-  if (i < 0) return <>{title}</>;
-  return (
-    <>
-      {title.slice(0, i)}
-      <span className="gt-accent">{accent}</span>
-      {title.slice(i + accent.length)}
-    </>
-  );
-}
+/** Intrinsic heights (px) of the below-the-fold box bodies for `content-visibility` (spec §8). */
+const CIS = { work: 900, services: 760, stats: 150, latest: 820, kindWords: 620 } as const;
 
+/**
+ * Home (spec §8): ten framed boxes in a fixed order. Their ids and
+ * `data-guide` keys are a cross-track contract (§15.1): top, brands, trust,
+ * work, services, process, stats, latest, kind-words, contact-cta. Static
+ * parts stay in the prerendered shell; every DB part is an async server
+ * component behind its own Suspense whose fallback renders the same cells.
+ */
 export default async function HomePage() {
   const locale = await getLocale();
   const t = getMessages(locale);
   const s = t.site;
+  const g = t.guide;
   return (
     <>
-      {/* ── Hero ── */}
-      <section
-        id="top"
-        className="relative isolate"
-        {...guideAttrs("home_hero", t.guide.home_hero)}
-      >
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
-        >
-          <div aria-hidden className="bg-grid mask-radial absolute inset-0 -z-10 opacity-80" />
-          <div
-            aria-hidden
-            className="gt-glow start-[10%] -top-48 -z-10 h-[28rem] w-[28rem] bg-primary/20"
-          />
-          <div aria-hidden className="gt-glow end-[5%] top-24 -z-10 h-80 w-80 bg-violet/15" />
-        </div>
-        <Container className="grid items-center gap-12 pt-10 pb-16 sm:pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8 lg:pt-20 lg:pb-24">
-          <div className="gt-rise flex flex-col items-start gap-7">
-            <Suspense fallback={<AvailabilityBadgeSkeleton />}>
-              <AvailabilityBadge t={t} />
-            </Suspense>
-            <h1 className="text-[2.6rem] leading-[1.12] font-black tracking-tight text-balance sm:text-6xl lg:text-[4.1rem]">
-              <HeroTitle title={s.heroTitle} accent={s.heroTitleAccent} />
-            </h1>
-            <p className="max-w-xl text-lg leading-8 text-pretty text-muted-foreground">
-              {s.heroSubtitle}
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href={localePath(locale, "/contact")}
-                className="group inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-hover"
-              >
-                {s.heroPrimaryCta}
-                <ArrowUpLeftIcon className="size-4 transition-transform group-hover:-translate-y-0.5 ltr:rotate-90" />
-              </Link>
-              <Link
-                href={localePath(locale, "/work")}
-                className="inline-flex h-12 items-center rounded-full border border-border bg-background/60 px-7 text-[15px] font-bold backdrop-blur transition-colors hover:border-foreground/30"
-              >
-                {s.heroSecondaryCta}
-              </Link>
-            </div>
-            <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-              {[s.heroProof1, s.heroProof2, s.heroProof3].map((p) => (
-                <li key={p} className="inline-flex items-center gap-1.5">
-                  <CheckIcon className="size-4 text-primary-ink" /> {p}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <HeroDiagram t={t} locale={locale} />
-        </Container>
-      </section>
+      {/* 01 · hero */}
+      <HomeHero locale={locale} t={t} />
 
-      {/* ── Trust ── */}
-      <Suspense fallback={<TrustMarqueeSkeleton />}>
-        <TrustMarquee locale={locale} t={t} />
+      {/* 02 · the Good In brand family */}
+      <BrandFamily locale={locale} t={t} />
+
+      {/* 03 · trust (the whole box streams; it is null below 2 names) */}
+      <Suspense fallback={<TrustBoxSkeleton t={t} />}>
+        <TrustBox locale={locale} t={t} />
       </Suspense>
 
-      {/* ── Featured work ── */}
-      <section id="work" className="py-20 sm:py-28" {...guideAttrs("home_work", t.guide.home_work)}>
-        <Container>
-          <SectionHeading
+      {/* 04 · featured work */}
+      <FrameSection
+        id="work"
+        labelledBy="work-title"
+        guide={{ key: "home_work", say: g.home_work }}
+        strip={{
+          index: 3,
+          path: framePath("good-in-team", "work"),
+          action: <ArrowLink href={localePath(locale, "/work")}>{s.viewAllWork}</ArrowLink>,
+        }}
+        cv={CIS.work}
+      >
+        <FrameGrid cols={3} reveal>
+          <FrameHeaderCell
+            span="md2"
             eyebrow={s.workEyebrow}
             title={s.workTitle}
+            titleId="work-title"
             subtitle={s.workSubtitle}
-            action={<ArrowLink href={localePath(locale, "/work")}>{s.viewAllWork}</ArrowLink>}
           />
-          <Suspense fallback={<FeaturedWorkSkeleton />}>
-            <FeaturedWork locale={locale} t={t} />
+          <Suspense fallback={<FeaturedWorkCellsSkeleton />}>
+            <FeaturedWorkCells locale={locale} t={t} />
           </Suspense>
-        </Container>
-      </section>
+        </FrameGrid>
+      </FrameSection>
 
-      {/* ── Services ── */}
-      <section
+      {/* 05 · services */}
+      <FrameSection
         id="services"
-        className="relative py-20 sm:py-28"
-        {...guideAttrs("home_services", t.guide.home_services)}
+        labelledBy="services-title"
+        guide={{ key: "home_services", say: g.home_services }}
+        strip={{
+          index: 4,
+          path: framePath("good-in-team", "services"),
+          action: <ArrowLink href={localePath(locale, "/services")}>{s.allServices}</ArrowLink>,
+        }}
+        cv={CIS.services}
       >
-        <div
-          aria-hidden
-          className="mask-fade-y absolute inset-x-0 top-0 -z-10 h-full bg-muted/40"
-        />
-        <Container>
-          <SectionHeading
+        <FrameGrid cols={3} reveal>
+          <FrameHeaderCell
             eyebrow={s.servicesEyebrow}
             title={s.servicesTitle}
+            titleId="services-title"
             subtitle={s.servicesSubtitle}
-            action={<ArrowLink href={localePath(locale, "/services")}>{s.allServices}</ArrowLink>}
           />
-          <Suspense fallback={<ServicesBentoSkeleton />}>
-            <ServicesBento locale={locale} t={t} />
+          <Suspense fallback={<ServicesCellsSkeleton />}>
+            <ServicesCells locale={locale} t={t} />
           </Suspense>
-        </Container>
-      </section>
+        </FrameGrid>
+      </FrameSection>
 
-      {/* ── How we work (transparency) ── */}
-      <section
-        id="process"
-        className="py-20 sm:py-28"
-        {...guideAttrs("home_process", t.guide.home_process)}
-      >
-        <Container>
-          <SectionHeading
-            eyebrow={s.processEyebrow}
-            title={s.processTitle}
-            subtitle={s.processSubtitle}
-            align="center"
-          />
-          <HowWeWork t={t} locale={locale} />
-        </Container>
-      </section>
+      {/* 06 · process (zero-JS tabs) */}
+      <HowWeWork t={t} locale={locale} />
 
-      {/* ── Stats ── */}
-      <section
+      {/* 07 · stats (StatsCells renders the FrameGrid 4 itself) */}
+      <FrameSection
         id="stats"
-        aria-label={s.statsEyebrow}
-        {...guideAttrs("home_stats", t.guide.home_stats)}
+        ariaLabel={s.statsEyebrow}
+        guide={{ key: "home_stats", say: g.home_stats }}
+        cv={CIS.stats}
       >
-        <Container>
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-card">
-            <div aria-hidden className="bg-dots absolute inset-0 opacity-60" />
-            <div className="relative">
-              <Suspense fallback={<StatsStripSkeleton />}>
-                <StatsStrip locale={locale} t={t} />
-              </Suspense>
-            </div>
-          </div>
-        </Container>
-      </section>
+        <Suspense fallback={<StatsCellsSkeleton />}>
+          <StatsCells locale={locale} t={t} />
+        </Suspense>
+      </FrameSection>
 
-      {/* ── Latest ── */}
-      <section
+      {/* 08 · latest posts + course */}
+      <FrameSection
         id="latest"
-        className="py-20 sm:py-28"
-        {...guideAttrs("home_latest", t.guide.home_latest)}
+        labelledBy="latest-title"
+        guide={{ key: "home_latest", say: g.home_latest }}
+        strip={{
+          index: 6,
+          path: framePath("good-in-team", "blog"),
+          action: <ArrowLink href={localePath(locale, "/blog")}>{s.readBlog}</ArrowLink>,
+        }}
+        cv={CIS.latest}
       >
-        <Container>
-          <SectionHeading
+        <FrameGrid cols={3} reveal>
+          <FrameHeaderCell
+            span="md2"
             eyebrow={s.latestEyebrow}
             title={s.latestTitle}
+            titleId="latest-title"
             subtitle={s.latestSubtitle}
-            action={<ArrowLink href={localePath(locale, "/blog")}>{s.readBlog}</ArrowLink>}
           />
-          <Suspense fallback={<LatestPostsSkeleton />}>
-            <LatestPosts locale={locale} t={t} />
+          <Suspense fallback={<LatestCellsSkeleton />}>
+            <LatestCells locale={locale} t={t} />
           </Suspense>
-        </Container>
-      </section>
+        </FrameGrid>
+      </FrameSection>
 
-      {/* ── Testimonials ── */}
-      <Suspense fallback={<TestimonialsSkeleton t={t} />}>
-        <Testimonials locale={locale} t={t} />
-      </Suspense>
+      {/* 09 · kind words */}
+      <FrameSection
+        id="kind-words"
+        labelledBy="testimonials-title"
+        guide={{ key: "home_testimonials", say: g.home_testimonials }}
+        strip={{ index: 7, path: framePath("good-in-team", "kind-words") }}
+        cv={CIS.kindWords}
+      >
+        <FrameGrid cols={3} reveal>
+          <FrameHeaderCell
+            span="full"
+            eyebrow={s.testimonialsEyebrow}
+            title={s.testimonialsTitle}
+            titleId="testimonials-title"
+          />
+          <Suspense fallback={<TestimonialCellsSkeleton />}>
+            <TestimonialCells locale={locale} />
+          </Suspense>
+        </FrameGrid>
+      </FrameSection>
 
+      {/* 10 · call to action (CtaBand renders its own box, id="contact-cta") */}
       <CtaBand locale={locale} t={t} guide="home_cta" />
     </>
   );
