@@ -72,8 +72,10 @@ export function ColorsSection({ t }: { t: Messages }) {
             </div>
           ))}
         </div>
-        {/* Live previews: PRESET_SCOPE_CLASS + presetStyle re-derive ink, hover and ring per preset. */}
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+        {/* Live previews: PRESET_SCOPE_CLASS + presetStyle re-derive ink, hover and ring per preset.
+            White on the green, cyan and red fills is 3.1–3.7:1 (AA large text only), so the
+            samples are intentional demos (spec §3.4): the "Aa" is aria-hidden, the name says which. */}
+        <div data-a11y-demo className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
           {colorPresets.map((p) => (
             <div
               key={p}
@@ -83,7 +85,10 @@ export function ColorsSection({ t }: { t: Messages }) {
               )}
               style={presetStyle(p) as CSSProperties}
             >
-              <span className="inline-flex h-7 items-center rounded-md bg-primary px-2.5 font-mono text-xs font-bold text-primary-foreground ring-2 ring-ring ring-offset-2 ring-offset-card">
+              <span
+                aria-hidden
+                className="inline-flex h-7 items-center rounded-md bg-primary px-2.5 font-mono text-xs font-bold text-primary-foreground ring-2 ring-ring ring-offset-2 ring-offset-card"
+              >
                 Aa
               </span>
               <span className="font-mono text-xs font-bold text-primary-ink" dir="ltr">
