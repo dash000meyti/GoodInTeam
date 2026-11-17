@@ -61,15 +61,8 @@ function Fill({ spans }: { spans: Spans }) {
 }
 
 /** A missing fixed-slot item: dots, decorative, only where the grid has 2+ tracks. */
-function SlotCell({ span, className }: { span?: FrameSpan; className?: string }) {
-  return (
-    <FrameCell
-      span={span}
-      tone="dots"
-      aria-hidden
-      className={`hidden md:block ${className ?? ""}`}
-    />
-  );
+function SlotCell({ span }: { span?: FrameSpan }) {
+  return <FrameCell span={span} tone="dots" aria-hidden className="hidden md:block" />;
 }
 
 // ─── 01 · hero availability (FrameEyebrow) ───────────────────────────────────
