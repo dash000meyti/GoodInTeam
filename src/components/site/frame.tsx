@@ -203,7 +203,7 @@ export const HEADING_CLASS = {
 } as const;
 
 /**
- * The header cell of a box (replaces SectionHeading inside frames): always
+ * The header cell of a box: always
  * `data-frame-header`; eyebrow, the h1/h2 (with `titleId` for the box's
  * aria-labelledby), subtitle, then `children` (breadcrumbs, a facets line)
  * and an optional action.

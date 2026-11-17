@@ -54,64 +54,9 @@ export function fmtDate(
 
 export const fmtNum = (n: number, locale: Locale) => formatNumber(n, locale);
 
-export function Container({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("mx-auto w-full max-w-7xl px-4 sm:px-6", className)}>{children}</div>;
-}
-
 /** Dashed accent chip (renders foundation's FrameEyebrow; no blur). */
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
   return <FrameEyebrow className={className}>{children}</FrameEyebrow>;
-}
-
-/** Legacy section heading (home imports it until its rewrite). */
-export function SectionHeading({
-  eyebrow,
-  title,
-  subtitle,
-  action,
-  align = "start",
-  as: Tag = "h2",
-  className,
-}: {
-  eyebrow?: ReactNode;
-  title: ReactNode;
-  subtitle?: ReactNode;
-  action?: ReactNode;
-  align?: "start" | "center";
-  as?: "h1" | "h2";
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "mb-10 flex flex-col gap-5 sm:mb-12",
-        align === "center"
-          ? "items-center text-center"
-          : "md:flex-row md:items-end md:justify-between",
-        className,
-      )}
-    >
-      <div className={cn("max-w-2xl space-y-4", align === "center" && "mx-auto")}>
-        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-        <Tag
-          className={cn(
-            "font-black tracking-tight text-balance",
-            Tag === "h1"
-              ? "text-4xl leading-[1.15] sm:text-5xl"
-              : "text-3xl leading-tight sm:text-4xl",
-          )}
-        >
-          {title}
-        </Tag>
-        {subtitle && (
-          <p className="text-base leading-8 text-pretty text-muted-foreground sm:text-lg">
-            {subtitle}
-          </p>
-        )}
-      </div>
-      {action && <div className="shrink-0">{action}</div>}
-    </div>
-  );
 }
 
 /** "View all →" style link with a direction-aware chevron. */
