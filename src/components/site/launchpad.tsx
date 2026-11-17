@@ -3,7 +3,7 @@ import Link from "next/link";
 import { XIcon } from "lucide-react";
 import { PixelIcon } from "@/components/brand/pixel-art";
 import type { PixelIconName } from "@/components/brand/pixel-icons";
-import { PixelMark } from "@/components/brand/pixel-logo";
+import { LogoMark } from "@/components/brand/logo";
 import { AppearanceModeToggle } from "@/components/shell/appearance";
 import { DockTile, type DockVariant } from "@/components/shell/dock";
 import { localePath, type Locale } from "@/i18n/config";
@@ -39,7 +39,7 @@ export function Launchpad({ locale, t }: { locale: Locale; t: Messages }) {
     <div id="os-launchpad" popover="auto" className="os-launchpad">
       <div className="os-lp-inner">
         <div className="os-lp-head">
-          <PixelMark cell={2} />
+          <LogoMark cell={2} />
           <p className="os-lp-title">{t.common.appName}</p>
           <button
             type="button"

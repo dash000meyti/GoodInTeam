@@ -1,6 +1,5 @@
 import { AppWindowIcon } from "lucide-react";
 import { PixelAvatar, PixelIcon } from "@/components/brand/pixel-art";
-import { PixelMark } from "@/components/brand/pixel-logo";
 import { Dock, DockTile, type DockEntry } from "@/components/shell/dock";
 import { DockLinks } from "@/components/shell/dock-links";
 import { OsLights } from "@/components/shell/os-lights";
@@ -37,7 +36,7 @@ import { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem,
 <MenuBarShell label={t.common.menuBar}
   start={<Menubar dir={dir} loop>
     <MenubarMenu>
-      <MenubarTrigger aria-label={t.nav.brandMenu}><PixelMark cell={2} /></MenubarTrigger>
+      <MenubarTrigger aria-label={t.nav.brandMenu}><LogoMark cell={2} /></MenubarTrigger>
       <MenubarContent>
         <MenubarItem asChild><Link href="/panel">…</Link></MenubarItem>
         <MenubarSeparator />
@@ -87,7 +86,7 @@ export function OsShellSection({ t }: { t: Messages }) {
       href: "#os-shell",
       label: t.panel.desktop,
       variant: "mark",
-      icon: <PixelMark cell={2} className="md:[--cell:3px]" />,
+      icon: <PixelIcon name="dashboard" cell={2} />,
     },
     { kind: "sep", key: "s2" },
     ...(["time", "calendar", "tasks", "projects"] as const).map((key): DockEntry => ({

@@ -35,7 +35,6 @@
     --gutter: 16px;
     --section-gap: 48px;
     --cell-pad: 24px;
-    --frame-l: 3px;
     --dir: 1;
     --ease-os: cubic-bezier(0.2, 0.8, 0.2, 1);
     --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
@@ -431,23 +430,6 @@
     background: var(--primary);
     --px-accent: #1c1c1e;
     --px-ink: #1c1c1e;
-  }
-  .os-tile[data-variant="brand"] {
-    background:
-      linear-gradient(var(--brand-ink) 0 0) left 4px top 4px / 3px 3px no-repeat,
-      linear-gradient(var(--brand-frame) 0 0) left 4px top 4px / calc(100% - 8px) 3px no-repeat,
-      linear-gradient(var(--brand-frame) 0 0) left 4px top 4px / 3px calc(100% - 8px) no-repeat,
-      var(--card);
-  }
-  [dir="rtl"] .os-tile[data-variant="brand"] {
-    background:
-      linear-gradient(var(--brand-ink) 0 0) right 4px top 4px / 3px 3px no-repeat,
-      linear-gradient(var(--brand-frame) 0 0) right 4px top 4px / calc(100% - 8px) 3px no-repeat,
-      linear-gradient(var(--brand-frame) 0 0) right 4px top 4px / 3px calc(100% - 8px) no-repeat,
-      var(--card);
-  }
-  .dark .os-tile[data-variant="brand"] {
-    background-color: #2a2a2d;
   }
   /* magnification: only fine pointers, motion allowed, data-magnify present */
   @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {

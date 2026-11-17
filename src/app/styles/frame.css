@@ -49,9 +49,6 @@
     margin-block-start: var(--section-gap);
     border: 1px solid var(--frame-line);
     background: var(--background);
-    /* logo L-frame, outside the border, at inline-start */
-    box-shadow: calc(-1 * var(--frame-l) * var(--dir)) calc(-1 * var(--frame-l)) 0 0
-      var(--brand-frame);
     view-timeline: --box block;
   }
   .frame-box[data-first] {
@@ -72,24 +69,15 @@
     block-size: 9px;
     pointer-events: none;
   }
-  /* top-start: logo corner cell · top-end: ringed marker */
+  /* the same ringed marker on all four corners: every edge looks alike */
   .frame-box::before {
     inset-block-start: -5px;
-    background:
-      linear-gradient(var(--brand-ink) 0 0) left 1px top 1px / 3px 3px no-repeat,
-      linear-gradient(var(--marker-dot) 0 0) right 3px top 3px / 3px 3px no-repeat,
-      linear-gradient(var(--marker-fill) 0 0) right 1px top 1px / 7px 7px no-repeat,
-      linear-gradient(var(--marker-ring) 0 0) right top / 9px 9px no-repeat;
-  }
-  [dir="rtl"] .frame-box::before {
-    background:
-      linear-gradient(var(--brand-ink) 0 0) right 1px top 1px / 3px 3px no-repeat,
-      linear-gradient(var(--marker-dot) 0 0) left 3px top 3px / 3px 3px no-repeat,
-      linear-gradient(var(--marker-fill) 0 0) left 1px top 1px / 7px 7px no-repeat,
-      linear-gradient(var(--marker-ring) 0 0) left top / 9px 9px no-repeat;
   }
   .frame-box::after {
     inset-block-end: -5px;
+  }
+  .frame-box::before,
+  .frame-box::after {
     background:
       linear-gradient(var(--marker-dot) 0 0) left 3px top 3px / 3px 3px no-repeat,
       linear-gradient(var(--marker-dot) 0 0) right 3px top 3px / 3px 3px no-repeat,
@@ -165,7 +153,7 @@
       inset-block-end: -5px;
       inset-inline-end: -5px;
     }
-    /* box origin is the logo corner */
+    /* the box draws its own corner markers */
     :is(.frame-box, .frame-cv) > .frame-grid:first-child > .frame-cell:first-child::before {
       display: none;
     }

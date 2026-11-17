@@ -17,7 +17,7 @@ import {
   siteIconNames,
   type PixelIconName,
 } from "@/components/brand/pixel-icons";
-import { PixelLogo, PixelLogoCycle, PixelMark } from "@/components/brand/pixel-logo";
+import { PixelLogo, PixelLogoCycle } from "@/components/brand/pixel-logo";
 import { DockTile, type DockVariant } from "@/components/shell/dock";
 import { OsLights } from "@/components/shell/os-lights";
 import { chromeTokens, inkTokens } from "@/components/shared/design-tokens";
@@ -154,10 +154,10 @@ function NeverChip({ pair }: { pair: Pair }) {
 }
 
 const logoCode = `import { LogoMark } from "@/components/brand/logo";
-import { PixelLogo, PixelMark, PixelLogoCycle } from "@/components/brand/pixel-logo";
+import { PixelLogo, PixelLogoCycle } from "@/components/brand/pixel-logo";
 <PixelLogo suffix="STUDIO" cell={3} />            // 34×18 cells → 102×54px
-<PixelMark cell={2} className="md:[--cell:3px]" /> // responsive: a cell class, never size-*
-<LogoMark cell={4} />                               // compatibility layer (44px)
+<LogoMark cell={2} className="md:[--cell:3px]" />  // the mark = the character's icon; a cell class, never size-*
+<LogoMark cell={4} />                               // 10×10 cells → 40px (favicon, documents)
 <PixelLogoCycle cell={3} />                         // TEAM→STUDIO→CODE once, 4.2s`;
 
 const iconCode = `import { PixelIcon, PixelText, PixelAvatar } from "@/components/brand/pixel-art";
@@ -247,12 +247,12 @@ export function BrandSection({ t }: { t: Messages }) {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <Example title={d.brandMark} code={logoCode} previewClassName="items-end gap-6">
-          <PixelMark cell={2} />
-          <PixelMark cell={3} />
-          <PixelMark cell={4} />
+          <LogoMark cell={2} />
+          <LogoMark cell={3} />
+          <LogoMark cell={4} />
           <LogoMark cell={6} />
           <span className="rounded-xl bg-[#161618] p-3">
-            <PixelMark cell={3} />
+            <LogoMark cell={3} />
           </span>
           <PixelLogoCycle cell={2} />
         </Example>

@@ -16,8 +16,9 @@ fallback of the final size, so streaming never shifts the layout (CLS 0 is teste
 ```
 skip link → #main
 <header class="os-menubar">            SiteMenuBar (server, site-menubar.tsx)
-  brand popover · section links · [Suspense: availability, AvailabilitySkeleton]
-  · virtual-me extra · Spotlight · language · theme · Control Center · [Suspense: clock, ClockSkeleton]
+  brand popover (the character's icon, no text; its menu also holds the guide: explain, tour,
+  show switch) · section links · [Suspense: availability, AvailabilitySkeleton]
+  · Spotlight · language · theme · Control Center · [Suspense: clock, ClockSkeleton]
 <div class="os-desktop">                wallpaper + rails, guide containing block (display:flow-root)
   <main id="main">                      the page: FrameSections (each page owns its Suspense holes)
   <footer class="frame-box">            SiteFooter (socials stream in a Suspense hole, h-9 skeleton)
@@ -145,8 +146,8 @@ magnification for fine pointers, off for touch and reduced motion). Entries are 
 - `DockLinks({ entries, running })` renders the links (client, internal Suspense); keys in
   `running` get `data-running` (the dot). Each internal link bounces while it loads
   (`useLinkStatus`).
-- Variants: `paper` (default), `brand` (L-frame tile), `accent` (yellow tile, ink icon — kept in
-  tab-bar mode), `mark`.
+- Variants: `paper` (default), `brand` and `mark` (look like `paper`: tiles are uniform, no
+  logo frame), `accent` (yellow tile, ink icon — kept in tab-bar mode).
 
 **Add a site dock app:** add an entry in `components/site/site-dock.tsx` (and its label to the
 `nav` namespace, fa + en); pick `show` so the tab bar keeps Home, Work, Services, Contact, More.
@@ -155,8 +156,8 @@ role's pins; owner 16 / member 9 / client 5 apps are asserted by panel-shell.spe
 
 ## Frame system (public pages)
 
-`FrameSection` (square `.frame-box` on the 1200px column, logo L-frame at inline-start, ringed
-markers) → stacked `FrameGrid`s → `FrameCell`s. Details and spans: [design-system.md → Frame](design-system.md#frame-public-site-srccomponentssiteframetsx).
+`FrameSection` (square `.frame-box` on the 1200px column, an even 1px border, the same ringed
+marker on every corner) → stacked `FrameGrid`s → `FrameCell`s. Details and spans: [design-system.md → Frame](design-system.md#frame-public-site-srccomponentssiteframetsx).
 
 **Add a section to a page:**
 

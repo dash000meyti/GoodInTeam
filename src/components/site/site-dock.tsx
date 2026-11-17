@@ -1,5 +1,5 @@
 import { PixelIcon } from "@/components/brand/pixel-art";
-import { PixelMark } from "@/components/brand/pixel-logo";
+import { LogoMark } from "@/components/brand/logo";
 import { Dock, DockTile, type DockEntry } from "@/components/shell/dock";
 import { DockLinks } from "@/components/shell/dock-links";
 import { localePath, type Locale } from "@/i18n/config";
@@ -27,7 +27,7 @@ export function SiteDock({ locale, t }: { locale: Locale; t: Messages }) {
       section: "/",
       label: t.nav.home,
       variant: "mark",
-      icon: <PixelMark cell={2} className="md:[--cell:3px]" />,
+      icon: <LogoMark cell={2} className="md:[--cell:3px]" />,
     },
     {
       kind: "link",

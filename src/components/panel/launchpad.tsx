@@ -4,7 +4,6 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowUpRightIcon, GlobeIcon, LogOutIcon, SearchIcon } from "lucide-react";
-import { PixelMark } from "@/components/brand/pixel-logo";
 import { AppearanceModeToggle } from "@/components/shell/appearance";
 import { DockTile } from "@/components/shell/dock";
 import { matchesQuery } from "@/components/shell/normalize";
@@ -63,11 +62,7 @@ export function AppGrid({
                   >
                     <span className="pm-lp-tile transition-transform group-hover:-translate-y-0.5 group-active:scale-95">
                       <DockTile variant={mark ? "mark" : "brand"}>
-                        {mark ? (
-                          <PixelMark cell={3} />
-                        ) : (
-                          <NavIcon item={item} lucideClassName="size-6" />
-                        )}
+                        <NavIcon item={item} lucideClassName="size-6" />
                       </DockTile>
                     </span>
                     <span className="line-clamp-2 text-xs leading-4 font-medium">

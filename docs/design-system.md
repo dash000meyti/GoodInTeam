@@ -141,7 +141,7 @@ How the site and panel shells, the frame system, the pixel brand and the guide f
 ## Frame (public site, `src/components/site/frame.tsx`)
 
 Every public section is a **framed box**: `FrameSection` (a square `.frame-box` on the 1200px
-column, logo L-frame at inline-start, ringed markers) → one or more stacked `FrameGrid`s →
+column, an even 1px border with the same ringed marker on every corner) → one or more stacked `FrameGrid`s →
 `FrameCell`s. Boxes are square; only `Window`s are rounded. Rules:
 
 - Every `FrameCell` is a child of a `FrameGrid`; rows of different shapes are stacked grids

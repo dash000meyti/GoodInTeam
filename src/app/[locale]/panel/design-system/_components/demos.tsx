@@ -71,7 +71,7 @@ import { DatePicker } from "@/components/shared/date-picker";
 import { SelectField } from "@/components/shared/select-field";
 import { SwitchInput } from "@/components/shared/switch-input";
 import { usePanelUI } from "@/components/panel/panel-ui";
-import { PixelMark } from "@/components/brand/pixel-logo";
+import { LogoMark } from "@/components/brand/logo";
 import { MenuBarShell } from "@/components/shell/menubar-shell";
 import { ClockSkeleton, OsClock } from "@/components/shell/os-clock";
 import {
@@ -431,7 +431,7 @@ export function MenubarDemo() {
         <Menubar dir={dir} loop>
           <MenubarMenu>
             <MenubarTrigger className="px-1.5" aria-label={t.nav.brandMenu}>
-              <PixelMark cell={2} />
+              <LogoMark cell={2} />
             </MenubarTrigger>
             <MenubarContent>
               <MenubarItem>

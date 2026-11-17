@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PixelMark } from "@/components/brand/pixel-logo";
+import { LogoMark } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/shell/appearance";
 import { MB_ICON_CLASS, MB_ITEM_CLASS, MenuBarShell } from "@/components/shell/menubar-shell";
 import { AuthLanguageLinks } from "@/components/site/auth-language-links";
@@ -34,7 +34,7 @@ export default async function AuthLayout({ children }: LayoutProps<"/[locale]">)
             aria-label={t.common.appName}
             className={MB_ITEM_CLASS}
           >
-            <PixelMark cell={2} />
+            <LogoMark cell={2} />
           </Link>
         }
         end={

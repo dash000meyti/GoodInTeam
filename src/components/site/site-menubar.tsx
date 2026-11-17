@@ -1,8 +1,9 @@
 import { Suspense, type CSSProperties } from "react";
 import Link from "next/link";
 import { SearchIcon, SlidersHorizontalIcon } from "lucide-react";
-import { PixelAvatar, PixelIcon } from "@/components/brand/pixel-art";
-import { PixelLogo, PixelMark } from "@/components/brand/pixel-logo";
+import { LogoMark } from "@/components/brand/logo";
+import { PixelIcon } from "@/components/brand/pixel-art";
+import { PixelLogo } from "@/components/brand/pixel-logo";
 import { brandById, subBrandIds } from "@/components/brand/brands";
 import { ThemeToggle } from "@/components/shell/appearance";
 import { ClockSkeleton } from "@/components/shell/os-clock";
@@ -59,10 +60,11 @@ const anchor = (name: string) => ({
 });
 
 /**
- * Item 1: the brand menu. Its accessible name is `appName` at every width:
- * the label is always in the DOM (sr-only below lg, where the trigger shows
- * only the mark), so no aria-label. The popover follows its trigger (open
- * style via `:has(+ :popover-open)`). Static links only.
+ * Item 1: the brand menu, the character's icon alone (named `appName`, no
+ * visible text). It also carries everything about the "virtual me": explain
+ * this part, take the tour and the show-guide switch (`data-guide-entry`, so
+ * the owner's site-guide switch hides them). The popover follows its trigger
+ * (open style via `:has(+ :popover-open)`). Static links only.
  */
 function BrandMenu({ locale, t }: { locale: Locale; t: Messages }) {
   const a = anchor("--mb-brand");
@@ -72,11 +74,11 @@ function BrandMenu({ locale, t }: { locale: Locale; t: Messages }) {
       <button
         type="button"
         popoverTarget="mb-brand"
-        className={cn(MB_ITEM_CLASS, "os-mb-brand")}
+        aria-label={t.common.appName}
+        className={cn(MB_ICON_CLASS, "os-mb-brand")}
         style={a.trigger}
       >
-        <PixelMark cell={2} />
-        <span className="sr-only lg:not-sr-only">{t.common.appName}</span>
+        <LogoMark cell={2} />
       </button>
       <div
         id="mb-brand"
@@ -89,6 +91,17 @@ function BrandMenu({ locale, t }: { locale: Locale; t: Messages }) {
         <div className="os-menu-card">
           <PixelLogo suffix="TEAM" cell={2} />
           <p>{t.common.appTagline}</p>
+        </div>
+        <div data-guide-entry="">
+          <div className={MENU_SEP_CLASS} />
+          <p className="os-menu-label">{t.guide.name}</p>
+          <GuideAction popover="mb-brand" type="explain" className={MENU_ITEM_CLASS}>
+            {t.guide.explain}
+          </GuideAction>
+          <GuideAction popover="mb-brand" type="tour" className={MENU_ITEM_CLASS}>
+            {t.guide.tour}
+          </GuideAction>
+          <GuideSwitch label={t.guide.show} className={MENU_ITEM_CLASS} />
         </div>
         <div className={MENU_SEP_CLASS} />
         <Link href={href("/about")} className={MENU_ITEM_CLASS}>
@@ -110,43 +123,6 @@ function BrandMenu({ locale, t }: { locale: Locale; t: Messages }) {
         <Link href={href("/login")} prefetch={false} className={MENU_ITEM_CLASS}>
           {t.common.signIn}
         </Link>
-      </div>
-    </>
-  );
-}
-
-/** Item 4 (lg+): the "virtual me" extra. Rows hide #mb-guide, then dispatch `gt:guide`. */
-function GuideExtra({ t }: { t: Messages }) {
-  const a = anchor("--mb-guide");
-  return (
-    <>
-      <button
-        type="button"
-        popoverTarget="mb-guide"
-        aria-label={t.guide.toggle}
-        data-guide-entry=""
-        className={cn(MB_ICON_CLASS, "hidden lg:inline-flex")}
-        style={a.trigger}
-      >
-        <PixelAvatar part="head" cell={2} />
-      </button>
-      <div
-        id="mb-guide"
-        popover="auto"
-        className={POPMENU_CLASS}
-        data-align="end"
-        data-anchor=""
-        style={a.popover}
-      >
-        <p className="os-menu-label">{t.guide.name}</p>
-        <GuideAction popover="mb-guide" type="explain" className={MENU_ITEM_CLASS}>
-          {t.guide.explain}
-        </GuideAction>
-        <GuideAction popover="mb-guide" type="tour" className={MENU_ITEM_CLASS}>
-          {t.guide.tour}
-        </GuideAction>
-        <div className={MENU_SEP_CLASS} />
-        <GuideSwitch label={t.guide.show} className={MENU_ITEM_CLASS} />
       </div>
     </>
   );
@@ -183,8 +159,8 @@ function LanguageMenu({ locale, t }: { locale: Locale; t: Messages }) {
 
 /**
  * The public menu bar (spec §7.2), DOM start → end, mirrored in fa:
- * brand · section links (md+) · spacer · availability (lg+, hole A) ·
- * guide extra (lg+) · Spotlight · language · theme (md+) · Control Center ·
+ * brand (the character; its menu holds the guide) · section links (md+) ·
+ * spacer · availability (lg+, hole A) · Spotlight · language · theme (md+) · Control Center ·
  * clock (lg+, hole B, outermost). Phones show brand, Spotlight, language and
  * Control Center only.
  */
@@ -210,7 +186,6 @@ export function SiteMenuBar({ locale, t }: { locale: Locale; t: Messages }) {
           <Suspense fallback={<AvailabilitySkeleton t={t} />}>
             <MenuBarAvailability locale={locale} t={t} />
           </Suspense>
-          <GuideExtra t={t} />
           <button
             type="button"
             popoverTarget="os-spotlight"

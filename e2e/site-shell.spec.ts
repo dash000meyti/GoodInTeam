@@ -186,17 +186,24 @@ test.describe("menus", () => {
     expect(await bg()).toBe(idle);
   });
 
-  test("#mb-guide 'What's this part?' closes its menu, then dispatches gt:guide", async ({
+  test("the character's brand menu holds the guide: explain closes it, then dispatches", async ({
     page,
   }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto("/en");
     await hydrated(page);
     await recordGuide(page);
-    await menuBar(page).getByRole("button", { name: enGuide.toggle }).click();
-    await expect(page.locator("#mb-guide")).toBeVisible();
-    await page.locator("#mb-guide").getByRole("button", { name: enGuide.explain }).click();
-    await expect(page.locator("#mb-guide")).toBeHidden();
+    // no separate guide button any more: the character (brand trigger) carries it
+    await expect(menuBar(page).getByRole("button", { name: enGuide.toggle })).toHaveCount(0);
+    const trigger = menuBar(page).locator('[popovertarget="mb-brand"]');
+    await expect(trigger).not.toContainText(enCommon.appName);
+    await trigger.click();
+    await expect(page.locator("#mb-brand")).toBeVisible();
+    await expect(
+      page.locator("#mb-brand").getByRole("switch", { name: enGuide.show }),
+    ).toBeVisible();
+    await page.locator("#mb-brand").getByRole("button", { name: enGuide.explain }).click();
+    await expect(page.locator("#mb-brand")).toBeHidden();
     expect(await guideEvents(page)).toContainEqual({ type: "explain" });
   });
 

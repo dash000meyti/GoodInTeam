@@ -101,42 +101,43 @@ brand"); see [modules/content.md](modules/content.md#services-and-brands).
 All pixel art is inline SVG with **one `<path>` per tone** (`toPaths` in `pixel-font.ts`), root
 `<svg class="px-art">`, `shape-rendering: crispEdges`.
 
-| Component                           | Grid   | Elements            | Notes                                                             |
-| ----------------------------------- | ------ | ------------------- | ----------------------------------------------------------------- |
-| `PixelMark`                         | 11×11  | 6                   | menu bar, dock Home tile, favicon                                 |
-| `PixelLogo suffix`                  | 34×18  | 7 (6 without paper) | framed GOOD IN / SUFFIX                                           |
-| `PixelLogoCycle`                    | 34×18  | 12                  | TEAM → STUDIO → CODE → TEAM **once** in 4.2s (`data-play`)        |
-| `PixelLogoSwap`                     | 34×18  | 12                  | all suffixes; consumers swap with `:has()` on `.gi-sfx[data-sfx]` |
-| `PixelText text`                    | 7 tall | 2                   | Latin + Persian digits, aria-hidden, LTR                          |
-| `PixelTextSet items`                | 7 tall | 1 + n               | one svg, one `path[data-path-id]` per item, first shown           |
-| `PixelIcon name mirror?`            | 12×12  | ≤3                  | 13 site + 17 panel icons; only `arrow` is directional (`mirror`)  |
-| `PixelAvatar pose part`             | 16×16  | ≤5 (head 5)         | static "virtual me"; `part="head"` = the 10×10 `AVATAR_ICON`      |
-| `PixelAvatarSprite state`           | 16×16  | 13                  | guide sprite; frames keyed on its own `svg.px-sprite[data-state]` |
-| `LogoMark cell` / `Logo label cell` | —      | —                   | compatibility layer over `PixelMark` / `PixelLogo TEAM`           |
+| Component                           | Grid   | Elements            | Notes                                                              |
+| ----------------------------------- | ------ | ------------------- | ------------------------------------------------------------------ |
+| `PixelMark`                         | 11×11  | 6                   | the old G·I mark: kept in code, no longer shown (see `LogoMark`)   |
+| `PixelLogo suffix`                  | 34×18  | 7 (6 without paper) | framed GOOD IN / SUFFIX                                            |
+| `PixelLogoCycle`                    | 34×18  | 12                  | TEAM → STUDIO → CODE → TEAM **once** in 4.2s (`data-play`)         |
+| `PixelLogoSwap`                     | 34×18  | 12                  | all suffixes; consumers swap with `:has()` on `.gi-sfx[data-sfx]`  |
+| `PixelText text`                    | 7 tall | 2                   | Latin + Persian digits, aria-hidden, LTR                           |
+| `PixelTextSet items`                | 7 tall | 1 + n               | one svg, one `path[data-path-id]` per item, first shown            |
+| `PixelIcon name mirror?`            | 12×12  | ≤3                  | 13 site + 17 panel icons; only `arrow` is directional (`mirror`)   |
+| `PixelAvatar pose part`             | 16×16  | ≤5 (head 5)         | static "virtual me"; `part="head"` = the 10×10 `AVATAR_ICON`       |
+| `PixelAvatarSprite state`           | 16×16  | 13                  | guide sprite; frames keyed on its own `svg.px-sprite[data-state]`  |
+| `LogoMark cell` / `Logo label cell` | 10×10  | 5                   | the mark = the character's icon (`AVATAR_ICON`) / `PixelLogo TEAM` |
 
 ### Integer cells only
 
 Size comes **only** from `cell` (`1|2|3|4|6|8|10|12` → the literal class `[--cell:Npx]`) or an
 inherited `--cell` (no class is emitted without `cell`; the guide sprite relies on that).
 `pixel.css` sizes `.px-art` as `--px-w × --cell` by `--px-h × --cell`. Responsive sizes add a
-cell class: `<PixelMark cell={2} className="md:[--cell:3px]" />`. **Never** put
+cell class: `<LogoMark cell={2} className="md:[--cell:3px]" />`. **Never** put
 `size-*`/`w-*`/`h-*` on a `LogoMark`/`Logo`/`PixelMark`/`PixelLogo` (utilities beat `.px-art`
 and give fractional cells); `git grep -nE "<(LogoMark|Logo|PixelMark|PixelLogo)[^>]*className=\"[^\"]*\b(size|w|h)-"`
 must stay empty. Never `%` or `vw` sizing.
 
 ### Logo usage map
 
-| Surface                               | Component                          | Cell → px                                       |
-| ------------------------------------- | ---------------------------------- | ----------------------------------------------- |
-| Menu bar brand                        | `PixelMark`                        | 2 → 22                                          |
-| Dock Home / panel Dashboard tile      | `PixelMark`                        | 3 → 33 (2 → 22 in tab-bar mode)                 |
-| Favicon `src/app/icon.svg`            | mark paths on paper                | viewBox 0 0 11 11, dark-scheme tones            |
-| Hero hub                              | `PixelLogoCycle`                   | 2 (<lg) / 3                                     |
-| Brand family big logo                 | `PixelLogo`/`PixelLogoSwap`        | 4 / 6 (md) / 8 (lg)                             |
-| Brand cells, /services headers, menus | `PixelLogo`                        | 2 or 3                                          |
-| Footer wordmark                       | `PixelLogo TEAM paper={false}`     | 6 / 8 / 12                                      |
-| OG images (`og.tsx`)                  | `toPaths()` with literal hex fills | 10 (Satori resolves no CSS variables)           |
-| Share pages, invoice, contract        | `LogoMark`                         | 3 (`/i`, `/sign`, contract) · 4 (`/p`, invoice) |
+| Surface                               | Component                           | Cell → px                                        |
+| ------------------------------------- | ----------------------------------- | ------------------------------------------------ |
+| Menu bar brand (site, panel, login)   | `LogoMark` (the character, no text) | 2 → 20                                           |
+| Site dock Home tile                   | `LogoMark`                          | 3 → 30 (2 → 20 in tab-bar mode)                  |
+| Panel Desktop/Portal tile             | `NavIcon` (`dashboard` / `portal`)  | 2 → 24 (the Me tile already shows the character) |
+| Favicon `src/app/icon.svg`            | the character's icon paths          | viewBox 0 0 10 10, literal fills                 |
+| Hero hub                              | `PixelLogoCycle`                    | 2 (<lg) / 3                                      |
+| Brand family big logo                 | `PixelLogo`/`PixelLogoSwap`         | 4 / 6 (md) / 8 (lg)                              |
+| Brand cells, /services headers, menus | `PixelLogo`                         | 2 or 3                                           |
+| Footer wordmark                       | `PixelLogo TEAM paper={false}`      | 6 / 8 / 12                                       |
+| OG images (`og.tsx`)                  | `toPaths()` with literal hex fills  | 10 (Satori resolves no CSS variables)            |
+| Share pages, invoice, contract        | `LogoMark`                          | 3 (`/i`, `/sign`, contract) · 4 (`/p`, invoice)  |
 
 ### Fills
 
@@ -198,8 +199,8 @@ lucide `icon` stays for menus, ⌘K, the window title and lists.
 | `design-system` | Design system         | palette, accent paint, thumb hole          | 9%     |
 
 Where they show: the panel dock and the <1024px tab bar (`NavIcon`, cell 2 = 24px in every dock
-size, like the site dock), and the panel Launchpad. The Desktop/Portal tile keeps the `PixelMark`
-(logo usage map), so `dashboard` and `portal` serve lists and the catalog. View site reuses
+size, like the site dock), and the panel Launchpad. The Desktop/Portal tile shows `dashboard` /
+`portal` (the Me tile next to it already shows the character). View site reuses
 `globe` and the tab bar's More reuses `more`. **Adding a panel module** means drawing its icon
 into `panelIcons` and setting `pixel` on its nav item.
 

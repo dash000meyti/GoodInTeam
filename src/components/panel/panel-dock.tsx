@@ -10,7 +10,6 @@ import {
   PanelBottomCloseIcon,
 } from "lucide-react";
 import { PixelIcon } from "@/components/brand/pixel-art";
-import { PixelMark } from "@/components/brand/pixel-logo";
 import { Dock, DockTile, type DockEntry } from "@/components/shell/dock";
 import { DockLinks } from "@/components/shell/dock-links";
 import { localePath } from "@/i18n/config";
@@ -70,11 +69,7 @@ export function PanelDock({ role, prefs }: { role: UserRole; prefs: ShellPrefs }
       exact: item.exact,
       label: t.nav[item.label],
       variant: mark ? "mark" : "brand",
-      icon: mark ? (
-        <PixelMark cell={2} className="lg:[--cell:3px]" />
-      ) : (
-        <NavIcon item={item} lucideClassName="pm-dock-icon" />
-      ),
+      icon: <NavIcon item={item} lucideClassName="pm-dock-icon" />,
       show: pins.has(item.label) ? "both" : "desktop",
       srExtra: item.label === "time" ? runningSr : undefined,
       attrs: APP,

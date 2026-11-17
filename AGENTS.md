@@ -149,7 +149,7 @@ docs/                      # architecture, conventions, data model, design syste
       outside `dark:`. Never `eslint-disable` it.
     - **No blur** outside the menu bar and the dock (`backdrop-blur`/`glass` are banned
       elsewhere; use 95% opaque surfaces). No endless main-thread animation.
-    - **Logos**: `LogoMark`/`Logo`/`PixelMark`/`PixelLogo` are sized only by `cell` (integer
+    - **Logos**: `LogoMark` (the mark is the character's icon)/`Logo`/`PixelLogo` are sized only by `cell` (integer
       px per cell) — never `size-*`/`w-*`/`h-*` on them.
     - **Guide narration**: every public box gets `guide={{ key, say }}` (FrameSection) or
       `{...guideAttrs(key, say)}`; special parts `spot` / `spotAttrs`. Lines live in the

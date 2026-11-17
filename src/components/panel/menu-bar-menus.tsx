@@ -20,7 +20,7 @@ import {
   SunMoonIcon,
   XIcon,
 } from "lucide-react";
-import { PixelMark } from "@/components/brand/pixel-logo";
+import { LogoMark } from "@/components/brand/logo";
 import { dispatchGuide } from "@/components/shell/guide-events";
 import { localeGlyph } from "@/components/shared/locale-switcher";
 import {
@@ -113,7 +113,7 @@ function BrandMenu() {
   return (
     <MenubarMenu value="brand">
       <MenubarTrigger className="pm-brand" aria-label={t.nav.brandMenu}>
-        <PixelMark cell={2} />
+        <LogoMark cell={2} />
       </MenubarTrigger>
       <MenubarContent>
         <MenubarItem asChild>
@@ -179,11 +179,15 @@ function BrandMenu() {
   );
 }
 
-/** Bold app name: the module of the current path (longest prefix); `/panel` → appName. */
+/**
+ * Bold app name: the module of the current path (longest prefix); `/panel` →
+ * "Desktop" (like the window title), so the bar never repeats the brand name
+ * next to the character.
+ */
 function CurrentAppName() {
   const t = useT();
   const item = matchNav(usePanelPath());
-  return <>{item ? t.nav[item.label] : t.common.appName}</>;
+  return <>{item ? t.nav[item.label] : t.panel.desktop}</>;
 }
 
 function AppMenu() {
@@ -192,7 +196,7 @@ function AppMenu() {
     <MenubarMenu value="app">
       <MenubarTrigger className="pm-app" data-pm-app="">
         <span className="truncate">
-          <Suspense fallback={t.common.appName}>
+          <Suspense fallback={t.panel.desktop}>
             <CurrentAppName />
           </Suspense>
         </span>
@@ -213,7 +217,7 @@ function AppMenuItems() {
   const path = usePanelPath();
   const { shell, setShell, setPaletteOpen } = usePanelUI();
   const item = matchNav(path);
-  const name = item ? t.nav[item.label] : t.common.appName;
+  const name = item ? t.nav[item.label] : t.panel.desktop;
   const wide = (shell ?? defaultShell).wide;
   const atDesktop = path === "/panel" || path === "/panel/";
   return (
