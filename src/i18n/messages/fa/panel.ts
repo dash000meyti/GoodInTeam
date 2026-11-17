@@ -58,4 +58,7 @@ export const panel = {
   toggleMagnify: "روشن یا خاموش کردن بزرگ‌نمایی داک",
   toggleAutohide: "روشن یا خاموش کردن پنهان‌شدن خودکار داک",
   windowCommands: "پنجره و داک",
+  // short tab-bar labels (mobile); the dock tooltip keeps the full module name
+  tabTime: "زمان",
+  tabTasks: "کارها",
 } as const satisfies Record<string, string>;

@@ -63,7 +63,15 @@
     font-weight: 700;
   }
 
-  .pm-status,
+  /*
+   * Zero layout shift: the end group and the status hole generate no box, so
+   * when the session items stream in (a running-timer pill is wider than its
+   * skeleton) only the spacer shrinks — no box after it changes its start edge.
+   */
+  .pm-menubar > .os-mb-end,
+  .pm-status {
+    display: contents;
+  }
   .pm-status-skeleton {
     display: inline-flex;
     align-items: center;
@@ -321,8 +329,18 @@
     .panel-shell .os-dock-item[aria-current="page"] .pm-dock-icon {
       color: var(--foreground);
     }
-    .panel-shell .os-dock-item[aria-current="page"] .os-dock-label {
+    .panel-shell > .os-dock .os-dock-item[aria-current="page"] .os-dock-label {
       font-weight: 700;
+    }
+    /* long module names ("Tasks & reminders") truncate inside their tab */
+    .panel-shell > .os-dock li {
+      min-inline-size: 0;
+    }
+    .panel-shell > .os-dock .os-dock-label {
+      max-inline-size: 100%;
+      padding-inline: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
 

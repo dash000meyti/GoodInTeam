@@ -113,7 +113,7 @@ export function TimerPill({
                 <LiveDuration
                   since={latest.startedAt}
                   serverNow={serverNow}
-                  className="hidden font-mono text-xs tabular-nums sm:inline"
+                  className="hidden min-w-[4.6em] text-start font-mono text-xs tabular-nums sm:inline-block"
                 />
               )}
             </span>

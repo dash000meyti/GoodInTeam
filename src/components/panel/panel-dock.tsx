@@ -53,9 +53,15 @@ export function PanelDock({ role, prefs }: { role: UserRole; prefs: ShellPrefs }
       ? `${locale === "fa" ? "، " : ", "}${format(t.time.runningCount, { n: formatNumber(running, locale) })}`
       : undefined;
 
-  const link = (item: NavItem, mark = false): DockEntry => {
+  // Tab-bar labels for module names too long for a 5-tab bar (the desktop tile keeps the full name).
+  const tabLabel: Partial<Record<NavItem["label"], string>> = {
+    time: t.panel.tabTime,
+    tasks: t.panel.tabTasks,
+  };
+
+  const link = (item: NavItem, mark = false): DockEntry[] => {
     const Icon = item.icon;
-    return {
+    const entry: DockEntry & { kind: "link" } = {
       kind: "link",
       key: item.label,
       href: localePath(locale, item.href),
@@ -72,16 +78,23 @@ export function PanelDock({ role, prefs }: { role: UserRole; prefs: ShellPrefs }
       srExtra: item.label === "time" ? runningSr : undefined,
       attrs: APP,
     };
+    const short = pins.has(item.label) ? tabLabel[item.label] : undefined;
+    if (!short) return [entry];
+    // The tab is a mobile-only twin (not a dock app: the [data-dock-app] count stays per role).
+    return [
+      { ...entry, show: "desktop" },
+      { ...entry, key: `${item.label}-tab`, label: short, show: "mobile", attrs: undefined },
+    ];
   };
 
   const entries: DockEntry[] = [
     { kind: "slot", key: "me", show: "desktop", node: <MeTile guide={guide} /> },
     { kind: "sep", key: "sep-me", show: "desktop" },
   ];
-  if (overview?.items[0]) entries.push(link(overview.items[0], true));
+  if (overview?.items[0]) entries.push(...link(overview.items[0], true));
   for (const g of groups) {
     entries.push({ kind: "sep", key: `sep-${g.label}`, show: "desktop" });
-    for (const item of g.items) entries.push(link(item));
+    for (const item of g.items) entries.push(...link(item));
   }
   entries.push({ kind: "sep", key: "sep-site", show: "desktop" });
   entries.push({
@@ -169,7 +182,7 @@ export function PanelDock({ role, prefs }: { role: UserRole; prefs: ShellPrefs }
       {/* 8px hot strip that reveals an auto-hidden dock (≥1024px only, panel-shell.css). */}
       <div className="os-dock-zone" aria-hidden />
       <Dock label={t.panel.mainNav} tabbar="lg" magnify={p.magnify} n={n} seps={seps}>
-        <DockLinks entries={entries} running={running > 0 ? ["time"] : []} />
+        <DockLinks entries={entries} running={running > 0 ? ["time", "time-tab"] : []} />
       </Dock>
       <PanelGuideBubble guide={guide} />
       <CommandPalette role={role} extraCommands={commands} />

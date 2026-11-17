@@ -59,4 +59,6 @@ export const panel: Record<keyof typeof fa, string> = {
   toggleMagnify: "Toggle dock magnification",
   toggleAutohide: "Toggle dock auto-hide",
   windowCommands: "Window & dock",
+  tabTime: "Time",
+  tabTasks: "Tasks",
 };
