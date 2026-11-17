@@ -196,7 +196,8 @@ export function FrameEyebrow({ className, children }: { className?: string; chil
   return <span className={cn("frame-eyebrow", className)}>{children}</span>;
 }
 
-const HEADING_CLASS = {
+/** Heading scale of the frame system (spec §3.5); site-pages' `TitleCell` extends it. */
+export const HEADING_CLASS = {
   h1: "text-[36px] leading-[1.08] font-bold text-balance md:text-[56px] md:leading-[1.02] [:lang(en)_&]:tracking-[-0.035em] [:lang(fa)_&]:text-[32px] [:lang(fa)_&]:leading-[1.35] [:lang(fa)_&]:font-extrabold md:[:lang(fa)_&]:text-[48px] md:[:lang(fa)_&]:leading-[1.3]",
   h2: "text-[28px] leading-[1.15] font-bold text-balance md:text-[40px] md:leading-[1.08] [:lang(en)_&]:tracking-[-0.03em] [:lang(fa)_&]:leading-[1.4] [:lang(fa)_&]:font-extrabold md:[:lang(fa)_&]:text-[36px] md:[:lang(fa)_&]:leading-[1.35]",
 } as const;

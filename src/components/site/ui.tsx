@@ -16,6 +16,7 @@ import {
   FrameGrid,
   FrameSection,
   framePath,
+  HEADING_CLASS as FRAME_HEADING_CLASS,
   type FrameSpan,
   type FrameTone,
   type GuideLine,
@@ -138,16 +139,13 @@ export function ArrowLink({
 }
 
 /**
- * Heading scale of the frame system (spec §3.5): the same literal classes as
- * foundation's FrameHeaderCell, plus a smaller `article` h1 for long titles.
- * TODO(foundation): FrameHeaderCell has no slot before the eyebrow (breadcrumbs)
- * and no `spot`, so TitleCell mirrors its heading classes; export them from frame.tsx.
+ * Heading scale of the frame system (spec §3.5): foundation's
+ * `FrameHeaderCell` scale, plus a smaller `article` h1 for long titles and h3.
  */
 export const HEADING_CLASS = {
-  h1: "text-[36px] leading-[1.08] font-bold text-balance md:text-[56px] md:leading-[1.02] [:lang(en)_&]:tracking-[-0.035em] [:lang(fa)_&]:text-[32px] [:lang(fa)_&]:leading-[1.35] [:lang(fa)_&]:font-extrabold md:[:lang(fa)_&]:text-[48px] md:[:lang(fa)_&]:leading-[1.3]",
+  ...FRAME_HEADING_CLASS,
   article:
     "text-[32px] leading-[1.12] font-bold text-balance md:text-[44px] md:leading-[1.08] [:lang(en)_&]:tracking-[-0.03em] [:lang(fa)_&]:text-[28px] [:lang(fa)_&]:leading-[1.45] [:lang(fa)_&]:font-extrabold md:[:lang(fa)_&]:text-[38px] md:[:lang(fa)_&]:leading-[1.4]",
-  h2: "text-[28px] leading-[1.15] font-bold text-balance md:text-[40px] md:leading-[1.08] [:lang(en)_&]:tracking-[-0.03em] [:lang(fa)_&]:leading-[1.4] [:lang(fa)_&]:font-extrabold md:[:lang(fa)_&]:text-[36px] md:[:lang(fa)_&]:leading-[1.35]",
   h3: "text-xl leading-[1.3] font-bold text-balance [:lang(fa)_&]:leading-[1.6]",
 } as const;
 
