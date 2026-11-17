@@ -571,7 +571,10 @@ function boot() {
         band = band.filter((b) => b !== e.target);
         if (e.isIntersecting) band.push(e.target);
       }
-      const c = band[band.length - 1] ?? null;
+      // Last activation wins, except that an unseen first box keeps the band:
+      // at scrollY 0 a short first box shares it with the next one (§9 first-box rule).
+      const c =
+        (first && band.includes(first) && !seen(first) ? first : band[band.length - 1]) ?? null;
       input();
       if (c !== cand) {
         cand = c;
