@@ -240,4 +240,31 @@ export const designSystem: Record<keyof typeof fa, string> = {
   sec_osShell: "OS shell",
   brandIntro: "The pixel logo, the brand family and colour rules.",
   osShellIntro: "Menu bar, dock, windows and frames.",
+
+  // ── Brand section (catalog) ──
+  brandFamily: "Brand family",
+  brandFamilyHint:
+    '"Good In" stays; the second word changes. The logo is always Latin and is sized only by cell.',
+  brandMark: "GI mark (11×11)",
+  brandIcons: "Pixel icons",
+  brandIconsHint: "12×12, two tones at most; only arrow mirrors in RTL. Shown at cell 2 and 1.",
+  brandAvatar: "Virtual me: poses",
+  brandAvatarHint:
+    "Literal colours in both modes; the yellow hoodie never sits directly on a yellow surface.",
+  brandSprite: "Guide sprite",
+  brandSpriteHint: "Each state on a light and a dark surface; the colours must stay identical.",
+  brandContrast: "Contrast rules",
+  brandContrastHint:
+    "Yellow is a fill; text, links and icons on light surfaces use the -ink tokens.",
+  brandColour: "Colour",
+  brandAllowed: "Allowed",
+  brandNever: "Never",
+  brandNonText: "Non-text states",
+  brandNonTextHint: "Solid focus rings, inset edges on yellow fills and ink borders.",
+  brandTokens: "Chrome tokens",
+  brandTokensHint: "Logo tones, wallpaper, frames, markers, lights and guide (light · dark).",
+  osShellFrame: "Framed box",
+  osShellFrameHint:
+    "A header row stacked on a 3-column grid; the line between the two grids must show.",
+  osShellWindow: "Window with a path list",
 };

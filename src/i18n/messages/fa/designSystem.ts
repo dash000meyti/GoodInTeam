@@ -238,4 +238,30 @@ export const designSystem = {
   sec_osShell: "پوستهٔ سیستم‌عامل",
   brandIntro: "لوگوی پیکسلی، خانوادهٔ برندها و قواعد رنگ.",
   osShellIntro: "نوار منو، داک، پنجره‌ها و قاب‌ها.",
+
+  // ── Brand section (catalog) ──
+  brandFamily: "خانوادهٔ برند",
+  brandFamilyHint:
+    "«گودین» ثابت است؛ کلمهٔ دوم عوض می‌شود. لوگو همیشه لاتین است و فقط با cell بزرگ می‌شود.",
+  brandMark: "نشان GI (۱۱×۱۱)",
+  brandIcons: "آیکون‌های پیکسلی",
+  brandIconsHint:
+    "۱۲×۱۲، حداکثر دو رنگ؛ فقط arrow در راست‌به‌چپ قرینه می‌شود. در اندازهٔ cell ۲ و ۱.",
+  brandAvatar: "منِ مجازی: حالت‌ها",
+  brandAvatarHint: "رنگ‌های ثابت در هر دو حالت؛ هودی زرد هیچ‌وقت مستقیم روی سطح زرد نمی‌نشیند.",
+  brandSprite: "اسپرایت راهنما",
+  brandSpriteHint: "هر حالت روی سطح روشن و تیره؛ رنگ‌ها باید یکسان بمانند.",
+  brandContrast: "قواعد کنتراست",
+  brandContrastHint:
+    "زرد فقط پرکننده است؛ متن، پیوند و آیکون روی سطح روشن توکن‌های ‎-ink‎ را می‌گیرند.",
+  brandColour: "رنگ",
+  brandAllowed: "مجاز",
+  brandNever: "هرگز",
+  brandNonText: "حالت‌های غیرمتنی",
+  brandNonTextHint: "حلقهٔ فوکوس توپر، لبه‌های توکار برای پرکننده‌های زرد و جوهر برای حاشیه‌ها.",
+  brandTokens: "توکن‌های پوسته",
+  brandTokensHint: "رنگ‌های لوگو، کاغذ دیواری، قاب‌ها، نشانگرها، چراغ‌ها و راهنما (روشن · تیره).",
+  osShellFrame: "جعبهٔ قاب‌دار",
+  osShellFrameHint: "ردیف سرتیتر روی یک شبکهٔ سه‌ستونی؛ خط بین دو شبکه باید دیده شود.",
+  osShellWindow: "پنجره با چند مسیر",
 } as const satisfies Record<string, string>;

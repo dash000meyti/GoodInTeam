@@ -3,6 +3,7 @@ import { BotIcon } from "lucide-react";
 import { PageHeader } from "@/components/panel/page-header";
 import { getLocale, getMessages } from "@/i18n/server";
 import { panelContext } from "@/server/page-context";
+import { BrandSection } from "./_components/sections/brand";
 import { BadgesSection, ButtonsSection } from "./_components/sections/buttons-badges";
 import { ColorsSection } from "./_components/sections/colors";
 import { DataSection } from "./_components/sections/data-display";
@@ -14,6 +15,7 @@ import {
   NavigationSection,
   OverlaysSection,
 } from "./_components/sections/interactive";
+import { OsShellSection } from "./_components/sections/os-shell";
 import { SurfacesSection } from "./_components/sections/surfaces";
 import { TypographySection } from "./_components/sections/typography";
 import { Toc } from "./_components/toc";
@@ -31,6 +33,8 @@ export default async function DesignSystemPage() {
   const { t, href, locale, now } = await panelContext({ roles: ["owner", "admin"] });
   const d = t.designSystem;
   const toc = [
+    { id: "brand", label: d.sec_brand },
+    { id: "os-shell", label: d.sec_osShell },
     { id: "colors", label: d.sec_colors },
     { id: "typography", label: d.sec_typography },
     { id: "buttons", label: d.sec_buttons },
@@ -79,6 +83,8 @@ export default async function DesignSystemPage() {
             </div>
           </aside>
 
+          <BrandSection t={t} />
+          <OsShellSection t={t} />
           <ColorsSection t={t} />
           <TypographySection t={t} />
           <ButtonsSection t={t} />
