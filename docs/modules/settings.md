@@ -102,10 +102,41 @@ convert stored amounts. Saving calls `updateTag("content")` (public pages read t
 
 ### Appearance
 
-Theme mode (next-themes), color preset (`usePreset()` from `shared/theme-controls` — synced
-across components via a MutationObserver on `<html data-preset>`) and sidebar mode
-(`usePanelUI()`), all stored per browser. Previews re-skin themselves with
-`presetStyle(preset)` from `shared/design-tokens`.
+Three cards, all stored per browser (`appearance-settings.tsx`):
+
+- **Mode** — light / dark / system (next-themes). The previews are `DesktopMock`s: a tiny OS
+  desktop (menu bar, window, dock) drawn with grey tokens, independent of the active theme.
+- **Primary color** — the 7 presets (`usePreset()` from `shared/theme-controls`, synced across
+  components via a MutationObserver on `<html data-preset>`, persisted as `gt-preset` in
+  localStorage). Every swatch preview renders `className={PRESET_SCOPE_CLASS}` with
+  `style={presetStyle(p)}` (`shared/design-tokens`), so `.preset-scope` re-derives that preset's
+  ink, hover and ring and each card shows its own colours in both modes (spec §3.1, A39).
+- **Desktop & Dock** (`settings.desktopDock`; its hint says it applies on large screens) — dock
+  size S/M/L (40/48/56px), Magnification, Automatically hide the dock, Full-width windows and
+  Guide tips, with a live `DesktopMock`. The same controls sit in the menu bar's Control Center.
+
+**The `gt-shell` cookie** (`components/panel/panel-prefs.ts`, unit-tested) holds the first four:
+`gt-shell=<dock>.<magnify>.<autohide>.<wide>`, e.g. `48.1.0.0` (the default when absent), one
+year, `path=/`, `samesite=lax`. `readShellCookie()` is strict (anything but `40|48|56` and three
+bits is ignored). It is applied twice so the first paint is right:
+
+- before paint by `shellInitScript` (an `InlineScript` in `panel/layout.tsx`): `data-dock-size`,
+  `data-dock-autohide` and `data-window-wide` on `<html>` (os-shell.css turns them into
+  `--dock-pref`, the reduced `--dock-space` and the wide window margins);
+- on the server by `SessionDock` (magnification is not layout, so the dock reads it there).
+
+`PanelUIProvider.setShell(partial)` writes the cookie and the attributes and re-applies them on
+mount (the inline script is inert on soft navigation, e.g. login → panel). Auto-hide only applies
+at ≥1024px: below that the dock is a tab bar, the only navigation, and never slides away even
+with the preference on. **Guide tips** is `localStorage gt-guide-tips` (`"off"` or absent): the
+quiet panel guide's one-time peek per module. The old sidebar preference is gone: the provider
+expires the `gt-sidebar-collapsed` cookie on first load and the `settings.sidebar*` keys were
+removed.
+
+**Brand name (deployment note).** The Persian brand is «گودین تیم» / "Good In Team"
+([brand.md](../brand.md)). `settings.profile.brandName` is stored data: after deploying the
+rename, edit it in **Settings → Site profile** (the code default and the seed already use the
+new name).
 
 ### Data & backup (owner)
 
@@ -141,7 +172,10 @@ sub-route therefore has a one-line `loading.tsx` re-exporting `settings/loading.
 
 ## Design system catalog
 
-`/panel/design-system` documents tokens (preset scales, surfaces light/dark, status, greys,
+`/panel/design-system` documents the brand (pixel logo, icons, avatar, contrast rules), the
+**OS shell** (`sections/os-shell.tsx`: `MenuBarShell` + the Radix `ui/menubar.tsx`, a non-fixed
+dock sample via `className="pm-dock-demo"`, windows, `OsLights`, the fixed-width `OsClock`, frame
+primitives), tokens (preset scales, surfaces light/dark, status, greys,
 charts, elevation), typography, buttons, badges, cards/StatCard/EmptyState/PageHeader, form
 controls (incl. Jalali + Gregorian DatePicker side by side), overlays, navigation, data
 display, charts, markdown and toasts. Every example is an `<Example code="…">` with a
