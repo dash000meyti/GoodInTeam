@@ -8,4 +8,140 @@
  */
 
 @layer components {
+  /* ── 01 · hero ── */
+  /* availability eyebrow: the chip's square dot shows the state */
+  .frame-eyebrow.home-avail-on::before {
+    background: var(--success);
+  }
+  .frame-eyebrow.home-avail-off::before {
+    background: var(--warning);
+  }
+  /* the diagram's one soft light: a gradient, never a blur */
+  .home-diagram-glow {
+    background: radial-gradient(closest-side, var(--surface-glow), transparent);
+  }
+  /* packets: 3px squares (pathLength 100), resting under the start ring / the hub;
+     the legacy rule caps them at 6 runs */
+  .home-diagram .gt-packet {
+    stroke-dasharray: 2 100;
+    stroke-dashoffset: 102;
+  }
+  .home-diagram .os-lights > span::after {
+    opacity: 1;
+  }
+
+  /* ── 02 · brand family: hovering/focusing a brand cell swaps the big logo's suffix ── */
+  .brand-family:has([data-brand="studio"]:is(:hover, :focus-within)) .gi-swap .gi-sfx,
+  .brand-family:has([data-brand="code"]:is(:hover, :focus-within)) .gi-swap .gi-sfx {
+    opacity: 0;
+  }
+  .brand-family:has([data-brand="studio"]:is(:hover, :focus-within))
+    .gi-swap
+    .gi-sfx[data-sfx="STUDIO"],
+  .brand-family:has([data-brand="code"]:is(:hover, :focus-within))
+    .gi-swap
+    .gi-sfx[data-sfx="CODE"] {
+    opacity: 1;
+    animation: home-wipe 0.24s steps(3, end) both;
+  }
+
+  /* ── 03 · trust: a 40px LTR track faded at both ends; it pauses on hover and keyboard focus.
+     (Sizes live here, not in utilities, so the reduced-motion rules below can undo them.) ── */
+  .home-trust .gt-marquee-wrap {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+  .home-trust .gt-marquee {
+    inline-size: max-content;
+    block-size: 40px;
+  }
+  .home-trust .gt-marquee-wrap:is(:hover, :focus-within) .gt-marquee {
+    animation-play-state: paused;
+  }
+  .home-trust:has(.gt-marquee-wrap:focus-visible) {
+    outline: 2px solid var(--ring);
+    outline-offset: -6px;
+  }
+
+  /* ── 06 · process: the checked tab and the window path (zero JS) ── */
+  .home-process:has(#how-portal:checked) .home-tab[data-tab="portal"],
+  .home-process:has(#how-progress:checked) .home-tab[data-tab="progress"],
+  .home-process:has(#how-contracts:checked) .home-tab[data-tab="contracts"],
+  .home-process:has(#how-invoices:checked) .home-tab[data-tab="invoices"] {
+    background: var(--card);
+    box-shadow:
+      inset calc(3px * var(--dir)) 0 0 var(--primary),
+      inset calc(4px * var(--dir)) 0 0 rgb(0 0 0 / 0.12);
+  }
+  .home-process:has(#how-portal:checked) .home-tab[data-tab="portal"] .home-tab-name,
+  .home-process:has(#how-progress:checked) .home-tab[data-tab="progress"] .home-tab-name,
+  .home-process:has(#how-contracts:checked) .home-tab[data-tab="contracts"] .home-tab-name,
+  .home-process:has(#how-invoices:checked) .home-tab[data-tab="invoices"] .home-tab-name {
+    font-weight: 800;
+  }
+  .home-tab:hover {
+    background: var(--card);
+  }
+  /* PORTAL is the first path and shows by default (pixel.css) */
+  .home-process:has(#how-progress:checked) .px-set > [data-path-id],
+  .home-process:has(#how-contracts:checked) .px-set > [data-path-id],
+  .home-process:has(#how-invoices:checked) .px-set > [data-path-id] {
+    display: none;
+  }
+  .home-process:has(#how-progress:checked) .px-set > [data-path-id="PROGRESS"],
+  .home-process:has(#how-contracts:checked) .px-set > [data-path-id="CONTRACTS"],
+  .home-process:has(#how-invoices:checked) .px-set > [data-path-id="INVOICES"] {
+    display: inline;
+  }
+}
+
+/* Reduced motion (OS setting or the site switch): a static, wrapped name list. */
+@media (prefers-reduced-motion: reduce) {
+  @layer components {
+    .home-trust .gt-marquee {
+      animation: none;
+      inline-size: auto;
+      flex-wrap: wrap;
+      justify-content: center;
+      block-size: auto;
+      row-gap: 8px;
+    }
+    .home-trust .gt-marquee > [aria-hidden="true"] {
+      display: none;
+    }
+    .home-trust .gt-marquee-wrap {
+      mask-image: none;
+    }
+    .brand-family .gi-swap .gi-sfx {
+      animation: none;
+    }
+  }
+}
+@layer components {
+  html[data-motion="reduce"] .home-trust .gt-marquee {
+    animation: none;
+    inline-size: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    block-size: auto;
+    row-gap: 8px;
+  }
+  html[data-motion="reduce"] .home-trust .gt-marquee > [aria-hidden="true"] {
+    display: none;
+  }
+  html[data-motion="reduce"] .home-trust .gt-marquee-wrap {
+    mask-image: none;
+  }
+  html[data-motion="reduce"] .brand-family .gi-swap .gi-sfx {
+    animation: none;
+  }
+}
+
+/* the brand suffix enters with the cycle's 3-step wipe */
+@keyframes home-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
 }
