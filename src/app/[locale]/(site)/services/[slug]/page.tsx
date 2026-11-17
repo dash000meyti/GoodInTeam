@@ -4,20 +4,38 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ArrowUpLeftIcon, CheckIcon } from "lucide-react";
+import { PixelIcon } from "@/components/brand/pixel-art";
+import { PixelLogo } from "@/components/brand/pixel-logo";
+import { brandById, brandOf } from "@/components/brand/brands";
 import { SetAlternates } from "@/components/site/alternates";
-import { Faq, generalFaq } from "@/components/site/faq";
+import { FaqBox, generalFaq } from "@/components/site/faq";
+import {
+  FrameCell,
+  FrameFiller,
+  FrameGrid,
+  FrameSection,
+  framePath,
+} from "@/components/site/frame";
 import { ids, JsonLd } from "@/components/site/json-ld";
 import { Breadcrumbs } from "@/components/site/nav-bits";
-import { decodeParam, homeCrumb, notFoundMetadata, withQuery } from "@/components/site/page-utils";
+import {
+  decodeParam,
+  fillers,
+  homeCrumb,
+  notFoundMetadata,
+  plainSpans,
+  withQuery,
+} from "@/components/site/page-utils";
 import { absoluteUrl, pageMetadata, postAlternates } from "@/components/site/seo";
 import { ServiceIcon } from "@/components/site/service-icon";
 import { ArticleSkeleton } from "@/components/site/skeletons";
-import { Container } from "@/components/site/ui";
+import { pillClass, TitleCell, TitleRow } from "@/components/site/ui";
 import { localePath, type Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
 import { getLocale, getMessages } from "@/i18n/server";
 import { postHref, postPath } from "@/lib/content";
 import { markdownToText } from "@/lib/markdown";
+import { cn } from "@/lib/utils";
 import {
   getPublishedPost,
   getTranslations,
@@ -58,6 +76,7 @@ async function ServiceDetail({ locale, t, slug }: { locale: Locale; t: Messages;
   const href = postHref(locale, post);
   const own = all.find((x) => x.id === post.id);
   const others = all.filter((x) => x.id !== post.id);
+  const brand = brandById(brandOf(post.meta));
   const faq = (
     Array.isArray(post.meta.faq) && post.meta.faq.length ? post.meta.faq : generalFaq(t)
   ) as FaqItem[];
@@ -83,90 +102,135 @@ async function ServiceDetail({ locale, t, slug }: { locale: Locale; t: Messages;
           },
         }}
       />
-      <section className="relative isolate">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 -top-16 bottom-0 -z-10 overflow-hidden"
-        >
-          <div aria-hidden className="bg-grid mask-fade-b absolute inset-0 -z-10 opacity-70" />
-          <div aria-hidden className="gt-glow end-[15%] -top-40 -z-10 size-96 bg-primary/20" />
-        </div>
-        <Container className="pt-10 pb-14 sm:pt-14">
-          <Breadcrumbs
-            items={[
-              homeCrumb(locale),
-              { name: s.servicesPageTitle, path: localePath(locale, "/services") },
-              { name: post.title, path: href },
-            ]}
-          />
-          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-center">
-            <div className="space-y-6">
-              <span className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-dark text-white shadow-primary">
-                <ServiceIcon name={post.meta.icon} className="size-8" />
+      <FrameSection
+        id="top"
+        first
+        labelledBy="top-title"
+        guide={{ key: "service_detail", say: t.guide.service_detail }}
+        strip={{ index: 1, path: framePath("GOOD-IN", brand.suffix, "SERVICE") }}
+      >
+        <FrameGrid cols="2-1">
+          <TitleCell
+            as="h1"
+            size="article"
+            titleId="top-title"
+            className="lg:min-h-[260px]"
+            crumbs={
+              <Breadcrumbs
+                items={[
+                  homeCrumb(locale),
+                  { name: s.servicesPageTitle, path: localePath(locale, "/services") },
+                  { name: post.title, path: href },
+                ]}
+              />
+            }
+            eyebrow={
+              <Link
+                href={localePath(locale, `/services#${brand.id}`)}
+                className="inline-flex items-center gap-2"
+              >
+                <PixelIcon name={brand.icon} cell={1} />
+                {t.nav[brand.label]}
+              </Link>
+            }
+            title={
+              <span className="inline-flex items-center gap-4">
+                <span className="hidden size-12 shrink-0 items-center justify-center rounded-[10px] border border-frame-line bg-card shadow-[-3px_-3px_0_0_var(--brand-frame)] sm:flex rtl:shadow-[3px_-3px_0_0_var(--brand-frame)]">
+                  <ServiceIcon name={post.meta.icon} className="size-6" />
+                </span>
+                <span>{post.title}</span>
               </span>
-              <h1 className="text-4xl leading-[1.15] font-black tracking-tight text-balance sm:text-5xl">
-                {post.title}
-              </h1>
-              {post.excerpt && (
-                <p className="max-w-2xl text-lg leading-8 text-muted-foreground">{post.excerpt}</p>
+            }
+            subtitle={post.excerpt}
+          />
+          <FrameCell
+            tone="dots"
+            aria-hidden
+            className="hidden items-center justify-center lg:flex lg:min-h-[200px]"
+          >
+            <span dir="ltr">
+              <PixelLogo suffix={brand.suffix} cell={4} />
+            </span>
+          </FrameCell>
+        </FrameGrid>
+      </FrameSection>
+
+      <FrameSection
+        id="details"
+        ariaLabel={post.title}
+        guide={{ key: "service_body", say: t.guide.service_body }}
+        strip={{ index: 2, path: framePath("GOOD-IN", brand.suffix, "SERVICE", "DETAILS") }}
+      >
+        <FrameGrid cols="2-1">
+          <FrameCell pad="lg" className="min-w-0">
+            <div
+              className="prose-gt max-w-[70ch]"
+              dangerouslySetInnerHTML={{ __html: rendered.html }}
+            />
+          </FrameCell>
+          <FrameCell tone="card" as="aside">
+            <div className="flex flex-col gap-6 lg:sticky lg:below-chrome">
+              {!!own?.highlights.length && (
+                <div>
+                  <p className="mb-4 text-sm font-black">{s.whatYouGet}</p>
+                  <ul className="space-y-3">
+                    {own.highlights.map((h) => (
+                      <li key={h} className="flex items-start gap-3 text-sm font-semibold">
+                        <span className="flex size-6 shrink-0 items-center justify-center rounded-[6px] bg-primary text-primary-foreground">
+                          <CheckIcon className="size-3.5" aria-hidden />
+                        </span>
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
               <Link
                 href={withQuery(localePath(locale, "/contact"), { service: post.slug })}
-                className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-7 text-[15px] font-bold text-primary-foreground shadow-primary transition-colors hover:bg-primary-hover"
+                className={cn(pillClass.primary, "h-12 justify-center")}
               >
-                {s.ctaButton} <ArrowUpLeftIcon className="size-4 ltr:rotate-90" />
+                {s.ctaButton} <ArrowUpLeftIcon className="size-4 ltr:rotate-90" aria-hidden />
               </Link>
             </div>
-            {!!own?.highlights.length && (
-              <div className="rounded-3xl border border-border bg-card p-6 shadow-card">
-                <p className="mb-4 text-sm font-black">{s.whatYouGet}</p>
-                <ul className="space-y-3">
-                  {own.highlights.map((h) => (
-                    <li key={h} className="flex items-start gap-3 text-sm font-semibold">
-                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary-ink">
-                        <CheckIcon className="size-3.5" />
-                      </span>
-                      {h}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </Container>
-      </section>
-      <Container className="max-w-3xl">
-        <div className="prose-gt" dangerouslySetInnerHTML={{ __html: rendered.html }} />
-      </Container>
-      <Container className="mt-16 max-w-4xl">
-        <Faq items={faq} title={s.faqTitle} />
-      </Container>
-      {others.length > 0 && (
-        <Container className="mt-20">
-          <h2 className="mb-6 text-2xl font-black tracking-tight">{s.otherServices}</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {others.map((o) => (
-              <Link
-                key={o.id}
-                href={postHref(locale, o)}
-                className="gt-lift flex items-center gap-4 rounded-2xl border border-border bg-card p-5"
-              >
-                <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary-ink">
-                  <ServiceIcon name={o.meta.icon} className="size-5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block font-extrabold">{o.title}</span>
-                  {o.excerpt && (
-                    <span className="block truncate text-sm text-muted-foreground">
-                      {o.excerpt}
+          </FrameCell>
+        </FrameGrid>
+        {others.length > 0 && (
+          <>
+            <TitleRow title={s.otherServices} titleId="others-title" size="h3" />
+            <FrameGrid cols={3}>
+              {others.map((o) => (
+                <FrameCell key={o.id} hover className="group">
+                  <Link
+                    href={postHref(locale, o)}
+                    className="flex items-center gap-4 after:absolute after:inset-0"
+                  >
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-[8px] border border-frame-line bg-card">
+                      <ServiceIcon name={o.meta.icon} className="size-5" />
                     </span>
-                  )}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </Container>
-      )}
+                    <span className="min-w-0">
+                      <span className="block font-extrabold group-hover:text-primary-ink">
+                        {o.title}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {t.nav[brandById(brandOf(o.meta)).label]}
+                      </span>
+                    </span>
+                  </Link>
+                </FrameCell>
+              ))}
+              <FrameFiller units={fillers(plainSpans(others.length), 3)} />
+            </FrameGrid>
+          </>
+        )}
+      </FrameSection>
+
+      <FaqBox
+        items={faq}
+        title={s.faqTitle}
+        guide={{ key: "service_faq", say: t.guide.service_faq }}
+        index={3}
+        path={framePath("GOOD-IN", brand.suffix, "SERVICE", "FAQ")}
+      />
     </>
   );
 }
@@ -175,7 +239,9 @@ export default async function ServicePage({ params }: PageProps<"/[locale]/servi
   const locale = await getLocale();
   const t = getMessages(locale);
   return (
-    <Suspense fallback={<ArticleSkeleton />}>
+    <Suspense
+      fallback={<ArticleSkeleton guide={{ key: "service_detail", say: t.guide.service_detail }} />}
+    >
       {params.then(({ slug }) => (
         <ServiceDetail locale={locale} t={t} slug={decodeParam(slug)} />
       ))}
