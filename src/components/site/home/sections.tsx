@@ -193,7 +193,10 @@ export async function FeaturedWorkCells({ locale, t }: { locale: Locale; t: Mess
           <WorkCard post={p} locale={locale} t={t} variant="cell" />
         </FrameCell>
       ))}
-      <FrameCell hover className="flex min-h-[240px] flex-col justify-between gap-8">
+      <FrameCell
+        hover
+        className="flex min-h-[160px] flex-col justify-between gap-6 md:min-h-[240px] md:gap-8"
+      >
         <div className="flex flex-col gap-2">
           <p className="text-sm font-semibold text-muted-foreground">{t.site.viewAllWork}</p>
           <p className="text-2xl leading-snug font-extrabold [:lang(en)_&]:tracking-tight">
@@ -244,7 +247,7 @@ export function FeaturedWorkCellsSkeleton() {
       <FrameCell>
         <CardCellSkeleton kind="work" />
       </FrameCell>
-      <FrameCell className="flex min-h-[240px] flex-col justify-between gap-8">
+      <FrameCell className="flex min-h-[160px] flex-col justify-between gap-6 md:min-h-[240px] md:gap-8">
         <Skeleton className="h-16 w-40" />
         <Skeleton className="size-12 self-end" />
       </FrameCell>
@@ -255,7 +258,7 @@ export function FeaturedWorkCellsSkeleton() {
 
 // ─── 05 · services: [header], up to 5 services, fillers complete to 6 ────────
 
-const SERVICE_CELL = "flex min-h-[340px] flex-col gap-5";
+const SERVICE_CELL = "flex flex-col gap-5 md:min-h-[340px]";
 
 export async function ServicesCells({ locale, t }: { locale: Locale; t: Messages }) {
   await connection();
@@ -442,7 +445,11 @@ export async function LatestCells({ locale, t }: { locale: Locale; t: Messages }
 
 function ReadBlogCell({ locale, t }: { locale: Locale; t: Messages }) {
   return (
-    <FrameCell span="lg2" hover className="flex min-h-[240px] flex-col justify-between gap-8">
+    <FrameCell
+      span="lg2"
+      hover
+      className="flex min-h-[160px] flex-col justify-between gap-6 md:min-h-[240px] md:gap-8"
+    >
       <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-muted-foreground">{t.site.latestEyebrow}</p>
         <p className="text-2xl leading-snug font-extrabold [:lang(en)_&]:tracking-tight">
