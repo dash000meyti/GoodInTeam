@@ -7,6 +7,8 @@ import {
   CalendarDaysIcon,
   CopyIcon,
   FolderKanbanIcon,
+  LogOutIcon,
+  MonitorIcon,
   MoreHorizontalIcon,
   PanelLeftIcon,
   PanelRightIcon,
@@ -69,6 +71,26 @@ import { DatePicker } from "@/components/shared/date-picker";
 import { SelectField } from "@/components/shared/select-field";
 import { SwitchInput } from "@/components/shared/switch-input";
 import { usePanelUI } from "@/components/panel/panel-ui";
+import { PixelMark } from "@/components/brand/pixel-logo";
+import { MenuBarShell } from "@/components/shell/menubar-shell";
+import { ClockSkeleton, OsClock } from "@/components/shell/os-clock";
+import {
+  Menubar,
+  MenubarCheckboxItem,
+  MenubarContent,
+  MenubarItem,
+  MenubarLabel,
+  MenubarMenu,
+  MenubarRadioGroup,
+  MenubarRadioItem,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
+import { localeMeta, locales } from "@/i18n/config";
 import { I18nProvider, useI18n, useT } from "@/i18n/client";
 
 // ─── Forms ──────────────────────────────────────────────────────────────────
@@ -384,5 +406,114 @@ export function ToastDemo() {
         {d.toastPromise}
       </Button>
     </>
+  );
+}
+
+// ─── OS shell ───────────────────────────────────────────────────────────────
+
+/**
+ * A static menu bar (MenuBarShell is server-safe; here it gets `relative` so it
+ * stays in the flow) with a Radix Menubar: brand, App, a checkbox, a radio
+ * group, a submenu and a destructive row — the parts the panel menu bar uses.
+ */
+export function MenubarDemo() {
+  const t = useT();
+  const d = t.designSystem;
+  const [wide, setWide] = useState(false);
+  const [mode, setMode] = useState("system");
+  const { dir } = useI18n();
+  return (
+    <MenuBarShell
+      label={d.osShellMenubarDemo}
+      // In the flow and opaque: the real menu bar is the page's only blurred bar.
+      className="relative top-auto z-0 w-full rounded-lg border [backdrop-filter:none] [-webkit-backdrop-filter:none] bg-background"
+      start={
+        <Menubar dir={dir} loop>
+          <MenubarMenu>
+            <MenubarTrigger className="px-1.5" aria-label={t.nav.brandMenu}>
+              <PixelMark cell={2} />
+            </MenubarTrigger>
+            <MenubarContent>
+              <MenubarItem>
+                <MonitorIcon aria-hidden /> {t.panel.desktop}
+              </MenubarItem>
+              <MenubarItem>
+                <SettingsIcon aria-hidden /> {t.common.settings}
+              </MenubarItem>
+              <MenubarSeparator />
+              <MenubarItem variant="destructive">
+                <LogOutIcon aria-hidden /> {t.common.signOut}
+              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+          <MenubarMenu>
+            <MenubarTrigger className="font-bold">{t.nav.time}</MenubarTrigger>
+            <MenubarContent>
+              <MenubarItem>
+                <TimerIcon aria-hidden /> {t.panel.startTimer}
+              </MenubarItem>
+              <MenubarCheckboxItem checked={wide} onCheckedChange={(v) => setWide(v === true)}>
+                {t.panel.zoomWindow}
+              </MenubarCheckboxItem>
+              <MenubarSeparator />
+              <MenubarItem>
+                <SearchIcon aria-hidden /> {t.common.commandPalette}
+                <MenubarShortcut>⌘K</MenubarShortcut>
+              </MenubarItem>
+            </MenubarContent>
+          </MenubarMenu>
+          <MenubarMenu>
+            <MenubarTrigger>{t.common.view}</MenubarTrigger>
+            <MenubarContent>
+              <MenubarLabel>{t.common.appearance}</MenubarLabel>
+              <MenubarRadioGroup value={mode} onValueChange={setMode}>
+                <MenubarRadioItem value="light">{t.common.light}</MenubarRadioItem>
+                <MenubarRadioItem value="dark">{t.common.dark}</MenubarRadioItem>
+                <MenubarRadioItem value="system">{t.common.system}</MenubarRadioItem>
+              </MenubarRadioGroup>
+              <MenubarSeparator />
+              <MenubarSub>
+                <MenubarSubTrigger>{t.common.language}</MenubarSubTrigger>
+                <MenubarSubContent>
+                  {locales.map((l) => (
+                    <MenubarItem key={l} lang={l}>
+                      {localeMeta[l].label}
+                    </MenubarItem>
+                  ))}
+                </MenubarSubContent>
+              </MenubarSub>
+            </MenubarContent>
+          </MenubarMenu>
+        </Menubar>
+      }
+      end={
+        <>
+          <button type="button" className="os-mb-item os-mb-icon" aria-label={t.common.search}>
+            <SearchIcon className="size-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className="os-mb-item os-mb-icon"
+            aria-label={t.common.controlCenter}
+          >
+            <SlidersHorizontalIcon className="size-4" aria-hidden />
+          </button>
+        </>
+      }
+    />
+  );
+}
+
+/** The studio clock (fixed width) above its same-size skeleton, in the current locale. */
+export function ClockDemo() {
+  const t = useT();
+  const { locale } = useI18n();
+  return (
+    <span className="flex flex-col items-end gap-2 text-[13px] font-medium">
+      <OsClock locale={locale} tz="Asia/Tehran" label={t.common.studioTime} />
+      <span className="rounded-sm bg-muted">
+        <ClockSkeleton />
+      </span>
+    </span>
   );
 }

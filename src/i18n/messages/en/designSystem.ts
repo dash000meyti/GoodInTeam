@@ -267,4 +267,15 @@ export const designSystem: Record<keyof typeof fa, string> = {
   osShellFrameHint:
     "A header row stacked on a 3-column grid; the line between the two grids must show.",
   osShellWindow: "Window with a path list",
+  osShellMenubar: "Menu bar",
+  osShellMenubarHint:
+    "One Radix Menubar root for every menu: arrow keys move between menus and mirror in RTL.",
+  osShellMenubarDemo: "Menu bar sample",
+  osShellDock: "Dock",
+  osShellDockHint:
+    "Tiles are named by their visible label; the dot marks the current page or a running app. Below 1024px it becomes a tab bar.",
+  osShellDockDemo: "Dock sample",
+  osShellLights: "Lights and clock",
+  osShellLightsHint:
+    "Octagon lights are decorative (pointer-only in the panel window); the clock has a fixed width so the bar never shifts.",
 };
