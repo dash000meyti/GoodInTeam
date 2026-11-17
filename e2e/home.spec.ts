@@ -82,6 +82,8 @@ for (const path of ["/", "/en"]) {
       const sfx = (s: string) => page.locator(`#brands .gi-swap .gi-sfx[data-sfx=${s}]`);
       await expect(sfx("TEAM")).toHaveCSS("opacity", "1");
       await expect(sfx("STUDIO")).toHaveCSS("opacity", "0");
+      // WebKit drops the :has(:hover) restyle on a page's very first pointer event (a real pointer always arrives from elsewhere).
+      await page.mouse.move(1, 1);
       await page.locator("#brands [data-brand=studio]").hover();
       await expect(sfx("STUDIO")).toHaveCSS("opacity", "1");
       await expect(sfx("TEAM")).toHaveCSS("opacity", "0");

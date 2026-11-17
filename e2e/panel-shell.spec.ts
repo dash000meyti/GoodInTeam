@@ -72,7 +72,9 @@ test("⌘K / Ctrl+K opens the command palette", async ({ page }) => {
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("the menu bar is keyboard-operable (Radix menubar)", async ({ page }) => {
+test("the menu bar is keyboard-operable (Radix menubar)", async ({ page, browserName }) => {
+  // Safari moves to links and buttons with Option+Tab only (Tab reaches text fields alone).
+  const tab = browserName === "webkit" ? "Alt+Tab" : "Tab";
   await page.setViewportSize({ width: 1440, height: 900 });
   await login(page, OWNER);
   await page.goto("/en/panel");
@@ -80,9 +82,9 @@ test("the menu bar is keyboard-operable (Radix menubar)", async ({ page }) => {
   await expect(page.getByRole("menuitem", { name: "Work", exact: true })).toBeVisible();
   await page.waitForLoadState("networkidle");
   // Tab order: skip link → the menu bar (one roving tab stop).
-  await page.keyboard.press("Tab");
+  await page.keyboard.press(tab);
   await expect(page.locator(":focus")).toHaveAttribute("href", "#main");
-  await page.keyboard.press("Tab");
+  await page.keyboard.press(tab);
   await expect(page.locator(":focus")).toHaveAccessibleName("Good In menu");
   // Radix moves roving focus on the next tick: wait for each move before the next key.
   await page.keyboard.press("ArrowRight");

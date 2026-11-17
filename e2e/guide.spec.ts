@@ -76,6 +76,9 @@ const sprite = (page: Page) => page.locator("#gt-guide .gt-guide-sprite");
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
+/** Desktop placement needs a fine pointer: a touch device is compact at any width (D21). */
+const TOUCH = "a touch device always uses compact mode (D21)";
+
 test("chrome variables are finite px and the engine boots after load", async ({ page }) => {
   await setup(page);
   await page.goto("/en");
@@ -94,7 +97,11 @@ test("chrome variables are finite px and the engine boots after load", async ({ 
   await expect(page.locator("#gt-guide svg.px-sprite")).toHaveAttribute("data-state", /.+/);
 });
 
-test("greeting stands on the first box's roof, inside the painted desktop", async ({ page }) => {
+test("greeting stands on the first box's roof, inside the painted desktop", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, TOUCH);
   await setup(page, { greeted: false });
   await page.goto("/en");
   await expect(page.locator(ROOF)).toHaveCount(1);
@@ -114,7 +121,8 @@ test("greeting stands on the first box's roof, inside the painted desktop", asyn
   expect(await page.evaluate(() => sessionStorage.getItem("gt-guide-greeted"))).toBe("1");
 });
 
-test("first box speaks into its decor cell (candidate B)", async ({ page }) => {
+test("first box speaks into its decor cell (candidate B)", async ({ page, isMobile }) => {
+  test.skip(isMobile, TOUCH);
   await setup(page);
   await page.goto("/");
   await expect(page.locator(ROOF)).toHaveCount(1);
@@ -144,7 +152,11 @@ test("first box speaks into its decor cell (candidate B)", async ({ page }) => {
     .toContain("/#home_hero");
 });
 
-test("a section in the activation band speaks above its roof (candidate A)", async ({ page }) => {
+test("a section in the activation band speaks above its roof (candidate A)", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, TOUCH);
   await setup(page);
   await page.goto("/en");
   await engine(page);
@@ -167,7 +179,9 @@ test("a section in the activation band speaks above its roof (candidate A)", asy
 
 test("a roof hidden under the menu bar moves the sprite to the rail, with a badge and no bubble", async ({
   page,
+  isMobile,
 }) => {
+  test.skip(isMobile, TOUCH);
   await setup(page);
   await page.goto("/en");
   await engine(page);
@@ -223,7 +237,12 @@ test("Hide persists; explain still works while muted and hides the layer again",
   expect(await page.evaluate(() => localStorage.getItem("gt-guide"))).toBe("off");
 });
 
-test("the sprite button toggles aria-expanded; Esc closes and returns focus", async ({ page }) => {
+test("the sprite button toggles aria-expanded; Esc closes and returns focus", async ({
+  page,
+  browserName,
+  isMobile,
+}) => {
+  test.skip(isMobile, TOUCH);
   await setup(page);
   await page.goto("/en");
   await engine(page);
@@ -233,7 +252,9 @@ test("the sprite button toggles aria-expanded; Esc closes and returns focus", as
   });
   await expect(sprite(page)).toBeVisible();
   await expect(sprite(page)).toHaveAttribute("aria-expanded", "false");
-  await sprite(page).click();
+  // Safari never focuses a button on click (macOS rule), so focus can only return there from the keyboard.
+  if (browserName === "webkit") await sprite(page).press("Enter");
+  else await sprite(page).click();
   await expect(sprite(page)).toHaveAttribute("aria-expanded", "true");
   await expect(bubble(page)).toBeVisible();
   await expect(bubble(page)).toHaveAttribute("role", "group");
@@ -247,7 +268,8 @@ test("the sprite button toggles aria-expanded; Esc closes and returns focus", as
 test.describe("reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
 
-  test("the sprite never walks; frames stay static", async ({ page }) => {
+  test("the sprite never walks; frames stay static", async ({ page, isMobile }) => {
+    test.skip(isMobile, TOUCH);
     await setup(page);
     await page.goto("/en");
     await engine(page);
