@@ -66,6 +66,13 @@ a non-service post that shares the key. `createTranslation` copies `meta`, so a 
 inherits the brand. Seed mapping: web, mobile, AI → `code`; consulting → `team`; the demo
 `product-design` service → `studio`. Tested in `content/service.test.ts`.
 
+**Brand pages.** Each sub-brand has a landing page at its registry `href`: `/studio` and `/code`
+(and `/en/…`). The listed services of a brand are its live `type=service` posts whose
+`brandOf(meta)` matches, in the same cells as the `/services` brand boxes
+(`components/site/brand-services.tsx`). Case studies carry no brand (no `meta.brand`, tag or
+service relation), so the brand pages show no work; a brand field on `work` posts would be the
+honest way to add one. See [Public pages](#public-pages).
+
 `updatePostInput` is a true partial: fields that are absent stay as they are (zod 4 applies
 `.default()` inside `.partial()`, so the defaults of `postInput` are removed for updates).
 
@@ -105,7 +112,21 @@ testimonials, CTA), `/work` (+ stack/year filters), `/work/<slug>`, `/blog` (typ
 filters, search `?q=`, pagination, featured), `/blog/<slug>` (TL;DR box, sticky TOC, lite
 YouTube for vlogs, share links, syndication links, author box, related, prev/next),
 `/learn`, `/learn/<course>`, `/learn/<course>/<lesson>`, `/services`, `/services/<slug>`,
-`/about`, `/contact`.
+`/studio`, `/code`, `/about`, `/contact`.
+
+**Brand landing pages** (`/studio`, `/code`; one shared `BrandPage` in
+`components/site/brand-page.tsx`, thin route folders with `loading.tsx` and
+`opengraph-image.tsx`). Boxes: the first box (h1 = brand name, tagline, `site.brand<X>Intro`,
+"Start a project" → `/contact` and "Explore services" → `#services`; the brand's `PixelLogo` in
+the `tone="dots"` decor end cell, shown at every width) → the brand's services (streamed, the
+`/services` cells, the "ask about" cell when the last row has room, the same full-row ask cell
+when there are none) → the Good In family (the other brands; the master brand links home) →
+`CtaBand`. Guide keys: `brand_<id>`, `brand_services_<id>`, `brand_family`, `cta`. Grid plans
+live in `brand-plan.ts` (tested in `page-frame-plan.test.ts`). Every Studio/Code entry point
+(brand menu, Spotlight, Launchpad, dock, footer, home brand cells, the service brand chip, the
+`/services` brand boxes) links here; the `/services#studio` and `#code` anchors still work. A
+new sub-brand page is a registry row plus `site.brand<X>Intro` (`brandIntro`), the two guide
+lines and a route folder.
 
 Client JavaScript on public pages is limited to tiny islands (`components/site/islands.tsx`,
 `site-menubar-client.tsx`, `header-client.tsx`, `contact-form.tsx`, the dock's `DockLinks`, the
@@ -117,7 +138,9 @@ The site ships only the `common` + `nav` message namespaces; islands get labels 
 
 See `docs/seo.md` for the full checklist. Endpoints: `/sitemap.xml`, `/robots.txt`,
 `/manifest.webmanifest`, `/feed.xml` + `/en/feed.xml`, `/llms.txt`, `/llms-full.txt`,
-`<page>.md` mirrors, per-post `opengraph-image` (blog, work) and a default one for the site.
+`<page>.md` mirrors, per-post `opengraph-image` (blog, work), one per brand page (`/studio`,
+`/code`: the default card with the brand's pixel logo, `brand-og.tsx`) and a default one for
+the site.
 
 OG images: Satori can't shape Arabic script or lay out RTL, so `src/lib/arabic-shaping.ts`
 converts Persian to presentation forms in visual order and the renderer lays out word runs

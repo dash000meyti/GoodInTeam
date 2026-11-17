@@ -16,8 +16,9 @@ Perplexity, Claude, Gemini (**GEO**). Implementation details: `docs/modules/cont
 - Canonical URLs: fa unprefixed, en under `/en`; `/fa/...` permanently redirects (except
   generated `opengraph-image` URLs, served directly). Filtered/searched blog listings are
   `noindex, follow`; paginated pages are self-canonical.
-- `sitemap.xml` (`src/app/sitemap.ts`): sections × locales, every published post and course
-  with `lastModified`, `hreflang` alternates and cover images.
+- `sitemap.xml` (`src/app/sitemap.ts`): sections × locales (the brand pages `/studio` and
+  `/code` included), every published post and course with `lastModified`, `hreflang`
+  alternates and cover images.
 - `robots.txt` (`src/app/robots.ts`): public content open to everyone; `/panel`, `/api/`,
   `/login`, `/setup`, `/sign/`, `/p/`, `/i/` disallowed (both locales). AI crawlers are
   **explicitly welcomed** for public content (decision: GEO visibility matters more than opting
@@ -47,6 +48,7 @@ Perplexity, Claude, Gemini (**GEO**). Implementation details: `docs/modules/cont
 | `/learn`              | `ItemList` of courses                                                      |
 | work                  | `CreativeWork` (client as `sourceOrganization`, year, stack as `keywords`) |
 | `/services`           | `ItemList` of `Service` + `FAQPage`                                        |
+| `/studio`, `/code`    | `Organization` (`parentOrganization` → the team) + `OfferCatalog` services |
 | service               | `Service` + `Offer` + `FAQPage` (`meta.faq` or the studio FAQ)             |
 | about                 | `AboutPage` / `ProfilePage` (mainEntity → Person)                          |
 | contact               | `ContactPage`                                                              |
@@ -69,7 +71,8 @@ Payloads are serialized with `<` escaped as a JSON unicode escape (see `JsonLd`)
   note, `llms-full.txt`.
 - `/llms-full.txt` — the full text of every published post in Markdown.
 - **Markdown mirrors**: append `.md` to `/blog/<slug>`, `/work/<slug>`, `/learn/<course>`,
-  `/learn/<course>/<lesson>`, `/learn/<tutorial>`, `/services/<slug>`, `/about` (both locales)
+  `/learn/<course>/<lesson>`, `/learn/<tutorial>`, `/services/<slug>`, `/about`, `/studio`,
+  `/code` (both locales)
   → `text/markdown` with YAML front matter (title, description, type, date, updated, author,
   lang, canonical, tags) and a `Link: <html>; rel="canonical"` header.
 - RSS 2.0 feeds per locale (`/feed.xml`, `/en/feed.xml`) with full HTML in
