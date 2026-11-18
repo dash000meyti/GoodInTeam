@@ -42,7 +42,7 @@ import {
   getRelated,
   getSyndicationLinks,
   getTranslations,
-  renderContent,
+  renderPostBody,
 } from "@/server/modules/content/queries";
 
 const TYPES = [...blogTypes];
@@ -77,7 +77,7 @@ async function BlogPost({ locale, t, slug }: { locale: Locale; t: Messages; slug
   if (!post) notFound();
   const [translations, rendered, adjacent, related, synd, profile] = await Promise.all([
     getTranslations(post.translationKey),
-    renderContent(post.contentMd),
+    renderPostBody(post),
     getAdjacent({
       id: post.id,
       locale,

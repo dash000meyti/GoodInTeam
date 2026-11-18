@@ -40,7 +40,7 @@ import {
   getPublishedPost,
   getTranslations,
   listServices,
-  renderContent,
+  renderPostBody,
 } from "@/server/modules/content/queries";
 
 export async function generateMetadata(
@@ -71,7 +71,7 @@ async function ServiceDetail({ locale, t, slug }: { locale: Locale; t: Messages;
   if (!post) notFound();
   const [translations, rendered, all] = await Promise.all([
     getTranslations(post.translationKey),
-    renderContent(post.contentMd),
+    renderPostBody(post),
     listServices(locale),
   ]);
   const s = t.site;

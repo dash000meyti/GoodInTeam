@@ -3,7 +3,7 @@ import { isLocale, localeMeta, localePath } from "@/i18n/config";
 import { messages } from "@/i18n/messages";
 import { env } from "@/lib/env";
 import { postPath } from "@/lib/content";
-import { getPublicProfile, listFullPosts, renderContent } from "@/server/modules/content/queries";
+import { getPublicProfile, listFullPosts, renderPostBody } from "@/server/modules/content/queries";
 
 /**
  * RSS 2.0 feed per locale: /feed.xml (fa, via the proxy rewrite) and
@@ -30,7 +30,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/[locale]/feed.xml">
   const items = await Promise.all(
     posts.map(async (p) => {
       const link = `${env.siteUrl}${localePath(locale, postPath(p))}`;
-      const { html } = await renderContent(p.contentMd);
+      const { html } = await renderPostBody(p);
       const author = p.authorName ?? profile.ownerName[locale];
       const cover = p.coverUrl
         ? p.coverUrl.startsWith("http")

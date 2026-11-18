@@ -65,7 +65,7 @@ src/
     (auth)/login, setup    # sign-in + first-run owner setup
     panel/<module>/        # private panel (owner/admin/member) + client portal (client role)
     p/[token]              # public project status page
-  app/api/                 # REST (/api/v1), MCP (/api/mcp), health
+  app/api/                 # REST (/api/v1), MCP (/api/mcp), health, uploads (POST /api/media)
   app/styles/              # CSS partials imported by globals.css, ONE OWNER EACH (docs/design-system.md):
                            #   os-shell.css · frame.css · pixel.css (foundation), site-shell.css (site-shell),
                            #   home.css (home), site-pages.css (site-pages), guide.css (assistant),
@@ -113,6 +113,11 @@ docs/                      # architecture, conventions, data model, design syste
      public content). Route handlers use `revalidateTag(tag, "max")`.
    - **Every panel route folder has a `loading.tsx`** (`<PageSkeleton />` or a layout-matching
      skeleton). Next 16.4 validates instant navigations; a missing boundary blocks the route.
+   - **Every `'use cache'` function is a public endpoint.** Next gives it a server reference id,
+     like a server action. It validates its arguments inside itself, first thing (locale and type
+     enums, ids by shape, short strings, `limit` ≤ 100; `checkArgs` in `content/query-args.ts`),
+     returns public data only, and never takes free-form content (Markdown, HTML) as an argument:
+     address content by id and load it inside. See docs/security.md "Cached functions".
 4. **i18n:** never hard-code UI strings. Add keys to `src/i18n/messages/fa/<ns>.ts` (source of
    truth) **and** `en/<ns>.ts`, register new namespaces in `messages/index.ts`. Server:
    `getT()`/`panelContext().t`; client: `useT()`.
@@ -129,7 +134,11 @@ docs/                      # architecture, conventions, data model, design syste
    `formatMoney`, `toMinor`, `parseMoneyInput` from `src/lib/money.ts`. Never floats in the DB.
 8. **Security:** every service checks the actor; clients only see what `projects.share*` flags
    allow. Vault secrets are encrypted in the browser — the server must never receive plaintext.
-   Log important mutations with `logActivity()`.
+   Log important mutations with `logActivity()`. The proxy runs on every path and server actions
+   refuse a request it did not vouch for: never add a path to the matcher's exclusions. Server
+   actions share a 2 MB body limit and never take a file (uploads: `POST /api/media`). Published
+   HTML is always sanitised (`renderMarkdown(…, { allowHtml: true })`); there is no raw-HTML
+   mode. See docs/security.md.
 9. **UI:** compose from `components/ui` + `components/shared` + `components/panel`. **Site and
    panel speak one frame language** (docs/design-system.md "Frame"): framed boxes → stacked
    `FrameGrid`s → `FrameCell`s; square boxes with one `--frame-line` hairline and a marker on

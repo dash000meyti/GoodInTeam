@@ -1,14 +1,30 @@
 import type { ReactNode } from "react";
-import { cacheLife } from "next/cache";
 import { CopyButton } from "@/components/shared/copy-button";
 import { renderMarkdown } from "@/lib/markdown";
 import { cn } from "@/lib/utils";
 
-/** Shiki-highlighted snippet (light + dark). Static input → cached across requests. */
-async function highlight(code: string, lang: string) {
-  "use cache";
-  cacheLife("max");
-  const { html } = await renderMarkdown(`\`\`\`${lang}\n${code}\n\`\`\``);
+/**
+ * Highlighted snippets of the catalog, kept for the life of the process.
+ *
+ * A plain module-level map, on purpose NOT a `'use cache'` function: a cached
+ * function is a public endpoint (it has a server reference id), and this one
+ * would take free-form text. The snippets are static strings in the catalog's
+ * own source, so the map is as large as the catalog; the cap only guards
+ * against a future caller that passes something else.
+ */
+const snippets = new Map<string, Promise<string>>();
+const MAX_SNIPPETS = 500;
+
+/** Shiki-highlighted snippet (light + dark). */
+function highlight(code: string, lang: string) {
+  const key = `${lang}\n${code}`;
+  let html = snippets.get(key);
+  if (!html) {
+    if (snippets.size >= MAX_SNIPPETS) snippets.clear();
+    html = renderMarkdown(`\`\`\`${lang}\n${code}\n\`\`\``).then((r) => r.html);
+    snippets.set(key, html);
+    html.catch(() => snippets.delete(key));
+  }
   return html;
 }
 

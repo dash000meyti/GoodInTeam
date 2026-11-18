@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import {
   getPublicProfile,
   getTranslations,
-  renderContent,
+  renderPostBody,
   type PostCard as PostCardData,
   type PostDetail,
 } from "@/server/modules/content/queries";
@@ -170,7 +170,7 @@ export async function LessonView({
   const s = t.site;
   const [translations, rendered, profile] = await Promise.all([
     getTranslations(post.translationKey),
-    renderContent(post.contentMd),
+    renderPostBody(post),
     getPublicProfile(),
   ]);
   const href = postHref(locale, post);
