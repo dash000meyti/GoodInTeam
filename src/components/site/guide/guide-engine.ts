@@ -264,6 +264,7 @@ function placeBubbleNow() {
   flag("data-measure", true, bub);
   bub.hidden = false;
   const p = placeBubble(b, bub.offsetWidth, bub.offsetHeight, w.beside, f);
+  flag("data-measure", false, bub);
   const q = origin(b);
   css("bx", p.left - q.x);
   css("by", p.top - q.y);
@@ -334,7 +335,6 @@ function say(
     flag("data-out", false, bub);
     fill(text, kind, x.tour);
     placeBubbleNow();
-    flag("data-measure", false, bub);
     flag("data-open", true, bub);
     if (x.tour) acts.next!.focus();
     const done = () => {
@@ -503,7 +503,8 @@ function observeAll() {
 function reanchor() {
   refresh();
   observeAll();
-  if (!up || !bot || (on && !shown(on))) return;
+  // only at rest: a swap in progress places the bot itself
+  if (!bot || !root.hasAttribute("data-rest") || (on && !shown(on))) return;
   put(measure(on, small ? undefined : bot.anchor));
   if (open && !bub.hidden) placeBubbleNow();
 }
@@ -687,6 +688,7 @@ function step(i: number) {
   flag("data-measure", true, bub);
   bub.hidden = false;
   const bh = bub.offsetHeight;
+  flag("data-measure", false, bub);
   hideBubble();
   tour = t;
   const go = () => tour === t && say(el, "explicit", text, { tour: true });

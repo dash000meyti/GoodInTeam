@@ -390,6 +390,14 @@ test("bot click and the brand menu's Explain open an explicit bubble; Esc return
   await expect(bubble(page).getByRole("button", { name: en.hide })).toBeVisible();
   await expect(page.locator("#gt-guide-live")).toHaveText((await sayOf(page, "home_work"))!);
   await expectBeside(page);
+  // a resize re-measures the same anchor: both move in place, the bubble stays shown
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect
+    .poll(async () => (await rect(page, ".gt-guide-sprite")).right)
+    .toBeCloseTo((await rect(page, '[data-guide="home_work"]')).right - 24, 0);
+  await expect(bubble(page)).toBeVisible();
+  await expect(bubble(page)).toHaveCSS("visibility", "visible");
+  await expectBeside(page);
   await page.keyboard.press("Escape");
   await expect(bubble(page)).toBeHidden();
   await expect(sprite(page)).toHaveAttribute("aria-expanded", "false");
