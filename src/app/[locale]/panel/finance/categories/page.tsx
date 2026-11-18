@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowDownLeftIcon, ArrowUpRightIcon, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ColorDot } from "@/components/shared/color-dot";
 import { PageHeader } from "@/components/panel/page-header";
+import { FrameBox, FrameGrid } from "@/components/shell/frame";
 import { MoneyStack } from "@/components/finance/money";
 import { format } from "@/i18n/format-message";
 import { formatNumber } from "@/lib/format";
@@ -11,7 +12,14 @@ import { listCategories } from "@/server/modules/finance/service";
 import { panelContext } from "@/server/page-context";
 import { CategoryActions, CategoryFormDialog } from "../_components/category-form";
 import { FinanceNav } from "../_components/finance-nav";
+import { BoxCell, FLUSH_LIST } from "../_components/frame-bits";
+import { KindIcon } from "../_components/transaction-list";
 
+/**
+ * Categories (framed): the page box carries the finance nav; income and
+ * expense categories are two cells of one box (side by side from lg), each a
+ * header row over an edge-to-edge row list; the shorter list ends in dots.
+ */
 export default async function CategoriesPage() {
   const ctx = await panelContext({ roles: ["owner", "admin"] });
   const { actor, t, href, locale, now } = ctx;
@@ -34,28 +42,22 @@ export default async function CategoriesPage() {
             }
           />
         }
-      />
-      <FinanceNav active="categories" href={href} t={f} />
-      <div className="grid gap-6 lg:grid-cols-2">
-        {(["income", "expense"] as const).map((kind) => {
-          const rows = list.filter((c) => c.kind === kind);
-          const Icon = kind === "income" ? ArrowDownLeftIcon : ArrowUpRightIcon;
-          return (
-            <Card key={kind} className="gap-0 pb-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span
-                    className={
-                      kind === "income"
-                        ? "flex size-8 items-center justify-center rounded-lg bg-success/14 text-[#118d57] dark:text-[#77ed8b]"
-                        : "flex size-8 items-center justify-center rounded-lg bg-destructive/12 text-[#b71d18] dark:text-[#ffac82]"
-                    }
-                  >
-                    <Icon className="size-4 rtl:-scale-x-100" />
-                  </span>
-                  {kind === "income" ? f.incomeCategories : f.expenseCategories}
-                </CardTitle>
-                <CardAction>
+      >
+        <FinanceNav active="categories" href={href} t={f} />
+      </PageHeader>
+
+      <FrameBox as="div" density="compact">
+        <FrameGrid cols={1} className="lg:grid-cols-2">
+          {(["income", "expense"] as const).map((kind) => {
+            const rows = list.filter((c) => c.kind === kind);
+            return (
+              <BoxCell
+                key={kind}
+                title={kind === "income" ? f.incomeCategories : f.expenseCategories}
+                titleId={`cat-${kind}`}
+                icon={<KindIcon kind={kind} className="size-8" />}
+                flush
+                action={
                   <CategoryFormDialog
                     defaultKind={kind}
                     trigger={
@@ -64,22 +66,20 @@ export default async function CategoriesPage() {
                       </Button>
                     }
                   />
-                </CardAction>
-              </CardHeader>
-              <CardContent className="px-0">
+                }
+              >
                 {rows.length === 0 ? (
-                  <p className="px-6 py-10 text-center text-sm text-muted-foreground">
+                  <p className="px-(--cell-pad) py-10 text-center text-sm text-muted-foreground">
                     {f.categoriesEmpty}
                   </p>
                 ) : (
-                  <ul className="divide-y divide-dashed">
+                  <ul className={FLUSH_LIST}>
                     {rows.map((c) => (
-                      <li key={c.id} className="flex items-center gap-3 px-6 py-3">
-                        <span
-                          aria-hidden
-                          className="size-3 shrink-0 rounded-full"
-                          style={{ backgroundColor: c.color ?? "var(--muted-foreground)" }}
-                        />
+                      <li
+                        key={c.id}
+                        className="flex items-center gap-3 px-(--cell-pad) py-3 transition-colors hover:bg-card"
+                      >
+                        <ColorDot color={c.color} />
                         <div className="min-w-0 flex-1">
                           <Link
                             href={href(`/panel/finance/transactions?categoryId=${c.id}`)}
@@ -87,7 +87,7 @@ export default async function CategoriesPage() {
                           >
                             {c.name}
                           </Link>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground tabular-nums">
                             {format(f.txCount, { n: formatNumber(c.txCount, locale) })}
                           </span>
                         </div>
@@ -108,11 +108,11 @@ export default async function CategoriesPage() {
                     ))}
                   </ul>
                 )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              </BoxCell>
+            );
+          })}
+        </FrameGrid>
+      </FrameBox>
     </>
   );
 }

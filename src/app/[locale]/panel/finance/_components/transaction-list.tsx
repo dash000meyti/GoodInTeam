@@ -31,11 +31,12 @@ import { TransactionActions } from "./transaction-actions";
 type Row = TransactionRow & { delta?: number; balanceAfter?: number };
 
 const kindIcon = {
-  income: { icon: ArrowDownLeftIcon, cls: "bg-success/14 text-[#118d57] dark:text-[#77ed8b]" },
-  expense: { icon: ArrowUpRightIcon, cls: "bg-destructive/12 text-[#b71d18] dark:text-[#ffac82]" },
-  transfer: { icon: ArrowLeftRightIcon, cls: "bg-info/14 text-[#006c9c] dark:text-[#61f3f3]" },
+  income: { icon: ArrowDownLeftIcon, cls: "text-[#118d57] dark:text-[#77ed8b]" },
+  expense: { icon: ArrowUpRightIcon, cls: "text-[#b71d18] dark:text-[#ffac82]" },
+  transfer: { icon: ArrowLeftRightIcon, cls: "text-[#006c9c] dark:text-[#61f3f3]" },
 } as const;
 
+/** The kind's square hairline tile (the StatIcon look): card surface, the kind's ink. */
 export function KindIcon({ kind, className }: { kind: Row["kind"]; className?: string }) {
   const k = kindIcon[kind];
   const Icon = k.icon;
@@ -43,7 +44,7 @@ export function KindIcon({ kind, className }: { kind: Row["kind"]; className?: s
     <span
       aria-hidden
       className={cn(
-        "flex size-9 shrink-0 items-center justify-center rounded-xl",
+        "flex size-9 shrink-0 items-center justify-center border border-frame-line bg-card",
         k.cls,
         className,
       )}
@@ -81,7 +82,7 @@ function Meta({ r, ctx }: { r: Row; ctx: PanelContext }) {
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
       {bits.map((b, i) => (
         <span key={i} className="inline-flex items-center gap-2">
-          {i > 0 && <span className="size-1 rounded-full bg-grey-500/60" />}
+          {i > 0 && <span aria-hidden className="size-1 bg-grey-500/60" />}
           {b}
         </span>
       ))}
@@ -254,9 +255,9 @@ export function TransactionList({
         </Table>
       </div>
 
-      <ul className="divide-y divide-dashed md:hidden">
+      <ul className="divide-y divide-frame-line md:hidden">
         {rows.map((r) => (
-          <li key={r.id} className="flex items-start gap-3 px-4 py-3">
+          <li key={r.id} className="flex items-start gap-3 px-(--cell-pad) py-3">
             <KindIcon kind={r.kind} />
             <div className="min-w-0 flex-1 space-y-1">
               <div className="flex items-start justify-between gap-2">
@@ -280,7 +281,7 @@ export function TransactionList({
   );
 }
 
-/** Prev/next pagination that keeps the current query string. */
+/** Prev/next pagination that keeps the current query string: the body of a box's last row (a padded cell). */
 export function Pager({
   page,
   pages,
@@ -298,7 +299,7 @@ export function Pager({
   const Prev = ctx.locale === "fa" ? ChevronRightIcon : ChevronLeftIcon;
   const Next = ctx.locale === "fa" ? ChevronLeftIcon : ChevronRightIcon;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-dashed px-5 py-3 text-sm text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
       <span>{summary}</span>
       {pages > 1 && (
         <div className="flex items-center gap-2">

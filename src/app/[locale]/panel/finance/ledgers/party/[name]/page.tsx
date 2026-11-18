@@ -1,4 +1,4 @@
-import { BookUserIcon, InfoIcon } from "lucide-react";
+import { BookUserIcon } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { format } from "@/i18n/format-message";
@@ -35,17 +35,20 @@ export default async function PartyLedgerPage({
           { label: f.ledgersTitle, href: href("/panel/finance/ledgers") },
           { label: data.name },
         ]}
-      />
-      <FinanceNav active="ledgers" href={href} t={f} />
-      <p className="mb-4 flex items-start gap-2 text-xs leading-6 text-muted-foreground">
-        <InfoIcon className="mt-1 size-3.5 shrink-0 text-info-ink" />
-        {f.ledgerHint}
-      </p>
-      <LedgerTotals totals={data.totals} ctx={ctx} />
+      >
+        <FinanceNav active="ledgers" href={href} t={f} />
+        <LedgerTotals totals={data.totals} ctx={ctx} />
+      </PageHeader>
       {data.groups.length === 0 ? (
-        <EmptyState icon={BookUserIcon} title={f.noLedgerLines} />
+        <EmptyState icon={BookUserIcon} title={f.noLedgerLines} description={f.ledgerHint} />
       ) : (
-        <LedgerTables groups={data.groups} ctx={ctx} mode="party" name={data.name} />
+        <LedgerTables
+          groups={data.groups}
+          ctx={ctx}
+          mode="party"
+          name={data.name}
+          hint={f.ledgerHint}
+        />
       )}
     </>
   );
