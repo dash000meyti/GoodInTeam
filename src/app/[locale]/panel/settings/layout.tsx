@@ -30,7 +30,7 @@ export default async function SettingsLayout({
           { label: t.settings.title },
         ]}
       />
-      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10">
+      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
         <SettingsNav role={actor.user.role} />
         <div className="min-w-0">{children}</div>
       </div>

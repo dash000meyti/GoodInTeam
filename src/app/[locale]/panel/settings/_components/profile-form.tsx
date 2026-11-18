@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { FrameCell, FrameGrid } from "@/components/shell/frame";
 import { SwitchInput } from "@/components/shared/switch-input";
 import { useActionForm } from "@/components/shared/use-action-form";
 import { useT } from "@/i18n/client";
@@ -13,7 +14,7 @@ import { cn, initials } from "@/lib/utils";
 import { updateProfileAction } from "@/server/modules/settings/actions";
 import { BilingualField } from "./bilingual-field";
 import { SaveBar } from "./save-bar";
-import { SettingsCard } from "./section";
+import { SettingsCard, SettingsHeader } from "./section";
 import { socialIcons } from "./social-icons";
 
 type Bi = { fa: string; en: string };
@@ -51,8 +52,21 @@ function read(form: HTMLFormElement) {
   };
 }
 
-/** Settings → Site profile: bilingual identity, contact and social links. */
-export function ProfileForm({ values }: { values: ProfileValues }) {
+/**
+ * Settings → Site profile: the heading box with the live preview as its
+ * second row, then framed boxes for identity, contact and social links, and
+ * the sticky save bar.
+ */
+export function ProfileForm({
+  values,
+  title,
+  description,
+}: {
+  values: ProfileValues;
+  /** The sub-page heading (rendered here so the live preview joins its box). */
+  title: string;
+  description?: string;
+}) {
   const t = useT();
   const s = t.settings;
   const [dirty, setDirty] = useState(false);
@@ -80,76 +94,85 @@ export function ProfileForm({ values }: { values: ProfileValues }) {
 
   return (
     <form onSubmit={form.submit} onChange={onChange} className="space-y-6" noValidate>
-      {/* Live preview */}
-      <div className="overflow-hidden rounded-2xl border border-dashed bg-muted/30">
-        <div className="flex items-center justify-between gap-3 border-b border-dashed px-4 py-2.5">
-          <span className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
-            <EyeIcon className="size-4" /> {s.preview}
-          </span>
-          <div className="flex rounded-lg bg-muted p-0.5" role="tablist" aria-label={s.preview}>
-            {(["fa", "en"] as const).map((l) => (
-              <button
-                key={l}
-                type="button"
-                role="tab"
-                aria-selected={pl === l}
-                onClick={() => setPreviewLang(l)}
-                className={cn(
-                  "cursor-pointer rounded-md px-2.5 py-1 text-xs font-bold text-muted-foreground",
-                  pl === l && "bg-background text-foreground shadow-sm dark:bg-card",
-                )}
-              >
-                {s[`lang_${l}`]}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div
-          dir={pl === "fa" ? "rtl" : "ltr"}
-          lang={pl}
-          className="bg-grid flex flex-wrap items-center gap-4 p-5"
-        >
-          <Avatar className="size-16 ring-4 ring-background">
-            {preview.avatarUrl && (
-              <AvatarImage src={preview.avatarUrl} alt="" className="object-cover" />
-            )}
-            <AvatarFallback className="text-lg">{initials(displayName || "?")}</AvatarFallback>
-          </Avatar>
-          <div className="min-w-0 flex-1 basis-44 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-lg leading-snug font-extrabold">{displayName || "—"}</p>
-              {preview.available && (
-                <Badge variant="success">
-                  <span className="size-1.5 animate-pulse rounded-full bg-current" />
-                  {s.availableBadge}
-                </Badge>
-              )}
-            </div>
-            {preview.headline[pl] && (
-              <p className="line-clamp-2 text-sm text-muted-foreground">{preview.headline[pl]}</p>
-            )}
-            {preview.location[pl] && (
-              <p className="text-xs text-muted-foreground">{preview.location[pl]}</p>
-            )}
-          </div>
-          <div className="flex w-full flex-wrap gap-1.5 sm:w-auto">
-            {networks
-              .filter((n) => preview.socials[n])
-              .map((n) => {
-                const Icon = socialIcons[n];
-                return (
-                  <span
-                    key={n}
-                    title={s[`social_${n}`]}
-                    className="flex size-9 items-center justify-center rounded-full bg-background text-muted-foreground shadow-card"
+      {/* The sub-page heading box; its second row is the live preview. */}
+      <SettingsHeader title={title} description={description}>
+        <FrameGrid cols={1}>
+          <FrameCell pad="none">
+            <div className="flex items-center justify-between gap-3 border-b border-frame-line px-(--cell-pad) py-2">
+              <span className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+                <EyeIcon className="size-4" /> {s.preview}
+              </span>
+              <div className="flex gap-1" role="tablist" aria-label={s.preview}>
+                {(["fa", "en"] as const).map((l) => (
+                  <button
+                    key={l}
+                    type="button"
+                    role="tab"
+                    aria-selected={pl === l}
+                    onClick={() => setPreviewLang(l)}
+                    className={cn(
+                      "h-7 cursor-pointer rounded-[6px] border border-frame-line bg-background px-2.5 text-xs font-bold text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground",
+                      pl === l &&
+                        "border-foreground bg-foreground text-background hover:text-background",
+                    )}
                   >
-                    <Icon className="size-4" />
-                  </span>
-                );
-              })}
-          </div>
-        </div>
-      </div>
+                    {s[`lang_${l}`]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div
+              dir={pl === "fa" ? "rtl" : "ltr"}
+              lang={pl}
+              className="flex flex-wrap items-center gap-4 bg-card p-(--cell-pad)"
+            >
+              <Avatar className="size-16 rounded-none border border-frame-line">
+                {preview.avatarUrl && (
+                  <AvatarImage src={preview.avatarUrl} alt="" className="object-cover" />
+                )}
+                <AvatarFallback className="rounded-none text-lg">
+                  {initials(displayName || "?")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1 basis-44 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-lg leading-snug font-extrabold">{displayName || "—"}</p>
+                  {preview.available && (
+                    <Badge variant="success">
+                      <span className="size-1.5 animate-pulse bg-current" />
+                      {s.availableBadge}
+                    </Badge>
+                  )}
+                </div>
+                {preview.headline[pl] && (
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
+                    {preview.headline[pl]}
+                  </p>
+                )}
+                {preview.location[pl] && (
+                  <p className="text-xs text-muted-foreground">{preview.location[pl]}</p>
+                )}
+              </div>
+              <div className="flex w-full flex-wrap gap-1.5 sm:w-auto">
+                {networks
+                  .filter((n) => preview.socials[n])
+                  .map((n) => {
+                    const Icon = socialIcons[n];
+                    return (
+                      <span
+                        key={n}
+                        title={s[`social_${n}`]}
+                        className="flex size-9 items-center justify-center border border-frame-line bg-background text-muted-foreground"
+                      >
+                        <Icon className="size-4" />
+                      </span>
+                    );
+                  })}
+              </div>
+            </div>
+          </FrameCell>
+        </FrameGrid>
+      </SettingsHeader>
 
       <SettingsCard icon={IdCardIcon} title={s.identity} contentClassName="grid gap-5">
         <BilingualField
@@ -201,7 +224,7 @@ export function ProfileForm({ values }: { values: ProfileValues }) {
               placeholder="https://…"
             />
           </Field>
-          <label className="flex cursor-pointer items-start gap-3 self-start rounded-xl border border-dashed p-4 md:mt-7">
+          <label className="flex cursor-pointer items-start gap-3 self-start border border-dashed border-frame-line bg-card p-4 md:mt-7">
             <SwitchInput
               name="availableForWork"
               defaultChecked={values.availableForWork}
@@ -215,7 +238,7 @@ export function ProfileForm({ values }: { values: ProfileValues }) {
               <span className="block text-xs text-muted-foreground">{s.availableForWorkHint}</span>
             </span>
           </label>
-          <label className="flex cursor-pointer items-start gap-3 self-start rounded-xl border border-dashed p-4 md:col-start-2">
+          <label className="flex cursor-pointer items-start gap-3 self-start border border-dashed border-frame-line bg-card p-4 md:col-start-2">
             <SwitchInput
               name="siteGuide"
               defaultChecked={values.siteGuide}

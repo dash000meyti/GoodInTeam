@@ -8,10 +8,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardDescription, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CopyButton } from "@/components/shared/copy-button";
 import { PageHeader } from "@/components/panel/page-header";
+import { FrameBox, FrameCell, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { InvoiceDocument, InvoicePrintStyles } from "@/components/finance/invoice-document";
 import { InvoiceStatusBadge } from "@/components/finance/invoice-status-badge";
 import { Money } from "@/components/finance/money";
@@ -90,6 +91,7 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
           { label: f.invoicesTitle, href: href("/panel/invoices") },
           { label: inv.number },
         ]}
+        path={["INVOICES", inv.number]}
         actions={
           admin ? (
             <InvoiceActions
@@ -133,15 +135,15 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
           t={t}
         />
 
-        <aside className="space-y-6 print:hidden">
+        <FrameBox as="aside" density="compact" className="print:hidden">
           {admin && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{f.shareLink}</CardTitle>
-                <CardDescription>{publicUrl ? f.shareLinkHint : f.notSentYet}</CardDescription>
-              </CardHeader>
+            <AsideSection
+              id="inv-share"
+              title={f.shareLink}
+              description={publicUrl ? f.shareLinkHint : f.notSentYet}
+            >
               {publicUrl && (
-                <CardContent className="flex gap-2">
+                <div className="flex gap-2">
                   <Input
                     readOnly
                     value={publicUrl}
@@ -150,15 +152,16 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
                     aria-label={f.shareLink}
                   />
                   <CopyButton value={publicUrl} size="icon-sm" />
-                </CardContent>
+                </div>
               )}
-            </Card>
+            </AsideSection>
           )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle>{f.payments}</CardTitle>
-              <CardDescription>
+          <AsideSection
+            id="inv-payments"
+            title={f.payments}
+            description={
+              <>
                 {f.paidAmount}:{" "}
                 <Money minor={inv.paidMinor} currency={inv.currency} locale={locale} />
                 {inv.dueMinor > 0 && (
@@ -167,72 +170,91 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/panel
                     {f.due}: <Money minor={inv.dueMinor} currency={inv.currency} locale={locale} />
                   </>
                 )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {inv.payments.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">{f.noPayments}</p>
-              ) : (
-                <ul className="divide-y divide-dashed">
-                  {inv.payments.map((p) => (
-                    <li
-                      key={p.id}
-                      className="flex items-center justify-between gap-3 py-2.5 text-sm"
-                    >
-                      <span>
-                        <span className="block font-semibold">{formatDate(p.occurredAt, fmt)}</span>
-                        {admin && (
-                          <span className="block text-xs text-muted-foreground">
-                            {p.accountName}
-                          </span>
-                        )}
-                      </span>
-                      <Money
-                        minor={p.amountMinor}
-                        currency={p.currency}
-                        locale={locale}
-                        tone="income"
-                        className="font-bold"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+              </>
+            }
+          >
+            {inv.payments.length === 0 ? (
+              <p className="py-2 text-center text-sm text-muted-foreground">{f.noPayments}</p>
+            ) : (
+              <ul className="divide-y divide-dashed divide-frame-line">
+                {inv.payments.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center justify-between gap-3 py-2.5 text-sm first:pt-0 last:pb-0"
+                  >
+                    <span>
+                      <span className="block font-semibold">{formatDate(p.occurredAt, fmt)}</span>
+                      {admin && (
+                        <span className="block text-xs text-muted-foreground">{p.accountName}</span>
+                      )}
+                    </span>
+                    <Money
+                      minor={p.amountMinor}
+                      currency={p.currency}
+                      locale={locale}
+                      tone="income"
+                      className="font-bold"
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </AsideSection>
 
           {admin && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{f.timeline}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ol className="relative space-y-4 before:absolute before:inset-y-2 before:start-[13px] before:w-px before:bg-border">
-                  {timeline.map((e, i) => {
-                    const Icon = e.icon;
-                    return (
-                      <li key={i} className="relative flex gap-3">
-                        <span className="z-10 flex size-7 shrink-0 items-center justify-center rounded-full border bg-card text-muted-foreground">
-                          <Icon className="size-3.5 rtl:-scale-x-100" />
+            <AsideSection id="inv-timeline" title={f.timeline}>
+              <ol className="relative space-y-4 before:absolute before:inset-y-2 before:start-[13px] before:w-px before:bg-frame-line">
+                {timeline.map((e, i) => {
+                  const Icon = e.icon;
+                  return (
+                    <li key={i} className="relative flex gap-3">
+                      <span className="z-10 flex size-7 shrink-0 items-center justify-center border border-frame-line bg-card text-muted-foreground">
+                        <Icon className="size-3.5 rtl:-scale-x-100" />
+                      </span>
+                      <span className="min-w-0 text-sm">
+                        <span className="block font-semibold">{e.label}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {formatDateTime(e.at, fmt)}
                         </span>
-                        <span className="min-w-0 text-sm">
-                          <span className="block font-semibold">{e.label}</span>
-                          <span className="block text-xs text-muted-foreground">
-                            {formatDateTime(e.at, fmt)}
-                          </span>
-                          {e.detail && (
-                            <span className="block text-xs text-muted-foreground">{e.detail}</span>
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ol>
-              </CardContent>
-            </Card>
+                        {e.detail && (
+                          <span className="block text-xs text-muted-foreground">{e.detail}</span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </AsideSection>
           )}
-        </aside>
+        </FrameBox>
       </div>
     </>
+  );
+}
+
+/** One section of the side box: a full-width cell with a header row (h2, description) and a body. */
+function AsideSection({
+  id,
+  title,
+  description,
+  children,
+}: {
+  id: string;
+  title: string;
+  description?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
+  return (
+    <FrameGrid cols={1}>
+      <FrameCell as="section" pad="none" aria-labelledby={id}>
+        <CardHeader>
+          <h2 id={id} className={HEADING_CLASS.box}>
+            {title}
+          </h2>
+          {description && <CardDescription>{description}</CardDescription>}
+        </CardHeader>
+        {children && <div className="p-(--cell-pad)">{children}</div>}
+      </FrameCell>
+    </FrameGrid>
   );
 }

@@ -1,34 +1,56 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatIcon } from "@/components/panel/stat-card";
+import { FrameBox, FrameCell, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { cn } from "@/lib/utils";
 
-/** Heading of a settings sub-page (the area itself has the PageHeader). */
+/**
+ * Heading box of a settings sub-page (the area itself has the PageHeader): a
+ * framed box whose header cell holds the h2, description and actions;
+ * `children` are more rows of the same box (FrameGrids, e.g. a preview).
+ */
 export function SettingsHeader({
   title,
   description,
   actions,
+  children,
 }: {
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
+  children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0 space-y-1">
-        <h2 className="text-xl font-extrabold tracking-tight">{title}</h2>
-        {description && <p className="max-w-2xl text-sm text-muted-foreground">{description}</p>}
-      </div>
-      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
-    </div>
+    <FrameBox as="div" density="compact">
+      <FrameGrid cols={1}>
+        <FrameCell
+          header
+          className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <div className="min-w-0 space-y-1">
+            <h2 className={HEADING_CLASS.box}>{title}</h2>
+            {description && (
+              <p className="max-w-2xl text-sm text-muted-foreground">{description}</p>
+            )}
+          </div>
+          {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
+        </FrameCell>
+      </FrameGrid>
+      {children}
+    </FrameBox>
   );
 }
 
-/** Card with an icon-led header — the building block of every settings page. */
+/**
+ * A framed box with an icon-led header row — the building block of every
+ * settings page: square icon tile, title, description, an inline-end action;
+ * the body; an optional footer row under a hairline.
+ */
 export function SettingsCard({
   title,
   description,
-  icon: Icon,
+  icon,
   action,
   children,
   footer,
@@ -45,22 +67,22 @@ export function SettingsCard({
   contentClassName?: string;
 }) {
   return (
-    <Card className={cn("gap-5", className)}>
-      <CardHeader className="flex flex-wrap items-start gap-3">
-        {Icon && (
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary-ink">
-            <Icon className="size-5" />
-          </span>
-        )}
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <CardTitle className="text-base">{title}</CardTitle>
+    <Card className={className}>
+      <CardHeader className="flex flex-wrap items-center gap-3">
+        {icon && <StatIcon icon={icon} />}
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <CardTitle>{title}</CardTitle>
           {description && <CardDescription>{description}</CardDescription>}
         </div>
         {action && <div className="flex w-full shrink-0 sm:w-auto sm:justify-end">{action}</div>}
       </CardHeader>
       {children && <CardContent className={contentClassName}>{children}</CardContent>}
       {footer && (
-        <div className="flex flex-wrap items-center justify-end gap-3 border-t border-dashed px-6 pt-5">
+        <div
+          className={cn(
+            "flex flex-wrap items-center justify-end gap-3 border-t border-frame-line px-(--cell-pad) pt-(--cell-pad)",
+          )}
+        >
           {footer}
         </div>
       )}

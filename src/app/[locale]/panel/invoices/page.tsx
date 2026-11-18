@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -21,9 +20,11 @@ import {
 import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
+import { StatRow } from "@/components/panel/stat-card";
 import { InvoiceStatusBadge } from "@/components/finance/invoice-status-badge";
 import { KpiCard } from "@/components/finance/kpi-card";
 import { Money, MoneyStack } from "@/components/finance/money";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { format } from "@/i18n/format-message";
 import { formatDate, formatNumber } from "@/lib/format";
 import { cn, initials } from "@/lib/utils";
@@ -35,6 +36,11 @@ import { panelContext, type PanelContext } from "@/server/page-context";
 const tabs = ["all", "draft", "sent", "partial", "overdue", "paid", "void"] as const;
 type Tab = (typeof tabs)[number];
 
+/**
+ * Invoices (framed): the page box carries the four KPIs as its second row;
+ * the list is one box whose first row holds the status chips and whose
+ * second row is the table (md+) or the row list (phones), edge to edge.
+ */
 export default async function InvoicesPage({
   searchParams,
 }: PageProps<"/[locale]/panel/invoices">) {
@@ -80,62 +86,62 @@ export default async function InvoicesPage({
             : undefined
         }
         actions={newButton}
-      />
-
-      {admin && (
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:gap-6 xl:grid-cols-4">
-          <KpiCard
-            label={f.outstanding}
-            icon={ReceiptIcon}
-            tone="warning"
-            value={
-              <MoneyStack
-                rows={kpis.outstanding}
-                locale={locale}
-                base={base}
-                compact
-                secondaryClassName="text-sm"
-              />
-            }
-            hint={format(f.openInvoicesCount, { n: formatNumber(kpis.openCount, locale) })}
-          />
-          <KpiCard
-            label={f.overdueAmount}
-            icon={AlarmClockIcon}
-            tone="destructive"
-            value={
-              <MoneyStack
-                rows={kpis.overdue}
-                locale={locale}
-                base={base}
-                compact
-                secondaryClassName="text-sm"
-              />
-            }
-            hint={format(f.overdueCount, { n: formatNumber(kpis.overdueCount, locale) })}
-          />
-          <KpiCard
-            label={f.paidThisMonth}
-            icon={BanknoteIcon}
-            tone="success"
-            value={
-              <MoneyStack
-                rows={kpis.paidThisMonth}
-                locale={locale}
-                base={base}
-                compact
-                secondaryClassName="text-sm"
-              />
-            }
-          />
-          <KpiCard
-            label={f.drafts}
-            icon={FilePenLineIcon}
-            tone="info"
-            value={formatNumber(kpis.drafts, locale)}
-          />
-        </div>
-      )}
+      >
+        {admin && (
+          <StatRow>
+            <KpiCard
+              label={f.outstanding}
+              icon={ReceiptIcon}
+              tone="warning"
+              value={
+                <MoneyStack
+                  rows={kpis.outstanding}
+                  locale={locale}
+                  base={base}
+                  compact
+                  secondaryClassName="text-sm"
+                />
+              }
+              hint={format(f.openInvoicesCount, { n: formatNumber(kpis.openCount, locale) })}
+            />
+            <KpiCard
+              label={f.overdueAmount}
+              icon={AlarmClockIcon}
+              tone="destructive"
+              value={
+                <MoneyStack
+                  rows={kpis.overdue}
+                  locale={locale}
+                  base={base}
+                  compact
+                  secondaryClassName="text-sm"
+                />
+              }
+              hint={format(f.overdueCount, { n: formatNumber(kpis.overdueCount, locale) })}
+            />
+            <KpiCard
+              label={f.paidThisMonth}
+              icon={BanknoteIcon}
+              tone="success"
+              value={
+                <MoneyStack
+                  rows={kpis.paidThisMonth}
+                  locale={locale}
+                  base={base}
+                  compact
+                  secondaryClassName="text-sm"
+                />
+              }
+            />
+            <KpiCard
+              label={f.drafts}
+              icon={FilePenLineIcon}
+              tone="info"
+              value={formatNumber(kpis.drafts, locale)}
+            />
+          </StatRow>
+        )}
+      </PageHeader>
 
       {counts.all === 0 ? (
         <EmptyState
@@ -145,145 +151,153 @@ export default async function InvoicesPage({
           action={newButton}
         />
       ) : (
-        <>
-          <nav
-            aria-label={t.common.status}
-            className="mb-4 flex max-w-full scrollbar-thin gap-1 overflow-x-auto rounded-xl bg-muted p-1 sm:w-fit"
-          >
-            {visibleTabs.map((s) => {
-              const on = s === status || (s === "all" && status === "open");
-              return (
-                <Link
-                  key={s}
-                  href={href(`/panel/invoices${s === "all" ? "" : `?status=${s}`}`)}
-                  aria-current={on ? "page" : undefined}
-                  className={cn(
-                    "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground",
-                    on && "bg-background text-foreground shadow-card dark:bg-card",
-                  )}
-                >
-                  {f[`tab_${s}`]}
-                  <span
-                    className={cn(
-                      "rounded-md px-1.5 text-xs tabular-nums",
-                      on
-                        ? "bg-primary/12 text-primary-dark dark:text-primary-light"
-                        : "bg-grey-500/12",
-                    )}
-                  >
-                    {formatNumber(count(s), locale)}
-                  </span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {list.length === 0 ? (
-            <EmptyState icon={SearchXIcon} title={f.invoicesNoMatch} />
-          ) : (
-            <Card className="gap-0 overflow-hidden py-0">
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{f.number}</TableHead>
-                      <TableHead>{f.client}</TableHead>
-                      <TableHead>{f.issueDate}</TableHead>
-                      <TableHead>{f.dueDate}</TableHead>
-                      <TableHead className="text-end">{f.total}</TableHead>
-                      <TableHead className="text-end">{f.due}</TableHead>
-                      <TableHead>{t.common.status}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {list.map((inv) => (
-                      <TableRow key={inv.id}>
-                        <TableCell>
-                          <Link
-                            href={href(`/panel/invoices/${inv.id}`)}
-                            className="font-mono font-bold hover:text-primary-ink"
-                            dir="ltr"
-                          >
-                            {inv.number}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <ClientCell inv={inv} />
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {formatDate(inv.issueDate, ctx.fmt)}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <DueCell inv={inv} today={today} ctx={ctx} />
-                        </TableCell>
-                        <TableCell className="text-end">
-                          <Money
-                            minor={inv.totalMinor}
-                            currency={inv.currency}
-                            locale={locale}
-                            className="font-semibold"
-                          />
-                        </TableCell>
-                        <TableCell className="text-end">
-                          {inv.dueMinor > 0 && inv.status !== "draft" ? (
-                            <Money
-                              minor={inv.dueMinor}
-                              currency={inv.currency}
-                              locale={locale}
-                              className="font-bold"
-                            />
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <InvoiceStatusBadge status={inv.status} t={f} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <ul className="divide-y divide-dashed md:hidden">
-                {list.map((inv) => (
-                  <li key={inv.id}>
+        <FrameBox as="section" density="compact" ariaLabel={f.invoicesTitle}>
+          <FrameGrid cols={1}>
+            <FrameCell className="py-3">
+              <nav
+                aria-label={t.common.status}
+                className="-mx-1 flex max-w-[calc(100%+0.5rem)] scrollbar-thin gap-1.5 overflow-x-auto px-1 py-0.5"
+              >
+                {visibleTabs.map((s) => {
+                  const on = s === status || (s === "all" && status === "open");
+                  return (
                     <Link
-                      href={href(`/panel/invoices/${inv.id}`)}
-                      className="flex items-start gap-3 px-4 py-3"
+                      key={s}
+                      href={href(`/panel/invoices${s === "all" ? "" : `?status=${s}`}`)}
+                      aria-current={on ? "page" : undefined}
+                      className={cn(
+                        "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border px-3 text-sm font-semibold whitespace-nowrap transition-colors",
+                        on
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-frame-line bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+                      )}
                     >
-                      <span className="min-w-0 flex-1 space-y-1">
-                        <span className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-bold" dir="ltr">
-                            {inv.number}
-                          </span>
-                          <InvoiceStatusBadge status={inv.status} t={f} />
-                        </span>
-                        <span className="block truncate text-sm">{inv.client?.name ?? "—"}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          <DueCell inv={inv} today={today} ctx={ctx} />
-                        </span>
-                      </span>
-                      <span className="text-end">
-                        <Money
-                          minor={inv.totalMinor}
-                          currency={inv.currency}
-                          locale={locale}
-                          className="block text-sm font-bold"
-                        />
-                        {inv.dueMinor > 0 && inv.dueMinor !== inv.totalMinor && (
-                          <span className="block text-xs text-muted-foreground">
-                            {f.due}:{" "}
-                            <Money minor={inv.dueMinor} currency={inv.currency} locale={locale} />
-                          </span>
-                        )}
+                      {f[`tab_${s}`]}
+                      <span className={cn("text-xs tabular-nums", on && "opacity-80")}>
+                        {formatNumber(count(s), locale)}
                       </span>
                     </Link>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-        </>
+                  );
+                })}
+              </nav>
+            </FrameCell>
+          </FrameGrid>
+          <FrameGrid cols={1}>
+            <FrameCell pad="none">
+              {list.length === 0 ? (
+                <EmptyState icon={SearchXIcon} title={f.invoicesNoMatch} />
+              ) : (
+                <>
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{f.number}</TableHead>
+                          <TableHead>{f.client}</TableHead>
+                          <TableHead>{f.issueDate}</TableHead>
+                          <TableHead>{f.dueDate}</TableHead>
+                          <TableHead className="text-end">{f.total}</TableHead>
+                          <TableHead className="text-end">{f.due}</TableHead>
+                          <TableHead>{t.common.status}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {list.map((inv) => (
+                          <TableRow key={inv.id}>
+                            <TableCell>
+                              <Link
+                                href={href(`/panel/invoices/${inv.id}`)}
+                                className="font-mono font-bold hover:text-primary-ink"
+                                dir="ltr"
+                              >
+                                {inv.number}
+                              </Link>
+                            </TableCell>
+                            <TableCell>
+                              <ClientCell inv={inv} />
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {formatDate(inv.issueDate, ctx.fmt)}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              <DueCell inv={inv} today={today} ctx={ctx} />
+                            </TableCell>
+                            <TableCell className="text-end">
+                              <Money
+                                minor={inv.totalMinor}
+                                currency={inv.currency}
+                                locale={locale}
+                                className="font-semibold"
+                              />
+                            </TableCell>
+                            <TableCell className="text-end">
+                              {inv.dueMinor > 0 && inv.status !== "draft" ? (
+                                <Money
+                                  minor={inv.dueMinor}
+                                  currency={inv.currency}
+                                  locale={locale}
+                                  className="font-bold"
+                                />
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <InvoiceStatusBadge status={inv.status} t={f} />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <ul className="divide-y divide-frame-line md:hidden">
+                    {list.map((inv) => (
+                      <li key={inv.id}>
+                        <Link
+                          href={href(`/panel/invoices/${inv.id}`)}
+                          className="flex items-start gap-3 px-(--cell-pad) py-3 transition-colors hover:bg-card"
+                        >
+                          <span className="min-w-0 flex-1 space-y-1">
+                            <span className="flex items-center gap-2">
+                              <span className="font-mono text-sm font-bold" dir="ltr">
+                                {inv.number}
+                              </span>
+                              <InvoiceStatusBadge status={inv.status} t={f} />
+                            </span>
+                            <span className="block truncate text-sm">
+                              {inv.client?.name ?? "—"}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              <DueCell inv={inv} today={today} ctx={ctx} />
+                            </span>
+                          </span>
+                          <span className="text-end">
+                            <Money
+                              minor={inv.totalMinor}
+                              currency={inv.currency}
+                              locale={locale}
+                              className="block text-sm font-bold"
+                            />
+                            {inv.dueMinor > 0 && inv.dueMinor !== inv.totalMinor && (
+                              <span className="block text-xs text-muted-foreground">
+                                {f.due}:{" "}
+                                <Money
+                                  minor={inv.dueMinor}
+                                  currency={inv.currency}
+                                  locale={locale}
+                                />
+                              </span>
+                            )}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </FrameCell>
+          </FrameGrid>
+        </FrameBox>
       )}
     </>
   );
@@ -294,9 +308,9 @@ type Row = ReturnType<typeof listInvoices>[number];
 function ClientCell({ inv }: { inv: Row }) {
   return (
     <span className="flex items-center gap-2.5">
-      <Avatar className="size-8 rounded-lg">
+      <Avatar className="size-8 rounded-none">
         <AvatarFallback
-          className="rounded-lg text-xs text-white"
+          className="rounded-none text-xs text-white"
           style={{ backgroundColor: inv.client?.color ?? "#919EAB" }}
         >
           {inv.client ? initials(inv.client.name) : "—"}

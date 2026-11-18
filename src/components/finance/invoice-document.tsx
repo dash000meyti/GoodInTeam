@@ -47,8 +47,10 @@ export interface InvoiceBrand {
 }
 
 /**
- * The invoice as a printable document (panel detail + public page). Pure
- * presentational component; `#invoice-doc` is targeted by <InvoicePrintStyles/>.
+ * The invoice as a printable document (panel detail + public page): a framed
+ * box (square, hairline, corner markers) on the card surface, like paper.
+ * Pure presentational component; `#invoice-doc` is targeted by
+ * <InvoicePrintStyles/> (no markers, no frame on paper).
  */
 export function InvoiceDocument({
   invoice,
@@ -80,10 +82,8 @@ export function InvoiceDocument({
   return (
     <article
       id="invoice-doc"
-      className={cn(
-        "relative overflow-hidden rounded-2xl bg-card text-card-foreground shadow-card dark:border dark:border-border",
-        className,
-      )}
+      data-density="compact"
+      className={cn("frame-box bg-card text-card-foreground", className)}
     >
       <div aria-hidden className="h-1.5 bg-primary" />
       <div className="space-y-8 p-5 sm:p-10">
@@ -116,7 +116,7 @@ export function InvoiceDocument({
           </div>
         </header>
 
-        <section className="grid gap-6 rounded-xl bg-muted/60 p-5 sm:grid-cols-2">
+        <section className="grid gap-6 border border-frame-line bg-background p-5 sm:grid-cols-2">
           <div className="min-w-0 space-y-1 text-sm">
             <p className="text-xs font-bold text-muted-foreground">{f.billTo}</p>
             {invoice.client ? (
@@ -252,7 +252,7 @@ export function InvoiceDocument({
               </Row>
             )}
             {invoice.status !== "void" && (
-              <div className="mt-3 flex items-center justify-between gap-4 rounded-xl bg-primary/10 px-4 py-3 text-primary-dark dark:text-primary-light">
+              <div className="mt-3 flex items-center justify-between gap-4 bg-primary/12 px-4 py-3 text-primary-dark dark:text-primary-light">
                 <dt className="font-bold">{f.amountDue}</dt>
                 <dd className="text-lg font-black">
                   <Money minor={invoice.dueMinor} currency={cur} locale={locale} />
@@ -286,7 +286,7 @@ export function InvoiceDocument({
         <div
           aria-hidden
           className={cn(
-            "pointer-events-none absolute end-6 top-28 rotate-[-12deg] rounded-xl border-[3px] px-4 py-1 text-2xl font-black tracking-widest uppercase opacity-80 select-none sm:end-12 sm:top-32 sm:text-3xl",
+            "pointer-events-none absolute end-6 top-28 rotate-[-12deg] rounded-[6px] border-[3px] px-4 py-1 text-2xl font-black tracking-widest uppercase opacity-80 select-none sm:end-12 sm:top-32 sm:text-3xl",
             invoice.status === "paid"
               ? "border-success text-success-ink"
               : "border-destructive text-destructive",
@@ -333,6 +333,7 @@ export function InvoicePrintStyles() {
   html, body { background: #fff !important; }
   body * { visibility: hidden !important; }
   #invoice-doc, #invoice-doc * { visibility: visible !important; }
+  #invoice-doc::before, #invoice-doc::after { display: none !important; }
   #invoice-doc {
     position: absolute; inset-inline: 0; top: 0; margin: 0 !important;
     box-shadow: none !important; border: 0 !important; border-radius: 0 !important;
