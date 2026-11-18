@@ -14,10 +14,10 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/shared/confirm-button";
 import { useAction } from "@/components/shared/use-action-form";
+import { FrameCell, FrameGrid } from "@/components/shell/frame";
 import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import {
@@ -81,8 +81,8 @@ export function Uploader() {
         upload(e.dataTransfer.files);
       }}
       className={cn(
-        "mb-6 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-muted/30 px-6 py-10 text-center transition-colors hover:border-primary/50 hover:bg-primary/[0.03]",
-        drag && "border-primary-ink bg-primary/5",
+        "group flex cursor-pointer flex-col items-center justify-center gap-2 border border-dashed border-frame-line bg-card px-6 py-8 text-center transition-colors hover:border-foreground/40 has-focus-visible:border-foreground",
+        drag && "border-foreground bg-primary/8",
       )}
     >
       <input
@@ -94,7 +94,12 @@ export function Uploader() {
         onChange={(e) => e.target.files && upload(e.target.files)}
         disabled={pending}
       />
-      <span className="flex size-14 items-center justify-center rounded-2xl bg-primary/12 text-primary-ink">
+      <span
+        className={cn(
+          "mb-1 flex size-14 items-center justify-center border border-frame-line bg-background bg-[radial-gradient(var(--dots)_1px,transparent_1.5px)] [background-size:12px_12px] text-muted-foreground transition-colors group-hover:text-foreground",
+          drag && "border-[var(--primary-dark)] bg-primary text-primary-foreground",
+        )}
+      >
         {pending ? (
           <Loader2Icon className="size-6 animate-spin" />
         ) : (
@@ -159,19 +164,41 @@ function CopyUrl({ url }: { url: string }) {
   );
 }
 
+/** Filler cells per breakpoint (md 2, lg 3, xl 4 columns); literal classes for Tailwind. */
+const FILLER: Record<string, string> = {
+  "100": "hidden md:block lg:hidden",
+  "010": "hidden lg:block xl:hidden",
+  "001": "hidden xl:block",
+  "110": "hidden md:block xl:hidden",
+  "101": "hidden md:block lg:hidden xl:block",
+  "011": "hidden lg:block",
+  "111": "hidden md:block",
+};
+const trailing = (n: number, cols: number) => (cols - (n % cols)) % cols;
+
+/**
+ * The library's files as cells of ONE framed grid (1 / 2 / 3 / 4 columns),
+ * sharing the box's hairlines: thumbnail edge to edge, then name, type,
+ * size and the actions; dots fillers complete the last row.
+ */
 export function MediaGrid({ items }: { items: MediaRow[] }) {
   const t = useT();
   const c = t.content;
   const { exec } = useAction();
+  const units = {
+    md: trailing(items.length, 2),
+    lg: trailing(items.length, 3),
+    xl: trailing(items.length, 4),
+  };
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <FrameGrid cols={3} className="xl:grid-cols-4">
       {items.map((m) => (
-        <Card key={m.id} className="gap-0 overflow-hidden py-0">
+        <FrameCell key={m.id} as="figure" pad="none" className="flex flex-col">
           <a
             href={m.url}
             target="_blank"
             rel="noopener"
-            className="relative block aspect-[4/3] bg-muted"
+            className="relative block aspect-[4/3] shrink-0 overflow-hidden border-b border-frame-line bg-card bg-[radial-gradient(var(--dots)_1px,transparent_1.5px)] [background-size:12px_12px]"
           >
             {m.kind === "image" ? (
               // eslint-disable-next-line @next/next/no-img-element -- library thumbnails (any type incl. SVG)
@@ -179,14 +206,14 @@ export function MediaGrid({ items }: { items: MediaRow[] }) {
                 src={m.url}
                 alt={m.alt ?? ""}
                 loading="lazy"
-                className="size-full object-cover"
+                className="absolute inset-0 size-full object-cover"
               />
             ) : (
               <span className="flex size-full items-center justify-center text-muted-foreground">
                 {m.kind === "pdf" ? (
-                  <FileTextIcon className="size-10" />
+                  <FileTextIcon className="size-10" strokeWidth={1.5} />
                 ) : (
-                  <FilmIcon className="size-10" />
+                  <FilmIcon className="size-10" strokeWidth={1.5} />
                 )}
               </span>
             )}
@@ -196,7 +223,7 @@ export function MediaGrid({ items }: { items: MediaRow[] }) {
               </Badge>
             )}
           </a>
-          <div className="space-y-2.5 p-3">
+          <figcaption className="flex flex-1 flex-col gap-2.5 p-3">
             <div className="flex items-start gap-1">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold" dir="ltr" title={m.name}>
@@ -221,9 +248,17 @@ export function MediaGrid({ items }: { items: MediaRow[] }) {
               />
             </div>
             {m.kind === "image" && <AltEditor item={m} />}
-          </div>
-        </Card>
+          </figcaption>
+        </FrameCell>
       ))}
-    </div>
+      {Array.from({ length: Math.max(units.md, units.lg, units.xl) }, (_, i) => (
+        <FrameCell
+          key={`filler-${i}`}
+          tone="dots"
+          aria-hidden
+          className={FILLER[`${+(i < units.md)}${+(i < units.lg)}${+(i < units.xl)}`]}
+        />
+      ))}
+    </FrameGrid>
   );
 }

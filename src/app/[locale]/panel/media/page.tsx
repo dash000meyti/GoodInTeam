@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { formatDate, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { listMedia } from "@/server/modules/media/service";
@@ -10,6 +11,20 @@ import { MediaGrid, Uploader, type MediaRow } from "./_components/media-library"
 
 const kinds = ["image", "pdf", "video"] as const;
 
+/** The site's filter chip at panel size (the invoices status chips). */
+const chip = (on: boolean) =>
+  cn(
+    "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border px-3 text-sm font-semibold whitespace-nowrap transition-colors",
+    on
+      ? "border-foreground bg-foreground text-background"
+      : "border-frame-line bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+  );
+
+/**
+ * Media library (framed): the page box, then ONE library box — the upload
+ * row (drop zone), the kind filter chips, and the files as cells of one
+ * framed grid (1 / 2 / 3 / 4 columns) sharing hairlines.
+ */
 export default async function MediaPage({ searchParams }: PageProps<"/[locale]/panel/media">) {
   const { actor, t, href, fmt, locale } = await panelContext({ roles: ["owner", "admin"] });
   const sp = await searchParams;
@@ -47,28 +62,41 @@ export default async function MediaPage({ searchParams }: PageProps<"/[locale]/p
         description={c.mediaSubtitle}
         crumbs={[{ label: t.nav.dashboard, href: href("/panel") }, { label: c.mediaTitle }]}
       />
-      <Uploader />
-      <div className="mb-5 flex gap-2">
-        {tabs.map((tb) => (
-          <Link
-            key={tb.label}
-            href={href(`/panel/media${tb.k ? `?kind=${tb.k}` : ""}`)}
-            className={cn(
-              "inline-flex h-9 items-center rounded-full border px-3.5 text-sm font-semibold transition-colors",
-              tb.k === kind
-                ? "border-transparent bg-grey-800 text-white dark:bg-white dark:text-grey-800"
-                : "border-border text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {tb.label}
-          </Link>
-        ))}
-      </div>
-      {rows.length === 0 ? (
-        <EmptyState icon={ImageIcon} title={c.mediaEmpty} description={c.mediaEmptyHint} />
-      ) : (
-        <MediaGrid items={rows} />
-      )}
+      <FrameBox as="section" density="compact" ariaLabel={c.mediaTitle}>
+        <FrameGrid cols={1}>
+          <FrameCell>
+            <Uploader />
+          </FrameCell>
+        </FrameGrid>
+        <FrameGrid cols={1}>
+          <FrameCell className="py-3">
+            <nav
+              aria-label={t.common.filter}
+              className="-mx-1 flex max-w-[calc(100%+0.5rem)] scrollbar-thin gap-1.5 overflow-x-auto px-1 py-0.5"
+            >
+              {tabs.map((tb) => (
+                <Link
+                  key={tb.label}
+                  href={href(`/panel/media${tb.k ? `?kind=${tb.k}` : ""}`)}
+                  aria-current={tb.k === kind ? "page" : undefined}
+                  className={chip(tb.k === kind)}
+                >
+                  {tb.label}
+                </Link>
+              ))}
+            </nav>
+          </FrameCell>
+        </FrameGrid>
+        {rows.length === 0 ? (
+          <FrameGrid cols={1}>
+            <FrameCell pad="none">
+              <EmptyState icon={ImageIcon} title={c.mediaEmpty} description={c.mediaEmptyHint} />
+            </FrameCell>
+          </FrameGrid>
+        ) : (
+          <MediaGrid items={rows} />
+        )}
+      </FrameBox>
     </>
   );
 }
