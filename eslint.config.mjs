@@ -15,16 +15,34 @@ const BRIGHT_TEXT =
 const BRIGHT_TEXT_MESSAGE =
   "Bright text tokens fail contrast on light surfaces. Use text-primary-ink / text-warning-ink / text-success-ink / text-info-ink (or dark:text-…), or text-[color:var(--…)] on a surface that is dark in both modes.";
 
+/**
+ * Update-schema guard (docs/conventions.md → "Forms"): zod 4 keeps `.default()`
+ * inside `.partial()`, so `createInput.partial()` resets every omitted field
+ * that has a default (a title-only update wiped page bodies). Forbid
+ * `.partial()` on a create schema (`somethingInput`), directly or after one
+ * derived step (`somethingInput.extend(…).partial()`, `.omit(…)`, `.pick(…)`).
+ * `src/server/modules/update-schemas.test.ts` proves the result at runtime.
+ */
+const PARTIAL_OF_INPUT = [
+  'CallExpression[callee.property.name="partial"][callee.object.name=/Input$/]',
+  'CallExpression[callee.property.name="partial"][callee.object.callee.object.name=/Input$/]',
+];
+const PARTIAL_OF_INPUT_MESSAGE =
+  "Never build an update schema with .partial() of a create schema: zod 4 keeps .default() inside .partial(), so a partial update resets every omitted field that has a default. Declare the fields once without defaults (const thingFields = z.object({…})), add the defaults in the create schema and use thingFields.partial().extend({ id: zId }) for updates. See docs/conventions.md → Forms.";
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
     files: ["src/**/*.{ts,tsx}"],
     rules: {
+      // One rule, one options list: a second `no-restricted-syntax` entry for the
+      // same files would REPLACE this one, not add to it.
       "no-restricted-syntax": [
         "error",
         { selector: `Literal[value=${BRIGHT_TEXT}]`, message: BRIGHT_TEXT_MESSAGE },
         { selector: `TemplateElement[value.raw=${BRIGHT_TEXT}]`, message: BRIGHT_TEXT_MESSAGE },
+        ...PARTIAL_OF_INPUT.map((selector) => ({ selector, message: PARTIAL_OF_INPUT_MESSAGE })),
       ],
     },
   },

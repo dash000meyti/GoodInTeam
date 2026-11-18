@@ -65,9 +65,10 @@ FormData strings parse correctly. `""` → `undefined` (create) or `null` (clear
 - **An update schema adds nothing the caller did not send**: `updateThingInput.parse({ id })` is
   exactly `{ id }`. The service writes only the keys it got; when nothing was sent it changes
   nothing (drizzle throws on an empty `set`, so return the current row instead).
-  `src/server/modules/update-schemas.test.ts` enforces it: it parses the id alone with every
-  exported `update*Input` / `*PatchInput` of every module (a schema that really needs more than
-  the id lists those keys in the test's `REQUIRED` map).
+  Two guards enforce it: ESLint (`no-restricted-syntax` in `eslint.config.mjs`) rejects `.partial()`
+  on a `…Input` schema, and `src/server/modules/update-schemas.test.ts` parses the id alone with
+  every exported `update*Input` / `*PatchInput` of every module (a schema that really needs more
+  than the id lists those keys in the test's `REQUIRED` map).
 - A form that both creates and updates (the post editor's `savePostInput`) is a full form: it
   **requires** the fields the create schema defaults; it never defaults them.
 
