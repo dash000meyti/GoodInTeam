@@ -45,6 +45,9 @@ test("no sign-in attempt is evaluated outside the throttle", async ({ request })
 });
 
 test("the sign-in throttle holds under rotating forged addresses", async ({ request }) => {
+  // The check does not depend on the browser, and the budget it spends is
+  // shared by every project of a `BROWSERS=all` run: once per run is enough.
+  test.skip(test.info().project.name !== "chromium", "runs once per run (chromium)");
   const login = actionId("login", "auth/actions");
   const email = `nobody-${rand}@example.test`;
   const codes: string[] = [];
