@@ -46,9 +46,30 @@ FormData strings parse correctly. `""` → `undefined` (create) or `null` (clear
   `zNullNumber` / `zNullNumberOf(...)` (absent = untouched, `""`/`null` = clear).
 - Days: `zOptDay` (create) / `zNullDay` (update) — a real `YYYY-MM-DD` or ISO date-time.
 - Currencies: `zCurrency` (trimmed, upper-cased, one of `currencyCodes`).
-- **Never build an update schema with `.partial()` of a create schema** — zod 4 still applies
-  `.default()`s inside `partial()`, so a partial update would reset untouched fields. Write a
-  separate update schema without defaults, and have the service write only the keys it got.
+- **Never build an update schema with `.partial()` of a create schema** — zod 4 keeps
+  `.default()` inside `.partial()` (also after `.extend()` / `.omit()` / `.pick()`), so a partial
+  update resets every omitted field that has a default (a title-only update wiped page bodies).
+  Declare the fields **once, without defaults**, and derive both schemas from that shape:
+
+  ```ts
+  const thingFields = z.object({ title: z.string().trim().min(1), status: z.enum(statuses) });
+  export const thingInput = thingFields.extend({
+    status: thingFields.shape.status.default("draft"), // defaults live in the create schema only
+  });
+  export const updateThingInput = thingFields.partial().extend({ id: zId });
+  ```
+
+  Or write the update schema out by hand (as `projects` and `clients` do) when a field needs its
+  "clear" variant on update (`zNullDay`, `zNullNumber`…).
+
+- **An update schema adds nothing the caller did not send**: `updateThingInput.parse({ id })` is
+  exactly `{ id }`. The service writes only the keys it got; when nothing was sent it changes
+  nothing (drizzle throws on an empty `set`, so return the current row instead).
+  `src/server/modules/update-schemas.test.ts` enforces it: it parses the id alone with every
+  exported `update*Input` / `*PatchInput` of every module (a schema that really needs more than
+  the id lists those keys in the test's `REQUIRED` map).
+- A form that both creates and updates (the post editor's `savePostInput`) is a full form: it
+  **requires** the fields the create schema defaults; it never defaults them.
 
 ## Dates & time
 
