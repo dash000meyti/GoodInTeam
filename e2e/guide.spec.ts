@@ -299,6 +299,31 @@ test.describe("a tall box (1440×700)", () => {
   });
 });
 
+test("its top border scrolling under the menu bar: the bot drops down from under it", async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, TOUCH);
+  await setup(page, { seen: HOME });
+  await page.goto("/en");
+  await engine(page);
+  await scrollBoxTo(page, "home_work", 430);
+  await settled(page, "top");
+  // still the active box (it spans the activation band), but its top border is gone
+  await scrollBoxTo(page, "home_work", 20);
+  const box = await rect(page, '[data-guide="home_work"]');
+  expect(box.bottom).toBeGreaterThan(900 * 0.5);
+  await settled(page, "chrome");
+  const top = parseFloat(
+    await page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue("--chrome-top"),
+    ),
+  );
+  expect(Math.abs((await rect(page, ".gt-guide-sprite")).top + 12 - (top + 2))).toBeLessThanOrEqual(
+    1,
+  );
+});
+
 test.describe("reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
 

@@ -100,6 +100,7 @@ let o: GuideOptions;
 let root: HTMLElement;
 let desk: HTMLElement;
 let btn: HTMLButtonElement;
+let slot: HTMLElement;
 let svg: SVGElement;
 let bub: HTMLElement;
 let typedEl: HTMLElement;
@@ -112,6 +113,7 @@ let small = false;
 let ac: AbortController | null = null;
 let io: IntersectionObserver | null = null;
 let ro: ResizeObserver | null = null;
+let so: IntersectionObserver | null = null;
 let band: Element[] = [];
 let cand: Element | null = null;
 let active: Element | null = null;
@@ -506,6 +508,25 @@ function reanchor() {
   if (open && !bub.hidden) placeBubbleNow();
 }
 
+/**
+ * The bot's anchor line scrolled out of view (under the menu bar or behind the
+ * dock) while its box is still active, e.g. a tall box's top border: re-anchor
+ * (it drops down from under the menu bar). An observer on the slot, so no
+ * scroll listener; an explicit bubble keeps it where it is.
+ */
+function watch() {
+  so?.disconnect();
+  so = new IntersectionObserver(
+    ([e]) => {
+      if (e!.isIntersecting || !up || !on || small || tour || open?.kind === "explicit") return;
+      close();
+      goTo(on);
+    },
+    { rootMargin: `${-chrome.top}px 0px ${-chrome.dock}px 0px` },
+  );
+  so.observe(slot);
+}
+
 function boot() {
   if (mode === "auto") return;
   mode = "auto";
@@ -576,6 +597,7 @@ function boot() {
     () => (doc.hidden ? stopT("idle", "sit", "dw") : input()),
     sig,
   );
+  watch();
   greet();
   input();
 }
@@ -597,7 +619,8 @@ function halt() {
   ac?.abort();
   io?.disconnect();
   ro?.disconnect();
-  ac = io = ro = null;
+  so?.disconnect();
+  ac = io = ro = so = null;
   for (const k in tm) clearTimeout(tm[k]);
   close();
   hideBubble();
@@ -695,6 +718,7 @@ function step(i: number) {
 function wire() {
   root = o.root;
   desk = (root.closest(".os-desktop") as HTMLElement) ?? root.parentElement!;
+  slot = $(".gt-guide-slot");
   btn = $(".gt-guide-sprite");
   svg = $("svg.px-sprite");
   bub = $("#gt-guide-bubble");
@@ -742,7 +766,9 @@ function setCompact(c: boolean) {
   if (open && !open.tour) close();
   hideBot();
   data("bot", "");
-  if (mode === "auto" && active) goTo(c ? null : active);
+  if (mode !== "auto") return;
+  watch();
+  if (active) goTo(c ? null : active);
 }
 
 const api: GuideApi = {
