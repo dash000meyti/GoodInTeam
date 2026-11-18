@@ -9,15 +9,18 @@ clients in their portal.
 src/server/modules/docs/{schemas,service,actions,tools}.ts
 src/server/modules/docs/tree.ts (+ tree.test.ts)     pure helpers: tree, snippets, normalization
 src/app/[locale]/panel/docs/
-  layout.tsx                 page tree (streams in) + current page
-  page.tsx                   home: stats, recent pages, sections · search results (?q=) · portal view
+  layout.tsx                 page tree box from xl (streams in) + current page
+  page.tsx                   home: counters, recent pages, sections · search results (?q=) · portal view
   [id]/page.tsx              page view (breadcrumbs, markdown, TOC, subpages, print)
   [id]/edit/page.tsx         editor
   new/page.tsx               editor for a new page (?parentId=, ?projectId=)
   archive/page.tsx           archived pages (restore / delete)
   */loading.tsx              per-segment skeletons (instant navigations)
+  _components/pages-bar.tsx  docTreeItems() + <DocsPagesBarSlot> (the tree's toolbar box below xl)
+  _components/docs-skeletons.tsx   loading states, box for box with the pages
   _components/project-docs-panel.tsx   <ProjectDocsPanel projectId ctx clientView /> for the project page
-src/components/docs/          sidebar tree, editor, emoji picker, TOC, actions, badges
+src/components/docs/          sidebar tree + toolbar box, editor, emoji picker, TOC, actions, badges,
+                              DocIconTile (emoji on a square hairline tile)
 src/i18n/messages/{fa,en}/docs.ts
 ```
 
@@ -57,17 +60,36 @@ Latin text and normalising Arabic ي/ى/ك/ة to Persian ی/ک/ه on both sides.
 Snippets are built from plain text (`markdownToText`) around the first match with `[start, end)`
 ranges for `<mark>` highlighting.
 
+## Layout (framed)
+
+The pages speak the panel's frame language (docs/design-system.md "Frame", "Panel density"):
+
+- **Tree**: from xl a sticky framed box beside the page (header + "new page", search + filter, the
+  scrolling tree, archive — rows sharing hairlines; the open page gets an ink bar on its start
+  edge). Below xl every page renders the tree's **toolbar box** (pages drawer + search) right
+  under its page box (`DocsPagesBarSlot`; the editor takes it as `pagesBar`), so the page box stays
+  first and keeps the full width for its title, actions and decor.
+- **Home**: the counters are the page box's second row; one box holds "Recently updated" (rows)
+  and "Sections" (top-level pages as one framed grid). Search results, the archive and the portal
+  view are one box each.
+- **Page**: the page box (strip `DOCS/PAGE`, crumbs, icon tile + title, badges, actions; an
+  "archived" row), the article box (markdown in a centred `.prose-gt` column, max 48rem), the
+  subpages as one framed grid.
+- **Editor**: one box — editor cell (emoji + title row, markdown edge to edge) and the sticky
+  page-settings cell share a hairline from lg.
+
 ## Page view & editor
 
 - View: breadcrumbs (visible ancestors), emoji icon + title, visibility badge, project/client
   links, "last edited by", rendered markdown (`renderMarkdown`, Shiki, raw HTML escaped), an
-  "On this page" TOC from the rendered headings (sticky with scroll-spy on wide screens, collapsible
-  above the article otherwise), subpage cards, copy link, print (CSS prints only the article).
+  "On this page" TOC from the rendered headings (a sticky side cell with scroll-spy from lg, a
+  collapsible row above the article otherwise), subpages, copy link, print (CSS prints only the
+  article box, without its frame).
 - Editor: title, emoji picker, `MarkdownEditor` with server preview, visibility cards, parent page
   (excluding the page and its subtree), project and client selects, `Ctrl/⌘+S`, unsaved-changes
-  guard, sticky save bar on phones. While typing, a **draft** is saved to `localStorage`
+  guard, sticky framed save bar on phones. While typing, a **draft** is saved to `localStorage`
   (`gt-doc-draft:<id|new>`, debounced); on the next visit a differing draft triggers a
-  "restore draft?" banner. Saving or cancelling clears it.
+  "restore draft?" row at the top of the editor box. Saving or cancelling clears it.
 - New subpages inherit the parent's visibility and links; pages created from a project default to
   `team` and are linked to that project; other new pages start `private`.
 

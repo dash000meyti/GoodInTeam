@@ -161,10 +161,17 @@ the bundled variable fonts (Vazirmatn incl. Latin, Public Sans) and stored in
   Instagram, Mastodon, Bluesky, Threads, YouTube — shown on the post with
   `rel="syndication"`; auto-posting is a future integration), delete.
 - `/panel/content/series` (courses) and `/panel/content/testimonials`.
+- Framed layout (docs/design-system.md "Frame", "Panel density"): the CMS sub-navigation (posts ·
+  courses · testimonials) is a chip row of the page box, followed on the posts page by the KPIs
+  row; lists are one box (filters row, then the table edge to edge or rows on phones);
+  testimonials are cells of one framed grid. The post editor is **one box**: the writing column
+  (fields, the type's sections, SEO) and the publishing column (publish — sticky from lg —,
+  details, cover, translations, syndication, delete) share a hairline from lg.
 - `/panel/inbox`: leads by status (new → contacted → qualified → won / lost, spam), detail
   drawer, reply by email, **convert to client** (creates a client and marks the lead won).
 - `/panel/media`: drag & drop upload (≤ 20 MB; PNG, JPG, WebP, AVIF, GIF, SVG, PDF, MP4),
-  sha256 de-duplication, alt text, copy URL, delete.
+  sha256 de-duplication, alt text, copy URL, delete. One library box: the drop zone row, the
+  kind chips, the files as cells of one framed grid (1 / 2 / 3 / 4 columns, dots fillers).
 
 ## Contact form → leads
 
