@@ -13,6 +13,4 @@ export const auth = {
   passwordHint: "حداقل ۱۰ کاراکتر. یک عبارت بلند و به‌یادماندنی بهترین انتخاب است.",
   backToSite: "بازگشت به سایت",
   clientHint: "مشتری هستید؟ با ایمیلی که برایتان ارسال شده وارد شوید.",
-  showPassword: "نمایش رمز عبور",
-  hidePassword: "پنهان کردن رمز عبور",
 } as const satisfies Record<string, string>;

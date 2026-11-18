@@ -41,8 +41,6 @@ export const settings = {
   changePassword: "تغییر رمز",
   passwordChanged: "رمز عبور تغییر کرد.",
   passwordChangedRevoked: "رمز عبور تغییر کرد و {n} نشست دیگر بسته شد.",
-  showPassword: "نمایش رمز",
-  hidePassword: "پنهان کردن رمز",
   strength: "قدرت رمز",
   strength_0: "خیلی کوتاه",
   strength_1: "ضعیف",

@@ -115,6 +115,9 @@ export const designSystem: Record<keyof typeof fa, string> = {
   switch: "Switch",
   toggleGroup: "Toggle group",
   datePicker: "Date picker",
+  passwordInput: "Password field",
+  passwordInputHint:
+    "One shared field for login, setup and security. It is an LTR island, so the show/hide toggle never sits over the text on Persian pages.",
   datePickerHint:
     "fa uses the Jalali calendar, en the Gregorian one; both emit Gregorian YYYY-MM-DD.",
   jalali: "Jalali",

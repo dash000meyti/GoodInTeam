@@ -5,6 +5,7 @@ import { Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/shared/password-input";
 import { useT } from "@/i18n/client";
 import { setupOwner } from "@/server/modules/auth/actions";
 
@@ -42,12 +43,10 @@ export function SetupForm() {
         hint={t.auth.passwordHint}
         error={errors.password?.[0]}
       >
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="new-password"
-          dir="ltr"
           minLength={10}
           required
         />

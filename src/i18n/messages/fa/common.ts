@@ -25,6 +25,7 @@ export const common = {
   yes: "بله",
   no: "خیر",
   loading: "در حال بارگذاری…",
+  showPassword: "نمایش رمز عبور",
   empty: "هنوز چیزی اینجا نیست.",
   actions: "عملیات",
   copy: "کپی",

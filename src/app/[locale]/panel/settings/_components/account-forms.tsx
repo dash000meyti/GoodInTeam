@@ -11,6 +11,7 @@ import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PasswordInput } from "@/components/shared/password-input";
 import { SwitchInput } from "@/components/shared/switch-input";
 import { useActionForm } from "@/components/shared/use-action-form";
 import { localePath, localeMeta, locales } from "@/i18n/config";
@@ -19,7 +20,6 @@ import { format } from "@/i18n/format-message";
 import { cn, initials } from "@/lib/utils";
 import { changePasswordAction } from "@/server/modules/auth/actions";
 import { updateAccountAction } from "@/server/modules/users/actions";
-import { PasswordInput } from "./password-input";
 import { passwordStrength } from "./password-strength";
 import { SettingsCard } from "./section";
 

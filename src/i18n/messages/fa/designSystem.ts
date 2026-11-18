@@ -114,6 +114,9 @@ export const designSystem = {
   switch: "کلید",
   toggleGroup: "گروه دکمه",
   datePicker: "انتخاب تاریخ",
+  passwordInput: "فیلد رمز عبور",
+  passwordInputHint:
+    "یک فیلد مشترک برای ورود، راه‌اندازی و امنیت. کل فیلد چپ‌به‌راست است، پس دکمهٔ نمایش/پنهان در صفحه‌های فارسی هیچ‌وقت روی متن نمی‌افتد.",
   datePickerHint: "fa با تقویم جلالی و en با میلادی؛ هر دو مقدار میلادی ‎YYYY-MM-DD‎ برمی‌گردانند.",
   jalali: "جلالی",
   gregorian: "میلادی",

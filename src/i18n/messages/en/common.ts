@@ -27,6 +27,7 @@ export const common: Record<keyof typeof fa, string> = {
   yes: "Yes",
   no: "No",
   loading: "Loading…",
+  showPassword: "Show password",
   empty: "Nothing here yet.",
   actions: "Actions",
   copy: "Copy",

@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/shared/password-input";
 import { useT } from "@/i18n/client";
 import { login } from "@/server/modules/auth/actions";
 
@@ -14,7 +15,6 @@ export function LoginForm() {
   const next = useSearchParams().get("next") ?? undefined;
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [show, setShow] = useState(false);
 
   return (
     <form
@@ -46,25 +46,7 @@ export function LoginForm() {
         />
       </Field>
       <Field label={t.auth.password} htmlFor="password">
-        <div className="relative">
-          <Input
-            id="password"
-            name="password"
-            type={show ? "text" : "password"}
-            autoComplete="current-password"
-            dir="ltr"
-            required
-            className="pe-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShow((s) => !s)}
-            className="absolute inset-y-0 end-0 flex w-10 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground"
-            aria-label={show ? t.auth.hidePassword : t.auth.showPassword}
-          >
-            {show ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
-          </button>
-        </div>
+        <PasswordInput id="password" name="password" autoComplete="current-password" required />
       </Field>
       {error && (
         <p

@@ -42,8 +42,6 @@ export const settings: Record<keyof typeof fa, string> = {
   changePassword: "Change password",
   passwordChanged: "Password changed.",
   passwordChangedRevoked: "Password changed and {n} other sessions were signed out.",
-  showPassword: "Show password",
-  hidePassword: "Hide password",
   strength: "Strength",
   strength_0: "Too short",
   strength_1: "Weak",

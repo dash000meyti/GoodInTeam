@@ -19,6 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { PasswordInput } from "@/components/shared/password-input";
 import { Markdown } from "@/components/shared/markdown";
 import { MarkdownEditor } from "@/components/shared/markdown-editor";
 import type { Messages } from "@/i18n/messages";
@@ -123,6 +124,21 @@ export function FormsSection({ t }: { t: Messages }) {
 // zod: visibleToClient: zBool`}
       >
         <SwitchDemo />
+      </Example>
+      <Example
+        title={d.passwordInput}
+        description={d.passwordInputHint}
+        code={`import { PasswordInput } from "@/components/shared/password-input";
+<Field label={t.auth.password} htmlFor="password">
+  <PasswordInput id="password" name="password" autoComplete="current-password" required />
+</Field>
+// An LTR island (dir="ltr" on the wrapper): the toggle and its padding share one side in fa and en.`}
+      >
+        <div className="w-full max-w-xs">
+          <Field label={t.auth.password}>
+            <PasswordInput defaultValue="correct-horse-battery" autoComplete="off" />
+          </Field>
+        </div>
       </Example>
       <Example
         title={d.toggleGroup}
