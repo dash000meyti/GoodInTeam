@@ -4,9 +4,10 @@
 `src/components/ui`, semantic CSS variables, `cva` variants, `data-slot` attributes).
 **Look** is "Good In OS" (spec: [`design/os-redesign.md`](design/os-redesign.md)): brand yellow
 `#FFC50D` as the only accent, neutral greys, ink text, a macOS-like shell (menu bar, dock,
-windows) and, on the public site, Cloudflare-style **framed boxes** on a dotted desktop. Panel
-content keeps the soft Minimals surfaces (rounded cards, alpha badges). Brand assets (pixel
-logo, icons, the GoodInBot sprite) are documented in [brand.md](brand.md).
+windows) and Cloudflare-style **framed boxes**: on the public site on a dotted desktop, in the
+panel inside the window at panel density (one frame language; see [Frame](#frame-site-and-panel)).
+Badges stay soft (alpha fills). Brand assets (pixel logo, icons, the GoodInBot sprite) are
+documented in [brand.md](brand.md).
 
 A live catalog is at **Panel → Design system** (`/panel/design-system`, owner/admin): every
 token and component with a live preview and a copyable usage snippet. Its sections live in
@@ -92,16 +93,16 @@ its first `}`); never write a literal `:root {` / `.dark {` inside a comment abo
 here"). Everything new lives in owned partials under `src/app/styles/`, imported right after
 `tw-animate-css` in this order:
 
-| Partial           | Owner (track) | Holds                                                                                 |
-| ----------------- | ------------- | ------------------------------------------------------------------------------------- |
-| `os-shell.css`    | foundation    | shell variables, offset utilities, menu bar, menus, dock, lights, window, clock, boot |
-| `frame.css`       | foundation    | `.os-desktop` wallpaper, frame boxes, grids, cells, strips, eyebrow, `.frame-cv`      |
-| `pixel.css`       | foundation    | `.px-art` sizing, `.px-set`, `.px-corners`, sprite frames, logo cycle                 |
-| `site-shell.css`  | site-shell    | site menu bar, popovers, site dock, footer, auth                                      |
-| `home.css`        | home          | home sections                                                                         |
-| `site-pages.css`  | site-pages    | other public pages                                                                    |
-| `guide.css`       | assistant     | the pixel guide                                                                       |
-| `panel-shell.css` | panel-shell   | panel menu bar, window, dock                                                          |
+| Partial           | Owner (track) | Holds                                                                                     |
+| ----------------- | ------------- | ----------------------------------------------------------------------------------------- |
+| `os-shell.css`    | foundation    | shell variables, offset utilities, menu bar, menus, dock, lights, window, clock, boot     |
+| `frame.css`       | foundation    | `.os-desktop` wallpaper, frame boxes, grids, cells, strips, eyebrow, `.frame-cv`, density |
+| `pixel.css`       | foundation    | `.px-art` sizing, `.px-set`, `.px-corners`, sprite frames, logo cycle                     |
+| `site-shell.css`  | site-shell    | site menu bar, popovers, site dock, footer, auth                                          |
+| `home.css`        | home          | home sections                                                                             |
+| `site-pages.css`  | site-pages    | other public pages                                                                        |
+| `guide.css`       | assistant     | the pixel guide                                                                           |
+| `panel-shell.css` | panel-shell   | panel menu bar, window, dock, panel-only frame rules (nested EmptyState)                  |
 
 Rules for partials: class rules in `@layer components`, `html` variables in `@layer base`,
 `@keyframes`/`@property` at top level; never `:root {` or `.dark {` (use `html {}` / `.dark .x`);
@@ -138,11 +139,16 @@ How the site and panel shells, the frame system, the pixel brand and the guide f
 | `guide-events.ts`                                                 | guide storage keys/events, `guideAttrs`, `spotAttrs`, `dispatchGuide`                                                  |
 | `match.ts`, `shortcuts.ts`, `normalize.ts`, `chrome-vars.ts`      | pure helpers (active path, ⌘K, Persian-aware filter, chrome variables)                                                 |
 
-## Frame (public site, `src/components/site/frame.tsx`)
+## Frame (site and panel)
 
-Every public section is a **framed box**: `FrameSection` (a square `.frame-box` on the 1200px
-column, an even 1px border with the same ringed marker on every corner) → one or more stacked `FrameGrid`s →
-`FrameCell`s. Boxes are square; only `Window`s are rounded. Rules:
+One frame language for the public site and the panel. The client-safe primitives live in
+`src/components/shell/frame.tsx` (`FrameBox`, `FrameStripBar`, `FrameGrid`, `FrameCell`,
+`FrameHeaderCell`, `FrameEyebrow`, `FrameFiller`, `HEADING_CLASS`, `framePath`);
+`src/components/site/frame.tsx` (server-only) re-exports them and adds the locale-aware
+`FrameStrip` and `FrameSection`. Every public section is a **framed box**: `FrameSection` (a
+square `.frame-box` on the 1200px column, an even 1px border with the same ringed marker on every
+corner) → one or more stacked `FrameGrid`s → `FrameCell`s. Boxes are square; only `Window`s are
+rounded. Rules:
 
 - Every `FrameCell` is a child of a `FrameGrid`; rows of different shapes are stacked grids
   (the hairline between them is kept by `.frame-grid:has(+ .frame-grid)`).
@@ -165,6 +171,46 @@ column, an even 1px border with the same ringed marker on every corner) → one 
 - Narration: every box carries `guide={{ key, say }}` (→ `data-guide`/`data-guide-say`) and
   special parts `spot`; lines live in the server-only `guide` i18n namespace and only
   paraphrase copy visible in that section.
+- Markers are sized by `--mk` (ring), `--mk-o` (offset) and `--mk-d` (dot inset): 9/5/3px on
+  the site, 7/4/2px at panel density. A box inside another box or a cell, or inside an overlay
+  (dialog, sheet, popover), drops its markers and keeps its hairline.
+
+### Panel density
+
+The panel uses the same boxes inside its window: `FrameBox density="compact"`
+(`.frame-box[data-density="compact"]`). Values: cells `--cell-pad` 16px (<768px) / 20px; strip
+32px with **idle** lights (the window's own lights are the coloured ones) and the pixel path at
+cell 2; markers 7px; the box takes the full width of its container and has **no outer margin**
+— pages space boxes with `gap-6`/`space-y-6` (24px) and `lg:gap-8` (32px), the site's section
+rhythm scaled down. Headings use `HEADING_CLASS.panel` (page title, 26/30px en · 24/28px fa) and
+`HEADING_CLASS.box` (box and cell titles, 17px en · 16px fa). Text tokens, `-ink` colours and
+yellow-as-fill are the site's.
+
+- **`PageHeader`** is the page's first box: the strip (`GOOD-IN-TEAM/PANEL/<route>` from the URL,
+  ids dropped; `path={["INVOICES", inv.number]}` overrides it; Persian digits on fa), a header
+  cell (crumbs with chevrons, the h1, description, actions at inline-end) and, from lg, a dots
+  decor cell with the module's `<APP>.APP` window and pixel icon (`icon`/`app` override,
+  `decor={false}` removes it). Its `children` are more rows of the same box (a `StatRow`).
+- **`Card`** is a compact box (square, hairline, markers, no shadow). A leading `CardHeader` sits
+  flush at the top as a header row with a hairline under it; `CardContent`/`CardFooter` pad with
+  `--cell-pad`. For a table edge to edge: `<Card className="gap-0 py-0">`. Avoid
+  `overflow-hidden` on Cards: it clips the corner markers (the rounded look needed it, frames
+  don't).
+- **Stats**: `StatCard` and `KpiCard` are cells. Several stats are **one** grid:
+  `StatGrid` (its own box) or `StatRow` (a row inside an existing box, e.g. `PageHeader`
+  children); columns follow the count (2, 3, else 4 — 2×2 on phones) and `FrameFiller`
+  completes the last row. Icons sit in a square hairline tile in the tone's ink.
+- **Widgets in one box**: a `FrameBox` with a `FrameGrid` of `FrameCell pad="none"` cells, each
+  starting with a `CardHeader` row (h2 + action). A nested `FrameGrid` inside a cell shares
+  its hairlines; leftover height can be a dots strip (the site's filler).
+- **`EmptyState`**: a framed box on its own; inside a box or a cell it drops its frame.
+- **Tables**: rows share solid `--frame-line` hairlines, the head row has no fill, a row hovers
+  to `--card`. **Tabs** and filter rows read like the site's `Chip` (32px, 6px corners,
+  hairline; the active one filled with ink). Buttons keep their sizes; the primary has no glow
+  and `outline` is a hairline on the card surface, like the site's outline pill.
+- **Skeletons**: `PageHeaderSkeleton`, `StatRowSkeleton`, `StatGridSkeleton`, `BoxSkeleton`
+  (`components/panel/page-skeleton.tsx`) build loading states from the same boxes.
+- Only the panel window and true overlays (dialogs, menus, popovers, toasts) stay rounded.
 
 ## Components
 
@@ -172,7 +218,7 @@ column, an even 1px border with the same ringed marker on every corner) → one 
 | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Button`                                                                                                        | variants: `default` (primary + glow on hover), `inherit` (Minimals black), `soft`, `outline`, `secondary`, `ghost`, `link`, `destructive`; sizes `sm/default/lg/icon/icon-sm/icon-lg` |
 | `Badge`                                                                                                         | soft by default: `default/success/warning/info/violet/destructive/neutral/outline/solid`                                                                                              |
-| `Card` (+Header/Title/Description/Action/Content/Footer)                                                        | `rounded-2xl shadow-card`                                                                                                                                                             |
+| `Card` (+Header/Title/Description/Action/Content/Footer)                                                        | a compact framed box (square, hairline, corner markers); a leading header row has a hairline under it ([Panel density](#panel-density))                                               |
 | `Input`, `Textarea`, `Label`, `Field`                                                                           | `Field` = label + control + hint/error, auto-wired (see [Forms & accessibility](#forms--accessibility))                                                                               |
 | `Select`, `Checkbox`, `RadioGroup`, `Switch`, `ToggleGroup`                                                     | Radix, RTL-aware                                                                                                                                                                      |
 | `Dialog`, `Sheet`, `AlertDialog`, `Popover`, `Tooltip`, `DropdownMenu`, `Command`                               | overlays; `Sheet side` is logical: `start` / `end` / `top` / `bottom`; close button label is `t.common.close`                                                                         |
@@ -192,9 +238,9 @@ column, an even 1px border with the same ringed marker on every corner) → one 
 
 | Panel (`components/panel`)                                                                                       |                                                                                        |
 | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `PageHeader`                                                                                                     | title, breadcrumbs, description, actions — every page                                  |
-| `EmptyState`                                                                                                     | every empty list                                                                       |
-| `StatCard`                                                                                                       | KPI tiles (`tone`: primary/info/warning/violet/destructive/success)                    |
+| `PageHeader`                                                                                                     | the page's first box: strip, crumbs, title, description, actions, decor — every page   |
+| `EmptyState`                                                                                                     | every empty list (framed alone, frameless inside a box)                                |
+| `StatCard`, `StatRow`, `StatGrid`                                                                                | KPI cells in one framed grid (`tone`: primary/info/warning/violet/destructive/success) |
 | `nav-config.ts`                                                                                                  | source of truth for the dock, menu bar, Launchpad and ⌘K (role filters, dock pins)     |
 | `nav-icon.tsx`                                                                                                   | a module's dock / tab-bar / Launchpad icon: `NavItem.pixel` (cell 2), else lucide      |
 | `panel-prefs.ts`                                                                                                 | `gt-shell` cookie (dock size, magnify, auto-hide, wide) + pre-paint script; ⌘K matcher |
@@ -244,7 +290,8 @@ column, an even 1px border with the same ringed marker on every corner) → one 
 
 ## Patterns
 
-- **Panel page**: `PageHeader` → KPI row (`StatCard` grid) → content `Card`s → `EmptyState` when empty.
+- **Panel page**: a stack of framed boxes — `PageHeader` (KPIs as its `StatRow`, or a
+  `StatGrid` below) → content `Card`s / one box of widget cells → `EmptyState` when empty.
 - **Create/edit**: `Dialog` with a form (≤ 12 fields) or a dedicated page for long editors.
 - **Destructive**: always `ConfirmDialog` (including small row actions).
 - **Status**: `Badge` soft variants; colors consistent per status across modules.
@@ -273,8 +320,9 @@ column, an even 1px border with the same ringed marker on every corner) → one 
 
 ## Settings UI patterns
 
-- Settings pages: `SettingsHeader` + `SettingsCard` (icon-led card) from
-  `panel/settings/_components/section.tsx`; long forms end with a sticky `SaveBar`.
+- Settings pages: `SettingsHeader` (a framed heading box; extra rows as children) +
+  `SettingsCard` (icon-led framed box) from `panel/settings/_components/section.tsx`; long forms
+  end with a sticky framed `SaveBar`.
 - Bilingual settings use `BilingualField` (fa/en side by side on md+, a fa/en switch on phones,
   error dot on the tab that has an error).
 - One-time secrets (API tokens, temporary passwords) are shown once in a dialog with a copy

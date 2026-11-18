@@ -73,11 +73,12 @@ src/
   components/ui/           # design-system primitives (shadcn structure) — reuse, don't fork
   components/brand/        # pixel logo/mark/text/icons/avatar, brand registry (docs/brand.md)
   components/shell/        # OS chrome shared by site + panel: MenuBarShell, Dock/DockLinks, Window,
-                           #   OsLights, OsClock, appearance toggles, guide-events, pure helpers
+                           #   OsLights, OsClock, frame.tsx (client-safe FrameBox/Grid/Cell, density),
+                           #   appearance toggles, guide-events, pure helpers
   components/shared/       # app-wide building blocks (DatePicker, SelectField, Markdown…)
   components/panel/        # panel OS chrome (menu bar, dock, window, Launchpad, Control Center, quiet
                            #   guide; nav-config.ts drives the dock, menus and ⌘K), PageHeader, EmptyState…
-  components/site/         # public site components; frame.tsx (FrameSection/Grid/Cell), frame-plan.ts
+  components/site/         # public site components; frame.tsx (FrameSection + re-exports), frame-plan.ts
                            #   (packRows), stats-cells.tsx, cta-band.tsx
   i18n/                    # locales, messages/{fa,en}/<namespace>.ts, server/client helpers
   lib/                     # pure utils: format (dates/numbers), money, tz, markdown, zod-helpers
@@ -129,13 +130,18 @@ docs/                      # architecture, conventions, data model, design syste
 8. **Security:** every service checks the actor; clients only see what `projects.share*` flags
    allow. Vault secrets are encrypted in the browser — the server must never receive plaintext.
    Log important mutations with `logActivity()`.
-9. **UI:** compose from `components/ui` + `components/shared` + `components/panel`. In the panel,
-   follow the Minimals look (soft surfaces, `shadow-card`, `rounded-2xl` cards, `Badge` soft
-   variants). **On the public site, sections are framed boxes instead**: `FrameSection` →
-   stacked `FrameGrid`s → `FrameCell`s (square boxes; only `Window`s are rounded; a
-   `tone="dots"` cell never holds text; every grid layout is proven hole-free with `packRows`
-   and completed with `FrameFiller`) — see docs/design-system.md "Frame".
-   Every list needs an `EmptyState`; every page a `PageHeader`. When you add or change a
+9. **UI:** compose from `components/ui` + `components/shared` + `components/panel`. **Site and
+   panel speak one frame language** (docs/design-system.md "Frame"): framed boxes → stacked
+   `FrameGrid`s → `FrameCell`s; square boxes with one `--frame-line` hairline and a marker on
+   every corner, cells share hairlines, no soft shadows or rounded cards; only `Window`s, the
+   panel window and overlays (dialogs, menus, popovers, toasts) are rounded; a `tone="dots"`
+   cell never holds text; every grid layout is proven hole-free with `packRows` and completed
+   with `FrameFiller`. The site uses `FrameSection` (`components/site/frame.tsx`). **The panel
+   uses the same primitives at panel density** (`FrameBox density="compact"` from
+   `components/shell/frame.tsx`: 16/20px cells, 32px strip, no outer margin, `gap-6`/`gap-8`
+   between boxes): `Card` is such a box, `PageHeader` is the page's first box (strip with the
+   route path, decor cell), several stats are one `StatGrid`/`StatRow` of `StatCard` cells
+   (never a gap grid of cards). Every list needs an `EmptyState`; every page a `PageHeader`. When you add or change a
    component in `components/ui` / `components/shared`, update its example in the living catalog
    `/panel/design-system` (`panel/design-system/_components/sections/*`).
 10. **OS shell rules** (Good In OS; how it works: `docs/os-shell.md`, spec: `docs/design/os-redesign.md`):

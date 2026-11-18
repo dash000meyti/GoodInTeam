@@ -1,7 +1,8 @@
 # Good In OS shell
 
 How the public site and the panel are built as one small "OS": a menu bar, a dotted desktop with
-framed boxes (site) or one window (panel), a dock, the pixel brand and GoodInBot, the guide.
+framed boxes (site) or one window of framed boxes at panel density (panel), a dock, the pixel
+brand and GoodInBot, the guide.
 The spec and its decisions live in [`design/os-redesign.md`](design/os-redesign.md); tokens,
 contrast and the component catalog in [design-system.md](design-system.md); the pixel assets and
 naming in [brand.md](brand.md). This page is the map you need to change or extend the shell.
@@ -55,7 +56,8 @@ InlineScript shellInitScript            gt-shell cookie → html[data-dock-size|
     [Suspense ClockSkeleton: SessionClock]
   <div class="os-window">
     [Suspense WindowTitleFallback: WindowTitleBar]   lights + module path
-    <main id="main" class="os-window-body">   pages render inside panel/loading.tsx's boundary
+    <main id="main" class="os-window-body">   pages render inside panel/loading.tsx's boundary:
+                                        a stack of compact framed boxes (PageHeader first)
   [Suspense null: SessionDock]          PanelDock (client): role dock + Me tile + View site
 ```
 
@@ -74,13 +76,13 @@ All new CSS lives in owned partials under `src/app/styles/`, imported by `global
 | Partial           | Owner       | Holds                                                                                           |
 | ----------------- | ----------- | ----------------------------------------------------------------------------------------------- |
 | `os-shell.css`    | foundation  | shell variables, offset utilities, menu bar, menus, dock + tab bar, lights, window, clock, boot |
-| `frame.css`       | foundation  | `.os-desktop`, frame boxes, grids, cells, strips, eyebrow, reveals, `.frame-cv`                 |
+| `frame.css`       | foundation  | `.os-desktop`, frame boxes, grids, cells, strips, eyebrow, reveals, `.frame-cv`, density        |
 | `pixel.css`       | foundation  | `.px-art` sizing, `.px-set`, sprite frames, logo cycle and swap                                 |
 | `site-shell.css`  | site-shell  | site menu bar, popovers (Spotlight, Control Center, Launchpad), site dock, footer, auth         |
 | `home.css`        | home        | home sections (hero, brands, marquee, process windows)                                          |
 | `site-pages.css`  | site-pages  | the other public pages                                                                          |
 | `guide.css`       | assistant   | the pixel guide (sprite, bubble, selection, trail)                                              |
-| `panel-shell.css` | panel-shell | panel menu bar, window, dock, catalog demos                                                     |
+| `panel-shell.css` | panel-shell | panel menu bar, window, dock, catalog demos, panel-only frame rules                             |
 
 The legacy `.prose-gt` and `/* site */` rules in `globals.css` are wrapped in
 `@layer components` and frozen: utilities on the same element now win, and partial rules that
@@ -154,10 +156,28 @@ magnification for fine pointers, off for touch and reduced motion). Entries are 
 **Add a panel dock app:** add the item to `nav-config.ts` (roles!) and, for the tab bar, to the
 role's pins; owner 16 / member 9 / client 5 apps are asserted by panel-shell.spec.
 
-## Frame system (public pages)
+## Frame system (site and panel)
 
 `FrameSection` (square `.frame-box` on the 1200px column, an even 1px border, the same ringed
-marker on every corner) → stacked `FrameGrid`s → `FrameCell`s. Details and spans: [design-system.md → Frame](design-system.md#frame-public-site-srccomponentssiteframetsx).
+marker on every corner) → stacked `FrameGrid`s → `FrameCell`s. Details and spans: [design-system.md → Frame](design-system.md#frame-site-and-panel).
+The primitives are client-safe in `components/shell/frame.tsx`; `components/site/frame.tsx`
+re-exports them with the locale-aware `FrameSection`/`FrameStrip`.
+
+**In the panel** the window body is the column: pages are stacks of `FrameBox
+density="compact"` boxes (16/20px cells, 32px strip with idle lights, 7px markers, no outer
+margin; `gap-6`/`lg:gap-8` between boxes). The window keeps its rounded corners and lights;
+the boxes inside are square. `PageHeader` is the first box: its strip (`PanelStrip`,
+`components/panel/page-frame.tsx`) reads the pathname (`panelPathSegments`, `panel-path.ts`:
+`GOOD-IN-TEAM/PANEL/<route>`, ids dropped) and its decor cell shows the module's
+`<APP>.APP` window from lg — both client components, allowed because pages render inside
+`panel/loading.tsx`'s Suspense boundary. Loading states use the same boxes
+(`page-skeleton.tsx`: the strip shows idle lights only, so the static shell never reads the
+route). Panel boxes carry no guide narration (the panel guide gives module tips).
+
+**Add a panel page:** `PageHeader` (KPIs as its `StatRow` children when the page has them) →
+`Card`s or one `FrameBox` of widget cells → `EmptyState` when empty; a `loading.tsx` built from
+`PageHeaderSkeleton` / `StatGridSkeleton` / `BoxSkeleton`. Grids of cells follow the site's
+no-holes rule (`packRows` + `FrameFiller`).
 
 **Add a section to a page:**
 
