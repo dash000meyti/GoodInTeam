@@ -8,28 +8,9 @@ import * as svc from "./service";
 
 const ADMIN = ["owner", "admin"] as const;
 
-const fileList = z.preprocess(
-  (v) => (Array.isArray(v) ? v : v ? [v] : []),
-  z
-    .array(z.custom<File>((f) => typeof File !== "undefined" && f instanceof File))
-    .min(1)
-    .max(20),
-);
-
-/** Upload one or more files (FormData: `file` repeated). Duplicates (same sha256) are reused. */
-export const uploadMediaAction = defineAction(
-  {
-    input: z.object({ file: fileList, alt: zNullString(300), isPublic: zBool.optional() }),
-    roles: [...ADMIN],
-  },
-  async ({ file, alt, isPublic }, actor) => {
-    const out = [];
-    for (const f of file)
-      out.push(await svc.uploadMedia(actor, f, { alt, isPublic: isPublic ?? true }));
-    refresh();
-    return out.map((m) => ({ id: m.id, url: m.url, duplicate: m.duplicate }));
-  },
-);
+// Uploading is NOT an action: files go to `POST /api/media`
+// (src/app/api/media/route.ts), which has its own body limit. No server action
+// takes a `File`; they all share the small limit in next.config.ts.
 
 export const updateMediaAction = defineAction(
   {

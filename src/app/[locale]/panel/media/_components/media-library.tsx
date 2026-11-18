@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckIcon,
   CopyIcon,
@@ -18,13 +19,10 @@ import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/shared/confirm-button";
 import { useAction } from "@/components/shared/use-action-form";
 import { FrameCell, FrameGrid } from "@/components/shell/frame";
-import { useT } from "@/i18n/client";
+import { useLocale, useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import {
-  deleteMediaAction,
-  updateMediaAction,
-  uploadMediaAction,
-} from "@/server/modules/media/actions";
+import type { ActionResult } from "@/server/action";
+import { deleteMediaAction, updateMediaAction } from "@/server/modules/media/actions";
 
 export interface MediaRow {
   id: string;
@@ -41,9 +39,30 @@ export interface MediaRow {
 
 const MAX = 20 * 1024 * 1024;
 
+/**
+ * Upload one file to `POST /api/media`. Files do not go through a server
+ * action: actions share one small body limit, the upload route has its own.
+ */
+async function uploadFile(file: File, locale: string, failed: string) {
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const res = await fetch(`/api/media?locale=${encodeURIComponent(locale)}`, {
+      method: "POST",
+      body: fd,
+      credentials: "same-origin",
+    });
+    return (await res.json()) as ActionResult<{ id: string; url: string; duplicate: boolean }[]>;
+  } catch {
+    return { ok: false as const, error: { code: "internal" as const, message: failed } };
+  }
+}
+
 export function Uploader() {
   const t = useT();
   const c = t.content;
+  const locale = useLocale();
+  const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
   const [pending, start] = useTransition();
@@ -56,15 +75,24 @@ export function Uploader() {
       return;
     }
     start(async () => {
-      const fd = new FormData();
-      for (const f of list) fd.append("file", f);
-      const res = await uploadMediaAction(fd);
-      if (res.ok) {
-        const dup = res.data.filter((d) => d.duplicate).length;
-        toast.success(dup ? `${c.uploaded} · ${c.duplicate}` : c.uploaded);
-      } else {
-        toast.error(res.error.message);
+      // One request per file, in order; the first failure stops the batch.
+      let done = 0;
+      let dup = 0;
+      let error: string | null = null;
+      for (const f of list) {
+        const res = await uploadFile(f, locale, t.common.errorTitle);
+        if (!res.ok) {
+          error = `${f.name}: ${res.error.message}`;
+          break;
+        }
+        done++;
+        if (res.data[0]?.duplicate) dup++;
       }
+      if (done) {
+        toast.success(dup ? `${c.uploaded} · ${c.duplicate}` : c.uploaded);
+        router.refresh();
+      }
+      if (error) toast.error(error);
       if (input.current) input.current.value = "";
     });
   };
