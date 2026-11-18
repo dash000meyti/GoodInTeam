@@ -2,16 +2,10 @@ import "server-only";
 import Link from "next/link";
 import { CheckSquareIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardAction, CardDescription, CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/panel/empty-state";
+import { HEADING_CLASS } from "@/components/shell/frame";
 import { format } from "@/i18n/format-message";
 import { formatDayLabel } from "@/lib/day-label";
 import { isOverdue } from "@/lib/due";
@@ -23,9 +17,11 @@ import type { PanelContext } from "@/server/page-context";
 import { ProjectTaskList, type ProjectTaskItem } from "./project-task-list";
 
 /**
- * Tasks of one project for the project detail page. Staff can complete and
- * add tasks; `clientView` (client portal) shows only `visibleToClient` tasks,
- * read-only, and renders nothing unless the project shares tasks.
+ * Tasks of one project for the project detail page, as one framed box: a
+ * header row (title, progress, link), the add row and edge-to-edge task rows
+ * sharing hairlines. Staff can complete and add tasks; `clientView` (client
+ * portal) shows only `visibleToClient` tasks, read-only, and renders nothing
+ * unless the project shares tasks.
  */
 export async function ProjectTasksPanel({
   projectId,
@@ -70,9 +66,11 @@ export async function ProjectTasksPanel({
   const pct = items.length ? (done / items.length) * 100 : 0;
 
   return (
-    <Card>
+    <Card className="gap-0 py-0" role="region" aria-labelledby="project-tasks">
       <CardHeader>
-        <CardTitle>{tk.projectTasks}</CardTitle>
+        <h2 id="project-tasks" className={HEADING_CLASS.box}>
+          {tk.projectTasks}
+        </h2>
         {items.length > 0 && (
           <CardDescription className="flex items-center gap-3 pt-1">
             <Progress value={pct} className="max-w-48 flex-1" />
@@ -95,13 +93,11 @@ export async function ProjectTasksPanel({
           </CardAction>
         )}
       </CardHeader>
-      <CardContent>
-        {items.length === 0 && readOnly ? (
-          <EmptyState icon={CheckSquareIcon} title={tk.noProjectTasks} className="py-10" />
-        ) : (
-          <ProjectTaskList projectId={projectId} items={items} readOnly={readOnly} />
-        )}
-      </CardContent>
+      {items.length === 0 && readOnly ? (
+        <EmptyState icon={CheckSquareIcon} title={tk.noProjectTasks} className="py-10" />
+      ) : (
+        <ProjectTaskList projectId={projectId} items={items} readOnly={readOnly} />
+      )}
     </Card>
   );
 }

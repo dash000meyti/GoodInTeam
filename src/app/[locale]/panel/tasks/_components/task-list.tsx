@@ -12,7 +12,6 @@ import {
   SunIcon,
   type LucideIcon,
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/panel/empty-state";
 import { useLocale, useT } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
@@ -30,7 +29,15 @@ export const listIcons: Record<SmartListKey, { icon: LucideIcon; tone: string }>
   done: { icon: CheckCircle2Icon, tone: "text-success-ink" },
 };
 
-/** Smart lists: vertical card on desktop, horizontally scrolling pills on mobile. */
+/** The site's filter chip (components/site/ui.tsx `Chip`): the phone/tablet list bar. */
+const CHIP =
+  "flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-[6px] border border-frame-line bg-background px-3 text-sm font-semibold text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground aria-[current=page]:border-foreground aria-[current=page]:bg-foreground aria-[current=page]:text-background";
+
+/**
+ * Smart lists, in their cell of the tasks box: rows with a square icon tile on
+ * large screens (the active one with a yellow tile and a square dot, like the
+ * settings nav), a horizontally scrolling chip bar on phones/tablets.
+ */
 export function SmartListNav({
   active,
   counts,
@@ -44,37 +51,7 @@ export function SmartListNav({
   const locale = useLocale();
   return (
     <nav aria-label={t.tasks.title}>
-      <div className="-mx-4 overflow-x-auto px-4 lg:hidden">
-        <div className="flex w-max gap-2 pb-1">
-          {SMART_LISTS.map((l) => {
-            const { icon: Icon, tone } = listIcons[l];
-            const on = l === active;
-            return (
-              <button
-                key={l}
-                type="button"
-                onClick={() => onSelect(l)}
-                aria-current={on ? "page" : undefined}
-                className={cn(
-                  "flex h-9 cursor-pointer items-center gap-2 rounded-full border px-3.5 text-sm font-semibold transition-colors",
-                  on
-                    ? "border-transparent bg-foreground text-background"
-                    : "border-border bg-card hover:bg-accent",
-                )}
-              >
-                <Icon className={cn("size-4", !on && tone)} />
-                {t.tasks[`list_${l}`]}
-                {l !== "done" && counts[l] > 0 && (
-                  <span className="text-xs tabular-nums opacity-70">
-                    {formatNumber(counts[l], locale)}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <Card className="hidden gap-0.5 p-2 lg:flex">
+      <div className="flex scrollbar-none gap-1.5 overflow-x-auto px-(--cell-pad) py-3 lg:hidden">
         {SMART_LISTS.map((l) => {
           const { icon: Icon, tone } = listIcons[l];
           const on = l === active;
@@ -84,29 +61,57 @@ export function SmartListNav({
               type="button"
               onClick={() => onSelect(l)}
               aria-current={on ? "page" : undefined}
-              title={t.tasks[`listHint_${l}`]}
-              className={cn(
-                "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm font-medium transition-colors hover:bg-accent",
-                on && "bg-primary/8 font-bold text-foreground",
-                l === "done" && "mt-2 border-t border-dashed pt-3",
-              )}
+              className={CHIP}
             >
-              <Icon className={cn("size-[18px]", tone)} />
-              <span className="flex-1">{t.tasks[`list_${l}`]}</span>
-              {l === "today" && counts.overdue > 0 && (
-                <span className="rounded-md bg-destructive/16 px-1.5 text-xs font-bold text-[#b71d18] tabular-nums dark:text-[#ffac82]">
-                  {formatNumber(counts.overdue, locale)}
-                </span>
-              )}
+              <Icon className={cn("size-4", !on && tone)} />
+              {t.tasks[`list_${l}`]}
               {l !== "done" && counts[l] > 0 && (
-                <span className="text-xs text-muted-foreground tabular-nums">
+                <span className="text-xs tabular-nums opacity-70">
                   {formatNumber(counts[l], locale)}
                 </span>
               )}
             </button>
           );
         })}
-      </Card>
+      </div>
+      <ul className="hidden py-2 lg:block">
+        {SMART_LISTS.map((l) => {
+          const { icon: Icon, tone } = listIcons[l];
+          const on = l === active;
+          return (
+            <li key={l} className={cn(l === "done" && "mt-2 border-t border-frame-line pt-2")}>
+              <button
+                type="button"
+                onClick={() => onSelect(l)}
+                aria-current={on ? "page" : undefined}
+                title={t.tasks[`listHint_${l}`]}
+                className="group flex w-full cursor-pointer items-center gap-3 px-(--cell-pad) py-1.5 text-start text-sm font-medium text-muted-foreground transition-colors hover:bg-card hover:text-foreground aria-[current=page]:bg-card aria-[current=page]:font-bold aria-[current=page]:text-foreground"
+              >
+                <span
+                  className={cn(
+                    "flex size-7 shrink-0 items-center justify-center border border-frame-line bg-background transition-colors",
+                    on ? "border-[var(--primary-dark)] bg-primary text-primary-foreground" : tone,
+                  )}
+                >
+                  <Icon className="size-4" />
+                </span>
+                <span className="flex-1 truncate">{t.tasks[`list_${l}`]}</span>
+                {l === "today" && counts.overdue > 0 && (
+                  <span className="bg-destructive/16 px-1.5 text-xs font-bold text-[#b71d18] tabular-nums dark:text-[#ffac82]">
+                    {formatNumber(counts.overdue, locale)}
+                  </span>
+                )}
+                {l !== "done" && counts[l] > 0 && (
+                  <span className="text-xs text-muted-foreground tabular-nums">
+                    {formatNumber(counts[l], locale)}
+                  </span>
+                )}
+                {on && <span aria-hidden className="size-1.5 shrink-0 bg-foreground" />}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
     </nav>
   );
 }
@@ -117,7 +122,7 @@ function TaskRow({ task, onOpen }: { task: TaskView; onOpen: (id: string) => voi
   return (
     <li
       className={cn(
-        "group flex items-start gap-3 px-4 py-3 transition-[background-color,opacity] duration-300 hover:bg-accent/40 sm:px-5",
+        "group flex items-start gap-3 px-(--cell-pad) py-3 transition-[background-color,opacity] duration-300 hover:bg-card",
         leaving && "bg-primary/4",
       )}
     >
@@ -150,7 +155,7 @@ function TaskRow({ task, onOpen }: { task: TaskView; onOpen: (id: string) => voi
   );
 }
 
-/** Grouped task list with per-list empty states. */
+/** Grouped task list (sections with a header row, rows sharing hairlines) with per-list empty states. */
 export function TaskListView({
   list,
   groups,
@@ -176,11 +181,16 @@ export function TaskListView({
     );
   }
   return (
-    <div className="space-y-4">
+    <div className="divide-y divide-frame-line">
       {groups.map((g) => (
-        <Card key={g.key} className="gap-0 overflow-hidden py-0">
+        <section key={g.key} aria-label={g.label ?? undefined}>
           {g.label && (
-            <div className="flex items-center justify-between gap-3 border-b border-dashed bg-muted/30 px-4 py-2.5 sm:px-5">
+            <div
+              className={cn(
+                "flex items-center justify-between gap-3 border-b border-frame-line px-(--cell-pad) py-2.5",
+                g.tone === "overdue" && "bg-destructive/6",
+              )}
+            >
               <h3
                 className={cn(
                   "text-sm font-bold",
@@ -194,12 +204,12 @@ export function TaskListView({
               </span>
             </div>
           )}
-          <ul className="divide-y divide-dashed">
+          <ul className="divide-y divide-frame-line">
             {g.tasks.map((task) => (
               <TaskRow key={task.id} task={task} onOpen={onOpen} />
             ))}
           </ul>
-        </Card>
+        </section>
       ))}
     </div>
   );

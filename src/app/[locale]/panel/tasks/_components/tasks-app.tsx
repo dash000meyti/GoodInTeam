@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { KanbanSquareIcon, ListIcon } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { PageHeader } from "@/components/panel/page-header";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import type { ProjectOption } from "@/components/time/project-select";
 import { useT } from "@/i18n/client";
 import {
@@ -62,10 +63,18 @@ function syncUrl(state: {
     window.history.replaceState(null, "", url);
 }
 
+/** The site's filter chip (components/site/ui.tsx `Chip`) over the ToggleGroup: 32px, 6px corners. */
+const CHIP =
+  "h-8 rounded-[6px] border border-frame-line bg-background px-3 text-sm font-semibold text-muted-foreground hover:border-foreground/40 hover:bg-background hover:text-foreground data-[state=on]:border-foreground data-[state=on]:bg-foreground data-[state=on]:text-background dark:data-[state=on]:text-background";
+
 /**
  * The whole tasks experience as one client island: smart lists, filters and
  * the list/board switch are instant (computed from server data); mutations go
  * through server actions and `refresh()` streams fresh data back in.
+ *
+ * Framed: the page box, then one box — quick add as its first row; below it
+ * the smart lists cell (list view; a chip bar on phones) and the main cell
+ * (filters row, then the grouped list or the board) sharing a hairline.
  */
 export function TasksApp(props: TasksAppProps) {
   const t = useT();
@@ -149,53 +158,65 @@ export function TasksApp(props: TasksAppProps) {
             value={view}
             onValueChange={(v) => v && setView(v as typeof view)}
             aria-label={`${tk.view_list} / ${tk.view_board}`}
+            className="gap-1.5 rounded-none border-0 p-0"
           >
-            <ToggleGroupItem value="list" className="px-3">
+            <ToggleGroupItem value="list" className={CHIP}>
               <ListIcon /> {tk.view_list}
             </ToggleGroupItem>
-            <ToggleGroupItem value="board" className="px-3">
+            <ToggleGroupItem value="board" className={CHIP}>
               <KanbanSquareIcon /> {tk.view_board}
             </ToggleGroupItem>
           </ToggleGroup>
         }
       />
 
-      <QuickAdd
-        ref={quickAdd}
-        projects={props.projects}
-        tz={props.tz}
-        now={props.now}
-        list={view === "board" ? "anytime" : list}
-        todayKey={props.todayKey}
-        filterProjectId={filters.projectId}
-      />
-
-      <div
-        className={
-          view === "list"
-            ? "mt-6 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-6"
-            : "mt-6 grid grid-cols-[minmax(0,1fr)] gap-4"
-        }
-      >
-        {view === "list" && (
-          <aside className="min-w-0 lg:sticky lg:below-chrome lg:self-start">
-            <SmartListNav active={list} counts={counts} onSelect={setList} />
-          </aside>
-        )}
-        <div className="min-w-0 space-y-4">
-          <TaskFilters
-            value={filters}
-            onChange={setFilters}
-            projects={props.projects}
-            tags={props.tags}
-          />
-          {view === "list" ? (
-            <TaskListView list={list} groups={groups} filtered={filtersActive} onOpen={setTaskId} />
-          ) : (
-            <TaskBoard tasks={filtered} now={props.now} onOpen={setTaskId} />
+      <FrameBox as="section" density="compact" ariaLabel={tk.title}>
+        <FrameGrid cols={1}>
+          <FrameCell pad="none">
+            <QuickAdd
+              ref={quickAdd}
+              projects={props.projects}
+              tz={props.tz}
+              now={props.now}
+              list={view === "board" ? "anytime" : list}
+              todayKey={props.todayKey}
+              filterProjectId={filters.projectId}
+            />
+          </FrameCell>
+        </FrameGrid>
+        <FrameGrid
+          cols={1}
+          className={view === "list" ? "lg:grid-cols-[15rem_minmax(0,1fr)]" : undefined}
+        >
+          {view === "list" && (
+            <FrameCell as="aside" pad="none" className="min-w-0">
+              <div className="lg:sticky lg:below-chrome">
+                <SmartListNav active={list} counts={counts} onSelect={setList} />
+              </div>
+            </FrameCell>
           )}
-        </div>
-      </div>
+          <FrameCell pad="none" className="min-w-0">
+            <div className="border-b border-frame-line px-(--cell-pad) py-3">
+              <TaskFilters
+                value={filters}
+                onChange={setFilters}
+                projects={props.projects}
+                tags={props.tags}
+              />
+            </div>
+            {view === "list" ? (
+              <TaskListView
+                list={list}
+                groups={groups}
+                filtered={filtersActive}
+                onOpen={setTaskId}
+              />
+            ) : (
+              <TaskBoard tasks={filtered} now={props.now} onOpen={setTaskId} />
+            )}
+          </FrameCell>
+        </FrameGrid>
+      </FrameBox>
 
       <TaskSheet
         taskId={taskId}

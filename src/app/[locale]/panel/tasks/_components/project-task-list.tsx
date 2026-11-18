@@ -35,7 +35,10 @@ const statusVariant: Record<TaskStatus, "neutral" | "info" | "violet" | "success
   canceled: "neutral",
 };
 
-/** Task rows for the project page. Staff can tick tasks off and add new ones. */
+/**
+ * Task rows for the project page, edge to edge in its box (the add row, then
+ * rows sharing hairlines). Staff can tick tasks off and add new ones.
+ */
 export function ProjectTaskList({
   projectId,
   items,
@@ -61,14 +64,17 @@ export function ProjectTaskList({
     });
 
   return (
-    <div className="space-y-3">
+    <div>
       {!readOnly && (
         <form
           onSubmit={(e) => {
             e.preventDefault();
             if (title.trim()) add();
           }}
-          className="flex items-center gap-2 rounded-xl bg-muted/60 px-3"
+          className={cn(
+            "flex items-center gap-2 px-(--cell-pad) transition-colors focus-within:bg-card",
+            items.length > 0 && "border-b border-frame-line",
+          )}
         >
           {pending ? (
             <Loader2Icon className="size-4 animate-spin text-primary-ink" />
@@ -80,13 +86,16 @@ export function ProjectTaskList({
             onChange={(e) => setTitle(e.target.value)}
             placeholder={tk.quickAddPlaceholder}
             aria-label={tk.quickAddLabel}
-            className="h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            className="h-12 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </form>
       )}
-      <ul className="divide-y divide-dashed">
+      <ul className="divide-y divide-frame-line">
         {items.map((task) => (
-          <li key={task.id} className="flex items-start gap-3 py-3">
+          <li
+            key={task.id}
+            className="flex items-start gap-3 px-(--cell-pad) py-3 transition-colors hover:bg-card"
+          >
             {readOnly ? (
               <Badge variant={statusVariant[task.status]} className="mt-0.5 shrink-0">
                 {tk[`status_${task.status}`]}
