@@ -1,21 +1,20 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  BoxSkeleton,
+  PageHeaderSkeleton,
+  StatGridSkeleton,
+} from "@/components/panel/page-skeleton";
 
 export default function ReportsLoading() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-4 w-64" />
-      </div>
-      <Skeleton className="h-20 rounded-2xl" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-28 rounded-2xl" />
-        ))}
-      </div>
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Skeleton className="h-96 rounded-2xl xl:col-span-2" />
-        <Skeleton className="h-96 rounded-2xl" />
+    <div aria-busy>
+      <PageHeaderSkeleton />
+      <div className="space-y-6">
+        <BoxSkeleton header={false} height={48} />
+        <StatGridSkeleton />
+        <div className="grid gap-6 xl:grid-cols-3">
+          <BoxSkeleton height={330} className="xl:col-span-2" />
+          <BoxSkeleton height={330} />
+        </div>
       </div>
     </div>
   );

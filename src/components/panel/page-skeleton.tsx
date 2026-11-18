@@ -52,7 +52,7 @@ export function PageHeaderSkeleton({
 }
 
 /** A row of stat cells (StatRow) with the StatCard's sizes. */
-export function StatRowSkeleton({ count = 4 }: { count?: 2 | 3 | 4 }) {
+export function StatRowSkeleton({ count = 4 }: { count?: 2 | 4 }) {
   return (
     <FrameGrid cols={count}>
       {Array.from({ length: count }, (_, i) => (
@@ -65,6 +65,15 @@ export function StatRowSkeleton({ count = 4 }: { count?: 2 | 3 | 4 }) {
         </FrameCell>
       ))}
     </FrameGrid>
+  );
+}
+
+/** A StatGrid while it streams: its own box around a StatRowSkeleton. */
+export function StatGridSkeleton({ count = 4, className }: { count?: 2 | 4; className?: string }) {
+  return (
+    <FrameBox as="div" density="compact" className={className}>
+      <StatRowSkeleton count={count} />
+    </FrameBox>
   );
 }
 
