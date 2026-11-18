@@ -37,9 +37,16 @@ export function FinanceNavSkeleton() {
 const COLS: Record<number, FrameCols> = { 1: 1, 2: 2, 3: 3, 4: 4 };
 
 /** A row of KPI cells (KpiCard sizes: icon tile + label, the value, a hint). */
-export function KpiRowSkeleton({ count = 4 }: { count?: 1 | 2 | 3 | 4 }) {
+export function KpiRowSkeleton({
+  count = 4,
+  className,
+}: {
+  count?: 1 | 2 | 3 | 4;
+  /** Same as the page's StatRow (e.g. `max-sm:grid-cols-1` for exact amounts). */
+  className?: string;
+}) {
   return (
-    <FrameGrid cols={COLS[count]!}>
+    <FrameGrid cols={COLS[count]!} className={className}>
       {Array.from({ length: count }, (_, i) => (
         <FrameCell key={i} className="flex flex-col gap-2.5">
           <div className="flex items-center gap-2.5">
@@ -57,17 +64,20 @@ export function KpiRowSkeleton({ count = 4 }: { count?: 1 | 2 | 3 | 4 }) {
 /** The page box of a finance page: header, the nav row and (optionally) a KPI row. */
 export function FinanceHeaderSkeleton({
   kpis,
+  exact,
   nav = true,
   children,
 }: {
   kpis?: 1 | 2 | 3 | 4;
+  /** KPIs with exact amounts: one per row on phones, like the page's StatRow. */
+  exact?: boolean;
   nav?: boolean;
   children?: ReactNode;
 }) {
   return (
     <PageHeaderSkeleton>
       {nav && <FinanceNavSkeleton />}
-      {kpis && <KpiRowSkeleton count={kpis} />}
+      {kpis && <KpiRowSkeleton count={kpis} className={exact ? "max-sm:grid-cols-1" : undefined} />}
       {children}
     </PageHeaderSkeleton>
   );

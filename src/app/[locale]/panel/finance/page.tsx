@@ -402,7 +402,8 @@ function ProfitabilityCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
                       </span>
                     </span>
                   </Link>
-                  <dl className="grid grid-cols-3 gap-3">
+                  {/* two per row on phones so compact amounts never truncate; three from sm */}
+                  <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {cell(
                       f.colIncome,
                       <>

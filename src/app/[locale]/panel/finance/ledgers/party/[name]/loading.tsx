@@ -4,7 +4,7 @@ import { FinanceHeaderSkeleton, LedgerSkeleton } from "../../../_components/fina
 export default function Loading() {
   return (
     <div aria-busy>
-      <FinanceHeaderSkeleton kpis={4} />
+      <FinanceHeaderSkeleton kpis={4} exact />
       <LedgerSkeleton />
     </div>
   );

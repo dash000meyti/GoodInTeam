@@ -4,7 +4,7 @@ import { FinanceHeaderSkeleton, ListBoxSkeleton } from "../../_components/financ
 export default function Loading() {
   return (
     <div aria-busy>
-      <FinanceHeaderSkeleton kpis={4} />
+      <FinanceHeaderSkeleton kpis={4} exact />
       <ListBoxSkeleton header rows={8} />
     </div>
   );
