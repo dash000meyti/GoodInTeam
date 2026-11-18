@@ -169,7 +169,35 @@ import { ProjectFinancePanel } from "@/app/[locale]/panel/finance/_components/pr
 <ProjectFinancePanel projectId={project.id} ctx={ctx} clientView={actor.user.role === "client"} />;
 ```
 
-Async server component; renders nothing when the viewer may not see project finance.
+Async server component; renders nothing when the viewer may not see project finance. Admins
+get a stat grid and one box with the invoices and recent transactions as two cells; clients
+(with `shareFinance`) one box: the invoiced / paid / outstanding row, then invoices | payments.
+
+## UI (framed pages)
+
+Every finance and invoice page speaks the panel's frame language
+([design-system.md → Panel density](../design-system.md#panel-density)):
+
+- **Page box**: `PageHeader` with the finance nav as a chip row (`FinanceNav`, a FrameGrid row;
+  the current section filled with ink) and, where the page has KPIs, a `StatRow` of `KpiCard`s
+  (overview, account statement, ledgers, accounts totals). KPI values scale with their cell
+  (container query) so exact amounts stay on one line; rows of exact amounts are one per row on
+  phones.
+- **Content boxes**: cells sharing hairlines instead of cards — the overview analytics are one
+  box (range/currency toolbar row → cash flow | account balances → by category | top clients |
+  unpaid invoices), transactions one list box (filters → totals row → edge-to-edge table → pager),
+  ledgers one box per ledger (hint row, then a header row + lines per currency). Charts sit in
+  cells with `--frame-line` grid lines and square legend swatches.
+- **Local pieces** (`_components/frame-bits.tsx`): `BoxCell` (a cell with a header row; `flush`
+  = edge to edge, the rest of a taller row in dots), `chipClass` / `TOGGLE_CHIP(S)` (site chips,
+  also on `ToggleGroup`), `FLUSH_LIST`, `GlyphTile`. Skeletons: `_components/finance-skeletons.tsx`.
+- **Invoice editor** (`new`, `[id]/edit`): one form box (details → line items under a head row →
+  notes | terms) beside a sticky summary box (totals, the amount due row, save buttons).
+- **Public invoice** `/i/<token>`: the site's desktop wallpaper and one site box
+  (`FrameSection first`): strip `GOOD-IN-TEAM/INVOICE/<number>`, a header row (brand eyebrow,
+  number, status, amount due, print and language pills) beside the decor window, then the
+  document as paper on the dotted desk. In print the box flattens (static, no markers) so only
+  the document prints, from the top of the first A4 page.
 
 ## Tools (MCP / REST)
 
