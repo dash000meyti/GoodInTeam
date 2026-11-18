@@ -191,6 +191,40 @@ test("auto-hide hides the desktop dock but never the mobile tab bar", async ({ p
   await expect(dock(page).getByRole("link", { name: /^Time\b/ })).toBeInViewport();
 });
 
+test.describe("framed pages (the site's frame language at panel density)", () => {
+  test("the page box: strip, square hairline frame, no shadow; KPIs are cells of one grid", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await login(page, OWNER);
+    await page.goto("/en/panel/invoices");
+    const box = page.locator("main header.frame-box[data-density=compact]:visible").first();
+    await expect(box).toBeVisible();
+    await expect(box.locator(".frame-strip")).toBeVisible();
+    await expect(box.locator("h1")).toHaveText("Invoices");
+    const style = await box.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { radius: cs.borderTopLeftRadius, shadow: cs.boxShadow, border: cs.borderTopWidth };
+    });
+    expect(style).toEqual({ radius: "0px", shadow: "none", border: "1px" });
+    // header cell + 4 KPI cells share the box's hairlines (the decor cell aside)
+    await expect(box.locator(".frame-grid > .frame-cell:not([data-decor])")).toHaveCount(5);
+  });
+
+  test("no horizontal overflow at 390px", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await login(page, OWNER);
+    for (const path of ["/en/panel", "/en/panel/invoices", "/panel/settings/profile", "/panel"]) {
+      await page.goto(path);
+      await expect(page.locator("main h1:visible").first()).toBeVisible();
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, path).toBeLessThanOrEqual(0);
+    }
+  });
+});
+
 test("at 1280×720 the dock never covers the last vault button", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await login(page, MEMBER);

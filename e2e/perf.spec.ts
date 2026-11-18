@@ -110,6 +110,44 @@ test.describe("layout shift (390×844, 4× CPU)", () => {
   }
 });
 
+test.describe("panel layout shift (390×844, 4× CPU)", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("CLS < 0.01 on /panel (owner, framed Desktop)", async ({ page, browserName }) => {
+    test.skip(
+      browserName !== "chromium",
+      "CDP CPU throttle and layout-shift entries: Chromium only",
+    );
+    await page.goto("/en/login");
+    await page.fill("#email", "owner@goodteam.local");
+    await page.fill("#password", "goodteam-demo-pass");
+    await Promise.all([
+      page.waitForURL((u) => !u.pathname.endsWith("/login")),
+      page.press("#password", "Enter"),
+    ]);
+    await throttle(page);
+    await page.addInitScript(() => {
+      const w = window as unknown as { __shifts: number[] };
+      w.__shifts = [];
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries() as unknown as {
+          value: number;
+          hadRecentInput: boolean;
+        }[])
+          if (!e.hadRecentInput) w.__shifts.push(e.value);
+      }).observe({ type: "layout-shift", buffered: true });
+    });
+    await page.goto("/panel", { waitUntil: "load" });
+    await expect(page.locator("main h1:visible").first()).toBeVisible();
+    await page.waitForTimeout(3000);
+    const sum = await page.evaluate(() =>
+      (window as unknown as { __shifts: number[] }).__shifts.reduce((a, v) => a + v, 0),
+    );
+    note("cls", `/panel: ${sum.toFixed(4)}`);
+    expect(sum).toBeLessThan(0.01);
+  });
+});
+
 test.describe("guide engine (lazy)", () => {
   test.use({ viewport: { width: 1440, height: 900 } });
 
