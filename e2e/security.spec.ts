@@ -514,8 +514,21 @@ test.describe("published HTML is sanitised", () => {
       ]);
     }
     // The post is gone again (a streamed page answers a missing post with its not-found view).
-    const after = await request.get(`/en/blog/${slug}`, { failOnStatusCode: false });
-    expect(await after.text()).not.toContain("Opening paragraph.");
+    // Polled: a request already rendering while the post was deleted may still answer with it
+    // once. A deleted post that stays visible for seconds is a failure.
+    await expect
+      .poll(
+        async () => {
+          const after = await request.get(`/en/blog/${slug}`, { failOnStatusCode: false });
+          return (await after.text()).includes("Opening paragraph.");
+        },
+        {
+          timeout: 5000,
+          intervals: [0, 250, 500, 1000],
+          message: "the deleted post is still served",
+        },
+      )
+      .toBe(false);
   });
 });
 
