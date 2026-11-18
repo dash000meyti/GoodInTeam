@@ -50,7 +50,7 @@ export function AgendaView({
 
   if (!groups.length)
     return (
-      <div className="p-4 sm:p-6">
+      <div className="p-(--cell-pad)">
         <EmptyState
           icon={CalendarDaysIcon}
           title={c.agendaEmpty}
@@ -65,18 +65,18 @@ export function AgendaView({
     );
 
   return (
-    <div className="divide-y divide-dashed">
+    <div className="divide-y divide-frame-line">
       {groups.map((g) => {
         const today = g.key === cal.todayKey;
         return (
           <section
             key={g.key}
             aria-label={dateLabel(g.key, cal.locale)}
-            className="flex gap-3 px-3 py-4 sm:gap-6 sm:px-6"
+            className="flex gap-3 px-(--cell-pad) py-4 sm:gap-6"
           >
             <Link
               href={dayHref(g.key)}
-              className="flex w-12 shrink-0 flex-col items-center rounded-xl py-1 text-center transition-colors hover:bg-accent sm:w-14"
+              className="flex w-12 shrink-0 flex-col items-center self-start border border-frame-line bg-card py-1.5 text-center transition-colors hover:border-foreground/40 sm:w-14"
             >
               <span
                 className={cn(
@@ -88,8 +88,8 @@ export function AgendaView({
               </span>
               <span
                 className={cn(
-                  "my-0.5 flex size-10 items-center justify-center rounded-full text-xl font-extrabold tabular-nums",
-                  today && "bg-primary text-primary-foreground",
+                  "my-0.5 flex size-10 items-center justify-center text-xl font-extrabold tabular-nums",
+                  today && "bg-primary text-primary-foreground shadow-[0_0_0_1px_var(--brand-ink)]",
                 )}
               >
                 {dayNumber(g.key, cal.locale)}
@@ -144,7 +144,7 @@ export function AgendaRow({
           type="button"
           aria-label={itemAriaLabel(item, cal, c)}
           className={cn(
-            "flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-xl text-start transition-colors outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
+            "flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-[6px] text-start transition-colors outline-none hover:bg-card focus-visible:ring-2 focus-visible:ring-ring",
             compact ? "p-1.5" : "p-2",
           )}
         >
@@ -159,10 +159,7 @@ export function AgendaRow({
           </span>
           <span
             aria-hidden
-            className={cn(
-              "w-1 shrink-0 self-stretch rounded-full",
-              compact ? "min-h-7" : "min-h-9",
-            )}
+            className={cn("w-1 shrink-0 self-stretch", compact ? "min-h-7" : "min-h-9")}
             style={{ backgroundColor: item.color }}
           />
           <span className="min-w-0 flex-1">

@@ -22,7 +22,17 @@ export interface TimesheetRow {
   total: string;
 }
 
-/** Project × day grid. Cells open the add-time dialog prefilled with day + project. */
+/** Hairlines between square cells: every cell draws its end + bottom line (frame cells). */
+const LINE = "border-e border-b border-frame-line last:border-e-0";
+/** The sticky project column covers what scrolls under it with the box surface. */
+const STICKY = "sticky start-0 z-10 bg-background";
+
+/**
+ * Project × day grid, edge to edge in its framed box: square cells sharing
+ * hairlines (no rounding), today's column tinted. Cells open the add-time
+ * dialog prefilled with day + project; the grid scrolls inside its box on
+ * narrow screens with the project column pinned.
+ */
 export function TimesheetGrid({
   days,
   rows,
@@ -46,12 +56,12 @@ export function TimesheetGrid({
         type="button"
         onClick={() => openCreate({ date: day.key, projectId: row?.projectId ?? "" })}
         aria-label={format(tt.addTimeFor, { day: `${day.weekday} ${day.label}` })}
-        className="group/cell flex h-11 w-full cursor-pointer items-center justify-center rounded-lg font-mono text-sm tabular-nums transition-colors hover:bg-primary/8 focus-visible:bg-primary/8 focus-visible:outline-none"
+        className="group/cell flex h-12 w-full cursor-pointer items-center justify-center font-mono text-sm tabular-nums transition-colors outline-none hover:bg-primary/8 focus-visible:bg-primary/8 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
       >
         {content}
       </button>
     ) : (
-      <div className="flex h-11 items-center justify-center font-mono text-sm tabular-nums">
+      <div className="flex h-12 items-center justify-center font-mono text-sm tabular-nums">
         {content}
       </div>
     );
@@ -61,25 +71,32 @@ export function TimesheetGrid({
   );
 
   return (
-    <div className="overflow-x-auto">
+    <div className="scrollbar-thin overflow-x-auto">
       <table className="w-full min-w-[680px] border-separate border-spacing-0 text-sm sm:min-w-[760px]">
         <thead>
           <tr>
-            <th className="sticky start-0 z-10 w-36 bg-card px-4 py-3 text-start text-xs font-bold text-muted-foreground sm:w-56 sm:px-6">
+            <th
+              className={cn(
+                LINE,
+                STICKY,
+                "w-36 px-(--cell-pad) py-3 text-start text-xs font-bold text-muted-foreground sm:w-56",
+              )}
+            >
               {t.common.project}
             </th>
             {days.map((d) => (
               <th
                 key={d.key}
                 className={cn(
-                  "px-1 py-3 text-center text-xs font-semibold text-muted-foreground",
-                  d.today && "text-primary-ink",
+                  LINE,
+                  "px-1 py-2.5 text-center text-xs font-semibold text-muted-foreground",
+                  d.today && "bg-primary/4 text-primary-ink",
                 )}
               >
                 <span className="block">{d.weekday}</span>
                 <span
                   className={cn(
-                    "mt-1 inline-block rounded-md px-1.5 text-[11px] font-bold",
+                    "mt-1 inline-block px-1.5 text-[11px] font-bold",
                     d.today && "bg-primary text-primary-foreground",
                   )}
                 >
@@ -87,7 +104,12 @@ export function TimesheetGrid({
                 </span>
               </th>
             ))}
-            <th className="w-24 px-4 py-3 text-center text-xs font-bold text-muted-foreground">
+            <th
+              className={cn(
+                LINE,
+                "w-24 px-4 py-3 text-center text-xs font-bold text-muted-foreground",
+              )}
+            >
               {t.common.total}
             </th>
           </tr>
@@ -95,7 +117,7 @@ export function TimesheetGrid({
         <tbody>
           {rows.map((row) => (
             <tr key={row.projectId ?? "_none"} className="group">
-              <td className="sticky start-0 z-10 max-w-36 border-t border-dashed bg-card px-4 py-1 sm:max-w-56 sm:px-6">
+              <td className={cn(LINE, STICKY, "max-w-36 px-(--cell-pad) py-1 sm:max-w-56")}>
                 <span className="flex items-center gap-2 font-semibold">
                   <ColorDot color={row.color} />
                   <span className="truncate">
@@ -106,7 +128,7 @@ export function TimesheetGrid({
               {row.cells.map((c, i) => (
                 <td
                   key={days[i]!.key}
-                  className={cn("border-t border-dashed p-1", days[i]!.today && "bg-primary/4")}
+                  className={cn(LINE, "p-0", days[i]!.today && "bg-primary/4")}
                 >
                   {cell(
                     days[i]!,
@@ -115,44 +137,51 @@ export function TimesheetGrid({
                   )}
                 </td>
               ))}
-              <td className="border-t border-dashed px-4 text-center font-mono font-bold tabular-nums">
+              <td className={cn(LINE, "px-4 text-center font-mono font-bold tabular-nums")}>
                 {row.total}
               </td>
             </tr>
           ))}
           {editable && (
             <tr>
-              <td className="sticky start-0 z-10 border-t border-dashed bg-card px-4 py-1 text-xs font-semibold text-muted-foreground sm:px-6">
+              <td
+                className={cn(
+                  LINE,
+                  STICKY,
+                  "px-(--cell-pad) py-1 text-xs font-semibold text-muted-foreground",
+                )}
+              >
                 <span className="flex items-center gap-2">
                   <PlusIcon className="size-3.5" /> {tt.addTime}
                 </span>
               </td>
               {days.map((d) => (
-                <td
-                  key={d.key}
-                  className={cn("border-t border-dashed p-1", d.today && "bg-primary/4")}
-                >
+                <td key={d.key} className={cn(LINE, "p-0", d.today && "bg-primary/4")}>
                   {cell(d, null, plus)}
                 </td>
               ))}
-              <td className="border-t border-dashed" />
+              <td className={LINE} />
             </tr>
           )}
         </tbody>
         <tfoot>
-          <tr className="bg-muted">
-            <td className="sticky start-0 z-10 bg-muted px-4 py-3 text-xs font-bold sm:px-6">
+          <tr>
+            <td
+              className={cn(
+                "sticky start-0 z-10 border-e border-frame-line bg-card px-(--cell-pad) py-3 text-xs font-bold",
+              )}
+            >
               {t.common.total}
             </td>
             {dayTotals.map((v, i) => (
               <td
                 key={days[i]!.key}
-                className="py-3 text-center font-mono text-sm font-bold tabular-nums"
+                className="border-e border-frame-line bg-card py-3 text-center font-mono text-sm font-bold tabular-nums"
               >
                 {v}
               </td>
             ))}
-            <td className="py-3 text-center font-mono text-base font-black text-primary-ink tabular-nums">
+            <td className="bg-card py-3 text-center font-mono text-base font-black text-primary-ink tabular-nums">
               {total}
             </td>
           </tr>

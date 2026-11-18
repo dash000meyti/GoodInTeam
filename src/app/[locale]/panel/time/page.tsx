@@ -9,10 +9,11 @@ import {
   TimerIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { CardAction, CardDescription, CardHeader } from "@/components/ui/card";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard, StatGrid } from "@/components/panel/stat-card";
+import { StatCard, StatRow } from "@/components/panel/stat-card";
+import { FrameBox, FrameCell, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { format } from "@/i18n/format-message";
 import { formatDuration, formatHours, formatNumber, formatPercent, formatTime } from "@/lib/format";
 import { addDays, startOfDay, startOfWeek, toDateInputValue, weekStartFor } from "@/lib/tz";
@@ -37,6 +38,12 @@ import { StartTimerBar } from "./_components/start-timer-bar";
 import { AddTimeButton, TimeUIProvider } from "./_components/time-ui";
 import { dayLabel, entryValues, moneyText, param, toRowView, withParams } from "./_lib/views";
 
+/**
+ * Time (framed): the page box carries the four KPIs as its second row; the
+ * tracker box holds the start bar and, below it, the running timers as cells
+ * sharing hairlines; the timeline is one box with a section per day (header
+ * row with the day total, entry rows edge to edge).
+ */
 export default async function TimePage({ searchParams }: PageProps<"/[locale]/panel/time">) {
   const ctx = await panelContext({ roles: ["owner", "admin", "member"] });
   const { actor, t, href, locale, tz, now, fmt } = ctx;
@@ -93,6 +100,16 @@ export default async function TimePage({ searchParams }: PageProps<"/[locale]/pa
 
   const baseParams = { user: userParam, weeks: weeks > 1 ? String(weeks) : undefined };
   const billablePct = week.totalMs ? (week.billableMs / week.totalMs) * 100 : 0;
+  const loadMore = (
+    <Button asChild variant="outline">
+      <Link
+        href={withParams(href("/panel/time"), { ...baseParams, weeks: String(weeks + 1) })}
+        scroll={false}
+      >
+        <ChevronDownIcon /> {tt.loadMore}
+      </Link>
+    </Button>
+  );
 
   return (
     <TimeUIProvider
@@ -125,26 +142,28 @@ export default async function TimePage({ searchParams }: PageProps<"/[locale]/pa
                 ]}
               />
             )}
+            {/* Icon-only between sm and xl, where the actions share the header row with the title. */}
             <Button asChild variant="outline">
-              <Link href={href("/panel/time/timesheet")}>
-                <CalendarRangeIcon /> {tt.timesheet}
+              <Link
+                href={href("/panel/time/timesheet")}
+                aria-label={tt.timesheet}
+                title={tt.timesheet}
+              >
+                <CalendarRangeIcon />
+                <span className="sm:hidden xl:inline">{tt.timesheet}</span>
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href={href("/panel/time/reports")}>
-                <BarChart3Icon /> {tt.reports}
+              <Link href={href("/panel/time/reports")} aria-label={tt.reports} title={tt.reports}>
+                <BarChart3Icon />
+                <span className="sm:hidden xl:inline">{tt.reports}</span>
               </Link>
             </Button>
             {self && <AddTimeButton />}
           </>
         }
-      />
-
-      <div className="space-y-6">
-        {self && <StartTimerBar projects={projects} tasks={tasks} />}
-        {self && <RunningTimers timers={runningViews} projects={projects} serverNow={now} />}
-
-        <StatGrid>
+      >
+        <StatRow>
           <StatCard
             label={tt.todayTotal}
             value={<span className="font-mono">{formatDuration(todayMs, locale)}</span>}
@@ -168,7 +187,7 @@ export default async function TimePage({ searchParams }: PageProps<"/[locale]/pa
           {admin ? (
             <StatCard
               label={tt.earnedWeek}
-              value={<span className="text-xl">{moneyText(week.earned, locale)}</span>}
+              value={moneyText(week.earned, locale)}
               icon={TimerIcon}
               tone="violet"
             />
@@ -185,7 +204,20 @@ export default async function TimePage({ searchParams }: PageProps<"/[locale]/pa
               tone="violet"
             />
           )}
-        </StatGrid>
+        </StatRow>
+      </PageHeader>
+
+      <div className="flex flex-col gap-6 lg:gap-8">
+        {self && (
+          <FrameBox as="section" density="compact" ariaLabel={tt.whatAreYouWorkingOn}>
+            <FrameGrid cols={1}>
+              <FrameCell>
+                <StartTimerBar projects={projects} tasks={tasks} />
+              </FrameCell>
+            </FrameGrid>
+            <RunningTimers timers={runningViews} projects={projects} serverNow={now} />
+          </FrameBox>
+        )}
 
         {days.size === 0 ? (
           <EmptyState
@@ -195,54 +227,45 @@ export default async function TimePage({ searchParams }: PageProps<"/[locale]/pa
             action={self ? <AddTimeButton variant="soft" /> : undefined}
           />
         ) : (
-          <div className="space-y-5">
+          <FrameBox as="section" density="compact" ariaLabel={tt.timeline}>
             {[...days.entries()].map(([key, list]) => {
               const label = dayLabel(key, ctx);
               const total = list.reduce((s, e) => s + e.durationMs, 0);
               return (
-                <Card key={key} className="gap-0 overflow-hidden py-0">
-                  <div className="flex items-center justify-between gap-3 border-b border-dashed bg-muted/30 px-4 py-3 sm:px-6">
-                    <div className="min-w-0">
-                      <h2 className="truncate font-bold">{label.title}</h2>
-                      {label.subtitle && (
-                        <p className="text-xs text-muted-foreground">{label.subtitle}</p>
-                      )}
-                    </div>
-                    <div className="text-end">
-                      <p className="text-[11px] font-semibold text-muted-foreground">
-                        {tt.dayTotal}
-                      </p>
-                      <p className="font-mono text-base font-black tabular-nums">
-                        {formatDuration(total, locale)}
-                      </p>
-                    </div>
-                  </div>
-                  <ul className="divide-y divide-dashed">
-                    {list.map((e) => (
-                      <EntryRow key={e.id} entry={toRowView(e, ctx, !self)} serverNow={now} />
-                    ))}
-                  </ul>
-                </Card>
+                <FrameGrid key={key} cols={1}>
+                  <FrameCell as="section" pad="none" aria-labelledby={`day-${key}`}>
+                    <CardHeader>
+                      <h2 id={`day-${key}`} className={`${HEADING_CLASS.box} truncate`}>
+                        {label.title}
+                      </h2>
+                      {label.subtitle && <CardDescription>{label.subtitle}</CardDescription>}
+                      <CardAction className="text-end">
+                        <p className="text-[11px] font-semibold text-muted-foreground">
+                          {tt.dayTotal}
+                        </p>
+                        <p className="font-mono text-base font-black tabular-nums">
+                          {formatDuration(total, locale)}
+                        </p>
+                      </CardAction>
+                    </CardHeader>
+                    <ul className="divide-y divide-frame-line">
+                      {list.map((e) => (
+                        <EntryRow key={e.id} entry={toRowView(e, ctx, !self)} serverNow={now} />
+                      ))}
+                    </ul>
+                  </FrameCell>
+                </FrameGrid>
               );
             })}
-          </div>
+            {hasMore && (
+              <FrameGrid cols={1}>
+                <FrameCell className="flex justify-center py-3">{loadMore}</FrameCell>
+              </FrameGrid>
+            )}
+          </FrameBox>
         )}
 
-        {hasMore && (
-          <div className="flex justify-center">
-            <Button asChild variant="outline">
-              <Link
-                href={withParams(href("/panel/time"), {
-                  ...baseParams,
-                  weeks: String(weeks + 1),
-                })}
-                scroll={false}
-              >
-                <ChevronDownIcon /> {tt.loadMore}
-              </Link>
-            </Button>
-          </div>
-        )}
+        {hasMore && days.size === 0 && <div className="flex justify-center">{loadMore}</div>}
       </div>
     </TimeUIProvider>
   );

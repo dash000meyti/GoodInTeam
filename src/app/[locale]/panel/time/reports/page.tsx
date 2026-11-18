@@ -9,7 +9,7 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -21,7 +21,8 @@ import {
 import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard, StatGrid } from "@/components/panel/stat-card";
+import { StatCard, StatRow } from "@/components/panel/stat-card";
+import { FrameBox, FrameCell, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { format } from "@/i18n/format-message";
 import { formatDate, formatDuration, formatHours, formatNumber, formatPercent } from "@/lib/format";
 import { startOfWeek, toDateInputValue, weekStartFor } from "@/lib/tz";
@@ -31,12 +32,18 @@ import { timeProjectOptions, timeReport, timeUserOptions } from "@/server/module
 import { panelContext } from "@/server/page-context";
 import { ParamSelect } from "../_components/param-select";
 import { ProjectDonut, StackedHoursChart, type ChartBucket } from "../_components/report-charts";
+import { DotsFiller } from "../../calendar/_components/dots-filler";
 import { ReportFilters } from "../_components/report-filters";
 import { dayParts, moneyText, param, withParams } from "../_lib/views";
 
 const H = 3_600_000;
 const NONE_COLOR = "#919EAB";
 
+/**
+ * Time reports (framed): the page box carries the range/project/user filters
+ * and the four KPIs as more rows; the charts are two cells of one box
+ * (2fr | 1fr from lg); the breakdown table sits edge to edge in its own box.
+ */
 export default async function TimeReportsPage({
   searchParams,
 }: PageProps<"/[locale]/panel/time/reports">) {
@@ -118,144 +125,156 @@ export default async function TimeReportsPage({
             </a>
           </Button>
         }
-      />
-
-      <Card className="mb-6 gap-4 p-4 sm:p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <ReportFilters
-            base={href("/panel/time/reports")}
-            params={keep}
-            preset={range.preset}
-            fromKey={range.fromKey}
-            toKey={range.toKey}
-          />
-          <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
-            <ParamSelect
+      >
+        <FrameGrid cols={1}>
+          <FrameCell className="flex flex-col gap-3 py-3 xl:flex-row xl:items-start xl:justify-between">
+            <ReportFilters
               base={href("/panel/time/reports")}
-              params={{ ...rangeParams, ...keep }}
-              param="project"
-              value={projectParam ?? ""}
-              noneLabel={tt.allProjects}
-              placeholder={tt.allProjects}
-              className="w-full sm:w-48"
-              options={projects.map((p) => ({
-                value: p.id,
-                label: p.name,
-                icon: <ColorDot color={p.color} />,
-              }))}
+              params={keep}
+              preset={range.preset}
+              fromKey={range.fromKey}
+              toKey={range.toKey}
             />
-            {admin && users.length > 1 && (
+            <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
               <ParamSelect
                 base={href("/panel/time/reports")}
                 params={{ ...rangeParams, ...keep }}
-                param="user"
-                value={userParam ?? ""}
-                noneLabel={tt.myTime}
-                ariaLabel={tt.whose}
-                className="w-full sm:w-40"
-                options={[
-                  { value: "all", label: tt.everyone },
-                  ...users
-                    .filter((u) => u.id !== actor.user.id)
-                    .map((u) => ({ value: u.id, label: u.name })),
-                ]}
+                param="project"
+                value={projectParam ?? ""}
+                noneLabel={tt.allProjects}
+                placeholder={tt.allProjects}
+                className="w-full sm:w-48"
+                options={projects.map((p) => ({
+                  value: p.id,
+                  label: p.name,
+                  icon: <ColorDot color={p.color} />,
+                }))}
               />
-            )}
-          </div>
-        </div>
-      </Card>
-
-      <StatGrid>
-        <StatCard
-          label={tt.totalHours}
-          value={<span className="font-mono">{formatDuration(report.totalMs, locale)}</span>}
-          hint={`${formatHours(report.totalMs, locale)} ${tt.hoursUnit}`}
-          icon={ClockIcon}
-        />
-        <StatCard
-          label={tt.billablePct}
-          value={formatPercent(billablePct, locale)}
-          hint={format(tt.billableOf, { h: formatHours(report.billableMs, locale) })}
-          icon={CoinsIcon}
-          tone="success"
-        />
-        {admin ? (
+              {admin && users.length > 1 && (
+                <ParamSelect
+                  base={href("/panel/time/reports")}
+                  params={{ ...rangeParams, ...keep }}
+                  param="user"
+                  value={userParam ?? ""}
+                  noneLabel={tt.myTime}
+                  ariaLabel={tt.whose}
+                  className="w-full sm:w-40"
+                  options={[
+                    { value: "all", label: tt.everyone },
+                    ...users
+                      .filter((u) => u.id !== actor.user.id)
+                      .map((u) => ({ value: u.id, label: u.name })),
+                  ]}
+                />
+              )}
+            </div>
+          </FrameCell>
+        </FrameGrid>
+        <StatRow>
           <StatCard
-            label={tt.earned}
-            value={<span className="text-xl">{moneyText(report.earned, locale)}</span>}
-            icon={TrendingUpIcon}
-            tone="violet"
+            label={tt.totalHours}
+            value={<span className="font-mono">{formatDuration(report.totalMs, locale)}</span>}
+            hint={`${formatHours(report.totalMs, locale)} ${tt.hoursUnit}`}
+            icon={ClockIcon}
           />
-        ) : (
           <StatCard
-            label={tt.byProject}
-            value={formatNumber(report.projects.length, locale)}
-            icon={PieChartIcon}
-            tone="violet"
+            label={tt.billablePct}
+            value={formatPercent(billablePct, locale)}
+            hint={format(tt.billableOf, { h: formatHours(report.billableMs, locale) })}
+            icon={CoinsIcon}
+            tone="success"
           />
-        )}
-        <StatCard
-          label={tt.avgPerDay}
-          value={<span className="font-mono">{formatDuration(avg, locale)}</span>}
-          hint={format(tt.avgPerDayHint, { n: formatNumber(report.activeDays, locale) })}
-          icon={CalendarDaysIcon}
-          tone="info"
-        />
-      </StatGrid>
+          {admin ? (
+            <StatCard
+              label={tt.earned}
+              value={moneyText(report.earned, locale)}
+              icon={TrendingUpIcon}
+              tone="violet"
+            />
+          ) : (
+            <StatCard
+              label={tt.byProject}
+              value={formatNumber(report.projects.length, locale)}
+              icon={PieChartIcon}
+              tone="violet"
+            />
+          )}
+          <StatCard
+            label={tt.avgPerDay}
+            value={<span className="font-mono">{formatDuration(avg, locale)}</span>}
+            hint={format(tt.avgPerDayHint, { n: formatNumber(report.activeDays, locale) })}
+            icon={CalendarDaysIcon}
+            tone="info"
+          />
+        </StatRow>
+      </PageHeader>
 
       {report.totalMs === 0 ? (
-        <EmptyState
-          className="mt-6"
-          icon={BarChart3Icon}
-          title={tt.noData}
-          description={tt.noDataHint}
-        />
+        <EmptyState icon={BarChart3Icon} title={tt.noData} description={tt.noDataHint} />
       ) : (
-        <>
-          <div className="mt-6 grid gap-6 xl:grid-cols-3">
-            <Card className="xl:col-span-2">
-              <CardHeader>
-                <CardTitle>{daily ? tt.dailyHours : tt.weeklyBuckets}</CardTitle>
-                <CardDescription>
-                  {formatHours(report.totalMs, locale)} {tt.hoursUnit}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <StackedHoursChart data={chartData} series={series} />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>{tt.byProject}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ProjectDonut
-                  totalLabel={formatDuration(report.totalMs, locale)}
-                  items={series.map((s, i) => ({
-                    key: s.key,
-                    name: s.name,
-                    color: s.color,
-                    hours: report.projects[i]!.ms / H,
-                  }))}
-                />
-              </CardContent>
-            </Card>
-          </div>
+        <div className="flex flex-col gap-6 lg:gap-8">
+          <FrameBox as="div" density="compact">
+            <FrameGrid cols="2-1">
+              <FrameCell
+                as="section"
+                pad="none"
+                aria-labelledby="rep-hours"
+                className="flex flex-col"
+              >
+                <CardHeader>
+                  {/* single-line headers keep the two cells' hairlines level (the total is a KPI above) */}
+                  <h2 id="rep-hours" className={HEADING_CLASS.box}>
+                    {daily ? tt.dailyHours : tt.weeklyBuckets}
+                  </h2>
+                </CardHeader>
+                <div className="p-(--cell-pad)">
+                  <StackedHoursChart data={chartData} series={series} />
+                </div>
+                <DotsFiller />
+              </FrameCell>
+              <FrameCell
+                as="section"
+                pad="none"
+                aria-labelledby="rep-projects"
+                className="flex flex-col"
+              >
+                <CardHeader>
+                  <h2 id="rep-projects" className={HEADING_CLASS.box}>
+                    {tt.byProject}
+                  </h2>
+                </CardHeader>
+                <div className="p-(--cell-pad)">
+                  <ProjectDonut
+                    totalLabel={formatDuration(report.totalMs, locale)}
+                    items={series.map((s, i) => ({
+                      key: s.key,
+                      name: s.name,
+                      color: s.color,
+                      hours: report.projects[i]!.ms / H,
+                    }))}
+                  />
+                </div>
+                <DotsFiller />
+              </FrameCell>
+            </FrameGrid>
+          </FrameBox>
 
-          <Card className="mt-6 gap-0 overflow-hidden py-0">
+          <Card className="gap-0 py-0" role="region" aria-labelledby="rep-breakdown">
             <CardHeader>
-              <CardTitle>{tt.breakdown}</CardTitle>
+              <h2 id="rep-breakdown" className={HEADING_CLASS.box}>
+                {tt.breakdown}
+              </h2>
             </CardHeader>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="ps-6">
+                  <TableHead>
                     {t.common.project} / {tt.task}
                   </TableHead>
                   <TableHead className="text-end">{tt.hoursCol}</TableHead>
                   <TableHead className="hidden text-end sm:table-cell">{tt.billableCol}</TableHead>
                   {admin && <TableHead className="text-end">{tt.earned}</TableHead>}
-                  <TableHead className="hidden w-40 pe-6 md:table-cell" />
+                  <TableHead className="hidden w-40 md:table-cell" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -263,8 +282,8 @@ export default async function TimeReportsPage({
                   const pct = (p.ms / report.totalMs) * 100;
                   return (
                     <Fragment key={p.projectId ?? "_none"}>
-                      <TableRow className="bg-muted/30 font-semibold">
-                        <TableCell className="ps-6">
+                      <TableRow className="bg-card font-semibold">
+                        <TableCell>
                           <span className="flex items-center gap-2">
                             <ColorDot color={p.color ?? NONE_COLOR} />
                             <span className="truncate">
@@ -283,11 +302,11 @@ export default async function TimeReportsPage({
                             {moneyText(p.earned, locale)}
                           </TableCell>
                         )}
-                        <TableCell className="hidden pe-6 md:table-cell">
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex items-center gap-2">
-                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                            <div className="h-1.5 flex-1 bg-muted">
                               <div
-                                className="h-full rounded-full"
+                                className="h-full"
                                 style={{
                                   width: `${pct}%`,
                                   backgroundColor: p.color ?? NONE_COLOR,
@@ -305,7 +324,7 @@ export default async function TimeReportsPage({
                           key={`${p.projectId ?? "_none"}-${task.taskId ?? "_none"}`}
                           className="text-muted-foreground"
                         >
-                          <TableCell className="ps-12">
+                          <TableCell className="ps-12 first:ps-12">
                             <span className="block max-w-[16rem] truncate sm:max-w-md">
                               <bdi>{task.title ?? tt.noTask}</bdi>
                             </span>
@@ -330,7 +349,7 @@ export default async function TimeReportsPage({
               </TableBody>
             </Table>
           </Card>
-        </>
+        </div>
       )}
     </>
   );

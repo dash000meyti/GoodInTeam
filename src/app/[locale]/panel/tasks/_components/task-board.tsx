@@ -40,7 +40,9 @@ interface Move {
 
 /**
  * Kanban by status with native HTML5 drag & drop (pointer) and a "Move to"
- * menu on every card (keyboard / touch).
+ * menu on every card (keyboard / touch). Framed: the columns share hairlines
+ * edge to edge in the tasks box (4 across from xl, a horizontal scroll inside
+ * the box below), cards are square hairline tiles.
  */
 export function TaskBoard({
   tasks,
@@ -111,91 +113,95 @@ export function TaskBoard({
   };
 
   return (
-    <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
-      <div className="grid w-max auto-cols-[minmax(17rem,82vw)] grid-flow-col gap-4 sm:auto-cols-[18rem] xl:w-full xl:grid-flow-row xl:grid-cols-4">
-        {BOARD_COLUMNS.map((status) => {
-          const { icon: Icon, tone, bar } = columnStyle[status];
-          const list = cols[status];
-          const isOver = over?.status === status;
-          return (
-            <section
-              key={status}
-              aria-label={tk[`status_${status}`]}
-              onDragOver={(e) => {
-                if (!dragId) return;
-                e.preventDefault();
-                e.dataTransfer.dropEffect = "move";
-                const beforeId = beforeAt(status, e.clientY);
-                if (over?.status !== status || over.beforeId !== beforeId)
-                  setOver({ status, beforeId });
-              }}
-              onDragLeave={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(null);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                const id = e.dataTransfer.getData("text/plain") || dragId;
-                if (id) move({ id, status, beforeId: beforeAt(status, e.clientY) });
-                setDragId(null);
-                setOver(null);
-              }}
-              className={cn(
-                "flex min-h-72 flex-col rounded-2xl bg-muted/50 p-2 transition-colors",
-                isOver && "bg-primary/8 ring-2 ring-primary/30",
-              )}
-            >
-              <header className="flex items-center gap-2 px-2 pt-1 pb-3">
-                <Icon className={cn("size-4", tone)} />
-                <h3 className="text-sm font-bold">{tk[`status_${status}`]}</h3>
-                <span className="ms-auto rounded-full bg-background px-2 text-xs font-bold text-muted-foreground tabular-nums">
-                  {formatNumber(list.length, locale)}
-                </span>
-              </header>
-              <ol
-                ref={(el) => {
-                  columnsRef.current[status] = el;
+    <div>
+      <div className="scrollbar-thin overflow-x-auto">
+        <div className="grid w-max auto-cols-[minmax(17rem,82vw)] grid-flow-col sm:auto-cols-[18rem] xl:w-full xl:grid-flow-row xl:grid-cols-4">
+          {BOARD_COLUMNS.map((status) => {
+            const { icon: Icon, tone, bar } = columnStyle[status];
+            const list = cols[status];
+            const isOver = over?.status === status;
+            return (
+              <section
+                key={status}
+                aria-label={tk[`status_${status}`]}
+                onDragOver={(e) => {
+                  if (!dragId) return;
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "move";
+                  const beforeId = beforeAt(status, e.clientY);
+                  if (over?.status !== status || over.beforeId !== beforeId)
+                    setOver({ status, beforeId });
                 }}
-                className="flex flex-1 flex-col gap-2"
-              >
-                {list.map((task) => (
-                  <li key={task.id} data-task-id={task.id}>
-                    {isOver && over.beforeId === task.id && <DropLine />}
-                    <BoardCard
-                      task={task}
-                      bar={bar}
-                      dragging={dragId === task.id}
-                      onOpen={onOpen}
-                      onMove={(to) => move({ id: task.id, status: to, beforeId: null })}
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("text/plain", task.id);
-                        e.dataTransfer.effectAllowed = "move";
-                        setDragId(task.id);
-                      }}
-                      onDragEnd={() => {
-                        setDragId(null);
-                        setOver(null);
-                      }}
-                    />
-                  </li>
-                ))}
-                {isOver && over.beforeId === null && <DropLine />}
-                {list.length === 0 && !isOver && (
-                  <li className="flex flex-1 items-center justify-center rounded-xl border-2 border-dashed border-border p-6 text-xs text-muted-foreground">
-                    {tk.emptyColumn}
-                  </li>
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const id = e.dataTransfer.getData("text/plain") || dragId;
+                  if (id) move({ id, status, beforeId: beforeAt(status, e.clientY) });
+                  setDragId(null);
+                  setOver(null);
+                }}
+                className={cn(
+                  "flex min-h-72 flex-col border-e border-frame-line transition-colors last:border-e-0",
+                  isOver && "bg-primary/8 ring-2 ring-primary/30 ring-inset",
                 )}
-              </ol>
-            </section>
-          );
-        })}
+              >
+                <header className="flex min-h-12 items-center gap-2 border-b border-frame-line px-(--cell-pad) py-2.5">
+                  <Icon className={cn("size-4", tone)} />
+                  <h3 className="text-sm font-bold">{tk[`status_${status}`]}</h3>
+                  <span className="ms-auto border border-frame-line bg-card px-1.5 text-xs leading-5 font-bold text-muted-foreground tabular-nums">
+                    {formatNumber(list.length, locale)}
+                  </span>
+                </header>
+                <ol
+                  ref={(el) => {
+                    columnsRef.current[status] = el;
+                  }}
+                  className="flex flex-1 flex-col gap-2 p-3"
+                >
+                  {list.map((task) => (
+                    <li key={task.id} data-task-id={task.id}>
+                      {isOver && over.beforeId === task.id && <DropLine />}
+                      <BoardCard
+                        task={task}
+                        bar={bar}
+                        dragging={dragId === task.id}
+                        onOpen={onOpen}
+                        onMove={(to) => move({ id: task.id, status: to, beforeId: null })}
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData("text/plain", task.id);
+                          e.dataTransfer.effectAllowed = "move";
+                          setDragId(task.id);
+                        }}
+                        onDragEnd={() => {
+                          setDragId(null);
+                          setOver(null);
+                        }}
+                      />
+                    </li>
+                  ))}
+                  {isOver && over.beforeId === null && <DropLine />}
+                  {list.length === 0 && !isOver && (
+                    <li className="flex flex-1 items-center justify-center border border-dashed border-frame-line p-6 text-xs text-muted-foreground">
+                      {tk.emptyColumn}
+                    </li>
+                  )}
+                </ol>
+              </section>
+            );
+          })}
+        </div>
       </div>
-      <p className="mt-3 hidden text-xs text-muted-foreground sm:block">{tk.dragHint}</p>
+      <p className="hidden border-t border-frame-line px-(--cell-pad) py-2.5 text-xs text-muted-foreground sm:block">
+        {tk.dragHint}
+      </p>
     </div>
   );
 }
 
 function DropLine() {
-  return <div className="my-1 h-1 rounded-full bg-primary/70" aria-hidden />;
+  return <div className="my-1 h-1 bg-primary shadow-[0_0_0_1px_var(--brand-ink)]" aria-hidden />;
 }
 
 function BoardCard({
@@ -223,7 +229,7 @@ function BoardCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       className={cn(
-        "group relative cursor-grab overflow-hidden rounded-xl bg-card p-3 shadow-card transition-[opacity,transform,box-shadow] hover:shadow-dropdown active:cursor-grabbing dark:border dark:border-border",
+        "group relative cursor-grab border border-frame-line bg-background p-3 transition-[opacity,transform,background-color,border-color] hover:border-foreground/40 hover:bg-card active:cursor-grabbing",
         dragging && "scale-[0.98] opacity-40",
       )}
     >

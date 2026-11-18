@@ -15,7 +15,7 @@ import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useCalendar } from "./calendar-context";
 
-/** Compact month navigator for the side panel (Jalali for fa). */
+/** Compact month navigator for the side cell (Jalali for fa): square day cells, today on a yellow square. */
 export function MiniMonth({
   anchor,
   selected,
@@ -81,17 +81,18 @@ export function MiniMonth({
               aria-label={dateLabel(d.key, cal.locale)}
               aria-current={isToday ? "date" : undefined}
               className={cn(
-                "relative mx-auto flex size-8 items-center justify-center rounded-lg text-[13px] tabular-nums transition-colors hover:bg-accent",
+                "relative mx-auto flex size-8 items-center justify-center text-[13px] tabular-nums transition-colors hover:bg-card",
                 !d.inMonth && "text-muted-foreground/50",
                 isSel && "bg-primary/10 font-semibold text-primary-dark dark:text-primary-light",
-                isToday && "bg-primary font-bold text-primary-foreground hover:bg-primary-hover",
+                isToday &&
+                  "bg-primary font-bold text-primary-foreground shadow-[0_0_0_1px_var(--brand-ink)] hover:bg-primary-hover",
               )}
             >
               {dayNumber(d.key, cal.locale)}
               {marked.has(d.key) && !isToday && (
                 <span
                   aria-hidden
-                  className="absolute inset-x-0 bottom-1 mx-auto size-1 rounded-full bg-primary"
+                  className="absolute inset-x-0 bottom-1 mx-auto size-1 bg-primary shadow-[0_0_0_0.5px_var(--brand-ink)]"
                 />
               )}
             </Link>

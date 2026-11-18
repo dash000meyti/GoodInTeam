@@ -19,6 +19,13 @@ const PRESETS: RangePreset[] = [
   "custom",
 ];
 
+/**
+ * The site's filter chip (components/site/ui.tsx `Chip`) over the ToggleGroup:
+ * 32px, 6px corners, hairline; the pressed one filled with ink.
+ */
+const CHIP =
+  "h-8 rounded-[6px] border border-frame-line bg-background px-3 text-sm font-semibold text-muted-foreground hover:border-foreground/40 hover:bg-background hover:text-foreground data-[state=on]:border-foreground data-[state=on]:bg-foreground data-[state=on]:text-background dark:data-[state=on]:text-background";
+
 function build(base: string, params: Record<string, string | undefined>) {
   const sp = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v) sp.set(k, v);
@@ -54,12 +61,12 @@ export function ReportFilters({
 
   return (
     <div className={cn("flex flex-col gap-3 transition-opacity", pending && "opacity-70")}>
-      <div className="-mx-1 overflow-x-auto px-1 pb-1">
+      <div className="-mx-1 scrollbar-thin overflow-x-auto px-1 py-0.5">
         <ToggleGroup
           type="single"
           value={mode}
           aria-label={tt.range}
-          className="w-max"
+          className="w-max gap-1.5 rounded-none border-0 p-0"
           onValueChange={(v) => {
             if (!v) return;
             setMode(v as RangePreset);
@@ -67,7 +74,7 @@ export function ReportFilters({
           }}
         >
           {PRESETS.map((p) => (
-            <ToggleGroupItem key={p} value={p} className="px-3">
+            <ToggleGroupItem key={p} value={p} className={CHIP}>
               {tt[`range_${p}`]}
             </ToggleGroupItem>
           ))}

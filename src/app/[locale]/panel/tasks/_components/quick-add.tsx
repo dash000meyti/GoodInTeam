@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ColorDot } from "@/components/shared/color-dot";
 import type { ProjectOption } from "@/components/time/project-select";
 import { localeMeta } from "@/i18n/config";
@@ -46,7 +45,10 @@ const listDefaults: Partial<Record<SmartListKey, TaskStatus>> = {
   someday: "someday",
 };
 
-/** Quick-add input with live preview chips of parsed priority/tags/project/date/time. */
+/**
+ * Quick-add input with live preview chips of parsed priority/tags/project/date/time.
+ * Frameless: the tasks box puts it in its first row (input row, hint row under a hairline).
+ */
 export function QuickAdd({
   projects,
   tz,
@@ -97,7 +99,7 @@ export function QuickAdd({
     <span
       key={key}
       className={cn(
-        "inline-flex animate-in items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-semibold zoom-in-95 fade-in",
+        "inline-flex animate-in items-center gap-1 rounded-[6px] border border-frame-line bg-card px-2 py-0.5 text-xs font-semibold zoom-in-95 fade-in",
         className,
       )}
     >
@@ -130,7 +132,7 @@ export function QuickAdd({
                   key,
                   <AlertCircleIcon className="size-3" />,
                   format(tk.projectNotFound, { slug: tok.value }),
-                  "bg-warning/16 text-[#b76e00] dark:text-warning",
+                  "bg-warning/16 text-warning-ink",
                 );
           case "date":
             return chip(
@@ -149,9 +151,9 @@ export function QuickAdd({
     : [];
 
   return (
-    <Card className="gap-0 p-0">
+    <>
       <form
-        className="flex items-center gap-3 px-4 py-2"
+        className="flex items-center gap-3 px-(--cell-pad) py-2"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -184,7 +186,7 @@ export function QuickAdd({
       </form>
       <div
         id="quick-add-hint"
-        className="flex min-h-9 flex-wrap items-center gap-1.5 border-t border-dashed px-4 py-2"
+        className="flex min-h-9 flex-wrap items-center gap-1.5 border-t border-frame-line px-(--cell-pad) py-2"
       >
         {chips.length ? (
           <>
@@ -199,6 +201,6 @@ export function QuickAdd({
           <span className="text-xs text-muted-foreground">{tk.quickAddHint}</span>
         )}
       </div>
-    </Card>
+    </>
   );
 }

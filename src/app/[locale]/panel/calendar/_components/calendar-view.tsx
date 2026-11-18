@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { FrameBox, FrameCell, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { addDaysKey, dayBounds, shiftAnchor } from "@/components/calendar/grid";
 import { dateLabel, monthTitle, rangeLabel } from "@/components/calendar/format";
 import { sourceMeta } from "@/components/calendar/kinds";
@@ -23,6 +23,7 @@ import { useT } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AgendaRow, AgendaView, groupByDay } from "./agenda-view";
 import { useCalendar } from "./calendar-context";
+import { DotsFiller } from "./dots-filler";
 import { ItemDetails } from "./item-popover";
 import { MiniMonth } from "./mini-month";
 import { MonthView } from "./month-view";
@@ -34,6 +35,16 @@ function persistHidden(list: CalendarSource[]) {
 }
 
 const viewKeys: Record<string, View> = { KeyM: "month", KeyW: "week", KeyD: "day", KeyA: "agenda" };
+
+/** The site's filter chip (components/site/ui.tsx `Chip`): 32px, 6px corners, hairline. */
+const CHIP =
+  "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border px-3 text-[13px] font-semibold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+/**
+ * The calendar app as one framed box: the main cell (toolbar row, source
+ * chips row, the month / week / day / agenda view) and, from xl, the side
+ * cell (mini month, the next 7 days, shortcuts) sharing its hairline.
+ */
 
 export function CalendarView({
   view,
@@ -156,86 +167,139 @@ export function CalendarView({
   );
 
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]">
-      <Card className="min-w-0 gap-0 overflow-hidden py-0">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-3 border-b border-dashed p-3 sm:p-4">
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={href(view, cal.todayKey)}>{c.today}</Link>
-            </Button>
-            <Button variant="ghost" size="icon-sm" asChild>
-              <Link href={href(view, prev)} aria-label={c.prevPeriod} title={c.prevPeriod}>
-                <ChevronLeftIcon className="rtl:rotate-180" />
-              </Link>
-            </Button>
-            <Button variant="ghost" size="icon-sm" asChild>
-              <Link href={href(view, next)} aria-label={c.nextPeriod} title={c.nextPeriod}>
-                <ChevronRightIcon className="rtl:rotate-180" />
-              </Link>
-            </Button>
+    <FrameBox as="section" density="compact" ariaLabel={c.title}>
+      <FrameGrid cols={1} className="xl:grid-cols-[minmax(0,1fr)_19rem]">
+        <FrameCell pad="none" className="flex min-w-0 flex-col">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-3 border-b border-frame-line px-(--cell-pad) py-3">
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={href(view, cal.todayKey)}>{c.today}</Link>
+              </Button>
+              <Button variant="ghost" size="icon-sm" asChild>
+                <Link href={href(view, prev)} aria-label={c.prevPeriod} title={c.prevPeriod}>
+                  <ChevronLeftIcon className="rtl:rotate-180" />
+                </Link>
+              </Button>
+              <Button variant="ghost" size="icon-sm" asChild>
+                <Link href={href(view, next)} aria-label={c.nextPeriod} title={c.nextPeriod}>
+                  <ChevronRightIcon className="rtl:rotate-180" />
+                </Link>
+              </Button>
+            </div>
+            <h2 className={cn(HEADING_CLASS.box, "min-w-0 truncate")} aria-live="polite">
+              {title}
+            </h2>
+            <nav
+              aria-label={c.view}
+              className="grid w-full grid-cols-4 gap-1.5 sm:ms-auto sm:flex sm:w-auto"
+            >
+              {calendarViews.map((v) => (
+                <Link
+                  key={v}
+                  href={href(v, anchor)}
+                  aria-current={v === view ? "page" : undefined}
+                  className={cn(
+                    CHIP,
+                    v === view
+                      ? "border-foreground bg-foreground text-background"
+                      : "border-frame-line bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+                  )}
+                >
+                  {c[`view_${v}`]}
+                </Link>
+              ))}
+            </nav>
           </div>
-          <h2 className="min-w-0 truncate text-base font-extrabold sm:text-lg" aria-live="polite">
-            {title}
-          </h2>
-          <nav
-            aria-label={c.view}
-            className="inline-flex h-9 w-full items-center gap-1 rounded-xl bg-muted p-1 sm:ms-auto sm:w-auto"
+
+          <div
+            role="group"
+            aria-label={c.sources}
+            className="flex flex-wrap items-center gap-1.5 border-b border-frame-line px-(--cell-pad) py-2.5"
           >
-            {calendarViews.map((v) => (
-              <Link
-                key={v}
-                href={href(v, anchor)}
-                aria-current={v === view ? "page" : undefined}
-                className={cn(
-                  "inline-flex h-full flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground sm:flex-none",
-                  v === view && "bg-background text-foreground shadow-card dark:bg-card",
-                )}
-              >
-                {c[`view_${v}`]}
-              </Link>
-            ))}
-          </nav>
-        </div>
+            {sources.map((s) => {
+              const on = !hidden.has(s);
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => toggle(s)}
+                  className={cn(
+                    CHIP,
+                    "h-7 cursor-pointer px-2.5 text-xs",
+                    on
+                      ? "border-frame-line bg-card text-foreground hover:border-foreground/40"
+                      : "border-dashed border-frame-line bg-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className={cn("size-2 transition-opacity", !on && "opacity-30")}
+                    style={{ backgroundColor: sourceMeta[s].color }}
+                  />
+                  <span className={cn(!on && "line-through decoration-1")}>{c[`source_${s}`]}</span>
+                </button>
+              );
+            })}
+          </div>
 
-        <div
-          role="group"
-          aria-label={c.sources}
-          className="flex flex-wrap items-center gap-1.5 border-b border-dashed px-3 py-2.5 sm:px-4"
-        >
-          {sources.map((s) => {
-            const on = !hidden.has(s);
-            return (
-              <button
-                key={s}
-                type="button"
-                aria-pressed={on}
-                onClick={() => toggle(s)}
-                className={cn(
-                  "inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  on
-                    ? "border-transparent bg-muted text-foreground hover:bg-muted/70"
-                    : "border-dashed border-border text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <span
-                  aria-hidden
-                  className={cn("size-2 rounded-full transition-opacity", !on && "opacity-30")}
-                  style={{ backgroundColor: sourceMeta[s].color }}
-                />
-                <span className={cn(!on && "line-through decoration-1")}>{c[`source_${s}`]}</span>
-              </button>
-            );
-          })}
-        </div>
+          {view === "month" ? (
+            <MonthView anchor={anchor} items={visible} dayHref={dayHref} />
+          ) : view === "agenda" ? (
+            <AgendaView days={days} items={visible} dayHref={dayHref} />
+          ) : (
+            <TimeGridView days={days} items={visible} dayHref={dayHref} />
+          )}
+          <DotsFiller />
+        </FrameCell>
 
-        {view === "month" ? (
-          <MonthView anchor={anchor} items={visible} dayHref={dayHref} />
-        ) : view === "agenda" ? (
-          <AgendaView days={days} items={visible} dayHref={dayHref} />
-        ) : (
-          <TimeGridView days={days} items={visible} dayHref={dayHref} />
-        )}
-      </Card>
+        <FrameCell as="aside" pad="none" className="hidden flex-col xl:flex">
+          <div className="border-b border-frame-line p-(--cell-pad)">
+            <MiniMonth anchor={anchor} selected={selected} marked={marked} dayHref={dayHref} />
+          </div>
+          <section aria-labelledby="cal-upcoming">
+            <div className="flex min-h-13 items-center justify-between gap-3 border-b border-frame-line ps-(--cell-pad) pe-3">
+              <h2 id="cal-upcoming" className={HEADING_CLASS.box}>
+                {c.upcomingTitle}
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={c.newEvent}
+                onClick={() => cal.openCreate()}
+              >
+                <PlusIcon />
+              </Button>
+            </div>
+            {upcomingDays.length === 0 ? (
+              <p className="p-(--cell-pad) text-sm text-muted-foreground">{c.upcomingEmpty}</p>
+            ) : (
+              <div className="max-h-[30rem] scrollbar-thin space-y-3 overflow-y-auto px-2 py-3">
+                {upcomingDays.map((g) => (
+                  <section key={g.key} aria-label={dateLabel(g.key, cal.locale)}>
+                    <h3 className="px-2 pb-1 text-xs font-bold text-muted-foreground">
+                      {g.key === cal.todayKey
+                        ? t.common.today
+                        : g.key === addDaysKey(cal.todayKey, 1)
+                          ? t.common.tomorrow
+                          : dateLabel(g.key, cal.locale, { year: false })}
+                    </h3>
+                    <ul className="space-y-0.5">
+                      {g.items.map((item) => (
+                        <AgendaRow key={item.key} item={item} dayStart={g.start} compact />
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            )}
+          </section>
+          <p className="border-t border-frame-line px-(--cell-pad) py-3 text-[11px] leading-5 text-muted-foreground">
+            {c.shortcuts}
+          </p>
+          <DotsFiller />
+        </FrameCell>
+      </FrameGrid>
 
       <Dialog open={!!focusItem} onOpenChange={(o) => !o && closeFocus()}>
         <DialogContent className="max-w-[min(24rem,calc(100vw-1.5rem))] gap-0 p-0">
@@ -247,48 +311,6 @@ export function CalendarView({
           )}
         </DialogContent>
       </Dialog>
-
-      <aside className="hidden flex-col gap-6 xl:flex">
-        <Card className="gap-0 p-4">
-          <MiniMonth anchor={anchor} selected={selected} marked={marked} dayHref={dayHref} />
-        </Card>
-        <Card className="gap-3 py-4">
-          <div className="flex items-center justify-between px-4">
-            <h2 className="font-bold">{c.upcomingTitle}</h2>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label={c.newEvent}
-              onClick={() => cal.openCreate()}
-            >
-              <PlusIcon />
-            </Button>
-          </div>
-          {upcomingDays.length === 0 ? (
-            <p className="px-4 pb-2 text-sm text-muted-foreground">{c.upcomingEmpty}</p>
-          ) : (
-            <div className="space-y-3 px-2">
-              {upcomingDays.map((g) => (
-                <section key={g.key} aria-label={dateLabel(g.key, cal.locale)}>
-                  <h3 className="px-2 pb-1 text-xs font-bold text-muted-foreground">
-                    {g.key === cal.todayKey
-                      ? t.common.today
-                      : g.key === addDaysKey(cal.todayKey, 1)
-                        ? t.common.tomorrow
-                        : dateLabel(g.key, cal.locale, { year: false })}
-                  </h3>
-                  <ul className="space-y-0.5">
-                    {g.items.map((item) => (
-                      <AgendaRow key={item.key} item={item} dayStart={g.start} compact />
-                    ))}
-                  </ul>
-                </section>
-              ))}
-            </div>
-          )}
-        </Card>
-        <p className="px-2 text-[11px] leading-5 text-muted-foreground">{c.shortcuts}</p>
-      </aside>
-    </div>
+    </FrameBox>
   );
 }

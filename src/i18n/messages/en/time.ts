@@ -39,6 +39,7 @@ export const time: Record<keyof typeof fa, string> = {
   duplicate: "Duplicate",
   deleteEntryBody: "This time entry will be permanently deleted.",
   dayTotal: "Day total",
+  timeline: "Time entries",
   loadMore: "Show previous week",
   noEntries: "No time tracked yet",
   noEntriesHint: "Start a timer or add time manually — it all adds up here.",

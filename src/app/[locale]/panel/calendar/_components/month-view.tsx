@@ -22,6 +22,11 @@ import { chipStyle, isWeekend, itemAriaLabel, itemTitle } from "./item-style";
 
 const MAX_LANES = 3;
 
+/**
+ * Month grid in the frame language: square day cells sharing solid
+ * hairlines (edge to edge in the calendar box), today's number on a yellow
+ * square, days of other months shaded.
+ */
 export function MonthView({
   anchor,
   items,
@@ -39,7 +44,7 @@ export function MonthView({
   );
   return (
     <div className="select-none">
-      <div aria-hidden className="grid grid-cols-7 border-b border-dashed">
+      <div aria-hidden className="grid grid-cols-7 border-b border-frame-line">
         {weeks[0]!.map((cell) => (
           <div
             key={cell.weekday}
@@ -81,7 +86,7 @@ function WeekRow({
 
   return (
     <div
-      className="relative grid grid-cols-7 border-b border-dashed last:border-b-0"
+      className="relative grid grid-cols-7 border-b border-frame-line last:border-b-0"
       style={{ gridTemplateRows: `2.25rem repeat(${MAX_LANES}, 1.375rem) minmax(0.375rem, 1fr)` }}
     >
       {week.map((cell, i) => {
@@ -91,7 +96,7 @@ function WeekRow({
           <div
             key={cell.key}
             className={cn(
-              "relative min-h-24 border-e border-dashed last:border-e-0 sm:min-h-[7.25rem]",
+              "relative min-h-24 border-e border-frame-line last:border-e-0 sm:min-h-[7.25rem]",
               !cell.inMonth
                 ? "bg-muted/50 dark:bg-muted/30"
                 : isWeekend(cell.weekday, cal.locale) && "bg-muted/25 dark:bg-muted/15",
@@ -110,9 +115,9 @@ function WeekRow({
                 href={dayHref(cell.key)}
                 aria-label={format(c.openDay, { date: label })}
                 className={cn(
-                  "pointer-events-auto flex size-7 items-center justify-center rounded-full text-[13px] font-bold tabular-nums transition-colors",
+                  "pointer-events-auto flex size-7 items-center justify-center text-[13px] font-bold tabular-nums transition-colors",
                   today
-                    ? "bg-primary text-primary-foreground hover:bg-primary-hover"
+                    ? "bg-primary text-primary-foreground shadow-[0_0_0_1px_var(--brand-ink)] hover:bg-primary-hover"
                     : cell.inMonth
                       ? "hover:bg-accent"
                       : "text-muted-foreground hover:bg-accent",

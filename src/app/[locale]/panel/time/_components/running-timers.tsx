@@ -12,7 +12,7 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { CardAction, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmDialog } from "@/components/shared/confirm-button";
+import { packRows } from "@/components/site/frame-plan";
+import { FrameCell, FrameFiller, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { LiveDuration } from "@/components/shared/live-duration";
 import { ProjectSelect, type ProjectOption } from "@/components/time/project-select";
 import { PulseDot } from "@/components/time/pulse-dot";
@@ -50,7 +52,11 @@ export interface RunningView {
   values: EntryFormValues;
 }
 
-/** Live cards for every running timer (parallel timers are first-class). */
+/**
+ * Live cells for every running timer (parallel timers are first-class): rows
+ * of the tracker box — a header row (title, count, Stop all), then a grid of
+ * timer cells sharing hairlines (2 per row at md, 3 at lg).
+ */
 export function RunningTimers({
   timers,
   projects,
@@ -85,23 +91,32 @@ export function RunningTimers({
 
   if (list.length === 0) return null;
 
+  const spans = list.map(() => undefined);
   return (
-    <section aria-labelledby="running-heading" className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="running-heading" className="flex items-center gap-2 text-base font-bold">
-          <PulseDot />
-          {tt.runningTimers}
-          <span className="rounded-full bg-primary/12 px-2 text-xs text-primary-dark tabular-nums dark:text-primary-light">
-            {formatNumber(list.length, locale)}
-          </span>
-        </h2>
-        {list.length > 1 && (
-          <Button variant="outline" size="sm" onClick={() => stop("all")} disabled={pending}>
-            <SquareIcon className="fill-current" /> {tt.stopAll}
-          </Button>
-        )}
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <>
+      <FrameGrid cols={1}>
+        <FrameCell pad="none">
+          {/* the cell's own hairline closes the header row */}
+          <CardHeader className="border-b-0">
+            <h2 id="running-heading" className={cn(HEADING_CLASS.box, "flex items-center gap-2")}>
+              <PulseDot />
+              {tt.runningTimers}
+              <span className="border border-frame-line bg-card px-1.5 text-xs leading-5 font-bold tabular-nums">
+                {formatNumber(list.length, locale)}
+              </span>
+            </h2>
+            {list.length > 1 && (
+              <CardAction>
+                <Button variant="outline" size="sm" onClick={() => stop("all")} disabled={pending}>
+                  <SquareIcon className="fill-current" /> {tt.stopAll}
+                </Button>
+              </CardAction>
+            )}
+          </CardHeader>
+        </FrameCell>
+      </FrameGrid>
+      {/* One cell per timer; dots fillers complete the last row. */}
+      <FrameGrid cols={3}>
         {list.map((timer) => (
           <RunningCard
             key={timer.id}
@@ -113,8 +128,11 @@ export function RunningTimers({
             busy={pending}
           />
         ))}
-      </div>
-    </section>
+        <FrameFiller
+          units={{ md: packRows(spans, 3, "md").trailing, lg: packRows(spans, 3, "lg").trailing }}
+        />
+      </FrameGrid>
+    </>
   );
 }
 
@@ -152,11 +170,9 @@ function RunningCard({
   };
 
   return (
-    <Card
-      className={cn(
-        "relative gap-4 overflow-hidden p-5 transition-shadow hover:shadow-dropdown",
-        timer.long && "ring-2 ring-warning/50",
-      )}
+    <FrameCell
+      hover
+      className={cn("flex flex-col gap-4", timer.long && "ring-2 ring-warning/50 ring-inset")}
     >
       <span
         aria-hidden
@@ -292,6 +308,6 @@ function RunningCard({
           )}
         </div>
       )}
-    </Card>
+    </FrameCell>
   );
 }

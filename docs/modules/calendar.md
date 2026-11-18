@@ -38,6 +38,12 @@ src/i18n/messages/{fa,en}/calendar.ts
   overlapping events side by side (they stretch into free columns). Click an hour slot to
   create an event there (lower half = :30). Items ≥ 24 h go to the all-day row.
 - **Agenda** — 30 days from the anchor date, grouped by day, with a Join button for meetings.
+- **Layout (framed, docs/design-system.md "Frame"):** one box holds the calendar — the main
+  cell (toolbar row with the view chips, the source chips row, the view; square day cells
+  sharing solid hairlines, today on a yellow square) and, from xl, the side cell (mini month,
+  next 7 days in a capped scroll, shortcuts). Leftover height in either cell is the dots
+  texture. Commitments: KPIs in the page box, then one box with the quick-promise form, the
+  groups and the keep rate by client.
 - Navigation: Today / prev / next, view switcher, mini month (xl screens) and a "Next 7 days"
   list. Keyboard: ← → move (RTL-aware), `T` today, `N` new event, `M/W/D/A` views (key codes,
   so they work with a Persian keyboard layout too).

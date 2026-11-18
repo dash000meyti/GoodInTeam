@@ -2,7 +2,8 @@ import Link from "next/link";
 import { CalendarDaysIcon, MapPinIcon, RepeatIcon, VideoIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardHeader } from "@/components/ui/card";
+import { HEADING_CLASS } from "@/components/shell/frame";
 import { dayKeyOf } from "@/components/calendar/grid";
 import {
   dayNumber,
@@ -20,8 +21,10 @@ import type { PanelContext } from "@/server/page-context";
 import { statusLabel } from "./labels";
 
 /**
- * Upcoming and recent events of a project (meetings, commitments, deadlines…).
- * Server component — drop it into the project page:
+ * Upcoming and recent events of a project (meetings, commitments, deadlines…)
+ * as one framed box: a header row, then an "upcoming" and a "past" section with
+ * edge-to-edge rows sharing hairlines. Server component — drop it into the
+ * project page:
  *
  *   <ProjectEventsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
  *
@@ -49,11 +52,11 @@ export async function ProjectEventsPanel({
   });
 
   return (
-    <Card>
+    <Card className="gap-0 py-0" role="region" aria-labelledby="project-events">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <h2 id="project-events" className={cn(HEADING_CLASS.box, "flex items-center gap-2")}>
           <CalendarDaysIcon className="size-5 text-primary-ink" /> {c.projectEvents}
-        </CardTitle>
+        </h2>
         {!asClient && (
           <CardAction>
             <Button asChild variant="ghost" size="sm">
@@ -62,16 +65,16 @@ export async function ProjectEventsPanel({
           </CardAction>
         )}
       </CardHeader>
-      <CardContent className="space-y-6">
-        {upcoming.length === 0 && past.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">{c.noProjectEvents}</p>
-        ) : (
-          <>
-            <EventList title={c.upcomingEvents} items={upcoming} ctx={ctx} showJoin />
-            <EventList title={c.pastEvents} items={past} ctx={ctx} muted />
-          </>
-        )}
-      </CardContent>
+      {upcoming.length === 0 && past.length === 0 ? (
+        <p className="px-(--cell-pad) py-8 text-center text-sm text-muted-foreground">
+          {c.noProjectEvents}
+        </p>
+      ) : (
+        <div className="divide-y divide-frame-line">
+          <EventList title={c.upcomingEvents} items={upcoming} ctx={ctx} showJoin />
+          <EventList title={c.pastEvents} items={past} ctx={ctx} muted />
+        </div>
+      )}
     </Card>
   );
 }
@@ -94,10 +97,10 @@ function EventList({
   if (!items.length) return null;
   return (
     <section>
-      <h3 className="mb-2 text-xs font-bold tracking-wide text-muted-foreground uppercase">
+      <h3 className="border-b border-frame-line px-(--cell-pad) py-2.5 text-xs font-bold tracking-wide text-muted-foreground uppercase">
         {title}
       </h3>
-      <ul className="divide-y divide-dashed">
+      <ul className="divide-y divide-frame-line">
         {items.map((item) => {
           const ev = item.event!;
           const key = dayKeyOf(item.start, tz);
@@ -105,9 +108,12 @@ function EventList({
           return (
             <li
               key={item.key}
-              className={cn("flex items-center gap-3 py-3", muted && "opacity-75")}
+              className={cn(
+                "flex items-center gap-3 px-(--cell-pad) py-3 transition-colors hover:bg-card",
+                muted && "opacity-75",
+              )}
             >
-              <div className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-muted/60 py-1.5 text-center">
+              <div className="flex w-12 shrink-0 flex-col items-center border border-frame-line bg-card py-1.5 text-center">
                 <span className="text-[10px] font-semibold text-muted-foreground">
                   {weekdayName(key, locale, "short")}
                 </span>

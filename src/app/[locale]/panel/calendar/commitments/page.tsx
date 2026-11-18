@@ -12,12 +12,13 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardHeader } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard, StatGrid } from "@/components/panel/stat-card";
+import { StatCard, StatRow } from "@/components/panel/stat-card";
+import { FrameBox, FrameCell, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { dayKeyOf } from "@/components/calendar/grid";
 import { dateLabel, timeLabel } from "@/components/calendar/format";
 import type { CalendarRef } from "@/components/calendar/types";
@@ -35,6 +36,7 @@ import { CalendarProvider } from "../_components/calendar-context";
 import { CommitmentActions } from "../_components/commitment-actions";
 import { CommitmentFilters } from "../_components/commitment-filters";
 import { CommitmentQuickAdd } from "../_components/commitment-quick-add";
+import { DotsFiller } from "../_components/dots-filler";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT()).calendar.commitments };
@@ -46,6 +48,12 @@ type Item = ReturnType<typeof listCommitments>["items"][number];
 
 const groupOrder = ["overdue", "upcoming", "kept", "missed"] as const;
 
+/**
+ * Commitments (framed): the page box carries the four KPIs as its second row;
+ * one box holds the quick-add form as its first row, then the groups (filters
+ * row, overdue / upcoming / kept / missed sections) and, from xl, the
+ * keep rate by client as cells sharing a hairline.
+ */
 export default async function CommitmentsPage({
   searchParams,
 }: PageProps<"/[locale]/panel/calendar/commitments">) {
@@ -110,138 +118,151 @@ export default async function CommitmentsPage({
             </Link>
           </Button>
         }
-      />
+      >
+        <StatRow>
+          <StatCard
+            label={c.keepRate}
+            value={stats.keepRate != null ? formatPercent(stats.keepRate * 100, locale) : "—"}
+            hint={
+              resolved
+                ? format(c.keepRateHint, {
+                    kept: formatNumber(stats.kept, locale),
+                    total: formatNumber(resolved, locale),
+                  })
+                : c.keepRateEmpty
+            }
+            icon={HandshakeIcon}
+            tone="success"
+          />
+          <StatCard
+            label={c.overdueStat}
+            value={formatNumber(stats.overdue, locale)}
+            icon={AlertTriangleIcon}
+            tone={stats.overdue ? "destructive" : "primary"}
+          />
+          <StatCard
+            label={c.dueSoonStat}
+            value={formatNumber(stats.dueSoon, locale)}
+            icon={CalendarClockIcon}
+            tone="warning"
+          />
+          <StatCard
+            label={c.avgLead}
+            value={
+              stats.avgLeadMs != null
+                ? format(c.avgLeadValue, {
+                    n: formatNumber(stats.avgLeadMs / DAY_MS, locale, { maximumFractionDigits: 1 }),
+                  })
+                : "—"
+            }
+            icon={HourglassIcon}
+            tone="info"
+          />
+        </StatRow>
+      </PageHeader>
 
-      <Card className="mb-6 p-4 sm:p-6">
-        <CommitmentQuickAdd />
-      </Card>
-
-      <StatGrid>
-        <StatCard
-          label={c.keepRate}
-          value={stats.keepRate != null ? formatPercent(stats.keepRate * 100, locale) : "—"}
-          hint={
-            resolved
-              ? format(c.keepRateHint, {
-                  kept: formatNumber(stats.kept, locale),
-                  total: formatNumber(resolved, locale),
-                })
-              : c.keepRateEmpty
-          }
-          icon={HandshakeIcon}
-          tone="success"
-        />
-        <StatCard
-          label={c.overdueStat}
-          value={formatNumber(stats.overdue, locale)}
-          icon={AlertTriangleIcon}
-          tone={stats.overdue ? "destructive" : "primary"}
-        />
-        <StatCard
-          label={c.dueSoonStat}
-          value={formatNumber(stats.dueSoon, locale)}
-          icon={CalendarClockIcon}
-          tone="warning"
-        />
-        <StatCard
-          label={c.avgLead}
-          value={
-            stats.avgLeadMs != null
-              ? format(c.avgLeadValue, {
-                  n: formatNumber(stats.avgLeadMs / DAY_MS, locale, { maximumFractionDigits: 1 }),
-                })
-              : "—"
-          }
-          icon={HourglassIcon}
-          tone="info"
-        />
-      </StatGrid>
-
-      <div className="mt-6 grid items-start gap-6 xl:grid-cols-3">
-        <div className="space-y-6 xl:col-span-2">
-          {(clientRefs.length > 0 || projectRefs.length > 0) && (
-            <CommitmentFilters
-              clients={clientRefs}
-              projects={projectRefs}
-              clientId={clientId}
-              projectId={projectId}
-            />
-          )}
-          {all.items.length === 0 ? (
-            <EmptyState
-              icon={HandshakeIcon}
-              title={c.noCommitments}
-              description={c.noCommitmentsHint}
-            />
-          ) : (
-            groupOrder.map((g) => <GroupCard key={g} group={g} items={groups[g]} ctx={ctx} />)
-          )}
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{c.byClient}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats.byClient.length === 0 ? (
-              <p className="py-4 text-sm text-muted-foreground">{c.byClientEmpty}</p>
-            ) : (
-              <ul className="space-y-4">
-                {stats.byClient.map((row) => (
-                  <li key={row.client?.id ?? "internal"} className="space-y-2">
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="flex min-w-0 items-center gap-2 font-semibold">
-                        <ColorDot color={row.client?.color} />
-                        <span className="truncate">{row.client?.name ?? c.internal}</span>
-                      </span>
-                      <span className="shrink-0 font-bold tabular-nums">
-                        {row.keepRate != null ? formatPercent(row.keepRate * 100, locale) : "—"}
-                      </span>
-                    </div>
-                    {row.keepRate != null && (
-                      <Progress
-                        value={row.keepRate * 100}
-                        aria-label={row.client?.name ?? c.internal}
-                      />
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      {format(c.keepRateHint, {
-                        kept: formatNumber(row.kept, locale),
-                        total: formatNumber(row.kept + row.missed, locale),
-                      })}
-                      {row.pending > 0 &&
-                        ` · ${format(c.pendingCount, { n: formatNumber(row.pending, locale) })}`}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+      <FrameBox as="div" density="compact">
+        <FrameGrid cols={1}>
+          <FrameCell>
+            <CommitmentQuickAdd />
+          </FrameCell>
+        </FrameGrid>
+        <FrameGrid cols={1} className="xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+          <FrameCell pad="none" className="flex min-w-0 flex-col">
+            {(clientRefs.length > 0 || projectRefs.length > 0) && (
+              // min-h-13 + py-2: as tall as the side cell's header row (hairlines level)
+              <div className="flex min-h-13 items-center border-b border-frame-line px-(--cell-pad) py-2">
+                <CommitmentFilters
+                  clients={clientRefs}
+                  projects={projectRefs}
+                  clientId={clientId}
+                  projectId={projectId}
+                />
+              </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+            {all.items.length === 0 ? (
+              <EmptyState
+                icon={HandshakeIcon}
+                title={c.noCommitments}
+                description={c.noCommitmentsHint}
+              />
+            ) : (
+              <div className="divide-y divide-frame-line">
+                {groupOrder.map((g) => (
+                  <GroupSection key={g} group={g} items={groups[g]} ctx={ctx} />
+                ))}
+              </div>
+            )}
+            <DotsFiller />
+          </FrameCell>
+
+          <FrameCell
+            as="section"
+            pad="none"
+            aria-labelledby="cm-by-client"
+            className="flex flex-col"
+          >
+            <CardHeader>
+              <h2 id="cm-by-client" className={HEADING_CLASS.box}>
+                {c.byClient}
+              </h2>
+            </CardHeader>
+            <div className="p-(--cell-pad)">
+              {stats.byClient.length === 0 ? (
+                <p className="py-4 text-sm text-muted-foreground">{c.byClientEmpty}</p>
+              ) : (
+                <ul className="space-y-4">
+                  {stats.byClient.map((row) => (
+                    <li key={row.client?.id ?? "internal"} className="space-y-2">
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <span className="flex min-w-0 items-center gap-2 font-semibold">
+                          <ColorDot color={row.client?.color} />
+                          <span className="truncate">{row.client?.name ?? c.internal}</span>
+                        </span>
+                        <span className="shrink-0 font-bold tabular-nums">
+                          {row.keepRate != null ? formatPercent(row.keepRate * 100, locale) : "—"}
+                        </span>
+                      </div>
+                      {row.keepRate != null && (
+                        <Progress
+                          value={row.keepRate * 100}
+                          aria-label={row.client?.name ?? c.internal}
+                        />
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {format(c.keepRateHint, {
+                          kept: formatNumber(row.kept, locale),
+                          total: formatNumber(row.kept + row.missed, locale),
+                        })}
+                        {row.pending > 0 &&
+                          ` · ${format(c.pendingCount, { n: formatNumber(row.pending, locale) })}`}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <DotsFiller />
+          </FrameCell>
+        </FrameGrid>
+      </FrameBox>
     </CalendarProvider>
   );
 }
 
+/** Icon ink of each group (the tile itself is a neutral hairline square, like a stat icon). */
 const groupMeta: Record<
   (typeof groupOrder)[number],
   { icon: typeof CheckIcon; tone: string; badge: "destructive" | "warning" | "success" | "neutral" }
 > = {
-  overdue: {
-    icon: AlertTriangleIcon,
-    tone: "bg-destructive/12 text-destructive",
-    badge: "destructive",
-  },
-  upcoming: {
-    icon: HourglassIcon,
-    tone: "bg-warning/16 text-[#b76e00] dark:text-warning",
-    badge: "warning",
-  },
-  kept: { icon: CheckIcon, tone: "bg-success/12 text-success-ink", badge: "success" },
-  missed: { icon: XIcon, tone: "bg-grey-500/12 text-muted-foreground", badge: "neutral" },
+  overdue: { icon: AlertTriangleIcon, tone: "text-destructive", badge: "destructive" },
+  upcoming: { icon: HourglassIcon, tone: "text-warning-ink", badge: "warning" },
+  kept: { icon: CheckIcon, tone: "text-success-ink", badge: "success" },
+  missed: { icon: XIcon, tone: "text-muted-foreground", badge: "neutral" },
 };
 
-function GroupCard({
+/** One group of the commitments cell: a header row (icon tile, title, count), then its rows. */
+function GroupSection({
   group,
   items,
   ctx,
@@ -255,29 +276,43 @@ function GroupCard({
   const meta = groupMeta[group];
   const Icon = meta.icon;
   if (group === "overdue" && items.length === 0) return null;
+  const titleId = `cm-group-${group}`;
   return (
-    <Card className={cn("gap-0 py-0", group === "overdue" && "ring-1 ring-destructive/30")}>
-      <div className="flex items-center gap-3 border-b border-dashed px-4 py-3 sm:px-6">
-        <span className={cn("flex size-8 items-center justify-center rounded-lg", meta.tone)}>
+    <section aria-labelledby={titleId}>
+      <div
+        className={cn(
+          "flex min-h-13 items-center gap-3 border-b border-frame-line px-(--cell-pad) py-2.5",
+          group === "overdue" && "bg-destructive/6",
+        )}
+      >
+        <span
+          aria-hidden
+          className={cn(
+            "flex size-8 shrink-0 items-center justify-center border border-frame-line bg-card",
+            meta.tone,
+          )}
+        >
           <Icon className="size-4" />
         </span>
-        <h2 className="font-bold">{c[`group_${group}`]}</h2>
+        <h2 id={titleId} className={HEADING_CLASS.box}>
+          {c[`group_${group}`]}
+        </h2>
         <Badge variant={meta.badge} className="ms-auto">
           {formatNumber(items.length, locale)}
         </Badge>
       </div>
       {items.length === 0 ? (
-        <p className="px-6 py-6 text-center text-sm text-muted-foreground">
+        <p className="px-(--cell-pad) py-6 text-center text-sm text-muted-foreground">
           {c[`groupEmpty_${group}`]}
         </p>
       ) : (
-        <ul className="divide-y divide-dashed">
+        <ul className="divide-y divide-frame-line">
           {items.map((item) => (
             <CommitmentRow key={item.id} item={item} ctx={ctx} />
           ))}
         </ul>
       )}
-    </Card>
+    </section>
   );
 }
 
@@ -298,12 +333,12 @@ function CommitmentRow({ item, ctx }: { item: Item; ctx: PanelContext }) {
   const overdue = item.group === "overdue";
   const resolved = item.group !== "overdue" && item.group !== "upcoming";
   return (
-    <li className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 px-4 py-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:px-6">
+    <li className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 px-(--cell-pad) py-4 transition-colors hover:bg-card sm:grid-cols-[auto_minmax(0,1fr)_auto]">
       <span
         className={cn(
-          "row-span-3 mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full sm:row-span-2",
+          "row-span-3 mt-0.5 flex size-7 shrink-0 items-center justify-center sm:row-span-2",
           overdue && "bg-destructive/12 text-destructive",
-          item.group === "upcoming" && "bg-warning/16 text-[#b76e00] dark:text-warning",
+          item.group === "upcoming" && "bg-warning/16 text-warning-ink",
           item.group === "kept" && "bg-success/12 text-success-ink",
           (item.group === "missed" || item.group === "canceled") &&
             "bg-grey-500/12 text-muted-foreground",
