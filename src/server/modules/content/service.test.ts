@@ -236,3 +236,79 @@ describe("the editor's save form (savePostInput)", () => {
     },
   );
 });
+
+/**
+ * `posts.updated_at` is the post's editorial "last modified" date: the visible
+ * "Updated on", JSON-LD `dateModified`, `article:modified_time`, the sitemap
+ * `lastmod`, llms-full.txt and the Markdown mirrors all read it. The column
+ * bumps itself on every UPDATE, so a write that is not an edit must keep it.
+ */
+describe("updated_at only moves when a post is edited", () => {
+  const OLD = new Date("2026-01-05T10:00:00Z");
+  const post = (id: string) => db.select().from(s.posts).where(eq(s.posts.id, id)).get()!;
+  /** Pin `updated_at` in the past (an explicit value is stored as given). */
+  const age = (...postIds: string[]) => {
+    for (const id of postIds)
+      db.update(s.posts).set({ updatedAt: OLD }).where(eq(s.posts.id, id)).run();
+  };
+  const create = (raw: Record<string, unknown>) => svc.createPost(owner, postInput.parse(raw)).id;
+
+  it("a page view counts without touching updated_at", () => {
+    const id = create({ title: "Launch notes", locale: "en", status: "published" });
+    age(id);
+    svc.recordView(id);
+    svc.recordView(id);
+    expect(post(id)).toMatchObject({ views: 2, updatedAt: OLD });
+  });
+
+  it("an edit still moves it", () => {
+    const id = create({ title: "Changelog", locale: "en", status: "published" });
+    age(id);
+    svc.recordView(id);
+    expect(post(id).updatedAt).toEqual(OLD);
+    update({ id, title: "Changelog 2026" });
+    expect(post(id).updatedAt.getTime()).toBeGreaterThan(OLD.getTime());
+    expect(post(id).views).toBe(1); // the edit keeps the counter
+  });
+
+  it("the brand sync changes the sibling's brand, not its updated_at", () => {
+    age(ids.fa!, ids.en!);
+    update({ id: ids.fa, meta: { brand: "team" } });
+    expect(metaOf(ids.en!).brand).toBe("team");
+    expect(post(ids.en!).updatedAt).toEqual(OLD);
+    // The row that was edited is, of course, modified.
+    expect(post(ids.fa!).updatedAt.getTime()).toBeGreaterThan(OLD.getTime());
+  });
+
+  it("giving a post its translation key (first translation) keeps updated_at", () => {
+    const id = create({ title: "Old article", locale: "fa", status: "published" });
+    // A legacy row without a key gets one when its first translation is created.
+    db.update(s.posts)
+      .set({ translationKey: null, updatedAt: OLD })
+      .where(eq(s.posts.id, id))
+      .run();
+    const translation = svc.createTranslation(owner, id);
+    const source = post(id);
+    expect(source.translationKey).toBeTruthy();
+    expect(post(translation.id)).toMatchObject({
+      locale: "en",
+      translationKey: source.translationKey,
+    });
+    expect(source.updatedAt).toEqual(OLD);
+  });
+
+  it("deleting a series detaches its lessons without touching their updated_at", () => {
+    const series = svc.createSeries(owner, seriesInput.parse({ title: "Course", locale: "en" }));
+    const id = create({
+      type: "tutorial",
+      locale: "en",
+      title: "Lesson 1",
+      seriesId: series.id,
+      seriesOrder: 1,
+    });
+    expect(post(id).seriesId).toBe(series.id);
+    age(id);
+    svc.deleteSeries(owner, series.id);
+    expect(post(id)).toMatchObject({ seriesId: null, seriesOrder: null, updatedAt: OLD });
+  });
+});

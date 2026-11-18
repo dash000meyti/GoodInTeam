@@ -6,6 +6,12 @@ Source of truth: `src/server/db/schema/*.ts` (Drizzle). Migrations: `drizzle/*.s
 Conventions: text ids (16 chars), `created_at`/`updated_at` as epoch-ms integers, money as
 integer minor units + currency, JSON columns for tags/meta, soft-archive via `archived_at`.
 
+`updated_at` bumps itself on **every** UPDATE (`$onUpdateFn` in `schema/_columns.ts`). Where it
+is shown or exported as "last modified" (posts, docs, vault items), a write that is not an edit
+— a counter, a sort order, a sync, a "last viewed" stamp — must keep it by naming the column in
+`set` (``updatedAt: sql`${table.updatedAt}` ``; the `keepUpdatedAt()` helpers in the content,
+docs and vault services do this).
+
 ```mermaid
 erDiagram
   clients ||--o{ projects : has

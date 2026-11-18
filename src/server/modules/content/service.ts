@@ -40,6 +40,17 @@ import type {
 
 type PostIn = z.output<typeof postInput>;
 
+/**
+ * `posts.updated_at` is the post's editorial "last modified" date: the visible
+ * "Updated on", JSON-LD `dateModified`, `article:modified_time`, the sitemap
+ * `lastmod`, llms-full.txt and the Markdown mirrors all read it. The column
+ * bumps itself on every UPDATE (`$onUpdateFn` in db/schema/_columns.ts) unless
+ * `set` names it, so every write that is NOT an edit — a page view, the brand
+ * sync to siblings, a translation key, a series removal — spreads this to keep
+ * the stored value. (A dedicated editorial `modified_at` is planned.)
+ */
+const keepUpdatedAt = () => ({ updatedAt: sql`${posts.updatedAt}` });
+
 // ─── Slugs ──────────────────────────────────────────────────────────────────
 
 function slugTaken(type: PostType, locale: "fa" | "en", slug: string, excludeId?: string) {
@@ -135,6 +146,8 @@ function syncServiceBrand(
         meta.brand !== undefined
           ? sql`json_set(${posts.meta}, '$.brand', ${meta.brand})`
           : sql`json_remove(${posts.meta}, '$.brand')`,
+      // The sibling follows an edit made to another row: it was not edited itself.
+      ...keepUpdatedAt(),
     })
     .where(
       and(
@@ -373,7 +386,10 @@ export function createTranslation(actor: Actor, id: string) {
   const locale = src.locale === "fa" ? "en" : "fa";
   const key = src.translationKey ?? newId();
   if (!src.translationKey)
-    db.update(posts).set({ translationKey: key }).where(eq(posts.id, id)).run();
+    db.update(posts)
+      .set({ translationKey: key, ...keepUpdatedAt() })
+      .where(eq(posts.id, id))
+      .run();
   const existing = db
     .select({ id: posts.id })
     .from(posts)
@@ -417,7 +433,7 @@ export function createTranslation(actor: Actor, id: string) {
 /** Public: count a view (fired by a client island after load, not during render). */
 export function recordView(id: string) {
   db.update(posts)
-    .set({ views: sql`${posts.views} + 1` })
+    .set({ views: sql`${posts.views} + 1`, ...keepUpdatedAt() })
     .where(and(eq(posts.id, id), inArray(posts.status, ["published", "scheduled"])))
     .run();
 }
@@ -548,7 +564,11 @@ export function updateSeries(actor: Actor, { id, ...input }: z.output<typeof upd
 
 export function deleteSeries(actor: Actor, id: string) {
   assertAdmin(actor);
-  db.update(posts).set({ seriesId: null, seriesOrder: null }).where(eq(posts.seriesId, id)).run();
+  // The lessons lose their series; their own content is unchanged.
+  db.update(posts)
+    .set({ seriesId: null, seriesOrder: null, ...keepUpdatedAt() })
+    .where(eq(posts.seriesId, id))
+    .run();
   db.delete(series).where(eq(series.id, id)).run();
   logActivity(actor, "content.series_delete", "series", id);
 }

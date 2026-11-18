@@ -93,6 +93,19 @@ query time: `status in (published, scheduled) AND coalesce(published_at, created
 Cached queries shorten their lifetime when the next scheduled post goes live within the hour,
 so scheduled posts appear on time without a cron job.
 
+### `updated_at` is the editorial date
+
+`posts.updated_at` is what readers and crawlers get as "last modified": the visible "Updated on"
+line, JSON-LD `dateModified`, `article:modified_time`, the sitemap `lastmod`, `llms-full.txt` and
+the Markdown mirrors. The column bumps itself on every UPDATE (`$onUpdateFn`), so only an edit
+may move it: `updatePost` and `setPostStatus` (a publish toggle) set it. Every other write to
+`posts` keeps the stored value with `keepUpdatedAt()` in `content/service.ts` (drizzle skips
+`$onUpdateFn` when `set` names the column): the view counter (`recordView`), the brand sync to
+translation siblings, the translation key a post gets with its first translation, and the
+removal of a series from its lessons. A new non-editorial write to `posts` must do the same.
+A dedicated editorial `modified_at` (set only when title, excerpt, body, cover or meta change)
+is planned; until then `updated_at` plays that role.
+
 ## Caching & rendering
 
 - No DB at build time. Public pages keep header/footer/hero copy in the static shell and
