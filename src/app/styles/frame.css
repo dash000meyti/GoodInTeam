@@ -11,7 +11,22 @@
  * - A tone=dots cell never holds text.
  * - Never transform / filter / contain / backdrop-filter / will-change on
  *   .os-desktop (it is the containing block of the guide layer).
+ *
+ * Density: the site's boxes sit on the 1200px column; the panel's are
+ * `.frame-box[data-density="compact"]` (FrameBox density="compact"): full
+ * width of their container, no outer margin (the page's layout sets the
+ * 24–32px gaps), 16/20px cells, a 32px strip with idle lights, 7px markers.
+ * Markers are sized by --mk (ring), --mk-o (offset from the edge) and --mk-d
+ * (dot inset), which nested cells inherit from their box.
  */
+
+@layer base {
+  html {
+    --mk: 9px;
+    --mk-o: 5px;
+    --mk-d: 3px;
+  }
+}
 
 @layer components {
   .os-desktop {
@@ -65,26 +80,27 @@
     content: "";
     position: absolute;
     z-index: 2;
-    inset-inline: -5px;
-    block-size: 9px;
+    inset-inline: calc(-1 * var(--mk-o));
+    block-size: var(--mk);
     pointer-events: none;
   }
   /* the same ringed marker on all four corners: every edge looks alike */
   .frame-box::before {
-    inset-block-start: -5px;
+    inset-block-start: calc(-1 * var(--mk-o));
   }
   .frame-box::after {
-    inset-block-end: -5px;
+    inset-block-end: calc(-1 * var(--mk-o));
   }
   .frame-box::before,
   .frame-box::after {
+    --mk-f: calc(var(--mk) - 2px);
     background:
-      linear-gradient(var(--marker-dot) 0 0) left 3px top 3px / 3px 3px no-repeat,
-      linear-gradient(var(--marker-dot) 0 0) right 3px top 3px / 3px 3px no-repeat,
-      linear-gradient(var(--marker-fill) 0 0) left 1px top 1px / 7px 7px no-repeat,
-      linear-gradient(var(--marker-fill) 0 0) right 1px top 1px / 7px 7px no-repeat,
-      linear-gradient(var(--marker-ring) 0 0) left top / 9px 9px no-repeat,
-      linear-gradient(var(--marker-ring) 0 0) right top / 9px 9px no-repeat;
+      linear-gradient(var(--marker-dot) 0 0) left var(--mk-d) top var(--mk-d) / 3px 3px no-repeat,
+      linear-gradient(var(--marker-dot) 0 0) right var(--mk-d) top var(--mk-d) / 3px 3px no-repeat,
+      linear-gradient(var(--marker-fill) 0 0) left 1px top 1px / var(--mk-f) var(--mk-f) no-repeat,
+      linear-gradient(var(--marker-fill) 0 0) right 1px top 1px / var(--mk-f) var(--mk-f) no-repeat,
+      linear-gradient(var(--marker-ring) 0 0) left top / var(--mk) var(--mk) no-repeat,
+      linear-gradient(var(--marker-ring) 0 0) right top / var(--mk) var(--mk) no-repeat;
   }
 
   /* Hairlines: each cell draws its end + bottom line; the grid overlaps the box
@@ -134,24 +150,25 @@
   @media (width >= 48rem) {
     .frame-cell::before,
     .frame-cell::after {
+      --mk-f: calc(var(--mk) - 2px);
       content: "";
       position: absolute;
       z-index: 1;
-      inline-size: 9px;
-      block-size: 9px;
+      inline-size: var(--mk);
+      block-size: var(--mk);
       pointer-events: none;
       background:
-        linear-gradient(var(--marker-dot) 0 0) 3px 3px / 3px 3px no-repeat,
-        linear-gradient(var(--marker-fill) 0 0) 1px 1px / 7px 7px no-repeat,
+        linear-gradient(var(--marker-dot) 0 0) var(--mk-d) var(--mk-d) / 3px 3px no-repeat,
+        linear-gradient(var(--marker-fill) 0 0) 1px 1px / var(--mk-f) var(--mk-f) no-repeat,
         var(--marker-ring);
     }
     .frame-cell::before {
-      inset-block-start: -5px;
-      inset-inline-start: -5px;
+      inset-block-start: calc(-1 * var(--mk-o));
+      inset-inline-start: calc(-1 * var(--mk-o));
     }
     .frame-cell::after {
-      inset-block-end: -5px;
-      inset-inline-end: -5px;
+      inset-block-end: calc(-1 * var(--mk-o));
+      inset-inline-end: calc(-1 * var(--mk-o));
     }
     /* the box draws its own corner markers */
     :is(.frame-box, .frame-cv) > .frame-grid:first-child > .frame-cell:first-child::before {
@@ -223,6 +240,58 @@
     color: #ffdb66;
     background: rgb(var(--primary-rgb) / 0.12);
     border-color: rgb(var(--primary-rgb) / 0.6);
+  }
+
+  /*
+   * Panel density (FrameBox density="compact"): the same box, cells and strip,
+   * tighter. The page's layout (gap-6 / gap-8 stacks and grids) spaces boxes.
+   */
+  .frame-box[data-density="compact"] {
+    --cell-pad: 16px;
+    --mk: 7px;
+    --mk-o: 4px;
+    --mk-d: 2px;
+    min-inline-size: 0;
+    inline-size: auto;
+    margin: 0;
+  }
+  @media (width >= 48rem) {
+    .frame-box[data-density="compact"] {
+      --cell-pad: 20px;
+    }
+  }
+  .frame-box[data-density="compact"] > .frame-strip {
+    gap: 10px;
+    block-size: 32px;
+    padding-inline: 10px;
+  }
+  /* idle lights: the panel window's own lights are the coloured ones */
+  html .frame-box[data-density="compact"] > .frame-strip .os-lights > span::after {
+    opacity: 0;
+    animation: none;
+  }
+  /*
+   * A box inside another box or cell keeps its hairline but drops its corner
+   * markers (they would collide with the outer frame); so does any box inside
+   * a rounded overlay (dialog, sheet, popover).
+   */
+  :is(.frame-box, .frame-cell) .frame-box::before,
+  :is(.frame-box, .frame-cell) .frame-box::after,
+  :is(
+      [data-slot="dialog-content"],
+      [data-slot="alert-dialog-content"],
+      [data-slot="sheet-content"],
+      [data-slot="popover-content"]
+    )
+    :is(.frame-box, .frame-cell)::before,
+  :is(
+      [data-slot="dialog-content"],
+      [data-slot="alert-dialog-content"],
+      [data-slot="sheet-content"],
+      [data-slot="popover-content"]
+    )
+    :is(.frame-box, .frame-cell)::after {
+    display: none;
   }
 
   /* Below-the-fold bodies (D8): -5px margin + 5px padding so markers are not clipped. */
