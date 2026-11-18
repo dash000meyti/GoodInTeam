@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   CheckIcon,
@@ -13,12 +21,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { CardHeader } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Kbd } from "@/components/ui/kbd";
 import { MarkdownEditor } from "@/components/shared/markdown-editor";
 import { SelectField } from "@/components/shared/select-field";
 import { PageHeader, type Crumb } from "@/components/panel/page-header";
+import { FrameBox, FrameCell, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { format } from "@/i18n/format-message";
 import { localePath } from "@/i18n/config";
 import { useLocale, useT } from "@/i18n/client";
@@ -68,6 +77,13 @@ function readDraft(id: string | null): Draft | null {
 /**
  * Create / edit a doc page. Edits are kept as a local draft (localStorage, per
  * page) while typing, so a closed tab never loses work; saving clears it.
+ *
+ * Framed: the page box (status, cancel, save + Ctrl/⌘S), the docs toolbar
+ * box (`pagesBar`), then ONE editor box — a "restore draft" row when a draft
+ * is found, then the editor cell (emoji + title row, the markdown editor edge
+ * to edge) beside the page-settings cell from lg (they share a hairline; the
+ * settings stay in view while a long page scrolls). Phones keep a framed save
+ * bar above the dock.
  */
 export function DocEditor({
   docId,
@@ -78,6 +94,7 @@ export function DocEditor({
   clients,
   crumbs,
   fmt,
+  pagesBar,
 }: {
   /** null → creating a new page. */
   docId: string | null;
@@ -89,6 +106,8 @@ export function DocEditor({
   clients: { id: string; name: string }[];
   crumbs: Crumb[];
   fmt: FormatOptions;
+  /** The docs toolbar box below xl (server-rendered), under the page box. */
+  pagesBar?: ReactNode;
 }) {
   const t = useT();
   const d = t.docs;
@@ -231,7 +250,7 @@ export function DocEditor({
       <Loader2Icon className="size-3.5 animate-spin" /> {t.common.saving}
     </span>
   ) : dirty ? (
-    <span className="flex items-center gap-1.5 text-xs font-semibold text-[#b76e00] dark:text-warning">
+    <span className="flex items-center gap-1.5 text-xs font-semibold text-warning-ink">
       <CircleDotIcon className="size-3.5" />
       {draftSavedAt ? d.draftSaved : d.unsaved}
     </span>
@@ -246,6 +265,7 @@ export function DocEditor({
       <PageHeader
         title={docId ? d.editPage : d.newPageTitle}
         crumbs={crumbs}
+        path={docId ? ["DOCS", "EDIT"] : ["DOCS", "NEW"]}
         actions={
           <>
             <span className="hidden sm:inline-flex">{status}</span>
@@ -262,192 +282,211 @@ export function DocEditor({
           </>
         }
       />
+      {pagesBar}
 
-      {draft && (
-        <div
-          role="status"
-          className="mb-6 flex flex-col gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4 sm:flex-row sm:items-center"
-        >
-          <HistoryIcon className="size-5 shrink-0 text-[#b76e00] dark:text-warning" />
-          <p className="flex-1 text-sm font-medium">
-            {format(d.draftFound, { time: formatDateTime(draft.savedAt, fmt) })}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              onClick={() => {
-                setValues((v) => ({
-                  ...v,
-                  title: draft.title,
-                  icon: draft.icon,
-                  contentMd: draft.contentMd,
-                }));
-                setDraft(null);
-              }}
-            >
-              {d.restoreDraft}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                try {
-                  localStorage.removeItem(draftKey(docId));
-                } catch {}
-                setDraft(null);
-              }}
-            >
-              {d.discardDraft}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem]">
-        <Card className="gap-5 p-4 sm:p-6">
-          <div className="flex items-center gap-3">
-            <EmojiPicker value={values.icon} onChange={(v) => set("icon", v)} />
-            <div className="min-w-0 flex-1">
-              <label htmlFor="doc-title" className="sr-only">
-                {d.pageTitle}
-              </label>
-              <input
-                id="doc-title"
-                ref={titleRef}
-                value={values.title}
-                onChange={(e) => set("title", e.target.value)}
-                placeholder={d.titlePlaceholder}
-                dir="auto"
-                autoFocus={!docId}
-                maxLength={200}
-                aria-invalid={!!errors.title || undefined}
-                className="w-full bg-transparent text-2xl font-extrabold tracking-tight outline-none placeholder:text-muted-foreground/60 sm:text-3xl"
-              />
-              {errors.title && (
-                <p role="alert" className="mt-1 text-xs font-medium text-destructive">
-                  {errors.title}
-                </p>
-              )}
-            </div>
-          </div>
-          <MarkdownEditor
-            value={values.contentMd}
-            onChange={(v) => set("contentMd", v)}
-            rows={22}
-            mono={false}
-            placeholder={d.contentPlaceholder}
-          />
-        </Card>
-
-        <Card className="h-fit gap-5 p-5 xl:sticky xl:below-chrome">
-          <h2 className="text-sm font-bold">{d.settings}</h2>
-          <fieldset className="grid gap-2">
-            <legend className="mb-2 text-sm font-semibold">{d.visibility}</legend>
-            {VISIBILITIES.map((v) => {
-              const Icon = VISIBILITY_ICONS[v];
-              const active = values.visibility === v;
-              const disabled = !!docId && !canManage;
-              return (
-                <button
-                  key={v}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  disabled={disabled}
-                  onClick={() => set("visibility", v)}
-                  className={cn(
-                    "flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-60",
-                    active
-                      ? "border-primary-ink bg-primary/6 ring-1 ring-primary-ink"
-                      : "border-border hover:bg-accent",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg",
-                      active
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="space-y-0.5">
-                    <span className="block text-sm font-semibold">{d[`visibility_${v}`]}</span>
-                    <span className="block text-xs leading-5 text-muted-foreground">
-                      {d[`visibilityHint_${v}`]}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-            {docId && !canManage && (
-              <p className="text-xs text-muted-foreground">{d.visibilityLocked}</p>
-            )}
-            {errors.visibility && (
-              <p role="alert" className="text-xs font-medium text-destructive">
-                {errors.visibility}
+      <FrameBox as="div" density="compact">
+        {draft && (
+          <FrameGrid cols={1}>
+            <FrameCell className="flex flex-col gap-3 bg-warning/10 py-3 sm:flex-row sm:items-center">
+              <p role="status" className="flex flex-1 items-center gap-3 text-sm font-medium">
+                <HistoryIcon className="size-5 shrink-0 text-warning-ink" />
+                {format(d.draftFound, { time: formatDateTime(draft.savedAt, fmt) })}
               </p>
-            )}
-          </fieldset>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setValues((v) => ({
+                      ...v,
+                      title: draft.title,
+                      icon: draft.icon,
+                      contentMd: draft.contentMd,
+                    }));
+                    setDraft(null);
+                  }}
+                >
+                  {d.restoreDraft}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    try {
+                      localStorage.removeItem(draftKey(docId));
+                    } catch {}
+                    setDraft(null);
+                  }}
+                >
+                  {d.discardDraft}
+                </Button>
+              </div>
+            </FrameCell>
+          </FrameGrid>
+        )}
 
-          <Field label={d.parent} error={errors.parentId}>
-            <SelectField
-              value={values.parentId ?? ""}
-              onChange={(v) => set("parentId", v || null)}
-              noneLabel={d.noParent}
-              placeholder={d.noParent}
-              options={parents.map((p) => ({
-                value: p.id,
-                label: (
-                  <span style={{ paddingInlineStart: p.depth * 12 }} className="truncate">
-                    {p.icon ? `${p.icon} ` : ""}
-                    {p.title}
-                  </span>
-                ),
-              }))}
+        <FrameGrid cols={1} className="lg:grid-cols-[minmax(0,1fr)_19rem]">
+          <FrameCell pad="none" className="flex min-w-0 flex-col">
+            <div className="flex items-center gap-3 border-b border-frame-line p-(--cell-pad)">
+              <EmojiPicker value={values.icon} onChange={(v) => set("icon", v)} />
+              <div className="min-w-0 flex-1">
+                <label htmlFor="doc-title" className="sr-only">
+                  {d.pageTitle}
+                </label>
+                <input
+                  id="doc-title"
+                  ref={titleRef}
+                  value={values.title}
+                  onChange={(e) => set("title", e.target.value)}
+                  placeholder={d.titlePlaceholder}
+                  dir="auto"
+                  autoFocus={!docId}
+                  maxLength={200}
+                  aria-invalid={!!errors.title || undefined}
+                  className="w-full bg-transparent text-2xl font-extrabold tracking-tight outline-none placeholder:text-muted-foreground/60 sm:text-3xl"
+                />
+                {errors.title && (
+                  <p role="alert" className="mt-1 text-xs font-medium text-destructive">
+                    {errors.title}
+                  </p>
+                )}
+              </div>
+            </div>
+            {/* edge to edge in its cell: the cell's hairlines frame the editor */}
+            <MarkdownEditor
+              value={values.contentMd}
+              onChange={(v) => set("contentMd", v)}
+              rows={22}
+              mono={false}
+              placeholder={d.contentPlaceholder}
+              className="flex-1 rounded-none border-0"
             />
-          </Field>
-          <Field label={d.project} error={errors.projectId}>
-            <SelectField
-              value={values.projectId ?? ""}
-              onChange={(v) => set("projectId", v || null)}
-              noneLabel={d.noProject}
-              placeholder={d.noProject}
-              options={projects.map((p) => ({ value: p.id, label: p.name }))}
-            />
-          </Field>
-          {clients.length > 0 && (
-            <Field label={d.client} error={errors.clientId}>
-              <SelectField
-                value={values.clientId ?? ""}
-                onChange={(v) => set("clientId", v || null)}
-                noneLabel={d.noClient}
-                placeholder={d.noClient}
-                options={clients.map((c) => ({ value: c.id, label: c.name }))}
-              />
-            </Field>
-          )}
-          {values.visibility === "client" && (
-            <p className="flex gap-2 rounded-lg bg-info/10 p-3 text-xs leading-5 text-[#006c9c] dark:text-info">
-              <InfoIcon className="mt-0.5 size-3.5 shrink-0" />
-              {!values.projectId && !values.clientId
-                ? d.clientNeedsLink
-                : project && !project.shareDocs && !values.clientId
-                  ? d.shareDocsOff
-                  : d.visibilityHint_client}
-            </p>
-          )}
-        </Card>
-      </div>
+          </FrameCell>
 
-      {/* Phones: keep save within reach while scrolling a long page. */}
-      <div className="fixed inset-x-0 bottom-[var(--dock-space)] z-30 flex items-center gap-3 border-t bg-background/95 px-4 py-3 sm:hidden dark:bg-card/95">
-        <div className="min-w-0 flex-1">{status}</div>
-        <Button onClick={save} disabled={pending}>
-          {pending ? <Loader2Icon className="animate-spin" /> : <SaveIcon />}
-          {t.common.save}
-        </Button>
+          <FrameCell as="aside" pad="none" aria-labelledby="doc-settings-title">
+            <div className="lg:sticky lg:below-chrome">
+              <CardHeader>
+                <h2 id="doc-settings-title" className={HEADING_CLASS.box}>
+                  {d.settings}
+                </h2>
+              </CardHeader>
+              <div className="space-y-5 p-(--cell-pad)">
+                <fieldset className="grid gap-2">
+                  <legend className="mb-2 text-sm font-semibold">{d.visibility}</legend>
+                  {VISIBILITIES.map((v) => {
+                    const Icon = VISIBILITY_ICONS[v];
+                    const active = values.visibility === v;
+                    const disabled = !!docId && !canManage;
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        disabled={disabled}
+                        onClick={() => set("visibility", v)}
+                        className={cn(
+                          "flex cursor-pointer items-start gap-3 border p-3 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+                          active
+                            ? "border-foreground bg-card"
+                            : "border-frame-line hover:border-foreground/40 hover:bg-card",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "mt-0.5 flex size-8 shrink-0 items-center justify-center border",
+                            active
+                              ? "border-[var(--primary-dark)] bg-primary text-primary-foreground"
+                              : "border-frame-line bg-background text-muted-foreground",
+                          )}
+                        >
+                          <Icon className="size-4" />
+                        </span>
+                        <span className="space-y-0.5">
+                          <span className="block text-sm font-semibold">
+                            {d[`visibility_${v}`]}
+                          </span>
+                          <span className="block text-xs leading-5 text-muted-foreground">
+                            {d[`visibilityHint_${v}`]}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {docId && !canManage && (
+                    <p className="text-xs text-muted-foreground">{d.visibilityLocked}</p>
+                  )}
+                  {errors.visibility && (
+                    <p role="alert" className="text-xs font-medium text-destructive">
+                      {errors.visibility}
+                    </p>
+                  )}
+                </fieldset>
+
+                <Field label={d.parent} error={errors.parentId}>
+                  <SelectField
+                    value={values.parentId ?? ""}
+                    onChange={(v) => set("parentId", v || null)}
+                    noneLabel={d.noParent}
+                    placeholder={d.noParent}
+                    options={parents.map((p) => ({
+                      value: p.id,
+                      label: (
+                        <span style={{ paddingInlineStart: p.depth * 12 }} className="truncate">
+                          {p.icon ? `${p.icon} ` : ""}
+                          {p.title}
+                        </span>
+                      ),
+                    }))}
+                  />
+                </Field>
+                <Field label={d.project} error={errors.projectId}>
+                  <SelectField
+                    value={values.projectId ?? ""}
+                    onChange={(v) => set("projectId", v || null)}
+                    noneLabel={d.noProject}
+                    placeholder={d.noProject}
+                    options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                  />
+                </Field>
+                {clients.length > 0 && (
+                  <Field label={d.client} error={errors.clientId}>
+                    <SelectField
+                      value={values.clientId ?? ""}
+                      onChange={(v) => set("clientId", v || null)}
+                      noneLabel={d.noClient}
+                      placeholder={d.noClient}
+                      options={clients.map((c) => ({ value: c.id, label: c.name }))}
+                    />
+                  </Field>
+                )}
+                {values.visibility === "client" && (
+                  <p className="flex gap-2 border border-dashed border-frame-line bg-info/10 p-3 text-xs leading-5 text-info-ink">
+                    <InfoIcon className="mt-0.5 size-3.5 shrink-0" />
+                    {!values.projectId && !values.clientId
+                      ? d.clientNeedsLink
+                      : project && !project.shareDocs && !values.clientId
+                        ? d.shareDocsOff
+                        : d.visibilityHint_client}
+                  </p>
+                )}
+              </div>
+            </div>
+          </FrameCell>
+        </FrameGrid>
+      </FrameBox>
+
+      {/* Phones: save stays within reach while a long page scrolls (framed, 95% opaque, no blur). */}
+      <div className="sticky above-dock z-20 mt-6 sm:hidden">
+        <div
+          data-density="compact"
+          className="frame-box flex items-center gap-3 bg-background/95 p-2.5 dark:bg-card/95"
+        >
+          <div className="min-w-0 flex-1 ps-1">{status}</div>
+          <Button onClick={save} disabled={pending}>
+            {pending ? <Loader2Icon className="animate-spin" /> : <SaveIcon />}
+            {t.common.save}
+          </Button>
+        </div>
       </div>
     </>
   );

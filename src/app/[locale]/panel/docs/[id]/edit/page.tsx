@@ -4,6 +4,7 @@ import { AppError } from "@/server/errors";
 import { getDoc } from "@/server/modules/docs/service";
 import { panelContext } from "@/server/page-context";
 import { editorOptions } from "../../_components/editor-props";
+import { DocsPagesBarSlot } from "../../_components/pages-bar";
 
 export default async function EditDocPage({ params }: PageProps<"/[locale]/panel/docs/[id]/edit">) {
   const { id } = await params;
@@ -32,6 +33,7 @@ export default async function EditDocPage({ params }: PageProps<"/[locale]/panel
       }}
       {...options}
       fmt={fmt}
+      pagesBar={<DocsPagesBarSlot actor={actor} />}
       crumbs={[
         { label: t.docs.title, href: href("/panel/docs") },
         { label: doc.title, href: href(`/panel/docs/${doc.id}`) },
