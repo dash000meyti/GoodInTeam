@@ -3,13 +3,15 @@ import type { GuideLabels } from "./guide-engine";
 import { GuideLoader } from "./guide-loader";
 
 /**
- * The guide layer's static DOM (spec §10.2), server-rendered inside
- * `.os-desktop` after the footer: an absolute, clipped, pointer-transparent
- * layer holding the selection box, the sprite button in nested x/y wrappers
- * (arc flights), the bubble (outside the wrappers, so it can be fixed in
- * compact mode) and the polite live region. The sprite has no `cell` prop:
- * guide.css sizes it (3px desktop, 2px compact). Lines are never rendered
- * here: the engine reads `data-guide-say` from the page.
+ * GoodInBot's static DOM (spec §10.2), server-rendered inside `.os-desktop`
+ * after the footer: an absolute, clipped, pointer-transparent layer holding
+ * the selection box, the bot's slot (it clips the bot at the anchor line, so
+ * the bot emerges from behind a box edge, the menu bar or the dock), the
+ * bubble and the polite live region. The sprite has no `cell` prop:
+ * guide.css sizes it (3px desktop, 2px compact). The bubble's text is two
+ * spans, typed and not yet typed (visually hidden, still read), so the full
+ * line is laid out from the start. Lines are never rendered here: the engine
+ * reads `data-guide-say` from the page.
  */
 export function GuideLayer({
   greeting,
@@ -21,24 +23,17 @@ export function GuideLayer({
   return (
     <div id="gt-guide" className="gt-guide" hidden>
       <div className="gt-guide-sel" aria-hidden="true" />
-      <div className="gt-guide-x">
-        <div className="gt-guide-y">
-          <button
-            type="button"
-            className="gt-guide-sprite"
-            aria-label={labels.name}
-            aria-expanded="false"
-            aria-controls="gt-guide-bubble"
-          >
-            <PixelAvatarSprite />
-            <i className="gt-guide-badge" aria-hidden="true" />
-          </button>
-          <span className="gt-guide-trail" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-        </div>
+      <div className="gt-guide-slot">
+        <button
+          type="button"
+          className="gt-guide-sprite"
+          aria-label={labels.name}
+          aria-expanded="false"
+          aria-controls="gt-guide-bubble"
+        >
+          <PixelAvatarSprite />
+          <i className="gt-guide-badge" aria-hidden="true" />
+        </button>
       </div>
       <div
         id="gt-guide-bubble"
@@ -47,8 +42,13 @@ export function GuideLayer({
         aria-labelledby="gt-guide-name"
         hidden
       >
-        <p id="gt-guide-name">{labels.name}</p>
-        <p className="gt-guide-text" />
+        <p id="gt-guide-name">
+          <span lang="en">{labels.name}</span>
+        </p>
+        <p className="gt-guide-text">
+          <span className="gt-guide-typed" />
+          <span className="gt-guide-rest" />
+        </p>
         <div className="gt-guide-actions">
           <button type="button" data-act="next" className="gt-guide-next" hidden />
           <button type="button" data-act="end" className="gt-guide-end" hidden>

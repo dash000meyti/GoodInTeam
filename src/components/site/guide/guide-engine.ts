@@ -1,16 +1,21 @@
 /**
- * The site guide engine, "virtual me" (spec §10.5). Vanilla TS, no React,
- * ≤6KB gz, imported lazily by GuideLoader after `load` + idle (or on an
- * explicit "What's this part?" / "Tour" while muted, `mode: "explicit"`).
+ * GoodInBot, the site guide engine (spec §10.5; the anchor model of
+ * 2026-11-18). Vanilla TS, no React, ≤6KB gz, imported lazily by GuideLoader
+ * after `load` + idle (or on an explicit "What's this part?" / "Tour" while
+ * muted, `mode: "explicit"`).
  *
+ * - The bot never travels: it lives at one edge of the active box (geometry.ts
+ *   anchors: top / bottom / chrome; compact: the dock) and emerges from behind
+ *   it inside a clipping slot. Changing box = duck, reposition while hidden,
+ *   emerge; the same anchor re-measured = reposition in place.
+ * - The bubble opens beside the bot after it has emerged: thinking dots, then
+ *   a typewriter (graphemes; the full text is laid out from the start, the rest
+ *   visually hidden) while the sprite talks.
  * - One IntersectionObserver (activation band −35%/−50%), one rAF-debounced
- *   ResizeObserver on <main>; delegated pointerover/focusin on .os-desktop;
- *   Esc; visibilitychange. No scroll listener.
- * - Rect reads only on activation, resize or a tour step; writes go to CSS
- *   variables on #gt-guide (`--gx --gy --bx --by --sx --sy --sw --sh`),
- *   relative to .os-desktop. Placement maths: geometry.ts.
- * - Sprite frames: every state goes to `#gt-guide svg.px-sprite[data-state]`
- *   (pixel.css); #gt-guide itself carries no data-state.
+ *   ResizeObserver on <main>; delegated pointerover/focusin on .os-desktop; Esc;
+ *   visibilitychange. No scroll listener; rect reads only on activation, resize,
+ *   a bubble or a tour step. Positions go to CSS variables on #gt-guide.
+ * - Sprite frames: `#gt-guide svg.px-sprite[data-state]` (pixel.css).
  * - Never: role=dialog, aria-modal, aria-hidden on the bubble, a network
  *   request, a focus move outside the user-started tour.
  */
@@ -23,21 +28,19 @@ import {
   writeSessionFlag,
 } from "@/components/shell/guide-events";
 import {
-  CANDIDATES,
-  bubbleB,
+  bubbleWidth,
   centreDistance,
+  chooseAnchor,
   frameColumn,
   inColumn,
+  placeBot,
   placeBubble,
-  placeSprite,
-  railProbe,
+  rises,
   tourScrollTop,
+  type Anchor,
+  type Bot,
   type Box,
-  type BubbleInput,
-  type BubbleKind,
   type Frame,
-  type Perch,
-  type Placed,
 } from "./geometry";
 
 /** Engine sentinel (spec §10.4): written to `#gt-guide[data-engine]`; defined in this module only. */
@@ -69,9 +72,19 @@ export interface GuideApi {
   rescan(): void;
 }
 
-type Open = { el: Element; kind: BubbleKind; tour?: boolean; spot?: Element };
+/** auto = a section line · greet · spot · explicit (bot click, explain, tour). */
+type Kind = "auto" | "greet" | "spot" | "explicit";
+type Open = { el: Element; kind: Kind; tour?: boolean; spot?: Element };
 
-const WIPE = 560;
+/* Timings (ms); reduced motion swaps every slide for a SWAP opacity fade. */
+const EMERGE = 420;
+const DUCK = 220;
+const SWAP = 120;
+const FADE = 140;
+const THINK = 450;
+const PER = 34;
+const PAUSE = 160;
+
 const doc = document;
 const html = doc.documentElement;
 const $ = <T extends Element>(s: string) => o.root.querySelector(s) as T;
@@ -80,7 +93,6 @@ const R = (e: Element): Box => {
   const { top, left, right, bottom } = e.getBoundingClientRect();
   return { top, left, right, bottom };
 };
-const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 const now = () => Date.now();
 const rmq = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -90,7 +102,8 @@ let desk: HTMLElement;
 let btn: HTMLButtonElement;
 let svg: SVGElement;
 let bub: HTMLElement;
-let txt: HTMLElement;
+let typedEl: HTMLElement;
+let restEl: HTMLElement;
 let live: HTMLElement;
 const acts: Record<string, HTMLButtonElement> = {};
 
@@ -103,20 +116,22 @@ let band: Element[] = [];
 let cand: Element | null = null;
 let active: Element | null = null;
 let first: Element | null = null;
-let at: { x: number; y: number } | null = null;
+/** The box the bot is anchored to, where it is, and whether it is up (or on its way up). */
 let on: Element | null = null;
+let bot: Bot | null = null;
+let up = false;
 let open: Open | null = null;
 let tour: { list: Element[]; i: number } | null = null;
 let invoker: HTMLElement | null = null;
-/** An explicit request whose sprite is still on its way (its bubble opens on arrival). */
-let asked: Element | null = null;
 let after: (() => void) | null = null;
 let hov: Element | null = null;
 let chrome = { top: 0, dock: 0 };
+let col = { g: 16, m: 1200 };
 let last = 0;
 let lastSpot = 0;
+let holdMs = 0;
 let hideAt = 0;
-let left = 0;
+let held = false;
 const tm: Record<string, ReturnType<typeof setTimeout>> = {};
 
 const later = (k: string, ms: number, f: () => void) => {
@@ -126,305 +141,268 @@ const later = (k: string, ms: number, f: () => void) => {
 const stopT = (...ks: string[]) => ks.forEach((k) => clearTimeout(tm[k]));
 const flag = (n: string, on: boolean, el: Element = root) => el.toggleAttribute(n, on);
 const data = (n: string, v: string) => root.setAttribute("data-" + n, v);
-const css = (n: string, v: string | number) => root.style.setProperty("--" + n, String(v));
-const reduced = () => rmq.matches || html.dataset.motion === "reduce";
-const state = (s: string) => svg.setAttribute("data-state", s);
-/** Restart the capped idle blink (5 iterations per activation, pixel.css). */
-const blink = () => {
-  svg.removeAttribute("data-state");
-  void svg.getBoundingClientRect();
-  state("idle");
+const css = (n: string, v: number) => root.style.setProperty("--" + n, Math.round(v) + "px");
+const reduced = () => {
+  const r = rmq.matches || html.dataset.motion === "reduce";
+  flag("data-rm", r);
+  return r;
 };
+/** Every state change restarts the capped blink (pixel.css; guide.css blinks once right away). */
+const state = (s: string) => svg.setAttribute("data-state", s);
 const sayOf = (el: Element) => el.getAttribute("data-guide-say") || "";
 /** Rendered: Next keeps up to 3 previous pages in the DOM, hidden by <Activity> (display:none). */
 const shown = (el: Element) => el.isConnected && el.getClientRects().length > 0;
 /** The rendered `[data-guide]` boxes in DOM order (`sel` narrows to `main` for the first box). */
 const boxes = (sel = "[data-guide]") => Array.from(doc.querySelectorAll(sel)).filter(shown);
+const badge = (on: boolean) => flag("data-badge", on);
 
 /* ── chrome values (registered px lengths, §10.5 "Chrome values") ── */
-function readChrome() {
+function refresh() {
   const cs = getComputedStyle(html);
-  let top = parseFloat(cs.getPropertyValue("--chrome-top"));
-  let dock = parseFloat(cs.getPropertyValue("--dock-space"));
+  const v = (n: string) => parseFloat(cs.getPropertyValue(n));
+  let top = v("--chrome-top");
+  let dock = v("--dock-space");
   if (!Number.isFinite(top))
     top = doc.querySelector(".os-menubar")?.getBoundingClientRect().bottom ?? 0;
   if (!Number.isFinite(dock)) {
     const d = doc.querySelector(".os-dock-list");
     dock = d ? innerHeight - d.getBoundingClientRect().top + 12 : 0;
   }
-  const g = parseFloat(cs.getPropertyValue("--gutter"));
-  const m = parseFloat(cs.getPropertyValue("--frame-max"));
   chrome = { top, dock };
-  return { g: Number.isFinite(g) ? g : 16, m: Number.isFinite(m) ? m : 1200 };
+  col = { g: v("--gutter") || 16, m: v("--frame-max") || 1200 };
 }
-let colVars = { g: 16, m: 1200 };
-function frame(): Frame {
-  const vw = html.clientWidth;
-  return {
-    vw,
-    vh: innerHeight,
-    chromeTop: chrome.top,
-    dockSpace: chrome.dock,
-    rtl: html.dir === "rtl",
-    col: frameColumn(vw, colVars.g, colVars.m),
-  };
-}
-const refresh = () => {
-  colVars = readChrome();
-};
+const frame = (): Frame => ({
+  vw: html.clientWidth,
+  vh: innerHeight,
+  chromeTop: chrome.top,
+  dockSpace: chrome.dock,
+  rtl: html.dir === "rtl",
+});
 
-/** The `.frame-cell` under a viewport point, ignoring the guide layer. */
-const cellAt = (x: number, y: number) =>
-  doc
-    .elementsFromPoint(x, y)
-    .find((e) => !root.contains(e))
-    ?.closest(".frame-cell");
-
-function perch(el: Element, f: Frame): [Box, Perch] {
-  const r = inColumn(R(el), f);
-  let p = placeSprite(r, f);
-  if (p.kind === "rail") {
-    const q = railProbe(r, f);
-    if (cellAt(q.x, q.y)?.getAttribute("data-pad") === "none") p = placeSprite(r, f, true);
+/* ── the bot ── */
+/** Where the bot goes for `el` (compact: the dock). `keep` re-measures an anchor already in use. */
+function measure(el: Element | null, keep?: Anchor): Bot {
+  const f = frame();
+  if (small || !el) {
+    const d = doc.querySelector(".os-dock-list");
+    const r = d ? R(d) : { top: f.vh - f.dockSpace, left: 12, right: f.vw - 12, bottom: f.vh };
+    return placeBot("dock", r.top, r, f.rtl, 32, 20);
   }
-  return [r, p];
+  const r = inColumn(R(el), frameColumn(f.vw, col.g, col.m));
+  const a = keep ?? chooseAnchor(r, f);
+  return placeBot(a, a === "top" ? r.top : a === "bottom" ? r.bottom : f.chromeTop, r, f.rtl);
 }
 
-/* ── movement (desktop) ── */
-/**
- * Move the sprite to `el`'s perch: walk (same roof), arc hop (≤1.5
- * viewports), drop-in, or a fade (reduced motion). Returns ms to arrival.
- */
-function goTo(el: Element, instant = false): number {
-  if (small) return 0;
-  on = el;
-  const p = perch(el, frame())[1];
-  stopT("mv", "land");
-  if (p.kind === "none") {
-    flag("data-gone", true);
-    at = null;
-    return 0;
-  }
-  const d = R(desk);
-  const x = Math.round(p.x - d.left);
-  const y = Math.round(p.y - d.top);
-  const was = at;
-  at = { x, y };
-  data("perch", p.kind);
-  const place = () => {
-    css("gx", x + "px");
-    css("gy", y + "px");
-  };
-  if (instant) {
-    data("move", "");
-    place();
-    return 0;
-  }
-  const dx = was ? x - was.x : 0;
-  const dy = was ? y - was.y : 0;
-  const dist = Math.hypot(dx, dy);
-  if (was && dist < 1) return 0;
-  if (Math.abs(dx) > 2) data("face", dx < 0 ? "l" : "r");
-  if (!was || reduced() || dist > 1.5 * innerHeight) {
-    // Fade (first placement, reduced motion) or drop-in from −24px.
-    const drop = !reduced();
-    const out = was ? 120 : 0;
-    data("move", "out");
-    later("mv", out, () => {
-      place();
-      flag("data-gone", false);
-      data("move", drop ? "drop" : "");
-      later("land", drop ? 400 : 120, land);
-    });
-    return out + (drop ? 400 : 120);
-  }
-  const hop = Math.abs(dy) >= 8;
-  const ms = Math.round(hop ? clamp(dist * 0.55, 450, 1000) : clamp(Math.abs(dx) * 0.9, 300, 900));
-  css("gd", ms + "ms");
-  if (hop) {
-    css("tilt", (dx < 0 ? -8 : 8) + "deg");
-    css("tdx", (-dx / dist).toFixed(2));
-    css("tdy", (-dy / dist).toFixed(2));
-  }
-  requestAnimationFrame(() => {
-    data("move", hop ? "hop" : "walk");
-    if (!hop) state("walk");
-    place();
+const fixed = (b: Bot) => b.anchor === "chrome" || b.anchor === "dock";
+/** Layer origin: `.os-desktop` for the box anchors (they scroll with it), the viewport for fixed ones. */
+function origin(b: Bot) {
+  if (fixed(b)) return { x: 0, y: 0 };
+  const d = desk.getBoundingClientRect();
+  return { x: d.left, y: d.top };
+}
+
+/** Put the slot (bot + 16px) with its clipping edge on the anchor line. */
+function put(b: Bot) {
+  bot = b;
+  const p = origin(b);
+  data("anchor", b.anchor);
+  flag("data-fixed", fixed(b));
+  css("gx", b.x - 8 - p.x);
+  css("gy", (rises(b.anchor) ? b.line - b.size - 16 : b.line) - p.y);
+}
+
+/** Duck behind the line (hidden once the slide ends). */
+function duck() {
+  flag("data-rest", false);
+  if (up) data("bot", "in");
+  up = false;
+}
+
+/** Duck if up, reposition while hidden, emerge at `b`. Returns ms until it is up. */
+function swap(b: Bot): number {
+  stopT("mv", "rest");
+  const rm = reduced();
+  const d = up ? (rm ? SWAP : DUCK) : 0;
+  duck();
+  up = true;
+  later("mv", d, () => {
+    data("bot", "");
+    put(b);
+    // commit the hidden start (and restart the capped blink), then slide out
+    const s = svg.getAttribute("data-state") || "idle";
+    svg.removeAttribute("data-state");
+    void btn.offsetWidth;
+    state(s);
+    data("bot", "out");
+    later("rest", rm ? SWAP : EMERGE, () => flag("data-rest", true));
   });
-  later("land", ms, () => land(hop));
-  return ms;
+  return d + (rm ? SWAP : EMERGE);
 }
 
-function land(squash = false) {
-  data("move", "");
-  if (squash) {
-    flag("data-land", true);
-    later("sq", 120, () => flag("data-land", false));
+/** Anchor the bot at `el`: emerge (or swap) unless it is already up at the same anchor. */
+function goTo(el: Element | null): number {
+  const b = measure(el);
+  const same = up && bot?.anchor === b.anchor && (small || on === el);
+  on = el;
+  if (same) {
+    put(b);
+    return 0;
   }
-  if (!open || svg.getAttribute("data-state") === "walk") blink();
+  return swap(b);
 }
-
-/** Compact mode: the pinned sprite hops (its own translate, 2 × 180ms). */
-function hop() {
-  flag("data-hop", false, btn);
-  void btn.offsetWidth;
-  flag("data-hop", true, btn);
-}
-
-const badge = (on: boolean) => flag("data-badge", on);
 
 /* ── the bubble ── */
-function measure(text: string, kind: BubbleKind, t?: boolean) {
-  bub.setAttribute("data-kind", kind === "explicit" ? (t ? "tour" : "explicit") : "auto");
-  acts.next!.hidden = acts.end!.hidden = !t;
-  txt.textContent = text;
+function placeBubbleNow() {
+  if (!on && !small) return;
+  const b = measure(on, small ? undefined : bot?.anchor);
+  put(b);
+  const f = frame();
+  const w = bubbleWidth(b, f);
+  css("bw", w.max);
   flag("data-measure", true, bub);
   bub.hidden = false;
-  return { w: bub.offsetWidth, h: bub.offsetHeight };
+  const p = placeBubble(b, bub.offsetWidth, bub.offsetHeight, w.beside, f);
+  const q = origin(b);
+  css("bx", p.left - q.x);
+  css("by", p.top - q.y);
+  css("bt", p.t);
+  bub.setAttribute("data-tail", p.tail);
 }
 
-/** Measure and place (desktop). Returns null when no allowed candidate fits. */
-function place(
-  el: Element,
-  kind: BubbleKind,
-  text: string,
-  x: { tour?: boolean; spot?: Element },
-): Placed | null {
-  const { w, h } = measure(text, kind, x.tour);
-  if (small) return { at: "C", left: 0, top: 0, tail: "down" };
-  const f = frame();
-  const target = x.spot ?? el;
-  const [r, sprite] = x.spot ? [R(x.spot), { kind: "roof", x: 0, y: 0 } as Perch] : perch(el, f);
-  const box = target.closest(".frame-box") ?? el;
-  const i: BubbleInput = {
-    kind,
-    r,
-    s: el.querySelector(":scope>.frame-strip") ? 36 : 0,
-    sprite,
-    bw: w,
-    bh: h,
-    f,
-    headers: Array.from(box.querySelectorAll("[data-frame-header]"), R),
-  };
-  if (CANDIDATES[kind].includes("B") && sprite.kind !== "none") {
-    const b = bubbleB(i);
-    const c = cellAt(f.rtl ? b.left + 2 : b.right - 2, b.top + 2);
-    i.decor = c?.hasAttribute("data-decor") ? R(c) : null;
-  }
-  const p = placeBubble(i);
-  if (p) {
-    const d = R(desk);
-    css("bx", Math.round(p.left - d.left) + "px");
-    css("by", Math.round(p.top - d.top) + "px");
-  }
-  return p;
+function fill(text: string, kind: Kind, t?: boolean) {
+  bub.setAttribute("data-kind", kind === "explicit" ? (t ? "tour" : "explicit") : "auto");
+  acts.next!.hidden = acts.end!.hidden = !t;
+  typedEl.textContent = "";
+  restEl.textContent = text;
 }
 
-function hideBubble() {
-  stopT("hide", "type", "talk", "spotOut");
-  hideAt = left = 0;
-  bub.hidden = true;
-  flag("data-open", false, bub);
-  flag("data-measure", false, bub);
+function hideBubble(fade = false) {
+  stopT("hide", "type", "say", "spotOut", "out");
+  holdMs = hideAt = 0;
+  held = false;
   flag("data-sel", false);
   btn.setAttribute("aria-expanded", "false");
-  if (svg.getAttribute("data-state") === "talk") blink();
+  if (svg.getAttribute("data-state") !== "sit") state("idle");
+  bub.removeAttribute("data-phase");
   open = null;
+  flag("data-open", false, bub);
+  if (fade && !bub.hidden && !reduced()) {
+    flag("data-out", true, bub);
+    later("out", FADE, () => (bub.hidden = true));
+  } else bub.hidden = true;
+}
+
+/** Graphemes (Persian clusters, emoji) with a code-point fallback. */
+function graphemes(t: string): string[] {
+  try {
+    return Array.from(
+      new Intl.Segmenter(html.lang, { granularity: "grapheme" }).segment(t),
+      (s) => s.segment,
+    );
+  } catch {
+    return Array.from(t);
+  }
 }
 
 /**
- * Open a bubble on `el` (a `[data-guide]` box). Typing dots, then a stepped
- * wipe while the mouth talks; automatic kinds auto-hide (paused on hover/focus).
+ * Open a bubble on `el` (a `[data-guide]` box) once the bot is up there:
+ * grow in from the tail, think, then type while the mouth talks. Automatic
+ * kinds hold for max(4.5s, 0.38s per word) after typing, paused on hover/focus.
  */
 function say(
   el: Element,
-  kind: BubbleKind,
+  kind: Kind,
   text: string,
-  x: { tour?: boolean; spot?: Element; hold?: number; typing?: number } = {},
-): boolean {
-  if (!text) return false;
-  hideBubble();
-  const p = place(el, kind, text, x);
-  if (!p) {
-    bub.hidden = true;
-    flag("data-measure", false, bub);
-    return false;
-  }
+  x: { tour?: boolean; spot?: Element; think?: number } = {},
+) {
+  if (!text) return;
+  hideBubble(true);
+  const me: Open = { el, kind, tour: x.tour, spot: x.spot };
   const explicit = kind === "explicit";
-  open = { el, kind, tour: x.tour, spot: x.spot };
-  bub.setAttribute("data-tail", p.tail ?? "");
+  open = me;
   btn.setAttribute("aria-expanded", String(explicit));
   if (explicit) {
     live.lang = html.lang;
     live.textContent = text;
   }
-  const typing = reduced() ? 0 : (x.typing ?? 400);
-  bub.setAttribute("data-phase", typing ? "type" : "");
-  requestAnimationFrame(() => {
+  last = now();
+  later("say", goTo(el), () => {
+    if (open !== me) return;
+    stopT("out");
+    flag("data-out", false, bub);
+    fill(text, kind, x.tour);
+    placeBubbleNow();
     flag("data-measure", false, bub);
     flag("data-open", true, bub);
-  });
-  later("type", typing, () => {
-    if (!typing) return;
-    bub.setAttribute("data-phase", "wipe");
-    state("talk");
-    later("talk", WIPE, () => {
-      bub.setAttribute("data-phase", "");
-      blink();
+    if (x.tour) acts.next!.focus();
+    const done = () => {
+      bub.removeAttribute("data-phase");
+      state("idle");
+      typedEl.textContent = text;
+      restEl.textContent = "";
+      if (!explicit) {
+        holdMs = Math.max(4500, text.split(/\s+/).length * 380);
+        arm();
+      }
+    };
+    if (reduced()) return done();
+    if (kind === "greet") state("wave");
+    bub.setAttribute("data-phase", "think");
+    const g = graphemes(text);
+    let i = 0;
+    let n = 0;
+    const tick = () => {
+      if (open !== me) return;
+      if (i >= g.length) return done();
+      const c = g[i++]!;
+      n += c.length;
+      typedEl.textContent = text.slice(0, n);
+      restEl.textContent = text.slice(n);
+      later("type", PER + (/[.!?؟،؛:…,\n]$/.test(c) ? PAUSE : 0), tick);
+    };
+    later("type", x.think ?? THINK, () => {
+      bub.setAttribute("data-phase", "type");
+      state("talk");
+      tick();
     });
   });
-  if (!explicit) hold(x.hold ?? clamp(text.length * 55, 4000, 9000) + typing + WIPE);
-  last = now();
-  return true;
 }
 
-function hold(ms: number) {
-  hideAt = now() + ms;
-  later("hide", ms, () => close());
+/** Start the auto-hide unless the pointer or focus is in the bubble. */
+function arm() {
+  if (!holdMs || held) return;
+  hideAt = now() + holdMs;
+  later("hide", holdMs, () => close());
 }
 function pause() {
+  held = true;
   if (!hideAt) return;
-  left = hideAt - now();
+  holdMs = Math.max(hideAt - now(), 1500);
   hideAt = 0;
   stopT("hide");
 }
 function resume() {
-  if (left && open) hold(Math.max(left, 1500));
-  left = 0;
+  held = false;
+  arm();
 }
 
-/** Close the bubble; Esc/× return focus to the invoker when focus was in the bubble or on the sprite. */
+/** Close the bubble; Esc/× return focus to the invoker when focus was in the bubble or on the bot. */
 function close(back = false) {
   if (!open) return;
   const ae = doc.activeElement;
   const had = bub.contains(ae) || ae === btn;
-  hideBubble();
+  hideBubble(true);
   tour = null;
   live.textContent = "";
   if (back && had) (invoker?.isConnected && !root.contains(invoker) ? invoker : btn).focus();
-  if (mode !== "auto") root.hidden = true;
+  if (mode !== "auto") {
+    duck();
+    on = null;
+    later("mv", DUCK, () => (root.hidden = true));
+  }
   const f = after;
   after = null;
   f?.();
-}
-
-/** Move the sprite to `el`, then open an explicit bubble (sprite click, explain, tour steps). */
-function speakAt(el: Element, text: string, t?: { list: Element[]; i: number }) {
-  hideBubble();
-  root.hidden = false;
-  if (small) hop();
-  const ms = small ? 0 : goTo(el);
-  asked = el;
-  later("say", ms, () => {
-    asked = null;
-    if (t && tour !== t) return;
-    if (!say(el, "explicit", text, { tour: !!t })) return;
-    if (t) acts.next!.focus();
-    else if (mode === "auto") {
-      markSeen(el);
-      if (el === active) badge(false);
-    }
-  });
 }
 
 /* ── seen list (sessionStorage, `pathname#key`, written only in auto mode) ── */
@@ -448,15 +426,11 @@ function markSeen(el: Element) {
 function activate(el: Element) {
   if (mode !== "auto" || el !== cand || tour) return;
   if (
-    asked ||
-    (open &&
-      (open.kind === "explicit" ||
-        open.kind === "spot" ||
-        (open.kind === "greet" && open.el === el)))
+    open &&
+    (open.kind === "explicit" || open.kind === "spot" || (open.kind === "greet" && open.el === el))
   ) {
-    // Never over an explicit bubble (or one whose sprite is still flying: both share the "say"
-    // timer) or a hovered spot; the first box speaks after its greeting.
-    if (!asked && open!.kind === "greet") after = () => later("dw", 1200, () => activate(el));
+    // Never over an explicit bubble or a hovered spot; the first box speaks after the greeting.
+    if (open.kind === "greet") after = () => later("dw", 1200, () => activate(el));
     else later("dw", 1500, () => activate(el));
     return;
   }
@@ -464,25 +438,18 @@ function activate(el: Element) {
   active = el;
   const unseen = !seen(el);
   if (small) {
-    if (fresh) hop();
-    badge(unseen);
-    return;
+    // compact: peek up (duck + emerge) with the "!" for a new section; no automatic bubble
+    if (unseen && fresh) swap(measure(null));
+    else if (!up) goTo(null);
+    return badge(unseen);
   }
-  if (open) {
-    if (open.el === el) return;
-    hideBubble();
-  }
-  const ms = goTo(el);
-  if (!unseen) {
-    badge(false);
-    if (!ms) blink();
-    return;
-  }
-  later("say", Math.max(ms, last + 2500 - now()), () => {
+  if (open && open.el !== el) hideBubble(true); // the old box's line fades as the bot ducks
+  if (!unseen) return void goTo(el);
+  if (open) return;
+  later("say", Math.max(goTo(el), last + 2500 - now()), () => {
     if (el !== cand || open) return;
-    const ok = say(el, el === first ? "first" : "auto", sayOf(el));
-    badge(!ok);
-    if (ok) markSeen(el);
+    say(el, "auto", sayOf(el));
+    markSeen(el);
   });
 }
 
@@ -490,55 +457,37 @@ function greet() {
   if (scrollY >= 200 || readSessionFlag(GUIDE_GREETED_KEY)) return;
   const el = first ?? boxes()[0];
   if (!el) return;
-  if (small) {
-    // Compact: the one-time line says to tap the sprite when its "!" shows (4s of text).
-    const hold = 4000 + (reduced() ? 0 : 400 + WIPE);
-    if (say(el, "greet", o.greeting.compact, { hold })) writeSessionFlag(GUIDE_GREETED_KEY);
-    return;
-  }
-  at = null;
-  const g: Open = { el, kind: "greet" };
-  open = g; // holds the first box's own line until the greeting has been said
-  later("say", goTo(el), () => {
-    if (mode !== "auto" || open !== g) return;
-    open = null;
-    state("wave");
-    if (say(el, "greet", o.greeting.full, { typing: reduced() ? 0 : 960 })) {
-      writeSessionFlag(GUIDE_GREETED_KEY);
-      active = el;
-    } else {
-      blink();
-      const f = after;
-      after = null;
-      f?.();
-    }
-  });
+  writeSessionFlag(GUIDE_GREETED_KEY);
+  // it waves (2 × 480ms) while it thinks
+  say(el, "greet", small ? o.greeting.compact : o.greeting.full, { think: 960 });
 }
 
 function input() {
   if (mode !== "auto") return;
-  later("idle", 30_000, idleLine);
+  later("idle", 30_000, () => {
+    if (small || open || tour || !active || !shown(active) || readSessionFlag(GUIDE_IDLE_KEY))
+      return;
+    writeSessionFlag(GUIDE_IDLE_KEY);
+    say(active, "auto", o.labels.idle);
+  });
   later("sit", 60_000, () => !open && state("sit"));
-  if (svg.getAttribute("data-state") === "sit") blink();
-}
-function idleLine() {
-  if (small || open || tour || !active || readSessionFlag(GUIDE_IDLE_KEY)) return;
-  if (say(active, "auto", o.labels.idle)) writeSessionFlag(GUIDE_IDLE_KEY);
+  if (svg.getAttribute("data-state") === "sit") state("idle");
 }
 
-/* ── spots: hover intent / keyboard focus, selection box, A only ── */
+/* ── spots: hover intent / keyboard focus; the bubble comes from the bot at its anchor ── */
 function spot(s: Element) {
   if (small || now() - lastSpot < 1200 || tour) return;
-  if (open && open.kind !== "auto" && open.kind !== "first" && open.kind !== "spot") return;
-  const host = s.closest("[data-guide]") ?? s;
-  if (!say(host, "spot", sayOf(s), { spot: s })) return;
+  if (open && (open.kind === "explicit" || open.kind === "greet")) return;
+  const host = s.closest("[data-guide]");
+  if (!host) return;
+  say(host, "spot", sayOf(s), { spot: s });
   lastSpot = now();
   const r = R(s);
-  const d = R(desk);
-  css("sx", Math.round(r.left - d.left) + "px");
-  css("sy", Math.round(r.top - d.top) + "px");
-  css("sw", Math.round(r.right - r.left) + "px");
-  css("sh", Math.round(r.bottom - r.top) + "px");
+  const d = desk.getBoundingClientRect();
+  css("sx", r.left - d.left);
+  css("sy", r.top - d.top);
+  css("sw", r.right - r.left);
+  css("sh", r.bottom - r.top);
   flag("data-sel", true);
 }
 const spotOut = () => later("spotOut", 1500, () => open?.kind === "spot" && close());
@@ -548,22 +497,13 @@ function observeAll() {
   first = boxes("main [data-guide]")[0] ?? null;
 }
 
-/** Re-anchor after streams, images or a resize (rAF-debounced ResizeObserver). */
+/** Streams, images or a resize: re-measure the same anchor and reposition in place. */
 function reanchor() {
   refresh();
   observeAll();
-  const el = on;
-  if (small || !at || tour || root.getAttribute("data-move") || !el || !shown(el)) return;
-  if (open?.kind === "spot") return;
-  const p = perch(el, frame())[1];
-  const d = R(desk);
-  if (p.kind !== "none" && Math.abs(p.x - d.left - at.x) + Math.abs(p.y - d.top - at.y) < 2) return;
-  goTo(el, true);
-  if (open?.el === el && !bub.hidden) {
-    const keep = open;
-    if (place(el, keep.kind, txt.textContent || "", keep)) flag("data-measure", false, bub);
-    else close();
-  }
+  if (!up || !bot || (on && !shown(on))) return;
+  put(measure(on, small ? undefined : bot.anchor));
+  if (open && !bub.hidden) placeBubbleNow();
 }
 
 function boot() {
@@ -636,10 +576,20 @@ function boot() {
     () => (doc.hidden ? stopT("idle", "sit", "dw") : input()),
     sig,
   );
-  at = null;
-  flag("data-gone", !small);
   greet();
   input();
+}
+
+/** Hide the bot and forget its box. */
+function hideBot() {
+  duck();
+  on = bot = null;
+}
+/** Forget the page's boxes (mute, a new page). */
+function forget() {
+  band = [];
+  cand = active = hov = null;
+  badge(false);
 }
 
 function halt() {
@@ -651,21 +601,18 @@ function halt() {
   for (const k in tm) clearTimeout(tm[k]);
   close();
   hideBubble();
-  band = [];
-  cand = active = hov = on = asked = null;
-  at = null;
-  badge(false);
-  flag("data-gone", !small);
+  hideBot();
+  forget();
+  data("bot", "");
   root.hidden = true;
 }
 
 /* ── explicit actions ── */
 function nearest(): Element | null {
-  const vh = innerHeight;
   let best: Element | null = null;
   let bd = Infinity;
   for (const e of boxes()) {
-    const d = centreDistance(R(e), vh);
+    const d = centreDistance(R(e), innerHeight);
     if (d < bd) {
       bd = d;
       best = e;
@@ -680,7 +627,12 @@ function explain(toggle = false, from?: HTMLElement) {
   if (!el) return;
   invoker = from ?? (doc.activeElement as HTMLElement | null);
   tour = null;
-  speakAt(el, sayOf(el));
+  root.hidden = false;
+  say(el, "explicit", sayOf(el));
+  if (mode === "auto") {
+    markSeen(el);
+    if (el === active) badge(false);
+  }
 }
 
 function runTour() {
@@ -706,9 +658,15 @@ function step(i: number) {
     : o.labels.next.replace("{i}", num(i + 1)).replace("{n}", num(n));
   acts.next!.dataset.done = done ? "1" : "";
   root.hidden = false;
-  const bh = measure(text, "explicit", true).h;
+  // the bubble's height decides how far the box's top lands below the menu bar
+  fill(text, "explicit", true);
+  css("bw", 340);
+  flag("data-measure", true, bub);
+  bub.hidden = false;
+  const bh = bub.offsetHeight;
   hideBubble();
-  const go = () => tour === t && speakAt(el, text, t);
+  tour = t;
+  const go = () => tour === t && say(el, "explicit", text, { tour: true });
   if (done) return go();
   const behavior: ScrollBehavior = reduced() ? "auto" : "smooth";
   let target = scrollY;
@@ -718,15 +676,19 @@ function step(i: number) {
     scrollTo({ top: target, behavior });
   }
   if (!small && Math.abs(target - scrollY) < 2) return go();
-  let fired = false;
+  // a stale `scrollend` (an earlier scroll ending) must not start the step mid-way
+  let late = small;
   const fin = () => {
-    if (fired) return;
-    fired = true;
+    if (!late && Math.abs(scrollY - target) > 2) return;
     removeEventListener("scrollend", fin);
+    stopT("tour");
     go();
   };
-  addEventListener("scrollend", fin, { once: true });
-  later("tour", 900, fin);
+  addEventListener("scrollend", fin);
+  later("tour", 900, () => {
+    late = true;
+    fin();
+  });
 }
 
 /* ── one-time DOM wiring (both modes) ── */
@@ -736,7 +698,8 @@ function wire() {
   btn = $(".gt-guide-sprite");
   svg = $("svg.px-sprite");
   bub = $("#gt-guide-bubble");
-  txt = $(".gt-guide-text");
+  typedEl = $(".gt-guide-typed");
+  restEl = $(".gt-guide-rest");
   live = $("#gt-guide-live");
   bub.querySelectorAll<HTMLButtonElement>("[data-act]").forEach((b) => (acts[b.dataset.act!] = b));
   btn.addEventListener("click", () => explain(true, btn));
@@ -777,9 +740,9 @@ function setCompact(c: boolean) {
   flag("data-compact", c);
   refresh();
   if (open && !open.tour) close();
-  flag("data-gone", !c);
-  at = null;
-  if (!c && active) activate(active);
+  hideBot();
+  data("bot", "");
+  if (mode === "auto" && active) goTo(c ? null : active);
 }
 
 const api: GuideApi = {
@@ -788,18 +751,13 @@ const api: GuideApi = {
   compact: setCompact,
   rescan() {
     close();
-    stopT("say");
     tour = null;
-    band = [];
-    cand = active = hov = on = asked = null;
-    badge(false);
+    forget();
+    // compact: the bot stays on the dock; desktop: its box is gone
+    if (!small) hideBot();
     if (mode !== "auto") return void (root.hidden = true);
     io?.disconnect();
     observeAll();
-    if (!small) {
-      at = null;
-      flag("data-gone", true);
-    }
   },
 };
 

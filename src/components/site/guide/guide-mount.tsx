@@ -6,7 +6,7 @@ import { getPublicProfile } from "@/server/modules/content/queries";
 import { GuideLayer } from "./guide-layer";
 
 /**
- * The pixel guide, "virtual me" (spec §10.2–10.4). Rendered by the site
+ * GoodInBot, the pixel guide (spec §10.2–10.4). Rendered by the site
  * layout inside `.os-desktop`, after the footer, as
  * `<Suspense fallback={null}><GuideMount locale={locale} /></Suspense>`.
  *

@@ -1,30 +1,31 @@
 import { describe, expect, it } from "vitest";
 import {
-  LIFT,
-  SPRITE,
-  TAIL,
-  bubbleA,
-  bubbleB,
+  BOT,
+  GAP,
+  INSET,
+  MAX_W,
+  bounds,
+  bubbleWidth,
   centreDistance,
-  clearB,
+  chooseAnchor,
+  eyeY,
   frameColumn,
+  inColumn,
+  placeBot,
   placeBubble,
-  placeSprite,
-  railProbe,
+  rises,
   tourScrollTop,
-  type BubbleInput,
   type Box,
   type Frame,
 } from "./geometry";
 
-/** 1440×900 desktop: 32px menu bar, 84px dock space, 1200px column at 120–1320. */
+/** 1440×900 desktop: 32px menu bar, 84px dock space; the 1200px column is 120–1320. */
 const frame = (rtl = false, over: Partial<Frame> = {}): Frame => ({
   vw: 1440,
   vh: 900,
   chromeTop: 32,
   dockSpace: 84,
   rtl,
-  col: frameColumn(1440, 32, 1200),
   ...over,
 });
 const rect = (top: number, height = 600, left = 120, right = 1320): Box => ({
@@ -33,280 +34,244 @@ const rect = (top: number, height = 600, left = 120, right = 1320): Box => ({
   right,
   bottom: top + height,
 });
-
-const input = (over: Partial<BubbleInput> & { f: Frame; r: Box }): BubbleInput => ({
-  kind: "auto",
-  s: 36,
-  bw: 300,
-  bh: 110,
-  sprite: placeSprite(over.r, over.f),
-  ...over,
+const overlaps = (a: Box, b: Box) =>
+  a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+const botBox = (b: { x: number; y: number; size: number }): Box => ({
+  left: b.x,
+  top: b.y,
+  right: b.x + b.size,
+  bottom: b.y + b.size,
 });
 
-describe("frameColumn", () => {
+describe("frameColumn / inColumn", () => {
   it("centres the 1200px column and respects the gutter below it", () => {
     expect(frameColumn(1440, 32, 1200)).toEqual({ left: 120, right: 1320 });
     expect(frameColumn(1024, 24, 1200)).toEqual({ left: 24, right: 1000 });
   });
-});
 
-describe("placeSprite", () => {
-  it("stands on the roof at inline-end when the roof is in the band (LTR)", () => {
-    const f = frame();
-    expect(placeSprite(rect(400), f)).toEqual({ kind: "roof", x: 1320 - 12 - SPRITE, y: 400 - 47 });
-  });
-
-  it("stands on the roof at inline-end (the left corner) in RTL", () => {
-    expect(placeSprite(rect(400), frame(true))).toEqual({ kind: "roof", x: 132, y: 353 });
-  });
-
-  it("keeps the roof perch on the band's top edge (first box at scrollY 0: chromeTop + 56)", () => {
-    expect(placeSprite(rect(32 + 56), frame()).kind).toBe("roof");
-    expect(placeSprite(rect(32 + 55), frame()).kind).toBe("rail");
-  });
-
-  it("has no perch when the roof is below the band (vh − dockSpace − 56)", () => {
-    expect(placeSprite(rect(900 - 84 - 56), frame()).kind).toBe("roof");
-    expect(placeSprite(rect(900 - 84 - 55), frame()).kind).toBe("none");
-    // …so an explicit bubble falls back to C without a tail
-    const f = frame();
-    const r = rect(1200);
-    expect(placeBubble(input({ f, r, kind: "explicit" }))).toMatchObject({ at: "C", tail: null });
-  });
-
-  it("clings to the inline-end border on the rail when the roof scrolled away", () => {
-    const f = frame();
-    expect(placeSprite(rect(40), f)).toEqual({ kind: "rail", x: 1320 - 24, y: 32 + 24 });
-    expect(placeSprite(rect(40), frame(true))).toEqual({ kind: "rail", x: 120 - 24, y: 56 });
-  });
-
-  it("stands outside the border beside a pad=none cell when the margin is ≥52px (≥1304px)", () => {
-    const f = frame(false, { vw: 1440 });
-    expect(placeSprite(rect(-200), f, true)).toEqual({ kind: "out", x: 1324, y: 56 });
-    const rtl = frame(true);
-    expect(placeSprite(rect(-200), rtl, true)).toEqual({ kind: "out", x: 120 - 52, y: 56 });
-    const at1304 = frame(false, { vw: 1304, col: frameColumn(1304, 32, 1200) });
-    expect(placeSprite(rect(-200, 600, 52, 1252), at1304, true).kind).toBe("out");
-  });
-
-  it("has no perch beside a pad=none cell when the margin is under 52px", () => {
-    const f = frame(false, { vw: 1280, col: frameColumn(1280, 32, 1200) });
-    expect(placeSprite(rect(-200, 600, 40, 1240), f, true).kind).toBe("none");
-  });
-
-  it("probes the inline-end cell inside the box, at the rail perch's height", () => {
-    expect(railProbe(rect(-100), frame())).toEqual({ x: 1308, y: 32 + 24 + 24 });
-    expect(railProbe(rect(-100), frame(true))).toEqual({ x: 132, y: 80 });
+  it("clamps a full-bleed box to the column", () => {
+    expect(inColumn(rect(100, 50, 0, 1440), { left: 120, right: 1320 })).toEqual(rect(100, 50));
   });
 });
 
-describe("candidate A", () => {
-  it("LTR: its inline-end (right) edge is 8px beyond the sprite's, extending left", () => {
-    const f = frame();
-    const i = input({ f, r: rect(450) });
-    const a = bubbleA(i);
-    expect(a.right).toBe(i.sprite.x + SPRITE + 8);
-    expect(a.left).toBe(a.right - 300);
-    expect(a.bottom).toBe(450 - LIFT);
-    expect(a.bottom).toBeLessThan(i.sprite.y); // above the sprite's head, never over it
+describe("chooseAnchor", () => {
+  const f = frame();
+
+  it("is `top` while the top border is in the comfortable zone", () => {
+    expect(chooseAnchor(rect(450), f)).toBe("top"); // a box entering the activation band
+    expect(chooseAnchor(rect(32 + 56), f)).toBe("top"); // the first box's reserved roof at scrollY 0
+    expect(chooseAnchor(rect(32 + 55.6), f)).toBe("top"); // …even a sub-pixel above it
+    expect(chooseAnchor(rect(900 * 0.72), f)).toBe("top");
   });
 
-  it("RTL: its inline-end (left) edge is 8px beyond the sprite's, extending right", () => {
+  it("is `bottom` when the top is out of the zone but the bottom border is in it", () => {
+    expect(chooseAnchor(rect(-300, 600), f)).toBe("bottom"); // bottom at 300 (scrolling back up)
+    expect(chooseAnchor(rect(32 + 54, 40), f)).toBe("bottom"); // roof under the 56px minimum
+    expect(chooseAnchor(rect(-500, 500 + 32 + 64), f)).toBe("bottom"); // bottom on the zone's top edge
+    expect(chooseAnchor(rect(-500, 500 + 900 - 84 - 64), f)).toBe("bottom"); // … and on its bottom edge
+  });
+
+  it("is `chrome` for a tall box that covers the viewport", () => {
+    expect(chooseAnchor(rect(-400, 2000), f)).toBe("chrome");
+    expect(chooseAnchor(rect(-500, 500 + 900 - 84 - 63), f)).toBe("chrome"); // bottom just under the zone
+    expect(chooseAnchor(rect(-500, 500 + 32 + 63), f)).toBe("chrome"); // bottom just over it
+  });
+
+  it("does not depend on the direction", () => {
+    for (const r of [rect(450), rect(-300), rect(-400, 2000)])
+      expect(chooseAnchor(r, frame(true))).toBe(chooseAnchor(r, f));
+  });
+});
+
+describe("placeBot", () => {
+  it("top: feet on the border, inline-end edge INSET inside the box (LTR: right)", () => {
+    const b = placeBot("top", 450, rect(450), false);
+    expect(b).toEqual({ anchor: "top", line: 450, x: 1320 - INSET - BOT, y: 450 - BOT, size: BOT });
+    expect(b.y + b.size).toBe(b.line);
+  });
+
+  it("mirrors to the left corner in RTL", () => {
+    expect(placeBot("top", 450, rect(450), true).x).toBe(120 + INSET);
+    expect(placeBot("bottom", 300, rect(-300), true).x).toBe(120 + INSET);
+  });
+
+  it("bottom / chrome: hangs under the line with its head (row 4) 2px below it", () => {
+    for (const a of ["bottom", "chrome"] as const) {
+      const b = placeBot(a, 300, rect(-300), false);
+      expect(rises(a)).toBe(false);
+      expect(b.y + BOT / 4).toBe(302);
+      expect(b.x).toBe(1320 - INSET - BOT);
+    }
+  });
+
+  it("dock (compact): a 32px bot standing on the tab bar's top edge", () => {
+    const b = placeBot("dock", 776, { left: 12, right: 378 }, false, 32, 20);
+    expect(b).toEqual({ anchor: "dock", line: 776, x: 378 - 20 - 32, y: 744, size: 32 });
+    expect(placeBot("dock", 776, { left: 12, right: 378 }, true, 32, 20).x).toBe(32);
+  });
+
+  it("puts the eyes between rows 7 and 8", () => {
+    expect(eyeY(placeBot("top", 450, rect(450), false))).toBeCloseTo(450 - 48 + 22.5);
+  });
+});
+
+describe("bubble beside the bot", () => {
+  const W = 300;
+  const H = 110;
+
+  it("top (LTR): GAP px left of the bot, bottom 4px above the line, tail right at eye level", () => {
+    const f = frame();
+    const b = placeBot("top", 450, rect(450), f.rtl);
+    const w = bubbleWidth(b, f);
+    expect(w).toEqual({ beside: true, max: MAX_W });
+    const p = placeBubble(b, W, H, w.beside, f);
+    expect(p.left + W).toBe(b.x - GAP);
+    expect(p.top + H).toBe(450 - 4);
+    expect(p.tail).toBe("r");
+    expect(p.top + p.t).toBeCloseTo(eyeY(b));
+    expect(
+      overlaps({ left: p.left, top: p.top, right: p.left + W, bottom: p.top + H }, botBox(b)),
+    ).toBe(false);
+  });
+
+  it("top (RTL): mirrored to the bot's right, tail on the left edge", () => {
     const f = frame(true);
-    const i = input({ f, r: rect(450) });
-    const a = bubbleA(i);
-    expect(a.left).toBe(i.sprite.x - 8);
-    expect(a.right).toBe(a.left + 300);
+    const b = placeBot("top", 450, rect(450), true);
+    const p = placeBubble(b, W, H, true, f);
+    expect(p.left).toBe(b.x + BOT + GAP);
+    expect(p.top + H).toBe(446);
+    expect(p.tail).toBe("l");
   });
 
-  it("is clamped to the frame column", () => {
-    const f = frame(false, { col: { left: 120, right: 420 } });
-    const a = bubbleA(input({ f, r: rect(450, 600, 120, 420), bw: 300 }));
-    expect(a.left).toBe(120);
-    expect(a.right).toBe(420);
-  });
-
-  it("opens for an automatic line when the roof has room above it", () => {
-    const p = placeBubble(input({ f: frame(), r: rect(400) }));
-    expect(p).toMatchObject({ at: "A", tail: "down" });
-    expect(p!.top + 110).toBeLessThan(400);
-  });
-
-  it("does not fit when the roof is too close to the menu bar", () => {
+  it("bottom / chrome: the bubble's top sits on the line and it grows down", () => {
     const f = frame();
-    const need = f.chromeTop + 8 + 110 + LIFT;
-    expect(placeBubble(input({ f, r: rect(need) }))?.at).toBe("A");
-    expect(placeBubble(input({ f, r: rect(need - 1) }))).toBeNull();
+    for (const [a, line] of [
+      ["bottom", 300],
+      ["chrome", 32],
+    ] as const) {
+      const b = placeBot(a, line, rect(-300), false);
+      const p = placeBubble(b, W, H, true, f);
+      expect(p.top).toBe(Math.max(line, 32 + 8)); // under the menu bar: clamped 8px clear of it
+      expect(p.left + W).toBe(b.x - GAP);
+      // the tail points at the eyes, or at least at the screen (rows 4–13) when clamped
+      if (a === "bottom") expect(p.top + p.t).toBeCloseTo(eyeY(b));
+      expect(p.top + p.t).toBeGreaterThanOrEqual(b.y + BOT / 4);
+      expect(p.top + p.t).toBeLessThanOrEqual(b.y + (BOT * 14) / 16);
+    }
   });
 
-  it("is never used from the rail perch", () => {
-    expect(placeBubble(input({ f: frame(), r: rect(40) }))).toBeNull();
-  });
-
-  it("anchors a spot on the spot's own top edge (tail down) and skips it when it doesn't fit", () => {
-    const f = frame();
-    const spot = rect(500, 300, 520, 920);
-    const p = placeBubble(input({ f, r: spot, kind: "spot" }));
-    expect(p).toMatchObject({ at: "A", tail: "down" });
-    expect(p!.top + 110).toBe(500 - TAIL);
-    expect(p!.left + 300).toBe(920 - 4);
-    expect(placeBubble(input({ f, r: rect(100, 300, 520, 920), kind: "spot" }))).toBeNull();
-  });
-
-  it("never covers a header cell (spots in a lower row)", () => {
-    const f = frame();
-    const header: Box = { top: 300, bottom: 480, left: 120, right: 1320 };
-    expect(
-      placeBubble(input({ f, r: rect(500, 300, 520, 920), kind: "spot", headers: [header] })),
-    ).toBeNull();
+  it("never covers the bot, in either direction, for any anchor", () => {
+    for (const rtl of [false, true])
+      for (const [a, line] of [
+        ["top", 88],
+        ["top", 640],
+        ["bottom", 120],
+        ["bottom", 740],
+        ["chrome", 32],
+      ] as const) {
+        const f = frame(rtl);
+        const b = placeBot(a, line, rect(line), rtl);
+        const p = placeBubble(b, MAX_W, 160, bubbleWidth(b, f).beside, f);
+        const bub = { left: p.left, top: p.top, right: p.left + MAX_W, bottom: p.top + 160 };
+        expect(overlaps(bub, botBox(b)), `${a}@${line} rtl=${rtl}`).toBe(false);
+      }
   });
 });
 
-describe("candidate B", () => {
-  /** First box at scrollY 0: roof at chromeTop + 56, a decor end cell 400×420 under the strip. */
-  const first = rect(88, 560);
-  const decor = (rtl = false): Box =>
-    rtl
-      ? { top: 88 + 36, bottom: 88 + 36 + 420, left: 120, right: 520 }
-      : { top: 88 + 36, bottom: 88 + 36 + 420, left: 920, right: 1320 };
-  const header = (rtl = false): Box =>
-    rtl
-      ? { top: 124, bottom: 544, left: 520, right: 1320 }
-      : { top: 124, bottom: 544, left: 120, right: 920 };
+describe("narrow room: above / below the bot", () => {
+  // A 400px-wide viewport whose box puts the bot near the inline-start edge.
+  const f = frame(false, { vw: 400 });
+  const box = rect(450, 300, 16, 260);
 
-  it("sits below the strip, 12px inside the inline-end border (LTR and RTL)", () => {
-    const b = bubbleB(input({ f: frame(), r: first }));
-    expect(b.top).toBe(88 + 36 + 8);
-    expect(b.right).toBe(1320 - 12);
-    const rb = bubbleB(input({ f: frame(true), r: first }));
-    expect(rb.left).toBe(120 + 12);
+  it("falls back when the room beside is under the minimum, at full width", () => {
+    const b = placeBot("top", 450, box, false);
+    expect(bubbleWidth(b, f)).toEqual({ beside: false, max: MAX_W });
   });
 
-  it("is clear only inside a [data-decor] cell and over no header", () => {
-    const b = bubbleB(input({ f: frame(), r: first }));
-    expect(clearB(b, decor(), [header()])).toBe(true);
-    expect(clearB(b, null, [header()])).toBe(false); // the cell under its corner is not decor
-    const fullHeader: Box = { top: 124, bottom: 300, left: 120, right: 1320 }; // span=full header row
-    expect(clearB(b, decor(), [fullHeader])).toBe(false);
-    const narrow: Box = { ...decor(), left: 1100 }; // B not inside the decor cell
-    expect(clearB(b, narrow, [])).toBe(false);
+  it("top: above the head, aligned to the bot's inline-end, tail pointing down at it", () => {
+    const b = placeBot("top", 450, box, false);
+    const p = placeBubble(b, 160, 100, false, f);
+    expect(p.top + 100).toBe(b.y + BOT / 4 - 8);
+    expect(p.left + 160).toBe(b.x + BOT);
+    expect(p.tail).toBe("d");
+    expect(p.left + p.t).toBe(b.x + BOT / 2);
   });
 
-  it("first box: A, else a clear B, else the badge (null)", () => {
-    const f = frame();
-    // roof too high for A → B inside the decor cell
-    expect(
-      placeBubble(input({ f, r: first, kind: "first", decor: decor(), headers: [header()] })),
-    ).toMatchObject({ at: "B", tail: "up" });
-    expect(
-      placeBubble(
-        input({
-          f: frame(true),
-          r: first,
-          kind: "first",
-          decor: decor(true),
-          headers: [header(true)],
-        }),
-      ),
-    ).toMatchObject({ at: "B" });
-    // no decor cell → badge
-    expect(placeBubble(input({ f, r: first, kind: "first", decor: null }))).toBeNull();
-    // roof with room → A wins
-    expect(placeBubble(input({ f, r: rect(420), kind: "first", decor: decor() }))?.at).toBe("A");
+  it("a wider fallback bubble is clamped into the viewport; the tail still points at the bot", () => {
+    const b = placeBot("top", 450, box, false);
+    const p = placeBubble(b, 300, 100, false, f);
+    expect(p.left).toBe(bounds(f).left);
+    expect(p.left + p.t).toBe(b.x + BOT / 2);
   });
 
-  it("automatic lines never use B", () => {
-    expect(placeBubble(input({ f: frame(), r: first, decor: decor() }))).toBeNull();
+  it("bottom: below the feet, tail pointing up", () => {
+    const b = placeBot("bottom", 300, box, false);
+    const p = placeBubble(b, 300, 100, false, f);
+    expect(p.top).toBe(b.y + BOT + 8);
+    expect(p.tail).toBe("u");
   });
 
-  it("beside a rail sprite it opens level with it, clear of the sprite", () => {
-    const f = frame();
-    const r = rect(20, 900);
-    const sprite = placeSprite(r, f);
-    const b = bubbleB(input({ f, r, sprite }));
-    expect(b.top).toBe(sprite.y);
-    expect(b.right).toBeLessThanOrEqual(sprite.x - 8);
-    const tall: Box = { top: 0, bottom: 900, left: 800, right: 1320 };
-    expect(placeBubble(input({ f, r, sprite, kind: "explicit", decor: tall }))).toMatchObject({
-      at: "B",
-      tail: "side",
-    });
+  it("RTL: aligned to the bot's inline-end (its left edge)", () => {
+    const g = frame(true, { vw: 400 });
+    const b = placeBot("top", 450, rect(450, 300, 140, 384), true);
+    expect(bubbleWidth(b, g).beside).toBe(false);
+    const p = placeBubble(b, 200, 100, false, g);
+    expect(p.left).toBe(b.x);
+    expect(p.left + p.t).toBe(b.x + BOT / 2);
   });
 });
 
-describe("candidate C and the chains", () => {
-  it("greeting: A, else a clear B on the first box, else C", () => {
+describe("clamping", () => {
+  it("keeps the first box's greeting clear of the menu bar (it may overlap the box instead)", () => {
     const f = frame();
-    expect(placeBubble(input({ f, r: rect(420), kind: "greet" }))?.at).toBe("A");
-    const first = rect(88, 560);
-    const decor: Box = { top: 124, bottom: 544, left: 920, right: 1320 };
-    expect(placeBubble(input({ f, r: first, kind: "greet", decor }))?.at).toBe("B");
-    const c = placeBubble(input({ f, r: first, kind: "greet", decor: null }));
-    // under the menu bar, stepping 8px clear of the roof sprite at the corner
-    expect(c).toEqual({ at: "C", left: 1260 - 8 - 300, top: 32 + 12, tail: null });
+    const b = placeBot("top", 32 + 56, rect(88), false);
+    const p = placeBubble(b, 300, 130, true, f);
+    expect(p.top).toBe(32 + 8);
+    expect(p.top + p.t).toBeCloseTo(eyeY(b)); // the tail still points at the eyes
   });
 
-  it("C sits at the column's inline-end (LTR and RTL) and never covers the sprite", () => {
-    const far = { kind: "roof", x: 600, y: 600 } as const; // a sprite far below C
-    expect(placeBubble(input({ f: frame(), r: rect(40), sprite: far, kind: "explicit" }))).toEqual({
-      at: "C",
-      left: 1320 - 12 - 300,
-      top: 44,
-      tail: null,
-    });
-    expect(
-      placeBubble(input({ f: frame(true), r: rect(40), sprite: far, kind: "explicit" })),
-    ).toEqual({
-      at: "C",
-      left: 132,
-      top: 44,
-      tail: null,
-    });
-    // rail sprite at chromeTop + 24 in RTL: C starts 8px past its inline-start edge
-    const c = placeBubble(input({ f: frame(true), r: rect(40), kind: "explicit" }));
-    expect(c).toEqual({ at: "C", left: 96 + SPRITE + 8, top: 44, tail: null });
-  });
-
-  it("explicit: A, else clear B, else C; no perch → C without a tail", () => {
-    const f = frame(false, { vw: 1280, col: frameColumn(1280, 32, 1200) });
-    const r = rect(-100, 900, 40, 1240);
-    const none = placeSprite(r, f, true);
-    expect(none.kind).toBe("none");
-    expect(
-      placeBubble(input({ f, r, sprite: none, kind: "explicit", decor: rect(0, 900, 800, 1240) })),
-    ).toMatchObject({
-      at: "C",
-      tail: null,
-    });
-    expect(placeBubble(input({ f: frame(), r: rect(420), kind: "explicit" }))?.at).toBe("A");
-  });
-
-  it("no automatic bubble: rail perch, no room, or a spot that would cover content", () => {
+  it("keeps a hanging bubble clear of the dock", () => {
     const f = frame();
-    expect(placeBubble(input({ f, r: rect(40) }))).toBeNull();
-    expect(placeBubble(input({ f, r: rect(120) }))).toBeNull();
-    expect(placeBubble(input({ f, r: rect(-300), kind: "spot" }))).toBeNull();
-    // the dock band: a bubble whose bottom would pass vh − dockSpace − 8 does not fit
-    const short = frame(false, { vh: 300 });
-    const roofAt = (top: number) => ({ kind: "roof", x: 1260, y: top - 47 }) as const;
-    // bottom 208 = 300 − 84 − 8
-    expect(placeBubble(input({ f: short, r: rect(262), sprite: roofAt(262) }))?.at).toBe("A");
-    expect(placeBubble(input({ f: short, r: rect(263), sprite: roofAt(263) }))).toBeNull();
+    const b = placeBot("bottom", 900 - 84 - 64, rect(-300), false);
+    const p = placeBubble(b, 300, 160, true, f);
+    expect(p.top + 160).toBe(900 - 84);
+    expect(p.t).toBeLessThanOrEqual(160 - 12);
+  });
+
+  it("compact (390×844): beside the bot, inside the viewport, above the tab bar's reserved space", () => {
+    const f = frame(false, { vw: 390, vh: 844, chromeTop: 44, dockSpace: 76 });
+    const b = placeBot("dock", 776, { left: 12, right: 378 }, false, 32, 20);
+    const w = bubbleWidth(b, f);
+    expect(w).toEqual({ beside: true, max: 326 - GAP - 8 });
+    const p = placeBubble(b, w.max, 120, true, f);
+    expect(p.left).toBe(bounds(f).left);
+    expect(p.left + w.max).toBe(b.x - GAP);
+    expect(p.top + 120).toBe(844 - 76);
+  });
+
+  it("keeps the tail inside the bubble's edge", () => {
+    const f = frame();
+    const b = placeBot("top", 88, rect(88), false);
+    const p = placeBubble(b, 300, 60, true, f);
+    expect(p.t).toBeGreaterThanOrEqual(12);
+    expect(p.t).toBeLessThanOrEqual(48);
   });
 });
 
-describe("helpers", () => {
-  it("measures the distance to the viewport centre", () => {
-    expect(centreDistance(rect(100, 500), 900)).toBe(0);
-    expect(centreDistance(rect(600, 100), 900)).toBe(150);
-    expect(centreDistance(rect(0, 300), 900)).toBe(150);
+describe("centreDistance", () => {
+  it("is 0 when a rect spans the viewport centre, else the distance to it", () => {
+    expect(centreDistance(rect(100, 600), 900)).toBe(0);
+    expect(centreDistance(rect(500, 100), 900)).toBe(50);
+    expect(centreDistance(rect(100, 300), 900)).toBe(50);
   });
+});
 
-  it("scrolls a tour step so candidate A fits above the roof", () => {
-    const f = frame();
-    const top = tourScrollTop(3000, f.chromeTop, 140);
-    const roof = 3000 - top;
-    expect(placeBubble(input({ f, r: rect(roof), bh: 140, kind: "explicit" }))?.at).toBe("A");
-    expect(tourScrollTop(10, 32, 140)).toBe(0);
+describe("tourScrollTop", () => {
+  it("lands the box's top low enough for the bubble above it, and at least the roof minimum", () => {
+    expect(tourScrollTop(2000, 32, 120)).toBe(2000 - 32 - 140);
+    expect(tourScrollTop(2000, 32, 10)).toBe(2000 - 32 - 56);
+    expect(tourScrollTop(100, 32, 120)).toBe(0);
+    // the landed box then anchors on its top border
+    expect(chooseAnchor(rect(32 + 140), frame())).toBe("top");
   });
 });

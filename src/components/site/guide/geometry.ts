@@ -1,33 +1,40 @@
 /**
- * Pure placement maths of the site guide (spec §10.5 "Placement"). No DOM:
- * the engine reads the rects and cell markers (viewport coordinates) and
- * passes them in, so every rule here is unit-tested (geometry.test.ts).
+ * Pure placement maths of GoodInBot (no DOM): the engine reads the rects
+ * (viewport px) and passes them in, so every rule here is unit-tested
+ * (geometry.test.ts).
  *
- * Sprite perches
- * - roof: on the box's top border at inline-end, inside the section gap,
- *   when the roof is comfortably visible (`chromeTop + 56 ≤ r.top`).
- * - rail: the roof has scrolled under the menu bar; the sprite clings to the
- *   inline-end border at `chromeTop + 24`, 24px inside (cell padding only).
- *   Beside a `[data-pad=none]` cell it stands fully outside the border
- *   (`out`) when the margin is ≥ 52px, else it fades out (`none`).
+ * Anchors: the bot never travels across the page. It lives at one edge of
+ * the active box and emerges from behind that edge (the anchor line):
+ * - `top`: stands on the box's top border, its inline-end edge INSET inside
+ *   the box's, when that border is comfortably in view;
+ * - `bottom`: hangs under the bottom border (head just below the line);
+ * - `chrome`: hangs under the menu bar, for a tall box that covers the view;
+ * - `dock`: compact mode, stands on the top edge of the dock / tab bar.
  *
- * Bubble candidates (first that fits wins; "fits" = inside
- * `[chromeTop + 8, vh − dockSpace − 8]` and inside the frame column)
- * - A: above the roof sprite's head (tail down at its inline-end bottom); its
- *   inline-end edge is 8px beyond the sprite's inline-end edge and it extends
- *   toward inline-start. For a spot, above the spot's own top edge.
- * - B: inside the box below the strip, inline-end edge 12px inside the
- *   border; only when CLEAR (inside a `[data-decor]` cell, over no
- *   `[data-frame-header]` cell).
- * - C: pinned under the menu bar at the column's inline-end; no tail.
+ * The bubble sits beside the bot, toward inline-start, GAP px from it, with
+ * a side tail at the bot's eye level; for a rising bot its bottom is 4px
+ * above the line (it grows up into the gap), for a hanging one its top is on
+ * the line (it grows down). With too little room beside, it falls back to
+ * directly above (rising) or below (hanging) the bot with a vertical tail.
+ * It is clamped inside the viewport, clear of the menu bar and the dock.
  */
 
-/** Desktop sprite size (16 cells × 3px). */
-export const SPRITE = 48;
-/** Height of the pixel tail under/over a bubble. */
-export const TAIL = 8;
-/** Room A needs above a roof besides the bubble: sprite + tail gap (bottom = r.top − LIFT). */
-export const LIFT = SPRITE + 6;
+/** Desktop sprite: 16 cells × 3px (compact: × 2px = 32). */
+export const BOT = 48;
+/** The bot's inline-end edge sits this far inside the box's inline-end edge. */
+export const INSET = 24;
+/** Space between the bubble and the bot. */
+export const GAP = 10;
+/** Widest bubble. */
+export const MAX_W = 340;
+/** Less room than this beside the bot → the bubble goes above / below it. */
+export const MIN_BESIDE = 220;
+/** A top border this far below the menu bar leaves room for a standing bot (the first box reserves 56px). */
+export const TOP_MIN = 56;
+/** A top border below this share of the viewport is too low to anchor on. */
+export const TOP_MAX = 0.72;
+/** A bottom border must sit this far inside the menu bar / dock band. */
+export const ZONE = 64;
 
 export interface Box {
   top: number;
@@ -42,206 +49,117 @@ export interface Frame {
   chromeTop: number;
   dockSpace: number;
   rtl: boolean;
-  /** The 1200px frame column (horizontal extent, viewport px). */
-  col: { left: number; right: number };
 }
 
-export type PerchKind = "roof" | "rail" | "out" | "none";
-export interface Perch {
-  kind: PerchKind;
-  /** Sprite top-left, viewport px. */
+export type Anchor = "top" | "bottom" | "chrome" | "dock";
+
+export interface Bot {
+  anchor: Anchor;
+  /** The anchor line (viewport y): the slot's clipping edge. */
+  line: number;
+  /** Sprite box top-left (viewport px) when it has emerged. */
   x: number;
   y: number;
+  size: number;
 }
 
-/** auto = section line · first = the page's first box · greet · spot · explicit (click, explain, tour). */
-export type BubbleKind = "auto" | "first" | "greet" | "spot" | "explicit";
-export type Candidate = "A" | "B" | "C";
-/** Where the stepped tail sits: down (A, at the inline-end bottom), up (B under a roof sprite), side (B beside a rail sprite). */
-export type Tail = "down" | "up" | "side" | null;
+/** The tail's physical direction: r/l beside the bot, d/u for the above/below fallback. */
+export type Tail = "r" | "l" | "d" | "u";
 
 export interface Placed {
-  at: Candidate;
   left: number;
   top: number;
   tail: Tail;
-}
-
-export interface BubbleInput {
-  kind: BubbleKind;
-  /** Target rect: the `[data-guide]` box, or the spot for `kind: "spot"`. */
-  r: Box;
-  /** Strip height of the box (36 with a `.frame-strip`, else 0). */
-  s: number;
-  /** The sprite's perch (ignored for spots, which anchor on their own top edge). */
-  sprite: Perch;
-  /** Measured bubble size. */
-  bw: number;
-  bh: number;
-  f: Frame;
-  /** The `[data-decor]` cell under B's top inline-end corner, or null when that cell is not decor. */
-  decor?: Box | null;
-  /** The box's `[data-frame-header]` cell rects. */
-  headers?: readonly Box[];
+  /** Tail centre along its edge: y from the bubble's top (r/l) or x from its left (d/u). */
+  t: number;
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
-/** Clamp a box horizontally to the frame column (boxes always are; full-bleed legacy sections are not). */
-export function inColumn(r: Box, f: Frame): Box {
-  return { ...r, left: Math.max(r.left, f.col.left), right: Math.min(r.right, f.col.right) };
+/** A rising bot stands on its line; the others hang under it. */
+export const rises = (a: Anchor) => a === "top" || a === "dock";
+
+/** Clamp a box horizontally to the frame column (boxes always fit it; legacy full-bleed sections don't). */
+export function inColumn(r: Box, col: { left: number; right: number }): Box {
+  return { ...r, left: Math.max(r.left, col.left), right: Math.min(r.right, col.right) };
 }
 
-/** The roof is low enough for the roof perch (`chromeTop + 56 ≤ r.top`; placeSprite also checks the band's bottom). */
-export function onRoof(r: Box, f: Frame): boolean {
-  return r.top >= f.chromeTop + 56;
-}
-
-/** Where the engine probes the inline-end cell under a rail perch (the inside half of the sprite). */
-export function railProbe(r: Box, f: Frame): { x: number; y: number } {
-  return { x: f.rtl ? r.left + 12 : r.right - 12, y: f.chromeTop + 24 + SPRITE / 2 };
-}
-
-/**
- * The sprite's perch for a box. `padNone`: the inline-end cell under the rail
- * perch is `[data-pad=none]`. A roof below the band (`vh − dockSpace − 56`,
- * e.g. an explain on a box far down the page) gets no perch.
- */
-export function placeSprite(r: Box, f: Frame, padNone = false): Perch {
-  if (r.top > f.vh - f.dockSpace - 56) {
-    return { kind: "none", x: f.rtl ? r.left + 12 : r.right - 12 - SPRITE, y: r.top - SPRITE + 1 };
-  }
-  if (onRoof(r, f)) {
-    return { kind: "roof", x: f.rtl ? r.left + 12 : r.right - 12 - SPRITE, y: r.top - SPRITE + 1 };
-  }
-  const y = f.chromeTop + 24;
-  if (!padNone) return { kind: "rail", x: f.rtl ? r.left - 24 : r.right - 24, y };
-  const margin = f.rtl ? r.left : f.vw - r.right;
-  if (margin >= SPRITE + 4) return { kind: "out", x: f.rtl ? r.left - SPRITE - 4 : r.right + 4, y };
-  return { kind: "none", x: f.rtl ? r.left - 24 : r.right - 24, y };
-}
-
-const box = (left: number, top: number, w: number, h: number): Box => ({
-  left,
-  top,
-  right: left + w,
-  bottom: top + h,
-});
-
-/** Vertical band and column test. */
-export function fits(b: Box, f: Frame): boolean {
-  return (
-    b.top >= f.chromeTop + 8 &&
-    b.bottom <= f.vh - f.dockSpace - 8 &&
-    b.left >= f.col.left - 0.5 &&
-    b.right <= f.col.right + 0.5
-  );
-}
-
-const overlaps = (a: Box, b: Box) =>
-  a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
-const inside = (a: Box, b: Box) =>
-  a.left >= b.left - 0.5 &&
-  a.right <= b.right + 0.5 &&
-  a.top >= b.top - 0.5 &&
-  a.bottom <= b.bottom + 0.5;
-
-/**
- * Candidate A: above the roof sprite (or the spot's top edge). The bubble's
- * inline-end edge sits 8px beyond the anchor's inline-end edge and the bubble
- * extends toward inline-start, then is clamped to the column.
- */
-export function bubbleA(i: BubbleInput): Box {
-  const { r, f, bw, bh } = i;
-  const spot = i.kind === "spot";
-  // Anchor: the sprite on the roof, or a virtual roof perch on the spot.
-  const end = spot
-    ? f.rtl
-      ? r.left + 12
-      : r.right - 12
-    : f.rtl
-      ? i.sprite.x
-      : i.sprite.x + SPRITE;
-  const bottom = spot ? r.top - TAIL : r.top - LIFT;
-  const left = clamp(f.rtl ? end - 8 : end + 8 - bw, f.col.left, f.col.right - bw);
-  return box(left, bottom - bh, bw, bh);
-}
-
-/** Candidate B: inside the box below the strip (or level with a rail sprite), inline-end edge 12px inside. */
-export function bubbleB(i: BubbleInput): Box {
-  const { r, f, bw, bh, sprite } = i;
-  const rail = sprite.kind === "rail" || sprite.kind === "out";
-  const top = rail ? sprite.y : r.top + i.s + 8;
-  if (f.rtl) {
-    let left = r.left + 12;
-    if (sprite.kind === "rail") left = Math.max(left, sprite.x + SPRITE + 8);
-    return box(left, top, bw, bh);
-  }
-  let right = r.right - 12;
-  if (sprite.kind === "rail") right = Math.min(right, sprite.x - 8);
-  return box(right - bw, top, bw, bh);
+/** The 1200px column for a viewport width (mirrors `.frame-box` sizing). */
+export function frameColumn(vw: number, gutter: number, max: number) {
+  const w = Math.min(vw - 2 * gutter, max);
+  const left = (vw - w) / 2;
+  return { left, right: left + w };
 }
 
 /**
- * Candidate C: under the menu bar at the column's inline-end. A rail sprite
- * stands right there (`chromeTop + 24`), so C steps 8px clear of it rather
- * than covering it.
+ * The anchor for a box: `top` when its top border is in the comfortable zone
+ * (`chromeTop + TOP_MIN` … `TOP_MAX · vh`), else `bottom` when its bottom
+ * border is (`chromeTop + ZONE` … `vh − dockSpace − ZONE`), else `chrome`.
  */
-export function bubbleC(i: BubbleInput): Box {
-  const { f, bw, bh, sprite } = i;
-  const top = f.chromeTop + 12;
-  let left = f.rtl ? f.col.left + 12 : f.col.right - 12 - bw;
-  if (sprite.kind !== "none" && sprite.y < top + bh && sprite.y + SPRITE > top) {
-    left = f.rtl ? Math.max(left, sprite.x + SPRITE + 8) : Math.min(left, sprite.x - 8 - bw);
-  }
-  return box(clamp(left, f.col.left, f.col.right - bw), top, bw, bh);
+export function chooseAnchor(r: Box, f: Frame): Anchor {
+  // 1px of slack: the first box's roof sits exactly on the minimum (sub-pixel layout)
+  if (r.top > f.chromeTop + TOP_MIN - 1 && r.top <= f.vh * TOP_MAX) return "top";
+  if (r.bottom >= f.chromeTop + ZONE && r.bottom <= f.vh - f.dockSpace - ZONE) return "bottom";
+  return "chrome";
 }
-
-/** B is used only when it lies inside a `[data-decor]` cell and over no `[data-frame-header]` cell. */
-export function clearB(
-  b: Box,
-  decor: Box | null | undefined,
-  headers: readonly Box[] = [],
-): boolean {
-  return !!decor && inside(b, decor) && !headers.some((h) => overlaps(b, h));
-}
-
-/** Which candidates each kind of bubble may use, in order (spec §10.5). */
-export const CANDIDATES: Record<BubbleKind, readonly Candidate[]> = {
-  auto: ["A"],
-  first: ["A", "B"],
-  greet: ["A", "B", "C"],
-  spot: ["A"],
-  explicit: ["A", "B", "C"],
-};
 
 /**
- * Place a bubble, or return null: for automatic and first-box lines that
- * means "show the badge, don't mark the line seen"; for spots, skip.
+ * The bot for an anchor. `edge` is the box (or the dock list) whose
+ * inline-end side it sits on; `line` its anchor line. Rising: feet on the
+ * line. Hanging: the head (row 4 of 16; rows 0–3 are empty) 2px under it.
  */
-export function placeBubble(i: BubbleInput): Placed | null {
-  const headers = i.headers ?? [];
-  const k = i.sprite.kind;
-  for (const at of CANDIDATES[i.kind]) {
-    if (at === "A") {
-      if (i.kind !== "spot" && k !== "roof") continue;
-      const a = bubbleA(i);
-      if (fits(a, i.f) && !headers.some((h) => overlaps(a, h))) {
-        return { at, left: a.left, top: a.top, tail: "down" };
-      }
-    } else if (at === "B") {
-      if (k === "none") continue;
-      const b = bubbleB(i);
-      if (fits(b, i.f) && clearB(b, i.decor, headers)) {
-        return { at, left: b.left, top: b.top, tail: k === "roof" ? "up" : "side" };
-      }
-    } else {
-      // C may overlay content (greeting, explicit); it must appear, so it is clamped, never rejected.
-      const c = bubbleC(i);
-      return { at, left: c.left, top: c.top, tail: null };
-    }
+export function placeBot(
+  anchor: Anchor,
+  line: number,
+  edge: { left: number; right: number },
+  rtl: boolean,
+  size = BOT,
+  inset = INSET,
+): Bot {
+  return {
+    anchor,
+    line,
+    x: rtl ? edge.left + inset : edge.right - inset - size,
+    y: rises(anchor) ? line - size : line - size / 4 + 2,
+    size,
+  };
+}
+
+/** The bot's eye level (between rows 7 and 8): where a side tail points. */
+export const eyeY = (b: Bot) => b.y + (b.size * 15) / 32;
+
+/** Where a bubble may go: inside the viewport, clear of the menu bar and the dock. */
+export function bounds(f: Frame): Box {
+  return { left: 8, right: f.vw - 8, top: f.chromeTop + 8, bottom: f.vh - f.dockSpace };
+}
+
+/** Beside the bot when there is room (max width = that room, ≤ MAX_W), else the fallback width. */
+export function bubbleWidth(b: Bot, f: Frame): { beside: boolean; max: number } {
+  const B = bounds(f);
+  const room = Math.floor(f.rtl ? B.right - (b.x + b.size + GAP) : b.x - GAP - B.left);
+  return room >= MIN_BESIDE
+    ? { beside: true, max: Math.min(MAX_W, room) }
+    : { beside: false, max: Math.min(MAX_W, B.right - B.left) };
+}
+
+/** Place a measured `w × h` bubble for the bot (see the module comment). */
+export function placeBubble(b: Bot, w: number, h: number, beside: boolean, f: Frame): Placed {
+  const B = bounds(f);
+  const up = rises(b.anchor);
+  let left: number;
+  let top: number;
+  if (beside) {
+    left = f.rtl ? b.x + b.size + GAP : b.x - GAP - w;
+    top = up ? b.line - 4 - h : b.line;
+  } else {
+    // aligned to the bot's inline-end, above its head or below its feet
+    left = f.rtl ? b.x : b.x + b.size - w;
+    top = up ? b.y + b.size / 4 - 8 - h : b.y + b.size + 8;
   }
-  return null;
+  left = clamp(left, B.left, B.right - w);
+  top = clamp(top, B.top, B.bottom - h);
+  if (beside) return { left, top, tail: f.rtl ? "l" : "r", t: clamp(eyeY(b) - top, 12, h - 12) };
+  return { left, top, tail: up ? "d" : "u", t: clamp(b.x + b.size / 2 - left, 12, w - 12) };
 }
 
 /** Distance of a rect from the viewport's vertical centre (0 when it contains it). */
@@ -250,18 +168,7 @@ export function centreDistance(r: Box, vh: number): number {
   return r.top > c ? r.top - c : r.bottom < c ? c - r.bottom : 0;
 }
 
-/** The 1200px column for a viewport width (mirrors `.frame-box` sizing). */
-export function frameColumn(
-  vw: number,
-  gutter: number,
-  max: number,
-): { left: number; right: number } {
-  const w = Math.min(vw - 2 * gutter, max);
-  const left = (vw - w) / 2;
-  return { left, right: left + w };
-}
-
-/** Tour scroll: the roof lands `bh + LIFT + 16` below the menu bar, so candidate A fits. */
+/** Tour scroll: the box's top lands low enough for the bubble above it (anchor `top`). */
 export function tourScrollTop(absTop: number, chromeTop: number, bh: number): number {
-  return Math.max(0, absTop - chromeTop - bh - LIFT - 16);
+  return Math.max(0, absTop - chromeTop - Math.max(TOP_MIN, bh + 20));
 }
