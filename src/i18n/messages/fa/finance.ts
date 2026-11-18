@@ -204,6 +204,7 @@ export const finance = {
   ledgersSubtitle: "چه کسی به چه کسی بدهکار است؟ مانده حساب با هر مشتری، شخص و پروژه.",
   tabCounterparties: "اشخاص و شرکت‌ها",
   tabProjects: "پروژه‌ها",
+  ledgerViews: "نمای دفترها",
   theyOwe: "طلب ما",
   weOwe: "بدهی ما",
   settled: "تسویه",

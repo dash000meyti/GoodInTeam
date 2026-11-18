@@ -8,8 +8,9 @@ import {
   TagsIcon,
   type LucideIcon,
 } from "lucide-react";
+import { FrameCell, FrameGrid } from "@/components/shell/frame";
 import type { Messages } from "@/i18n/messages";
-import { cn } from "@/lib/utils";
+import { CHIP_ROW, chipClass } from "./frame-bits";
 
 export type FinanceSection =
   "overview" | "transactions" | "accounts" | "categories" | "ledgers" | "rates";
@@ -23,7 +24,11 @@ const items: { key: FinanceSection; path: string; icon: LucideIcon }[] = [
   { key: "rates", path: "/panel/finance/rates", icon: CoinsIcon },
 ];
 
-/** Finance sub-navigation (segmented pills; scrolls horizontally on small screens). */
+/**
+ * Finance sub-navigation: a row of the page box (`<PageHeader>{<FinanceNav/>}</PageHeader>`)
+ * holding the site's chips, the current section filled with ink; the row
+ * scrolls inside its cell on small screens.
+ */
 export function FinanceNav({
   active,
   href,
@@ -34,28 +39,26 @@ export function FinanceNav({
   t: Messages["finance"];
 }) {
   return (
-    <nav
-      aria-label={t.title}
-      className="-mt-3 mb-8 flex max-w-full scrollbar-thin gap-1 overflow-x-auto rounded-xl bg-muted p-1 sm:w-fit"
-    >
-      {items.map((item) => {
-        const Icon = item.icon;
-        const on = item.key === active;
-        return (
-          <Link
-            key={item.key}
-            href={href(item.path)}
-            aria-current={on ? "page" : undefined}
-            className={cn(
-              "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground",
-              on && "bg-background text-foreground shadow-card dark:bg-card",
-            )}
-          >
-            <Icon className="size-4" />
-            {t[`nav_${item.key}`]}
-          </Link>
-        );
-      })}
-    </nav>
+    <FrameGrid cols={1}>
+      <FrameCell className="py-3">
+        <nav aria-label={t.title} className={CHIP_ROW}>
+          {items.map((item) => {
+            const Icon = item.icon;
+            const on = item.key === active;
+            return (
+              <Link
+                key={item.key}
+                href={href(item.path)}
+                aria-current={on ? "page" : undefined}
+                className={chipClass(on)}
+              >
+                <Icon />
+                {t[`nav_${item.key}`]}
+              </Link>
+            );
+          })}
+        </nav>
+      </FrameCell>
+    </FrameGrid>
   );
 }

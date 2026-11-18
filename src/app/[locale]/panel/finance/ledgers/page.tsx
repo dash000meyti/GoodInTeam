@@ -2,7 +2,6 @@ import Link from "next/link";
 import { BookUserIcon, FolderKanbanIcon, InfoIcon } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -11,18 +10,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { Money, MoneyStack } from "@/components/finance/money";
 import { initials } from "@/lib/utils";
 import { subtractByCurrency } from "@/server/modules/finance/calc";
 import { listCounterparties, listProjectLedgers } from "@/server/modules/finance/ledger";
 import { panelContext } from "@/server/page-context";
 import { FinanceNav } from "../_components/finance-nav";
+import { CHIP_ROW, chipClass } from "../_components/frame-bits";
 import { BalanceBadge } from "../_components/ledger-view";
 
+/**
+ * Ledgers (framed): the page box carries the finance nav; one box holds the
+ * view chips (counterparties / projects, in the URL like the invoice status
+ * chips) with the view's hint as its first row and the edge-to-edge table
+ * (md+) or row list (phones) as its second.
+ */
 export default async function LedgersPage({
   searchParams,
 }: PageProps<"/[locale]/panel/finance/ledgers">) {
@@ -48,115 +54,138 @@ export default async function LedgersPage({
     </span>
   );
 
+  const views = [
+    { key: "parties", label: f.tabCounterparties, icon: BookUserIcon, path: "" },
+    { key: "projects", label: f.tabProjects, icon: FolderKanbanIcon, path: "?tab=projects" },
+  ] as const;
+
   return (
     <>
       <PageHeader
         title={f.ledgersTitle}
         description={f.ledgersSubtitle}
         crumbs={[{ label: f.title, href: href("/panel/finance") }, { label: f.ledgersTitle }]}
-      />
-      <FinanceNav active="ledgers" href={href} t={f} />
+      >
+        <FinanceNav active="ledgers" href={href} t={f} />
+      </PageHeader>
 
-      <Tabs defaultValue={tab}>
-        <TabsList>
-          <TabsTrigger value="parties">
-            <BookUserIcon /> {f.tabCounterparties}
-          </TabsTrigger>
-          <TabsTrigger value="projects">
-            <FolderKanbanIcon /> {f.tabProjects}
-          </TabsTrigger>
-        </TabsList>
+      <FrameBox as="section" density="compact" ariaLabel={f.ledgersTitle}>
+        <FrameGrid cols={1}>
+          <FrameCell className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between">
+            <nav aria-label={f.ledgerViews} className={CHIP_ROW}>
+              {views.map((v) => {
+                const Icon = v.icon;
+                const on = v.key === tab;
+                return (
+                  <Link
+                    key={v.key}
+                    href={href(`/panel/finance/ledgers${v.path}`)}
+                    aria-current={on ? "page" : undefined}
+                    scroll={false}
+                    className={chipClass(on)}
+                  >
+                    <Icon />
+                    {v.label}
+                  </Link>
+                );
+              })}
+            </nav>
+            <p className="flex items-start gap-2 text-xs leading-6 text-muted-foreground lg:max-w-xl">
+              <InfoIcon className="mt-1 size-3.5 shrink-0 text-info-ink" />
+              {tab === "parties" ? f.ledgerHint : f.projectLedgerHint}
+            </p>
+          </FrameCell>
+        </FrameGrid>
 
-        <TabsContent value="parties" className="space-y-4">
-          <p className="flex items-start gap-2 text-xs leading-6 text-muted-foreground">
-            <InfoIcon className="mt-1 size-3.5 shrink-0 text-info-ink" />
-            {f.ledgerHint}
-          </p>
-          {parties.length === 0 ? (
-            <EmptyState
-              icon={BookUserIcon}
-              title={f.ledgersEmpty}
-              description={f.ledgersEmptyHint}
-            />
-          ) : (
-            <Card className="gap-0 overflow-hidden py-0">
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{f.colCounterparty}</TableHead>
-                      <TableHead className="text-end">{f.colInvoiced}</TableHead>
-                      <TableHead className="text-end">{f.colReceived}</TableHead>
-                      <TableHead className="text-end">{f.colPaid}</TableHead>
-                      <TableHead>{f.colBalance}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {parties.map((p) => (
-                      <TableRow key={`${p.type}:${p.id ?? p.name}`}>
-                        <TableCell className="align-top">
-                          <PartyName
-                            p={p}
-                            href={partyHref(p)}
-                            kindLabel={
-                              p.clientKind ? t.clients[`kind_${p.clientKind}`] : f.freeTextParty
-                            }
-                          />
-                        </TableCell>
-                        <TableCell className="text-end align-top">{cells(p, "invoiced")}</TableCell>
-                        <TableCell className="text-end align-top">{cells(p, "received")}</TableCell>
-                        <TableCell className="text-end align-top">{cells(p, "paid")}</TableCell>
-                        <TableCell className="align-top">
-                          <span className="flex flex-col gap-1">
-                            {p.currencies.map((c) => (
-                              <BalanceBadge
-                                key={c.currency}
-                                minor={c.balance}
-                                currency={c.currency}
-                                ctx={ctx}
+        <FrameGrid cols={1}>
+          <FrameCell pad="none">
+            {tab === "parties" ? (
+              parties.length === 0 ? (
+                <EmptyState
+                  icon={BookUserIcon}
+                  title={f.ledgersEmpty}
+                  description={f.ledgersEmptyHint}
+                />
+              ) : (
+                <>
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{f.colCounterparty}</TableHead>
+                          <TableHead className="text-end">{f.colInvoiced}</TableHead>
+                          <TableHead className="text-end">{f.colReceived}</TableHead>
+                          <TableHead className="text-end">{f.colPaid}</TableHead>
+                          <TableHead>{f.colBalance}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {parties.map((p) => (
+                          <TableRow key={`${p.type}:${p.id ?? p.name}`}>
+                            <TableCell className="align-top">
+                              <PartyName
+                                p={p}
+                                href={partyHref(p)}
+                                kindLabel={
+                                  p.clientKind ? t.clients[`kind_${p.clientKind}`] : f.freeTextParty
+                                }
                               />
-                            ))}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <ul className="divide-y divide-dashed md:hidden">
-                {parties.map((p) => (
-                  <li key={`${p.type}:${p.id ?? p.name}`} className="space-y-2 px-4 py-3">
-                    <PartyName
-                      p={p}
-                      href={partyHref(p)}
-                      kindLabel={p.clientKind ? t.clients[`kind_${p.clientKind}`] : f.freeTextParty}
-                    />
-                    <div className="flex flex-col gap-1 ps-12">
-                      {p.currencies.map((c) => (
-                        <BalanceBadge
-                          key={c.currency}
-                          minor={c.balance}
-                          currency={c.currency}
-                          ctx={ctx}
+                            </TableCell>
+                            <TableCell className="text-end align-top">
+                              {cells(p, "invoiced")}
+                            </TableCell>
+                            <TableCell className="text-end align-top">
+                              {cells(p, "received")}
+                            </TableCell>
+                            <TableCell className="text-end align-top">{cells(p, "paid")}</TableCell>
+                            <TableCell className="align-top">
+                              <span className="flex flex-col gap-1">
+                                {p.currencies.map((c) => (
+                                  <BalanceBadge
+                                    key={c.currency}
+                                    minor={c.balance}
+                                    currency={c.currency}
+                                    ctx={ctx}
+                                  />
+                                ))}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <ul className="divide-y divide-frame-line md:hidden">
+                    {parties.map((p) => (
+                      <li
+                        key={`${p.type}:${p.id ?? p.name}`}
+                        className="space-y-2 px-(--cell-pad) py-3"
+                      >
+                        <PartyName
+                          p={p}
+                          href={partyHref(p)}
+                          kindLabel={
+                            p.clientKind ? t.clients[`kind_${p.clientKind}`] : f.freeTextParty
+                          }
                         />
-                      ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="projects" className="space-y-4">
-          <p className="flex items-start gap-2 text-xs leading-6 text-muted-foreground">
-            <InfoIcon className="mt-1 size-3.5 shrink-0 text-info-ink" />
-            {f.projectLedgerHint}
-          </p>
-          {projectRows.length === 0 ? (
-            <EmptyState icon={FolderKanbanIcon} title={f.projectsLedgerEmpty} />
-          ) : (
-            <Card className="gap-0 overflow-hidden py-0">
+                        <div className="flex flex-col gap-1 ps-12">
+                          {p.currencies.map((c) => (
+                            <BalanceBadge
+                              key={c.currency}
+                              minor={c.balance}
+                              currency={c.currency}
+                              ctx={ctx}
+                            />
+                          ))}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )
+            ) : projectRows.length === 0 ? (
+              <EmptyState icon={FolderKanbanIcon} title={f.projectsLedgerEmpty} />
+            ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -210,10 +239,10 @@ export default async function LedgersPage({
                   ))}
                 </TableBody>
               </Table>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+            )}
+          </FrameCell>
+        </FrameGrid>
+      </FrameBox>
     </>
   );
 }
@@ -229,9 +258,9 @@ function PartyName({
 }) {
   return (
     <Link href={href} className="group flex items-center gap-3">
-      <Avatar className="size-9 rounded-xl">
+      <Avatar className="size-9 rounded-none">
         <AvatarFallback
-          className="rounded-xl text-white"
+          className="rounded-none text-white"
           style={{ backgroundColor: p.color ?? (p.type === "party" ? "#919EAB" : "#078DEE") }}
         >
           {initials(p.name)}

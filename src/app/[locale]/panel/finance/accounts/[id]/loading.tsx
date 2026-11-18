@@ -1,6 +1,11 @@
-import { PageSkeleton } from "@/components/panel/page-skeleton";
+import { FinanceHeaderSkeleton, ListBoxSkeleton } from "../../_components/finance-skeletons";
 
-/** Suspense boundary so navigations inside this segment stream instantly. */
+/** An account while it streams: the page box (nav + KPIs), then the statement box. */
 export default function Loading() {
-  return <PageSkeleton />;
+  return (
+    <div aria-busy>
+      <FinanceHeaderSkeleton kpis={4} exact />
+      <ListBoxSkeleton header rows={8} />
+    </div>
+  );
 }

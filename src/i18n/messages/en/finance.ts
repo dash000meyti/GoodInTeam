@@ -206,6 +206,7 @@ export const finance: Record<keyof typeof fa, string> = {
   ledgersSubtitle: "Who owes whom? Balances with every client, person and project.",
   tabCounterparties: "People & companies",
   tabProjects: "Projects",
+  ledgerViews: "Ledger views",
   theyOwe: "They owe",
   weOwe: "We owe",
   settled: "Settled",

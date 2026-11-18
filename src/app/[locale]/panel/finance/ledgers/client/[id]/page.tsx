@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BookUserIcon, ExternalLinkIcon, InfoIcon, PlusIcon } from "lucide-react";
+import { BookUserIcon, ExternalLinkIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
@@ -57,17 +57,20 @@ export default async function ClientLedgerPage({
             />
           </>
         }
-      />
-      <FinanceNav active="ledgers" href={href} t={f} />
-      <p className="mb-4 flex items-start gap-2 text-xs leading-6 text-muted-foreground">
-        <InfoIcon className="mt-1 size-3.5 shrink-0 text-info-ink" />
-        {f.ledgerHint}
-      </p>
-      <LedgerTotals totals={data.totals} ctx={ctx} />
+      >
+        <FinanceNav active="ledgers" href={href} t={f} />
+        <LedgerTotals totals={data.totals} ctx={ctx} />
+      </PageHeader>
       {data.groups.length === 0 ? (
-        <EmptyState icon={BookUserIcon} title={f.noLedgerLines} />
+        <EmptyState icon={BookUserIcon} title={f.noLedgerLines} description={f.ledgerHint} />
       ) : (
-        <LedgerTables groups={data.groups} ctx={ctx} mode="party" name={data.client.name} />
+        <LedgerTables
+          groups={data.groups}
+          ctx={ctx}
+          mode="party"
+          name={data.client.name}
+          hint={f.ledgerHint}
+        />
       )}
     </>
   );

@@ -9,11 +9,11 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
+import { StatRow } from "@/components/panel/stat-card";
+import { FrameBox, FrameGrid } from "@/components/shell/frame";
 import { KpiCard } from "@/components/finance/kpi-card";
-import { StatGrid } from "@/components/panel/stat-card";
 import { Money } from "@/components/finance/money";
 import { format } from "@/i18n/format-message";
 import { formatNumber } from "@/lib/format";
@@ -25,6 +25,7 @@ import { panelContext } from "@/server/page-context";
 import { AccountActions } from "../../_components/account-actions";
 import { accountKindIcons } from "../../_components/account-icons";
 import { FinanceNav } from "../../_components/finance-nav";
+import { BoxCell, GlyphTile } from "../../_components/frame-bits";
 import { TransactionFormDialog } from "../../_components/transaction-form";
 import { Pager, TransactionList } from "../../_components/transaction-list";
 import { txFormOptions } from "../../_lib/options";
@@ -49,8 +50,6 @@ export default async function AccountPage({
   })();
   const { account } = data;
   const options = txFormOptions(actor);
-  const Icon = accountKindIcons[account.kind];
-  const color = account.color ?? "#00A76F";
   const money = (minor: number) => (
     <Money minor={minor} currency={account.currency} locale={locale} />
   );
@@ -59,13 +58,12 @@ export default async function AccountPage({
     <>
       <PageHeader
         title={
-          <span className="flex items-center gap-3">
-            <span
-              className="flex size-10 items-center justify-center rounded-xl"
-              style={{ backgroundColor: `${color}22`, color }}
-            >
-              <Icon className="size-5" />
-            </span>
+          <span className="flex flex-wrap items-center gap-3">
+            <GlyphTile
+              icon={accountKindIcons[account.kind]}
+              color={account.color ?? "#00A76F"}
+              size="lg"
+            />
             {account.name}
             <Badge variant="neutral" className="font-mono">
               {account.currency}
@@ -108,66 +106,71 @@ export default async function AccountPage({
             />
           </>
         }
-      />
-      <FinanceNav active="accounts" href={href} t={f} />
+      >
+        <FinanceNav active="accounts" href={href} t={f} />
+        {/* Exact amounts: one per row on phones (2×2 from sm). */}
+        <StatRow className="max-sm:grid-cols-1">
+          <KpiCard label={f.balance} value={money(account.balance)} icon={WalletIcon} />
+          <KpiCard
+            label={f.openingBalance}
+            value={money(account.openingBalanceMinor)}
+            icon={ClockIcon}
+            tone="info"
+            hint={
+              account.pending
+                ? format(f.pendingAmount, {
+                    amount: formatMoney(account.pending, account.currency, locale),
+                  })
+                : undefined
+            }
+          />
+          <KpiCard
+            label={f.colIncome}
+            value={money(account.income)}
+            icon={ArrowDownLeftIcon}
+            tone="success"
+          />
+          <KpiCard
+            label={f.colExpense}
+            value={money(account.expense)}
+            icon={ArrowUpRightIcon}
+            tone="destructive"
+          />
+        </StatRow>
+      </PageHeader>
 
-      <StatGrid className="mb-6">
-        <KpiCard label={f.balance} value={money(account.balance)} icon={WalletIcon} />
-        <KpiCard
-          label={f.openingBalance}
-          value={money(account.openingBalanceMinor)}
-          icon={ClockIcon}
-          tone="info"
-          hint={
-            account.pending
-              ? format(f.pendingAmount, {
-                  amount: formatMoney(account.pending, account.currency, locale),
-                })
-              : undefined
-          }
-        />
-        <KpiCard
-          label={f.colIncome}
-          value={money(account.income)}
-          icon={ArrowDownLeftIcon}
-          tone="success"
-        />
-        <KpiCard
-          label={f.colExpense}
-          value={money(account.expense)}
-          icon={ArrowUpRightIcon}
-          tone="destructive"
-        />
-      </StatGrid>
-
-      <Card className="gap-0 overflow-hidden py-0">
-        <CardHeader>
-          <CardTitle>{f.statement}</CardTitle>
-        </CardHeader>
-        {data.total === 0 ? (
-          <EmptyState icon={ReceiptTextIcon} title={f.txEmpty} className="m-5" />
-        ) : (
-          <>
-            <TransactionList
-              rows={data.rows}
-              ctx={ctx}
-              options={options}
-              accountId={account.id}
-              accountCurrency={account.currency}
-              showBalance
-            />
-            <Pager
-              ctx={ctx}
-              page={data.page}
-              pages={data.pages}
-              summary={format(f.resultsCount, { n: formatNumber(data.total, locale) })}
-              makeHref={(p) =>
-                href(`/panel/finance/accounts/${account.id}${p > 1 ? `?page=${p}` : ""}`)
-              }
-            />
-          </>
-        )}
-      </Card>
+      {/* The statement: one box, a header row over the edge-to-edge table and the pager. */}
+      <FrameBox as="div" density="compact">
+        <FrameGrid cols={1}>
+          <BoxCell title={f.statement} titleId="acc-statement" flush>
+            {data.total === 0 ? (
+              <EmptyState icon={ReceiptTextIcon} title={f.txEmpty} />
+            ) : (
+              <>
+                <TransactionList
+                  rows={data.rows}
+                  ctx={ctx}
+                  options={options}
+                  accountId={account.id}
+                  accountCurrency={account.currency}
+                  showBalance
+                />
+                <div className="border-t border-frame-line px-(--cell-pad) py-3">
+                  <Pager
+                    ctx={ctx}
+                    page={data.page}
+                    pages={data.pages}
+                    summary={format(f.resultsCount, { n: formatNumber(data.total, locale) })}
+                    makeHref={(p) =>
+                      href(`/panel/finance/accounts/${account.id}${p > 1 ? `?page=${p}` : ""}`)
+                    }
+                  />
+                </div>
+              </>
+            )}
+          </BoxCell>
+        </FrameGrid>
+      </FrameBox>
     </>
   );
 }

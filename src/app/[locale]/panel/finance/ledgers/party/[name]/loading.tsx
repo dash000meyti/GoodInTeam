@@ -1,6 +1,11 @@
-import { PageSkeleton } from "@/components/panel/page-skeleton";
+import { FinanceHeaderSkeleton, LedgerSkeleton } from "../../../_components/finance-skeletons";
 
-/** Suspense boundary so navigations inside this segment stream instantly. */
+/** A ledger while it streams: the page box (nav + totals), then the ledger box. */
 export default function Loading() {
-  return <PageSkeleton />;
+  return (
+    <div aria-busy>
+      <FinanceHeaderSkeleton kpis={4} exact />
+      <LedgerSkeleton />
+    </div>
+  );
 }

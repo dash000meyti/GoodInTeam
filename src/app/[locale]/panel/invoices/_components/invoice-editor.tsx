@@ -6,7 +6,6 @@ import { Loader2Icon, PlusIcon, SendIcon, TimerIcon, Trash2Icon } from "lucide-r
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +13,7 @@ import { ColorDot } from "@/components/shared/color-dot";
 import { DatePicker, parseDateValue, toDateValue } from "@/components/shared/date-picker";
 import { SelectField } from "@/components/shared/select-field";
 import { useActionForm } from "@/components/shared/use-action-form";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { localePath } from "@/i18n/config";
 import { format } from "@/i18n/format-message";
 import { useLocale, useT } from "@/i18n/client";
@@ -23,6 +23,7 @@ import { minorToMajor } from "@/server/modules/finance/calc";
 import { createInvoiceAction, updateInvoiceAction } from "@/server/modules/finance/actions";
 import { invoiceTotals } from "@/server/modules/finance/invoice-calc";
 import type { InvoiceFormOptions } from "@/server/modules/finance/invoices";
+import { BoxCell } from "../../finance/_components/frame-bits";
 import { TimeImportDialog, type TimeLine } from "./time-import-dialog";
 
 export interface EditorLine {
@@ -74,9 +75,16 @@ const num = (v: string) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+/** Line grid (md+): description, quantity, unit price, amount, remove. */
+const LINE_COLS = "md:grid-cols-[minmax(0,1fr)_90px_150px_140px_36px]";
+
 /**
  * Invoice editor: parties, dates, currency, line items (manual or from tracked
  * time), discount & tax with live totals. Saves as draft or saves + sends.
+ *
+ * Framed: the form is one box (the details row, the line items as an
+ * edge-to-edge list under a head row, notes | terms); the summary is a sticky
+ * box beside it from xl (totals, the amount due row, the save buttons).
  */
 export function InvoiceEditor({
   options,
@@ -200,10 +208,10 @@ export function InvoiceEditor({
   const err = (k: string) => form.errors[k]?.[0];
 
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="min-w-0 space-y-6">
-        <Card>
-          <CardContent className="grid gap-5 sm:grid-cols-2">
+    <div className="grid items-start gap-6 lg:gap-8 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <FrameBox as="div" density="compact" className="min-w-0">
+        <FrameGrid cols={1}>
+          <FrameCell className="grid items-start gap-5 sm:grid-cols-2">
             <Field label={f.client} error={err("clientId")}>
               <SelectField
                 value={clientId}
@@ -263,7 +271,7 @@ export function InvoiceEditor({
                     key={n}
                     type="button"
                     onClick={() => setDueDate(addDaysTo(issueDate, n))}
-                    className="cursor-pointer rounded-md bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-primary/12 hover:text-primary-ink"
+                    className="h-6 cursor-pointer rounded-[6px] border border-frame-line bg-background px-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
                   >
                     {format(f.dueInN, { n: formatNumber(n, locale) })}
                   </button>
@@ -295,34 +303,36 @@ export function InvoiceEditor({
                 className="font-mono"
               />
             </Field>
-          </CardContent>
-        </Card>
+          </FrameCell>
+        </FrameGrid>
 
-        <Card className="gap-4">
-          <CardHeader>
-            <CardTitle>{f.items}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <FrameGrid cols={1}>
+          <BoxCell title={f.items} titleId="inv-items" flush>
             {err("items") && (
-              <p className="text-xs font-medium text-destructive" role="alert">
+              <p
+                className="border-b border-frame-line px-(--cell-pad) py-2 text-xs font-medium text-destructive"
+                role="alert"
+              >
                 {err("items")}
               </p>
             )}
-            <div className="hidden grid-cols-[minmax(0,1fr)_90px_150px_140px_36px] gap-3 px-1 text-xs font-semibold text-muted-foreground md:grid">
+            <div
+              className={`hidden gap-3 border-b border-frame-line px-(--cell-pad) py-2.5 text-[13px] font-semibold text-muted-foreground md:grid ${LINE_COLS}`}
+            >
               <span>{f.itemDescription}</span>
               <span>{f.quantity}</span>
               <span>{f.unitPrice}</span>
               <span className="text-end">{f.lineAmount}</span>
               <span />
             </div>
-            <ul className="space-y-3">
+            <ul className="divide-y divide-frame-line">
               {lines.map((l, i) => {
                 const amount = Math.round(parsed[i]!.quantity * parsed[i]!.unitPriceMinor);
                 const priceErr = err(`items.${i}.unitPrice`);
                 return (
                   <li
                     key={l.key}
-                    className="grid grid-cols-[1fr_1fr] gap-3 rounded-xl border border-dashed p-3 md:grid-cols-[minmax(0,1fr)_90px_150px_140px_36px] md:items-start md:border-0 md:p-1"
+                    className={`grid grid-cols-[1fr_1fr] gap-3 px-(--cell-pad) py-3 md:items-start ${LINE_COLS}`}
                   >
                     <div className="col-span-2 space-y-1 md:col-span-1">
                       <Textarea
@@ -385,7 +395,7 @@ export function InvoiceEditor({
                 );
               })}
             </ul>
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-wrap gap-2 border-t border-frame-line px-(--cell-pad) py-3">
               <Button
                 type="button"
                 variant="outline"
@@ -401,27 +411,31 @@ export function InvoiceEditor({
                 onAdd={addTime}
               />
             </div>
-          </CardContent>
-        </Card>
+          </BoxCell>
+        </FrameGrid>
 
-        <Card>
-          <CardContent className="grid gap-5 sm:grid-cols-2">
+        <FrameGrid cols={2}>
+          <FrameCell>
             <Field label={f.notesLabel}>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
             </Field>
+          </FrameCell>
+          <FrameCell>
             <Field label={f.termsLabel}>
               <Textarea value={terms} onChange={(e) => setTerms(e.target.value)} rows={4} />
             </Field>
-          </CardContent>
-        </Card>
-      </div>
+          </FrameCell>
+        </FrameGrid>
+      </FrameBox>
 
-      <aside className="space-y-4 xl:sticky xl:below-chrome">
-        <Card className="gap-4">
-          <CardHeader>
-            <CardTitle>{f.summary}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 text-sm">
+      <FrameBox
+        as="aside"
+        density="compact"
+        ariaLabel={f.summary}
+        className="xl:sticky xl:below-chrome"
+      >
+        <FrameGrid cols={1}>
+          <BoxCell title={f.summary} titleId="inv-summary" bodyClassName="space-y-4 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">{f.subtotal}</span>
               <span className="font-semibold tabular-nums">{money(totals.subtotal)}</span>
@@ -460,41 +474,46 @@ export function InvoiceEditor({
                 <span className="font-semibold tabular-nums">{money(totals.tax)}</span>
               </div>
             )}
-            <div className="flex items-center justify-between rounded-xl bg-primary/10 px-4 py-3 text-primary-dark dark:text-primary-light">
-              <span className="font-bold">{f.totalDue}</span>
-              <span className="text-lg font-black tabular-nums">{money(totals.total)}</span>
-            </div>
-            <div className="grid gap-2 pt-1">
-              {isDraft ? (
-                <>
-                  <Button type="button" onClick={() => submit(true)} disabled={form.pending}>
-                    {form.pending && sendAfter ? (
-                      <Loader2Icon className="animate-spin" />
-                    ) : (
-                      <SendIcon className="rtl:-scale-x-100" />
-                    )}
-                    {f.saveAndSend}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => submit(false)}
-                    disabled={form.pending}
-                  >
-                    {form.pending && !sendAfter && <Loader2Icon className="animate-spin" />}
-                    {f.saveDraft}
-                  </Button>
-                </>
-              ) : (
-                <Button type="button" onClick={() => submit(false)} disabled={form.pending}>
-                  {form.pending && <Loader2Icon className="animate-spin" />}
-                  {f.saveChanges}
+          </BoxCell>
+        </FrameGrid>
+        {/* The amount due as its own row, in the document's soft yellow. */}
+        <FrameGrid cols={1}>
+          <FrameCell className="flex items-center justify-between gap-3 bg-primary/12 py-3 text-primary-dark dark:text-primary-light">
+            <span className="font-bold">{f.totalDue}</span>
+            <span className="text-lg font-black tabular-nums">{money(totals.total)}</span>
+          </FrameCell>
+        </FrameGrid>
+        <FrameGrid cols={1}>
+          <FrameCell className="grid gap-2">
+            {isDraft ? (
+              <>
+                <Button type="button" onClick={() => submit(true)} disabled={form.pending}>
+                  {form.pending && sendAfter ? (
+                    <Loader2Icon className="animate-spin" />
+                  ) : (
+                    <SendIcon className="rtl:-scale-x-100" />
+                  )}
+                  {f.saveAndSend}
                 </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </aside>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => submit(false)}
+                  disabled={form.pending}
+                >
+                  {form.pending && !sendAfter && <Loader2Icon className="animate-spin" />}
+                  {f.saveDraft}
+                </Button>
+              </>
+            ) : (
+              <Button type="button" onClick={() => submit(false)} disabled={form.pending}>
+                {form.pending && <Loader2Icon className="animate-spin" />}
+                {f.saveChanges}
+              </Button>
+            )}
+          </FrameCell>
+        </FrameGrid>
+      </FrameBox>
     </div>
   );
 }

@@ -1,6 +1,11 @@
-import { PageSkeleton } from "@/components/panel/page-skeleton";
+import { FinanceHeaderSkeleton, ListBoxSkeleton } from "../_components/finance-skeletons";
 
-/** Suspense boundary so navigations inside this segment stream instantly. */
+/** Ledgers while they stream: the page box, then the list box (view chips, rows). */
 export default function Loading() {
-  return <PageSkeleton />;
+  return (
+    <div aria-busy>
+      <FinanceHeaderSkeleton />
+      <ListBoxSkeleton toolbar="chips" rows={6} />
+    </div>
+  );
 }

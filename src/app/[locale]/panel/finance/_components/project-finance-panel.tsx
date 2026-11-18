@@ -9,17 +9,10 @@ import {
   ScaleIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { KpiCard } from "@/components/finance/kpi-card";
 import { StatGrid } from "@/components/panel/stat-card";
+import { FrameBox, FrameGrid } from "@/components/shell/frame";
+import { KpiCard } from "@/components/finance/kpi-card";
 import { Money, MoneyStack } from "@/components/finance/money";
 import { formatDate, formatHours, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -27,18 +20,22 @@ import { AppError } from "@/server/errors";
 import { getProjectFinance } from "@/server/modules/finance/ledger";
 import type { PanelContext } from "@/server/page-context";
 import { txFormOptions } from "../_lib/options";
-import { InvoiceMiniList } from "./invoice-mini-list";
+import { BoxCell, FLUSH_LIST } from "./frame-bits";
+import { InvoiceMiniList, MiniTotals } from "./invoice-mini-list";
 import { KindIcon } from "./transaction-list";
 import { TransactionFormDialog } from "./transaction-form";
 
 /**
- * Finance block for the project page (wired in by the projects module).
+ * Finance block for the project page (wired in by the projects module), as
+ * framed boxes at panel density.
  *
  *   <ProjectFinancePanel projectId={project.id} ctx={ctx} clientView={isClient} />
  *
- * - owner/admin: income, expenses, net, budget usage, invoices, recent transactions.
- * - clientView (client users — or admins previewing the portal): only the client's
- *   non-draft invoices and payments, and only when the project has `shareFinance`.
+ * - owner/admin: a stat grid (income, expenses, net, budget usage), then one
+ *   box with the invoices and the recent transactions as two cells.
+ * - clientView (client users — or admins previewing the portal): one box with
+ *   the totals row, then the client's non-draft invoices and payments as two
+ *   cells — only when the project has `shareFinance`.
  * Renders nothing when the viewer may not see project finance.
  */
 export async function ProjectFinancePanel({
@@ -63,61 +60,55 @@ export async function ProjectFinancePanel({
 
   if (data.mode === "client") {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{f.pf_clientTitle}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-3 sm:grid-cols-3">
-            {(
-              [
+      <FrameBox as="section" density="compact" ariaLabel={f.pf_clientTitle}>
+        <FrameGrid cols={1}>
+          <BoxCell title={f.pf_clientTitle} titleId="pf-client" flush>
+            <MiniTotals
+              items={[
                 [f.pf_invoiced, data.totals.invoiced],
                 [f.pf_paid, data.totals.paid],
                 [f.pf_outstanding, data.totals.outstanding],
-              ] as const
-            ).map(([label, rows]) => (
-              <div key={label} className="rounded-xl bg-muted/50 p-4">
-                <p className="text-xs font-semibold text-muted-foreground">{label}</p>
-                <MoneyStack rows={rows} locale={locale} className="mt-1 text-lg font-extrabold" />
-              </div>
-            ))}
-          </div>
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div>
-              <h3 className="mb-2 text-sm font-bold">{f.invoicesTitle}</h3>
-              <InvoiceMiniList invoices={data.invoices} ctx={ctx} empty={f.pf_noInvoices} />
-            </div>
-            <div>
-              <h3 className="mb-2 text-sm font-bold">{f.payments}</h3>
-              {data.payments.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">{f.noPayments}</p>
-              ) : (
-                <ul className="divide-y divide-dashed">
-                  {data.payments.map((p) => (
-                    <li key={p.id} className="flex items-center gap-3 py-2.5 text-sm">
-                      <KindIcon kind="income" className="size-8" />
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-semibold">{formatDate(p.occurredAt, fmt)}</span>
-                        {p.invoiceNumber && (
-                          <span className="block text-xs text-muted-foreground" dir="ltr">
-                            {p.invoiceNumber}
-                          </span>
-                        )}
-                      </span>
-                      <Money
-                        minor={p.amountMinor}
-                        currency={p.currency}
-                        locale={locale}
-                        className="font-bold"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              ]}
+              locale={locale}
+              compact={false}
+            />
+          </BoxCell>
+        </FrameGrid>
+        <FrameGrid cols={1} className="lg:grid-cols-2">
+          <BoxCell title={f.invoicesTitle} titleId="pf-client-invoices" flush>
+            <InvoiceMiniList invoices={data.invoices} ctx={ctx} empty={f.pf_noInvoices} flush />
+          </BoxCell>
+          <BoxCell title={f.payments} titleId="pf-client-payments" flush>
+            {data.payments.length === 0 ? (
+              <p className="px-(--cell-pad) py-6 text-center text-sm text-muted-foreground">
+                {f.noPayments}
+              </p>
+            ) : (
+              <ul className={FLUSH_LIST}>
+                {data.payments.map((p) => (
+                  <li key={p.id} className="flex items-center gap-3 px-(--cell-pad) py-3 text-sm">
+                    <KindIcon kind="income" className="size-8" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold">{formatDate(p.occurredAt, fmt)}</span>
+                      {p.invoiceNumber && (
+                        <span className="block text-xs text-muted-foreground" dir="ltr">
+                          {p.invoiceNumber}
+                        </span>
+                      )}
+                    </span>
+                    <Money
+                      minor={p.amountMinor}
+                      currency={p.currency}
+                      locale={locale}
+                      className="font-bold"
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </BoxCell>
+        </FrameGrid>
+      </FrameBox>
     );
   }
 
@@ -126,7 +117,7 @@ export async function ProjectFinancePanel({
   const net = stats.incomeMinor - stats.expenseMinor;
   const options = txFormOptions(ctx.actor);
   return (
-    <section className="space-y-6" aria-label={f.pf_title}>
+    <section className="flex flex-col gap-6 lg:gap-8" aria-label={f.pf_title}>
       <StatGrid>
         <KpiCard
           label={f.colIncome}
@@ -225,54 +216,59 @@ export async function ProjectFinancePanel({
         />
       </StatGrid>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ReceiptIcon className="size-4 text-muted-foreground" /> {f.invoicesTitle}
-            </CardTitle>
-            <CardDescription>
-              {f.colOutstanding}: <MoneyStack rows={stats.outstanding} locale={locale} compact />
-            </CardDescription>
-            <CardAction>
+      <FrameBox as="div" density="compact">
+        <FrameGrid cols={1} className="lg:grid-cols-2">
+          <BoxCell
+            title={f.invoicesTitle}
+            titleId="pf-invoices"
+            icon={<ReceiptIcon className="size-4 text-muted-foreground" />}
+            description={
+              <>
+                {f.colOutstanding}: <MoneyStack rows={stats.outstanding} locale={locale} compact />
+              </>
+            }
+            flush
+            action={
               <Button asChild variant="soft" size="sm">
                 <Link href={href(`/panel/invoices/new?projectId=${projectId}`)}>
                   <PlusIcon /> {f.pf_newInvoice}
                 </Link>
               </Button>
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <InvoiceMiniList invoices={data.invoices} ctx={ctx} empty={f.pf_noInvoices} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>{f.pf_recent}</CardTitle>
-            <CardAction className="flex gap-1">
-              <Button asChild variant="ghost" size="sm">
-                <Link href={href(`/panel/finance/ledgers/project/${projectId}`)}>
-                  <BookOpenTextIcon /> {f.pf_viewLedger}
-                </Link>
-              </Button>
-              <TransactionFormDialog
-                options={options}
-                defaults={{ projectId }}
-                trigger={
-                  <Button variant="soft" size="icon-sm" aria-label={f.newTransaction}>
-                    <PlusIcon />
-                  </Button>
-                }
-              />
-            </CardAction>
-          </CardHeader>
-          <CardContent>
+            }
+          >
+            <InvoiceMiniList invoices={data.invoices} ctx={ctx} empty={f.pf_noInvoices} flush />
+          </BoxCell>
+          <BoxCell
+            title={f.pf_recent}
+            titleId="pf-recent"
+            flush
+            action={
+              <>
+                <Button asChild variant="ghost" size="sm">
+                  <Link href={href(`/panel/finance/ledgers/project/${projectId}`)}>
+                    <BookOpenTextIcon /> {f.pf_viewLedger}
+                  </Link>
+                </Button>
+                <TransactionFormDialog
+                  options={options}
+                  defaults={{ projectId }}
+                  trigger={
+                    <Button variant="soft" size="icon-sm" aria-label={f.newTransaction}>
+                      <PlusIcon />
+                    </Button>
+                  }
+                />
+              </>
+            }
+          >
             {data.recent.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">{f.txEmpty}</p>
+              <p className="px-(--cell-pad) py-6 text-center text-sm text-muted-foreground">
+                {f.txEmpty}
+              </p>
             ) : (
-              <ul className="divide-y divide-dashed">
+              <ul className={FLUSH_LIST}>
                 {data.recent.map((r) => (
-                  <li key={r.id} className="flex items-center gap-3 py-2.5">
+                  <li key={r.id} className="flex items-center gap-3 px-(--cell-pad) py-3">
                     <KindIcon kind={r.kind} className="size-8" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold">
@@ -298,9 +294,9 @@ export async function ProjectFinancePanel({
                 ))}
               </ul>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </BoxCell>
+        </FrameGrid>
+      </FrameBox>
     </section>
   );
 }

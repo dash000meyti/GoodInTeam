@@ -1,8 +1,8 @@
 import { ArrowLeftRightIcon, DownloadIcon, PlusIcon, SearchXIcon, UploadIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { MoneyStack } from "@/components/finance/money";
 import { format } from "@/i18n/format-message";
 import { formatNumber } from "@/lib/format";
@@ -23,6 +23,11 @@ import { txFormOptions } from "../_lib/options";
  */
 export const instant = false;
 
+/**
+ * Transactions (framed): the page box carries the finance nav; the list is
+ * one box — the filter toolbar row, the totals of the filter as a row of
+ * cells, the edge-to-edge table (md+) or row list (phones), the pager row.
+ */
 export default async function TransactionsPage({
   searchParams,
 }: PageProps<"/[locale]/panel/finance/transactions">) {
@@ -76,8 +81,9 @@ export default async function TransactionsPage({
             {newButton}
           </>
         }
-      />
-      <FinanceNav active="transactions" href={href} t={f} />
+      >
+        <FinanceNav active="transactions" href={href} t={f} />
+      </PageHeader>
 
       {list.total === 0 && !hasFilters ? (
         <EmptyState
@@ -87,15 +93,19 @@ export default async function TransactionsPage({
           action={newButton}
         />
       ) : (
-        <>
+        <FrameBox as="section" density="compact" ariaLabel={f.transactionsTitle}>
           <TransactionFilters values={filters} options={options} basePath={base} />
           {list.total === 0 ? (
-            <EmptyState icon={SearchXIcon} title={f.txNoMatch} />
+            <FrameGrid cols={1}>
+              <FrameCell pad="none">
+                <EmptyState icon={SearchXIcon} title={f.txNoMatch} />
+              </FrameCell>
+            </FrameGrid>
           ) : (
-            <Card className="gap-0 overflow-hidden py-0">
-              <div className="flex flex-wrap items-start gap-x-8 gap-y-3 border-b border-dashed px-5 py-4 text-sm">
-                <span className="font-bold text-muted-foreground">{f.filteredTotals}</span>
-                <Totals label={f.colIncome}>
+            <>
+              {/* The totals of this filter: one row of cells sharing the box's hairlines. */}
+              <FrameGrid as="dl" cols={1} className="sm:grid-cols-3">
+                <Totals label={f.colIncome} caption={f.filteredTotals}>
                   <MoneyStack
                     rows={list.totals.income}
                     locale={locale}
@@ -118,31 +128,51 @@ export default async function TransactionsPage({
                     base={options.base}
                   />
                 </Totals>
-              </div>
-              <TransactionList rows={list.rows} ctx={ctx} options={options} />
-              <Pager
-                ctx={ctx}
-                page={list.page}
-                pages={list.pages}
-                summary={format(f.resultsCount, { n: formatNumber(list.total, locale) })}
-                makeHref={(p) => {
-                  const q = filtersQuery(filters, p);
-                  return q ? `${base}?${q}` : base;
-                }}
-              />
-            </Card>
+              </FrameGrid>
+              <FrameGrid cols={1}>
+                <FrameCell pad="none">
+                  <TransactionList rows={list.rows} ctx={ctx} options={options} />
+                </FrameCell>
+              </FrameGrid>
+              <FrameGrid cols={1}>
+                <FrameCell className="py-3">
+                  <Pager
+                    ctx={ctx}
+                    page={list.page}
+                    pages={list.pages}
+                    summary={format(f.resultsCount, { n: formatNumber(list.total, locale) })}
+                    makeHref={(p) => {
+                      const q = filtersQuery(filters, p);
+                      return q ? `${base}?${q}` : base;
+                    }}
+                  />
+                </FrameCell>
+              </FrameGrid>
+            </>
           )}
-        </>
+        </FrameBox>
       )}
     </>
   );
 }
 
-function Totals({ label, children }: { label: string; children: React.ReactNode }) {
+/** One total of the filter (a cell of the totals row); the first carries the row's caption. */
+function Totals({
+  label,
+  caption,
+  children,
+}: {
+  label: string;
+  caption?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <span className="flex items-start gap-2">
-      <span className="text-muted-foreground">{label}:</span>
-      <span className="font-bold">{children}</span>
-    </span>
+    <FrameCell className="flex min-w-0 items-start justify-between gap-3 py-3 sm:block">
+      <dt className="text-xs font-semibold text-muted-foreground">
+        {caption && <span className="sr-only">{caption}: </span>}
+        {label}
+      </dt>
+      <dd className="text-base font-extrabold sm:mt-1 sm:text-lg">{children}</dd>
+    </FrameCell>
   );
 }

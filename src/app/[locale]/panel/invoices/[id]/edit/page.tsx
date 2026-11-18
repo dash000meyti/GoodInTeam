@@ -31,6 +31,7 @@ export default async function EditInvoicePage({
           { label: inv.number, href: href(`/panel/invoices/${id}`) },
           { label: t.common.edit },
         ]}
+        path={["INVOICES", inv.number, "EDIT"]}
       />
       <InvoiceEditor
         options={options}

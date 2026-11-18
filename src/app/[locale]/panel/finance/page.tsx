@@ -10,14 +10,7 @@ import {
   WalletIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   Table,
@@ -31,7 +24,7 @@ import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { KpiCard } from "@/components/finance/kpi-card";
-import { StatGrid } from "@/components/panel/stat-card";
+import { StatRow } from "@/components/panel/stat-card";
 import { Approx, Money, MoneyStack } from "@/components/finance/money";
 import { InvoiceStatusBadge } from "@/components/finance/invoice-status-badge";
 import { format } from "@/i18n/format-message";
@@ -42,6 +35,7 @@ import { panelContext, type PanelContext } from "@/server/page-context";
 import { accountKindIcons } from "./_components/account-icons";
 import { FinanceAnalytics } from "./_components/finance-analytics";
 import { FinanceNav } from "./_components/finance-nav";
+import { BoxCell, FLUSH_LIST, GlyphTile } from "./_components/frame-bits";
 import { TransactionFormDialog } from "./_components/transaction-form";
 import { txFormOptions } from "./_lib/options";
 
@@ -92,25 +86,10 @@ export default async function FinanceOverviewPage() {
             {newButton}
           </>
         }
-      />
-      <FinanceNav active="overview" href={href} t={f} />
-
-      {empty ? (
-        <EmptyState
-          icon={WalletIcon}
-          title={f.getStarted}
-          description={f.getStartedHint}
-          action={
-            <Button asChild>
-              <Link href={href("/panel/finance/accounts")}>
-                <LandmarkIcon /> {f.newAccount}
-              </Link>
-            </Button>
-          }
-        />
-      ) : (
-        <>
-          <StatGrid className="mb-6">
+      >
+        <FinanceNav active="overview" href={href} t={f} />
+        {!empty && (
+          <StatRow>
             <KpiCard
               label={f.monthIncome}
               icon={ArrowDownLeftIcon}
@@ -193,8 +172,25 @@ export default async function FinanceOverviewPage() {
               }
               hint={format(f.openInvoicesCount, { n: formatNumber(o.receivables.count, locale) })}
             />
-          </StatGrid>
+          </StatRow>
+        )}
+      </PageHeader>
 
+      {empty ? (
+        <EmptyState
+          icon={WalletIcon}
+          title={f.getStarted}
+          description={f.getStartedHint}
+          action={
+            <Button asChild>
+              <Link href={href("/panel/finance/accounts")}>
+                <LandmarkIcon /> {f.newAccount}
+              </Link>
+            </Button>
+          }
+        />
+      ) : (
+        <div className="flex flex-col gap-6 lg:gap-8">
           <FinanceAnalytics
             rows={o.analytics.rows}
             months={o.analytics.months}
@@ -207,7 +203,7 @@ export default async function FinanceOverviewPage() {
           />
 
           <ProfitabilityCard o={o} ctx={ctx} />
-        </>
+        </div>
       )}
     </>
   );
@@ -223,153 +219,144 @@ function Hint({ approx, trend }: { approx: React.ReactNode; trend: string | null
   );
 }
 
+/** Account balances: a cell of the analytics box (the 1fr beside the cash flow). */
 function AccountsCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
   const { t, href, locale } = ctx;
   const f = t.finance;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{f.accountBalances}</CardTitle>
-        <CardAction>
-          <Button asChild variant="ghost" size="sm">
-            <Link href={href("/panel/finance/accounts")}>{t.common.viewAll}</Link>
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {o.accounts.length === 0 ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">{f.accountsEmpty}</p>
-        ) : (
-          <ul className="space-y-3">
-            {o.accounts.slice(0, 6).map((a) => {
-              const Icon = accountKindIcons[a.kind];
-              const color = a.color ?? "#00A76F";
-              return (
-                <li key={a.id}>
-                  <Link
-                    href={href(`/panel/finance/accounts/${a.id}`)}
-                    className="group flex items-center gap-3"
-                  >
-                    <span
-                      className="flex size-9 shrink-0 items-center justify-center rounded-xl"
-                      style={{ backgroundColor: `${color}22`, color }}
-                    >
-                      <Icon className="size-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold group-hover:text-primary-ink">
-                        {a.name}
-                      </span>
-                      <span className="block text-xs text-muted-foreground">
-                        {f[`accountKind_${a.kind}`]}
-                      </span>
-                    </span>
-                    <Money
-                      minor={a.balance}
-                      currency={a.currency}
-                      locale={locale}
-                      compact
-                      tone={a.balance < 0 ? "expense" : "none"}
-                      className="text-sm font-bold"
-                    />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        {o.balances.length > 0 && (
-          <div className="space-y-1 rounded-xl bg-muted/50 p-3">
-            <p className="text-xs font-semibold text-muted-foreground">{f.totalBalance}</p>
-            <MoneyStack
-              rows={o.balances}
-              locale={locale}
-              base={o.base}
-              className="font-extrabold"
-            />
-            {o.balances.length > 1 && (
-              <Approx
-                value={o.balancesApprox}
-                base={o.base}
-                locale={locale}
-                t={f}
-                className="flex"
-              />
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <BoxCell
+      title={f.accountBalances}
+      titleId="fin-accounts"
+      flush
+      action={
+        <Button asChild variant="ghost" size="sm">
+          <Link href={href("/panel/finance/accounts")}>{t.common.viewAll}</Link>
+        </Button>
+      }
+    >
+      {o.accounts.length === 0 ? (
+        <p className="p-(--cell-pad) py-8 text-center text-sm text-muted-foreground">
+          {f.accountsEmpty}
+        </p>
+      ) : (
+        <ul className="divide-y divide-dashed divide-frame-line px-(--cell-pad) py-1">
+          {o.accounts.slice(0, 6).map((a) => (
+            <li key={a.id}>
+              <Link
+                href={href(`/panel/finance/accounts/${a.id}`)}
+                className="group flex items-center gap-3 py-3"
+              >
+                <GlyphTile icon={accountKindIcons[a.kind]} color={a.color ?? "#00A76F"} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold group-hover:text-primary-ink">
+                    {a.name}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">
+                    {f[`accountKind_${a.kind}`]}
+                  </span>
+                </span>
+                <Money
+                  minor={a.balance}
+                  currency={a.currency}
+                  locale={locale}
+                  compact
+                  tone={a.balance < 0 ? "expense" : "none"}
+                  className="text-sm font-bold"
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+      {o.balances.length > 0 && (
+        // The total closes the cell as its own hairline row (on the card surface).
+        <div className="order-last space-y-1 border-t border-frame-line bg-card p-(--cell-pad)">
+          <p className="text-xs font-semibold text-muted-foreground">{f.totalBalance}</p>
+          <MoneyStack
+            rows={o.balances}
+            locale={locale}
+            base={o.base}
+            className="text-lg font-extrabold"
+          />
+          {o.balances.length > 1 && (
+            <Approx value={o.balancesApprox} base={o.base} locale={locale} t={f} className="flex" />
+          )}
+        </div>
+      )}
+    </BoxCell>
   );
 }
 
+/** Unpaid invoices: a cell of the analytics box (full row at md, one track from lg). */
 function ReceivablesCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
   const { t, href, locale, now } = ctx;
   const f = t.finance;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{f.unpaidInvoices}</CardTitle>
-        <CardDescription>
-          <MoneyStack
-            rows={o.receivables.totals}
-            locale={locale}
-            base={o.base}
-            compact
-            className="text-sm"
-          />
-        </CardDescription>
-        <CardAction>
-          <Button asChild variant="ghost" size="sm">
-            <Link href={href("/panel/invoices?status=open")}>{f.viewInvoices}</Link>
-          </Button>
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        {o.receivables.list.length === 0 ? (
-          <p className="py-10 text-center text-sm text-muted-foreground">{f.allPaid}</p>
-        ) : (
-          <ul className="divide-y divide-dashed">
-            {o.receivables.list.map((inv) => {
-              const late = inv.dueDate && inv.dueDate.getTime() < now;
-              return (
-                <li key={inv.id}>
-                  <Link
-                    href={href(`/panel/invoices/${inv.id}`)}
-                    className="group flex items-center gap-3 py-2.5"
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-2">
-                        <span className="truncate text-sm font-semibold group-hover:text-primary-ink">
-                          {inv.clientName ?? inv.number}
-                        </span>
-                        <InvoiceStatusBadge status={inv.status} t={f} />
+    <BoxCell
+      title={f.unpaidInvoices}
+      titleId="fin-receivables"
+      span="md2"
+      flush
+      description={
+        <MoneyStack
+          rows={o.receivables.totals}
+          locale={locale}
+          base={o.base}
+          compact
+          className="text-sm"
+        />
+      }
+      action={
+        <Button asChild variant="ghost" size="sm">
+          <Link href={href("/panel/invoices?status=open")}>{f.viewInvoices}</Link>
+        </Button>
+      }
+    >
+      {o.receivables.list.length === 0 ? (
+        <p className="p-(--cell-pad) py-10 text-center text-sm text-muted-foreground">
+          {f.allPaid}
+        </p>
+      ) : (
+        <ul className={FLUSH_LIST}>
+          {o.receivables.list.map((inv) => {
+            const late = inv.dueDate && inv.dueDate.getTime() < now;
+            return (
+              <li key={inv.id}>
+                <Link
+                  href={href(`/panel/invoices/${inv.id}`)}
+                  className="group flex items-center gap-3 px-(--cell-pad) py-3 transition-colors hover:bg-card"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className="truncate text-sm font-semibold group-hover:text-primary-ink">
+                        {inv.clientName ?? inv.number}
                       </span>
-                      <span
-                        className={cn(
-                          "block text-xs text-muted-foreground",
-                          late && "text-destructive",
-                        )}
-                      >
-                        <span dir="ltr">{inv.number}</span>
-                        {inv.dueDate ? ` · ${f.dueDate} ${formatDate(inv.dueDate, ctx.fmt)}` : ""}
-                      </span>
+                      <InvoiceStatusBadge status={inv.status} t={f} />
                     </span>
-                    <Money
-                      minor={inv.dueMinor}
-                      currency={inv.currency}
-                      locale={locale}
-                      compact
-                      className="text-sm font-bold"
-                    />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
+                    <span
+                      className={cn(
+                        "block text-xs text-muted-foreground",
+                        late && "text-destructive",
+                      )}
+                    >
+                      <span dir="ltr">{inv.number}</span>
+                      {inv.dueDate ? ` · ${f.dueDate} ${formatDate(inv.dueDate, ctx.fmt)}` : ""}
+                    </span>
+                  </span>
+                  <Money
+                    minor={inv.dueMinor}
+                    currency={inv.currency}
+                    locale={locale}
+                    compact
+                    className="text-sm font-bold"
+                  />
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </BoxCell>
   );
 }
 
@@ -378,16 +365,20 @@ function ProfitabilityCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
   const f = t.finance;
   const rows = o.profitability;
   return (
-    <Card className="mt-6 gap-0 overflow-hidden pb-0">
+    <Card className="gap-0 py-0">
       <CardHeader>
-        <CardTitle>{f.profitability}</CardTitle>
+        <CardTitle>
+          <h2 id="fin-profitability">{f.profitability}</h2>
+        </CardTitle>
         <CardDescription>{f.profitabilityHint}</CardDescription>
       </CardHeader>
       {rows.length === 0 ? (
-        <p className="px-6 pb-10 text-center text-sm text-muted-foreground">{f.noProfitability}</p>
+        <p className="p-(--cell-pad) py-10 text-center text-sm text-muted-foreground">
+          {f.noProfitability}
+        </p>
       ) : (
         <>
-          <ul className="divide-y divide-dashed border-t border-dashed md:hidden">
+          <ul className="divide-y divide-frame-line md:hidden">
             {rows.map((p) => {
               const approx = p.approximate ? "≈ " : "";
               const net = p.incomeMinor - p.expenseMinor;
@@ -398,7 +389,7 @@ function ProfitabilityCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
                 </div>
               );
               return (
-                <li key={p.id} className="space-y-3 px-5 py-4">
+                <li key={p.id} className="space-y-3 px-(--cell-pad) py-4">
                   <Link
                     href={href(`/panel/finance/ledgers/project/${p.id}`)}
                     className="flex items-center gap-2.5"
@@ -411,7 +402,8 @@ function ProfitabilityCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
                       </span>
                     </span>
                   </Link>
-                  <dl className="grid grid-cols-3 gap-3">
+                  {/* two per row on phones so compact amounts never truncate; three from sm */}
+                  <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {cell(
                       f.colIncome,
                       <>
