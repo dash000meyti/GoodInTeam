@@ -1,7 +1,7 @@
 import { layoutFromGrid, type PixelCell, type PixelTone } from "./pixel-font";
 
 /**
- * The "virtual me" sprite (spec §4.3, D20; the owner's pick "M3", 2026-11-17):
+ * The GoodInBot sprite (spec §4.3, D20; the owner's pick "M3", 2026-11-17):
  * a 16×16 screen creature. Its body is a dark screen in the logo's frame (light
  * top and left edge, ink corner, right and bottom edges), with two yellow
  * eyes, stubby ink arms and legs, and a mouth only while it talks. Tones: `O`

@@ -49,7 +49,7 @@ export const settingsSchemas = {
       })
       .default({ x: "", linkedin: "", github: "", telegram: "", instagram: "", youtube: "" }),
     availableForWork: z.boolean().default(true),
-    /** The "virtual me" guide on the public site (spec §18 owner override). */
+    /** GoodInBot, the pixel guide on the public site (spec §18 owner override). */
     siteGuide: z.boolean().default(true),
   }),
   business: z.object({

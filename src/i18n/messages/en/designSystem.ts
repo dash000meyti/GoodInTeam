@@ -257,7 +257,7 @@ export const designSystem: Record<keyof typeof fa, string> = {
   brandDigits: "Pixel digits",
   brandDigitsHint:
     "Persian 0–9 on the Latin digits' 5×7 grid; fa pages number their frame strips and the 404 with them.",
-  brandAvatar: "Virtual me: poses",
+  brandAvatar: "GoodInBot: poses",
   brandAvatarHint:
     "A dark screen in the logo's frame with yellow eyes; literal colours in both modes. The menu bar uses its leg-free 10×10 icon.",
   brandSprite: "Guide sprite",

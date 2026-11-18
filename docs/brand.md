@@ -110,7 +110,7 @@ All pixel art is inline SVG with **one `<path>` per tone** (`toPaths` in `pixel-
 | `PixelText text`                    | 7 tall | 2                   | Latin + Persian digits, aria-hidden, LTR                           |
 | `PixelTextSet items`                | 7 tall | 1 + n               | one svg, one `path[data-path-id]` per item, first shown            |
 | `PixelIcon name mirror?`            | 12×12  | ≤3                  | 13 site + 17 panel icons; only `arrow` is directional (`mirror`)   |
-| `PixelAvatar pose part`             | 16×16  | ≤5 (head 5)         | static "virtual me"; `part="head"` = the 10×10 `AVATAR_ICON`       |
+| `PixelAvatar pose part`             | 16×16  | ≤5 (head 5)         | static GoodInBot; `part="head"` = the 10×10 `AVATAR_ICON`          |
 | `PixelAvatarSprite state`           | 16×16  | 13                  | guide sprite; frames keyed on its own `svg.px-sprite[data-state]`  |
 | `LogoMark cell` / `Logo label cell` | 10×10  | 5                   | the mark = the character's icon (`AVATAR_ICON`) / `PixelLogo TEAM` |
 
@@ -149,7 +149,7 @@ must stay empty. Never `%` or `vw` sizing.
   screen `#1C1C1E`, eyes `#FFC50D`): no tile or dark mode re-tones it. It never sits directly on a
   yellow surface (the CTA puts it on a paper tile).
 
-### The "virtual me" (owner's pick M3, 2026-11-17)
+### GoodInBot, the guide character (owner's pick M3, 2026-11-17; named 2026-11-18)
 
 A small screen creature, not a portrait: a dark screen wearing the logo's frame (ink corner,
 light top and left edge, ink right and bottom edges), two 3×3 yellow eyes, stubby ink arms and

@@ -1,16 +1,16 @@
 /**
- * The pixel guide ("virtual me"). Server-only on the public site: lines are
- * rendered into `data-guide-say` attributes (never shipped as a namespace),
- * full in the panel. Every section line paraphrases copy visible on the same
+ * GoodInBot, the pixel guide (its name stays Latin in both locales). Server-only
+ * on the public site: lines are rendered into `data-guide-say` attributes (never
+ * shipped as a namespace), full in the panel. Every section line paraphrases copy visible on the same
  * page and adds no new facts (spec §10.3). Placeholders: {owner} {i} {n} {module}.
  * `services_brand_<BrandId>` must exist for every brand in the registry, and
  * `brand_<SubBrandId>` / `brand_services_<SubBrandId>` for every sub-brand page.
  */
 export const guide = {
-  name: "منِ مجازی",
-  toggle: "راهنمای پیکسلی",
-  show: "نمایش راهنما",
-  hide: "پنهان کردن راهنما",
+  name: "GoodInBot",
+  toggle: "GoodInBot",
+  show: "نمایش GoodInBot",
+  hide: "پنهان کردن GoodInBot",
   explain: "این بخش چیست؟",
   tour: "گشت در این صفحه",
   next: "بعدی ({i} از {n})",
@@ -18,12 +18,13 @@ export const guide = {
   tourDone: "همین بود! هر وقت خواستی از نوار بالا صدایم کن.",
   tipsAuto: "نمایش خودکار نکته‌ها",
 
-  greeting: "سلام! من نسخهٔ پیکسلیِ {owner} هستم. به هر بخش که برسی، کوتاه می‌گویم چه خبر است.",
-  greetingNoName: "سلام! من نسخهٔ پیکسلیِ گودین تیم هستم. به هر بخش که برسی، کوتاه توضیحش می‌دهم.",
+  greeting:
+    "سلام، من GoodInBot هستم، دستیار پیکسلیِ {owner}. به هر بخش سایت که برسی، کوتاه می‌گویم دربارهٔ چیست.",
+  greetingNoName: "سلام، من GoodInBot هستم. به هر بخش سایت که برسی، کوتاه می‌گویم دربارهٔ چیست.",
   greetingCompact:
-    "سلام! من نسخهٔ پیکسلیِ {owner} هستم. هر وقت علامت «!» را کنارم دیدی، رویم بزن تا آن بخش را توضیح بدهم.",
+    "سلام، من GoodInBot هستم، دستیار پیکسلیِ {owner}. هر وقت علامت «!» را کنارم دیدی، رویم بزن تا آن بخش را توضیح بدهم.",
   greetingCompactNoName:
-    "سلام! من نسخهٔ پیکسلیِ گودین تیم هستم. هر وقت علامت «!» را کنارم دیدی، رویم بزن تا آن بخش را توضیح بدهم.",
+    "سلام، من GoodInBot هستم. هر وقت علامت «!» را کنارم دیدی، رویم بزن تا آن بخش را توضیح بدهم.",
   idle: "هنوز این‌جایی؟ داک پایین صفحه تو را به هر بخش سایت می‌برد.",
 
   // ── Home ──

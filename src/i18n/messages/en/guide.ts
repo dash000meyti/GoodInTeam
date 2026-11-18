@@ -1,10 +1,10 @@
 import type { guide as fa } from "../fa/guide";
 
 export const guide: Record<keyof typeof fa, string> = {
-  name: "Virtual me",
-  toggle: "Pixel guide",
-  show: "Show the guide",
-  hide: "Hide the guide",
+  name: "GoodInBot",
+  toggle: "GoodInBot",
+  show: "Show GoodInBot",
+  hide: "Hide GoodInBot",
   explain: "What's this part?",
   tour: "Tour this page",
   next: "Next ({i} of {n})",
@@ -13,12 +13,13 @@ export const guide: Record<keyof typeof fa, string> = {
   tipsAuto: "Show tips automatically",
 
   greeting:
-    "Hi! I'm {owner}'s pixel twin. As you reach each part, I'll tell you briefly what it's about.",
-  greetingNoName: "Hi! I'm Good In Team's pixel twin. I'll explain each part as you reach it.",
+    "Hi, I'm GoodInBot, {owner}'s pixel assistant. As you reach each part of the site, I'll tell you briefly what it's about.",
+  greetingNoName:
+    "Hi, I'm GoodInBot. As you reach each part of the site, I'll tell you briefly what it's about.",
   greetingCompact:
-    "Hi! I'm {owner}'s pixel twin. When you see my \"!\", tap or click me and I'll explain that part.",
+    "Hi, I'm GoodInBot, {owner}'s pixel assistant. When you see my \"!\", tap or click me and I'll explain that part.",
   greetingCompactNoName:
-    "Hi! I'm Good In Team's pixel twin. When you see my \"!\", tap or click me and I'll explain that part.",
+    "Hi, I'm GoodInBot. When you see my \"!\", tap or click me and I'll explain that part.",
   idle: "Still here? The dock at the bottom takes you to any part of the site.",
 
   // ── Home ──

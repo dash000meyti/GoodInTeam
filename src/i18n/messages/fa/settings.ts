@@ -154,8 +154,9 @@ export const settings = {
   availableForWork: "پذیرای پروژه‌ی جدید",
   availableForWorkHint: "نشان «آماده‌ی همکاری» روی سایت نمایش داده می‌شود.",
   availableBadge: "آماده‌ی همکاری",
-  siteGuide: "راهنمای «من مجازی» روی سایت",
-  siteGuideHint: "آواتار پیکسلی که هر بخش سایت را کوتاه توضیح می‌دهد. خاموش باشد، نه آواتار دیده می‌شود نه دکمه‌هایش.",
+  siteGuide: "دستیار GoodInBot روی سایت",
+  siteGuideHint:
+    "دستیار پیکسلی که هر بخش سایت را کوتاه توضیح می‌دهد. خاموش باشد، نه GoodInBot دیده می‌شود نه دکمه‌هایش.",
   contact: "راه‌های ارتباط",
   publicEmail: "ایمیل عمومی",
   publicPhone: "تلفن عمومی",

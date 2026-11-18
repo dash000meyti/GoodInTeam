@@ -67,7 +67,7 @@ Two map constraints are deliberately changed, and the change is recorded here so
 | D17 | Shell CSS is split into partial files (`src/app/styles/*.css`) imported by `globals.css`, one owner each. Tokens stay in `globals.css` (the token test parses only that file). Partials use `@layer components` / `@layer base` so Tailwind utilities can still override them. **The existing unlayered `.prose-gt` block and `/* site */` block in `globals.css` are wrapped in `@layer components` by foundation** (§5.1); otherwise every partial override of `.gt-*`/`.prose-gt` (e.g. the marquee pause in `home.css`) would silently lose to unlayered rules. | Parallel ownership; critic verified the blocks are unlayered (L389–706) |
 | D18 | All header-height and dock collisions (sticky tops, bottom bars, Toc rootMargins, scroll offsets) are replaced in `foundation` using shell CSS variables and utilities. Fragment and focus scrolling uses **one** mechanism: `html { scroll-padding-top/bottom }`. Elements never add their own chrome-sized `scroll-margin`. | Avoids file conflicts and double-counted offsets |
 | D19 | Both clocks (site and panel) show **studio time** (`appTimezone()`, through a cached `getPublicTimezone()`), inside Suspense. | structure flagged that `env.timezone` was wrong |
-| D20 | The sprite design is the perf 16×16 "virtual me" (redrawn 2026-11-17 to the owner's pick "M3": a dark screen in the logo's frame with yellow eyes and stubby limbs; small sizes use a leg-free 10×10 icon; see `docs/brand.md`). It uses the same palette in both modes (literal fills, `AVATAR_FILLS` in §4.2, never the re-tonable `--px-*`/`--brand-*` variables), faces its direction of travel, and its art is never mirrored. Its poses are exactly `idle, blink, talk, walkA, walkB, wave, sit` (§4.3). | perf |
+| D20 | The sprite design is the perf 16×16 guide sprite, GoodInBot (redrawn 2026-11-17 to the owner's pick "M3": a dark screen in the logo's frame with yellow eyes and stubby limbs; small sizes use a leg-free 10×10 icon; see `docs/brand.md`). It uses the same palette in both modes (literal fills, `AVATAR_FILLS` in §4.2, never the re-tonable `--px-*`/`--brand-*` variables), faces its direction of travel, and its art is never mirrored. Its poses are exactly `idle, blink, talk, walkA, walkB, wave, sit` (§4.3). | perf |
 | D21 | **Compact guide** below 1024px or on coarse pointers: the sprite is pinned above the dock, hops and shows a badge on each new section, and opens a bubble only on tap (plus the one-time greeting). It does not walk to each section there. This is a deliberate deviation from the owner's "comes to each section" wish on phones and tablets (likely most fa traffic), listed in §19; approved by the owner on 2026-11-17. | Judges (wow's auto bubbles covered content on phones) |
 | D22 | Everything two parallel tracks share is built by `foundation`: frame primitives, card `variant="cell"`, `StatsCells` (home §8 row 07 and `/about`; it renders the `FrameGrid 4`, never the box), `CtaBand` (home §8 row 10 and the other pages; it renders its own `FrameSection`), and the `id` + `data-guide` attributes on the current home sections (so the assistant's e2e runs before the home rewrite lands). No parallel track waits on, or edits, another parallel track's file (§16). | Critic: cross-track dependencies |
 
@@ -1222,7 +1222,7 @@ The `(auth)` group counts as a **public route**: no Radix DropdownMenu, Tooltip 
 
 ---
 
-## 10. The assistant: "virtual me"
+## 10. The assistant: GoodInBot (named "virtual me" until 2026-11-18)
 
 ### 10.1 Look
 - **Sprite:** §4.3. 3px cells (48px) in desktop mode, 2px (32px) in compact mode (§10.5), with a 1-row grey shadow when standing on a roof.
@@ -1378,8 +1378,8 @@ The pure maths lives in `geometry.ts` (`placeSprite`, `placeBubble`; the engine 
 - No auto-speak under webdriver.
 - The sprite never covers cell content on desktop (roof perch in the gap; rail perch inside the cell padding, or outside the border beside a `pad=none` cell, or no perch); bubbles follow the candidate rules above.
 
-### 10.6 Panel "virtual me" (quiet)
-- A **"Me" tile** at the inline-start of the panel dock (`PixelAvatar part="head" cell={2}` on a `brand` tile). It is a `<button type="button" aria-expanded aria-controls="panel-guide">` whose accessible name is its visible dock label `guide.name` («منِ مجازی» / "Virtual me"), like every dock tile; no `aria-label`.
+### 10.6 Panel GoodInBot (quiet)
+- A **"Me" tile** at the inline-start of the panel dock (`PixelAvatar part="head" cell={2}` on a `brand` tile). It is a `<button type="button" aria-expanded aria-controls="panel-guide">` whose accessible name is its visible dock label `guide.name` ("GoodInBot", Latin in both locales), like every dock tile; no `aria-label`.
 - It opens a bubble `<div id="panel-guide" popover="manual" role="group" aria-labelledby="panel-guide-name">` (`<p id="panel-guide-name">` = `guide.name`). Content:
   - a 3px `PixelAvatar`
   - `t.guide["panel_"+navKey]` for the active module (`navKey` from the same longest-prefix match `CurrentAppName` uses; `/panel` maps to `panel_dashboard` or `panel_portalHome` by role)
@@ -1717,20 +1717,20 @@ After all tracks merge the grep is empty, and qa-docs deletes the `.gt-glow` rul
 
 | key | fa | en |
 |---|---|---|
-| name | منِ مجازی | Virtual me |
-| toggle | راهنمای پیکسلی | Pixel guide |
-| show | نمایش راهنما | Show the guide |
-| hide | پنهان کردن راهنما | Hide the guide |
+| name | GoodInBot | GoodInBot |
+| toggle | GoodInBot | GoodInBot |
+| show | نمایش GoodInBot | Show GoodInBot |
+| hide | پنهان کردن GoodInBot | Hide GoodInBot |
 | explain | این بخش چیست؟ | What's this part? |
 | tour | گشت در این صفحه | Tour this page |
 | next | بعدی ({i} از {n}) | Next ({i} of {n}) |
 | endTour | پایان گشت | End tour |
 | tourDone | همین بود! هر وقت خواستی از نوار بالا صدایم کن. | That's all! Call me from the menu bar any time. |
 | tipsAuto | نمایش خودکار نکته‌ها | Show tips automatically |
-| greeting | سلام! من نسخهٔ پیکسلیِ {owner} هستم. به هر بخش که برسی، کوتاه می‌گویم چه خبر است. | Hi! I'm {owner}'s pixel twin. As you reach each part, I'll tell you briefly what it's about. |
-| greetingNoName | سلام! من نسخهٔ پیکسلیِ گودین تیم هستم. به هر بخش که برسی، کوتاه توضیحش می‌دهم. | Hi! I'm Good In Team's pixel twin. I'll explain each part as you reach it. |
-| greetingCompact | سلام! من نسخهٔ پیکسلیِ {owner} هستم. هر وقت علامت «!» را کنارم دیدی، رویم بزن تا آن بخش را توضیح بدهم. | Hi! I'm {owner}'s pixel twin. When you see my "!", tap or click me and I'll explain that part. |
-| greetingCompactNoName | سلام! من نسخهٔ پیکسلیِ گودین تیم هستم. هر وقت علامت «!» را کنارم دیدی، رویم بزن تا آن بخش را توضیح بدهم. | Hi! I'm Good In Team's pixel twin. When you see my "!", tap or click me and I'll explain that part. |
+| greeting | سلام، من GoodInBot هستم، دستیار پیکسلیِ {owner}. به هر بخش سایت که برسی، کوتاه می‌گویم دربارهٔ چیست. | Hi, I'm GoodInBot, {owner}'s pixel assistant. As you reach each part of the site, I'll tell you briefly what it's about. |
+| greetingNoName | سلام، من GoodInBot هستم. به هر بخش سایت که برسی، کوتاه می‌گویم دربارهٔ چیست. | Hi, I'm GoodInBot. As you reach each part of the site, I'll tell you briefly what it's about. |
+| greetingCompact | سلام، من GoodInBot هستم، دستیار پیکسلیِ {owner}. هر وقت علامت «!» را کنارم دیدی، رویم بزن تا آن بخش را توضیح بدهم. | Hi, I'm GoodInBot, {owner}'s pixel assistant. When you see my "!", tap or click me and I'll explain that part. |
+| greetingCompactNoName | سلام، من GoodInBot هستم. هر وقت علامت «!» را کنارم دیدی، رویم بزن تا آن بخش را توضیح بدهم. | Hi, I'm GoodInBot. When you see my "!", tap or click me and I'll explain that part. |
 | idle | هنوز این‌جایی؟ داک پایین صفحه تو را به هر بخش سایت می‌برد. | Still here? The dock at the bottom takes you to any part of the site. |
 | home_hero | این خلاصهٔ کار ماست. نمودار کنارش مسیر هر پروژه را نشان می‌دهد: ایده، طراحی، کد، انتشار. | That's what we do, in one line. The diagram beside it shows every project's path: idea, design, code, launch. |
 | spot_diagram | مسیر هر پروژه همین است و در پورتال مشتری همه‌اش را زنده می‌بینی. | This is every project's path, and you can follow all of it live in your client portal. |

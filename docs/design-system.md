@@ -6,7 +6,7 @@
 `#FFC50D` as the only accent, neutral greys, ink text, a macOS-like shell (menu bar, dock,
 windows) and, on the public site, Cloudflare-style **framed boxes** on a dotted desktop. Panel
 content keeps the soft Minimals surfaces (rounded cards, alpha badges). Brand assets (pixel
-logo, icons, the "virtual me" sprite) are documented in [brand.md](brand.md).
+logo, icons, the GoodInBot sprite) are documented in [brand.md](brand.md).
 
 A live catalog is at **Panel → Design system** (`/panel/design-system`, owner/admin): every
 token and component with a live preview and a copyable usage snippet. Its sections live in

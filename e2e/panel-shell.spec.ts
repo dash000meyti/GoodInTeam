@@ -42,7 +42,7 @@ test.describe("role dock", () => {
       // The overview item (dashboard / portal) is the mark tile only — never a group too.
       await expect(nav.locator('[data-dock-app][href="/en/panel"]')).toHaveCount(1);
       // Plus the Me tile (named by its visible label) and View site, which are not apps.
-      await expect(nav.getByRole("button", { name: "Virtual me" })).toBeVisible();
+      await expect(nav.getByRole("button", { name: "GoodInBot" })).toBeVisible();
       await expect(nav.getByRole("link", { name: /^View site/ })).toBeVisible();
       if (email === CLIENT) {
         for (const staff of ["time", "calendar", "tasks", "clients", "finance", "docs", "vault"])

@@ -130,7 +130,7 @@ function AvatarPaths({ cells }: { cells: readonly PixelCell[] }) {
 }
 
 /**
- * The "virtual me" as one static frame (≤4 elements). `part="head"` draws the
+ * GoodInBot as one static frame (≤4 elements). `part="head"` draws the
  * 10×10 AVATAR_ICON (the framed screen without limbs, eyes centred): the site
  * menu-bar extra, the panel guide and the Me tile use it at `cell={2}` (20px).
  * Decorative (aria-hidden).

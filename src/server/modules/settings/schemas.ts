@@ -99,7 +99,7 @@ export const profilePatchInput = z.object({
   siteGuide: z
     .boolean()
     .optional()
-    .describe("Show the pixel 'virtual me' guide on the public site (default true)"),
+    .describe("Show GoodInBot, the pixel guide, on the public site (default true)"),
 });
 export type ProfilePatch = z.output<typeof profilePatchInput>;
 

@@ -99,6 +99,27 @@ describe("guide copy", () => {
     }
   });
 
+  it("names the bot GoodInBot, in Latin script in both locales, and every greeting introduces it", () => {
+    expect(en.name).toBe("GoodInBot");
+    expect(fa.name).toBe("GoodInBot");
+    const greetings = [
+      "greeting",
+      "greetingNoName",
+      "greetingCompact",
+      "greetingCompactNoName",
+    ] as const;
+    for (const k of greetings) {
+      expect(en[k], `en.${k}`).toMatch(/^Hi, I'm GoodInBot\b/);
+      expect(fa[k], `fa.${k}`).toMatch(/^سلام، من GoodInBot هستم/);
+    }
+    // a Persian sentence never starts with the Latin name (`unicode-bidi: plaintext` in the
+    // bubble would set it LTR); only the bare-name labels do
+    for (const k of keys) if (fa[k] !== "GoodInBot") expect(fa[k], k).not.toMatch(/^[A-Za-z]/);
+    for (const old of [/virtual me/i, /pixel twin/i])
+      for (const k of keys) expect(en[k], k).not.toMatch(old);
+    for (const k of keys) expect(fa[k], k).not.toMatch(/منِ? مجازی|نسخهٔ پیکسلی/);
+  });
+
   it("formats the compact greeting without promising automatic explanations", () => {
     for (const g of [en.greetingCompact, en.greetingCompactNoName]) {
       expect(g).toMatch(/"!"/);

@@ -155,8 +155,9 @@ export const settings: Record<keyof typeof fa, string> = {
   availableForWork: "Open to new projects",
   availableForWorkHint: "Shows an “Available for work” badge on the site.",
   availableBadge: "Available for work",
-  siteGuide: "“Virtual me” guide on the site",
-  siteGuideHint: "The pixel avatar that briefly explains each part of the site. When off, neither the avatar nor its buttons appear.",
+  siteGuide: "GoodInBot on the site",
+  siteGuideHint:
+    "The pixel assistant that briefly explains each part of the site. When off, neither GoodInBot nor its buttons appear.",
   contact: "Contact",
   publicEmail: "Public email",
   publicPhone: "Public phone",

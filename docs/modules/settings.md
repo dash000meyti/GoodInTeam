@@ -91,7 +91,7 @@ its own error; `unflatten()` maps them back. Social links accept full URLs, bare
 convert stored amounts. Saving calls `updateTag("content")` (public pages read the profile).
 
 Two profile switches drive the public site: `availableForWork` (the "available" badge) and
-`siteGuide` (default on). With `siteGuide` off, `GuideMount` renders no guide layer, only a hide
+`siteGuide` (default on: GoodInBot, the pixel guide). With `siteGuide` off, `GuideMount` renders no guide layer, only a hide
 rule for the entry points marked `data-guide-entry` (menu bar sprite button, Control Center and
 Launchpad guide tiles); a visitor's own mute stays a per-browser preference.
 

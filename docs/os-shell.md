@@ -1,7 +1,7 @@
 # Good In OS shell
 
 How the public site and the panel are built as one small "OS": a menu bar, a dotted desktop with
-framed boxes (site) or one window (panel), a dock, the pixel brand and the "virtual me" guide.
+framed boxes (site) or one window (panel), a dock, the pixel brand and GoodInBot, the guide.
 The spec and its decisions live in [`design/os-redesign.md`](design/os-redesign.md); tokens,
 contrast and the component catalog in [design-system.md](design-system.md); the pixel assets and
 naming in [brand.md](brand.md). This page is the map you need to change or extend the shell.
@@ -181,7 +181,7 @@ SVG with one `<path>` per tone; sizes come only from `cell` (integer px per cell
 `size-*`/`w-*`/`h-*`. The brand registry (`brands.ts`: team, studio, code) maps services to
 brands. The 13 pixel icons and the avatar parts are unit-tested. See [brand.md](brand.md).
 
-## The guide ("virtual me")
+## The guide: GoodInBot
 
 **Files:** `components/site/guide/` — `guide-mount.tsx` (server, request-time greeting),
 `guide-layer.tsx` (the DOM: `#gt-guide`, sprite button, bubble, selection, live region),

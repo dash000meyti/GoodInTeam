@@ -99,7 +99,7 @@ export interface PanelGuide {
 }
 
 /**
- * The quiet panel "virtual me" (spec §10.6): state for the Me tile and its
+ * The quiet panel GoodInBot (spec §10.6): state for the Me tile and its
  * bubble. Handles `gt:guide` (the App menu's "About {module}"), Esc, outside
  * clicks and the one-time per-module peek (≥1024px, tips on, never under
  * webdriver).

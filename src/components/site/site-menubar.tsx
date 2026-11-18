@@ -61,7 +61,7 @@ const anchor = (name: string) => ({
 
 /**
  * Item 1: the brand menu, the character's icon alone (named `appName`, no
- * visible text). It also carries everything about the "virtual me": explain
+ * visible text). It also carries everything about GoodInBot, the guide: explain
  * this part, take the tour and the show-guide switch (`data-guide-entry`, so
  * the owner's site-guide switch hides them). The popover follows its trigger
  * (open style via `:has(+ :popover-open)`). Static links only.
