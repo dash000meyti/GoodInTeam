@@ -115,6 +115,11 @@ favorites. The detail drawer reveals secrets on demand, copies with a **30-secon
 auto-clear** (countdown toast), shows a live TOTP code with a countdown ring, password strength,
 and records "last viewed" (`viewVaultItemAction`, no refresh).
 
+Layout (framed, panel density; presentation only): setup and unlock are centered framed boxes
+(heading, stepper and step rows); the workspace's page box carries the tab strip; items are one
+box (filter row, then one cell per item type, two columns from xl); the generator and the six
+security sections are framed cells.
+
 Generator: random passwords (8–64, upper/lower/digits/symbols, avoid look-alikes; at least one char
 of each class, uniform via rejection sampling) or passphrases (3–12 words from an 830-word list,
 separator, capitalisation, number).

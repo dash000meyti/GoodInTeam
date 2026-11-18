@@ -7,9 +7,10 @@ This is the **reference implementation** — copy its structure for new modules.
 ```
 src/server/modules/projects/{schemas,service,actions,tools}.ts
 src/server/modules/clients/{schemas,service,actions,tools}.ts
-src/app/[locale]/panel/projects/page.tsx            list (cards)
+src/app/[locale]/panel/projects/page.tsx            list (one framed grid of project cells)
 src/app/[locale]/panel/projects/[id]/page.tsx       detail (tabs, `?tab=<name>` deep link — see below)
-src/app/[locale]/panel/projects/_components/*       client islands (form dialog, milestones, composer…)
+src/app/[locale]/panel/projects/_components/*       client islands (form dialog, milestones, composer…),
+                                                    frame-parts.tsx (SectionCell, KeyValueRow, FrameNote)
 src/app/[locale]/panel/clients/{page,[id]/page}.tsx
 src/app/[locale]/p/[token]/page.tsx                 public status page (no auth, token-gated)
 src/i18n/messages/{fa,en}/{projects,clients}.ts
@@ -34,6 +35,14 @@ and returns `null` without access. Which tabs a viewer gets:
 | portal     | owner/admin                | —                                  |
 
 `?tab=<name>` opens a tab directly (ignored when the viewer can't see it).
+
+Layout (the frame language at panel density, docs/design-system.md "Panel density"): the
+page box (`PageHeader`) carries the stats as a `StatRow` and the tab strip (chips) as its
+last rows; each tab's content follows as framed boxes — overview (description | details),
+milestones (hairline rows), updates (one cell per update) and portal (flags | public link)
+are built here, the module tabs render their panels' own boxes. Clients and the client
+detail use the same boxes (table / hairline rows, `SectionCell`s). The public status page
+`/p/<token>` uses site-density boxes with numbered strips on the desktop wallpaper.
 
 ## Access
 

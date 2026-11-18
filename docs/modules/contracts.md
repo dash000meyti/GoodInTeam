@@ -29,6 +29,13 @@ src/app/[locale]/sign/[token]/   public signing page
 src/i18n/messages/{fa,en}/contracts.ts
 ```
 
+Layout (framed, panel density): the list's page box carries the KPIs; one box holds the view
+chips, the filters and the table (template / starter cells on the templates view). The detail
+is a paper box beside one aside box (details, signatures, timeline); notices are tinted note
+boxes. The editor is a document box beside a settings box with a framed sticky save bar. The
+A4 sheet is a framed paper box on screen and drops its frame (hairline, markers) on paper.
+Skeletons for every route live in `_components/skeletons.tsx`.
+
 ## Lifecycle (state machine)
 
 ```
@@ -108,6 +115,9 @@ and the signing link (`/sign/…` vs `/en/sign/…`).
 - Unknown token or draft → not-found UI (streamed, so HTTP 200 like `/p/[token]`; noindex).
   Void / expired → friendly message only. Declined → notice + document. Signed → signed copy
   with signature blocks, audit summary and a print/PDF button.
+- Layout: site-density framed boxes with numbered strips on the desktop wallpaper (brand box
+  with language and theme, document box, signatures box); on paper they drop their hairlines,
+  markers and strips.
 - Pending: document (brand header, parties, version, fingerprint) + sticky signing panel on
   desktop, fixed bottom bar → bottom sheet on mobile. Fields: full name, optional email, drawn
   signature (`SignaturePad`: pointer events, coalesced points, velocity-weighted smooth strokes,
