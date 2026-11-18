@@ -17,7 +17,10 @@ import { localePath } from "@/i18n/config";
 import { useLocale, useT } from "@/i18n/client";
 import { contentTypes } from "@/lib/content";
 
-/** Filter bar for the posts table: type, language, status, search (URL-driven). */
+/**
+ * Filter row of the posts box: search, type, language, status (URL-driven).
+ * Phones: the search takes the row, the three selects share the next one.
+ */
 export function PostFilters({
   type,
   locale: filterLocale,
@@ -42,9 +45,9 @@ export function PostFilters({
     start(() => router.replace(localePath(locale, `/panel/content${qs ? `?${qs}` : ""}`)));
   };
   return (
-    <div className="mb-5 flex flex-wrap items-center gap-2" data-pending={pending || undefined}>
+    <div className="flex flex-wrap items-center gap-2" data-pending={pending || undefined}>
       <form
-        className="relative min-w-56 flex-1"
+        className="relative w-full md:w-auto md:min-w-56 md:flex-1"
         onSubmit={(e) => {
           e.preventDefault();
           go({ q: query || undefined });
@@ -64,7 +67,7 @@ export function PostFilters({
         onChange={(v) => go({ type: v || undefined })}
         noneLabel={t.content.allTypes}
         placeholder={t.content.allTypes}
-        className="w-40"
+        className="min-w-0 flex-1 basis-28 md:w-40 md:flex-none md:basis-auto"
         options={contentTypes.map((k) => ({ value: k, label: t.site[`type_${k}`] }))}
       />
       <SelectField
@@ -72,7 +75,7 @@ export function PostFilters({
         onChange={(v) => go({ locale: v || undefined })}
         noneLabel={t.content.allLocales}
         placeholder={t.content.allLocales}
-        className="w-36"
+        className="min-w-0 flex-1 basis-28 md:w-36 md:flex-none md:basis-auto"
         options={[
           { value: "fa", label: t.content.locale_fa },
           { value: "en", label: t.content.locale_en },
@@ -83,7 +86,7 @@ export function PostFilters({
         onChange={(v) => go({ status: v || undefined })}
         noneLabel={t.content.allStatuses}
         placeholder={t.content.allStatuses}
-        className="w-40"
+        className="min-w-0 flex-1 basis-28 md:w-40 md:flex-none md:basis-auto"
         options={(["draft", "scheduled", "published", "archived"] as const).map((s) => ({
           value: s,
           label: t.content[`status_${s}`],
