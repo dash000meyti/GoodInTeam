@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArchiveIcon, FolderKanbanIcon, ListIcon, PencilLineIcon, UsersIcon } from "lucide-react";
+import {
+  ArchiveIcon,
+  ChevronDownIcon,
+  FolderKanbanIcon,
+  ListIcon,
+  PencilLineIcon,
+  UsersIcon,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardHeader } from "@/components/ui/card";
@@ -135,8 +142,9 @@ export default async function DocPage({ params }: PageProps<"/[locale]/panel/doc
             <FrameCell pad="none">
               {hasToc && (
                 <details className="group/toc border-b border-frame-line lg:hidden print:hidden">
-                  <summary className="flex cursor-pointer items-center gap-2 px-(--cell-pad) py-3 text-sm font-semibold transition-colors hover:bg-card">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 px-(--cell-pad) py-3 text-sm font-semibold transition-colors hover:bg-card [&::-webkit-details-marker]:hidden">
                     <ListIcon className="size-4 text-muted-foreground" /> {d.onThisPage}
+                    <ChevronDownIcon className="ms-auto size-4 text-muted-foreground transition-transform group-open/toc:rotate-180" />
                   </summary>
                   <DocToc headings={toc} className="px-(--cell-pad) pb-4" />
                 </details>
