@@ -13,7 +13,6 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Sheet,
   SheetContent,
@@ -77,60 +76,62 @@ export function LeadsBoard({ rows }: { rows: LeadRow[] }) {
 
   return (
     <>
-      <Card className="divide-y divide-dashed divide-border py-0">
+      {/* Hairline rows edge to edge (the inbox box's list cell); a row opens the lead sheet. */}
+      <ul className="divide-y divide-frame-line">
         {rows.map((r) => (
-          <button
-            key={r.id}
-            type="button"
-            onClick={() => setOpenId(r.id)}
-            className="flex w-full cursor-pointer items-start gap-4 px-5 py-4 text-start transition-colors hover:bg-muted/50"
-          >
-            <span
-              className={cn(
-                "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-                r.status === "new"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground",
-              )}
+          <li key={r.id}>
+            <button
+              type="button"
+              onClick={() => setOpenId(r.id)}
+              className="flex w-full cursor-pointer items-start gap-4 px-(--cell-pad) py-4 text-start transition-colors hover:bg-card"
             >
-              {initials(r.name)}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex flex-wrap items-center gap-2">
-                <span
-                  className={cn(
-                    "truncate",
-                    r.status === "new" ? "font-extrabold" : "font-semibold",
+              <span
+                className={cn(
+                  "flex size-10 shrink-0 items-center justify-center border text-sm font-bold",
+                  r.status === "new"
+                    ? "border-[var(--primary-dark)] bg-primary text-primary-foreground"
+                    : "border-frame-line bg-card text-muted-foreground",
+                )}
+              >
+                {initials(r.name)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={cn(
+                      "truncate",
+                      r.status === "new" ? "font-extrabold" : "font-semibold",
+                    )}
+                    dir="auto"
+                  >
+                    {r.name}
+                  </span>
+                  {r.company && (
+                    <span className="truncate text-xs text-muted-foreground" dir="auto">
+                      · {r.company}
+                    </span>
                   )}
+                  <Badge variant={leadVariant[r.status]} className="ms-auto">
+                    {c[`leadStatus_${r.status}`]}
+                  </Badge>
+                </span>
+                <span
+                  className="mt-1 line-clamp-2 block text-sm leading-6 text-muted-foreground"
                   dir="auto"
                 >
-                  {r.name}
+                  {r.message}
                 </span>
-                {r.company && (
-                  <span className="truncate text-xs text-muted-foreground" dir="auto">
-                    · {r.company}
-                  </span>
-                )}
-                <Badge variant={leadVariant[r.status]} className="ms-auto">
-                  {c[`leadStatus_${r.status}`]}
-                </Badge>
+                <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span>{r.received}</span>
+                  {r.serviceLabel && <span>· {r.serviceLabel}</span>}
+                  {r.budgetLabel && <span>· {r.budgetLabel}</span>}
+                  <span className="uppercase">· {r.locale}</span>
+                </span>
               </span>
-              <span
-                className="mt-1 line-clamp-2 block text-sm leading-6 text-muted-foreground"
-                dir="auto"
-              >
-                {r.message}
-              </span>
-              <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span>{r.received}</span>
-                {r.serviceLabel && <span>· {r.serviceLabel}</span>}
-                {r.budgetLabel && <span>· {r.budgetLabel}</span>}
-                <span className="uppercase">· {r.locale}</span>
-              </span>
-            </span>
-          </button>
+            </button>
+          </li>
         ))}
-      </Card>
+      </ul>
 
       <Sheet open={!!open} onOpenChange={(o) => !o && setOpenId(null)}>
         <SheetContent side="end" className="w-full overflow-y-auto sm:max-w-lg">
