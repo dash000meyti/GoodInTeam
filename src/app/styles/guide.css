@@ -42,6 +42,9 @@
     block-size: calc(var(--bot) + 16px);
     translate: var(--gx, 0) var(--gy, 0);
     overflow: clip;
+    /* never a "visible" box itself: only the bot inside shows, so the slot can be
+       placed (or switch to fixed) between frames without counting as layout shift */
+    visibility: hidden;
   }
   .gt-guide[data-rest] .gt-guide-slot {
     overflow: visible;
@@ -72,6 +75,9 @@
   .gt-guide:is([data-anchor="bottom"], [data-anchor="chrome"]) .gt-guide-sprite {
     top: calc(2px - var(--bot) / 4);
     bottom: auto;
+  }
+  .gt-guide[data-bot="out"] .gt-guide-sprite {
+    visibility: visible;
   }
   .gt-guide:not([data-bot="out"]) .gt-guide-sprite {
     translate: 0 var(--duck);
