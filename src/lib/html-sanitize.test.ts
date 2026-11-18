@@ -350,6 +350,68 @@ describe("Markdown mirrors carry the sanitised source", () => {
     expect(sanitizeMarkdownHtml("a <!-- hidden note --> b\n")).toBe("a  b\n");
   });
 
+  it("keeps code inside lists and quotes as it is", () => {
+    const md = [
+      "1. Install it:",
+      "",
+      "   ```tsx",
+      '   export const App = () => <div className="app">',
+      '     <Child<string> value="x" />',
+      "",
+      "   >>> not a quote",
+      "   </div>;",
+      "   ```",
+      "",
+      "2. Use `Array<string>` here",
+      "   and `<b>` on the next line of the same item.",
+      "",
+      "> A quote with code:",
+      ">",
+      "> ```html",
+      "> <script>shown()</script>",
+      "> ```",
+      ">",
+      "> and `<i>` after it.",
+      "",
+      "| tag | meaning |",
+      "| --- | --- |",
+      "| `<b>` | bold |",
+      "",
+    ].join("\n");
+    expect(sanitizeMarkdownHtml(md)).toBe(md);
+  });
+
+  it("still cleans raw HTML next to code inside lists and quotes", () => {
+    const out = sanitizeMarkdownHtml(
+      [
+        "- item <script>alert(1)</script> with `<code>` kept",
+        "  second line <img src=x onerror=alert(1)> and `<img onerror=x>` kept",
+        "",
+        "  ```html",
+        "  <script>kept()</script>",
+        "  ```",
+        "",
+        "> quote <svg onload=alert(1)>",
+        '> more <b onclick="x()">bold</b>',
+        "",
+      ].join("\n"),
+    );
+    expect(out).toContain("item &lt;script>alert(1)&lt;/script> with `<code>` kept");
+    expect(out).toContain('second line <img src="x" /> and `<img onerror=x>` kept');
+    expect(out).toContain("  ```html\n  <script>kept()</script>\n  ```");
+    expect(out).toContain("> quote &lt;svg onload=alert(1)>");
+    expect(out).toContain("> more <b>bold</b>");
+  });
+
+  it("does not take fence-like lines inside raw HTML for code", () => {
+    // An HTML block is raw HTML up to its blank line, whatever its lines look like.
+    const out = sanitizeMarkdownHtml(
+      "<div>\n```\n<script>alert(1)</script>\n```\n</div>\n\n- x\n\n  <div>\n  ```\n  <script>alert(2)</script>\n  ```\n  </div>\n",
+    );
+    expect(out).not.toMatch(/<script/);
+    expect(out.match(/&lt;script>/g)).toHaveLength(2);
+  });
+
   it("stays fast on hostile input", () => {
     const started = performance.now();
     sanitizeMarkdownHtml("<!--".repeat(50_000));

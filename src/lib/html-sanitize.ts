@@ -274,24 +274,75 @@ function leaves(token: Node, out: Token[] = []) {
   return out;
 }
 
-/** One top-level block: everything is cleaned except inline code found in its exact place. */
+/** What a list or a quote puts in front of a continuation line. */
+const isPrefix = (ch: string | undefined) => ch === " " || ch === "\t" || ch === ">";
+/** How many places a multi-line piece is tried at (bounds the work on hostile input). */
+const MAX_CANDIDATES = 16;
+
+/**
+ * Where `piece` (the raw text of a token) sits in `raw` at or after `from`.
+ * Inside a list or a quote the lexer strips the indentation and the `>` of
+ * continuation lines, so a multi-line piece is also matched line by line
+ * behind such a prefix. Returns the span in `raw`, or null.
+ */
+function locate(raw: string, piece: string, from: number): [number, number] | null {
+  const exact = raw.indexOf(piece, from);
+  if (exact !== -1) return [exact, exact + piece.length];
+  const lines = piece.split("\n");
+  if (lines.length < 2) return null;
+  let start = raw.indexOf(lines[0]!, from);
+  for (let tries = 0; start !== -1 && tries < MAX_CANDIDATES; tries++) {
+    let pos = start + lines[0]!.length;
+    let ok = true;
+    for (let i = 1; i < lines.length && ok; i++) {
+      if (raw[pos] !== "\n") ok = false;
+      else {
+        pos++;
+        const want = lines[i]!.trimStart();
+        if (want === "" && i === lines.length - 1) break; // the piece ends with its line break
+        let end = pos;
+        while (isPrefix(raw[end])) end++;
+        if (want === "") {
+          // An empty line of the piece is a line with nothing but the prefix.
+          ok = end === raw.length || raw[end] === "\n";
+          pos = end;
+        } else {
+          // The line starts somewhere inside the run of prefix characters.
+          let at = pos;
+          while (at <= end && !raw.startsWith(want, at)) at++;
+          ok = at <= end;
+          pos = at + want.length;
+        }
+      }
+    }
+    if (ok) return [start, pos];
+    start = raw.indexOf(lines[0]!, start + 1);
+  }
+  return null;
+}
+
+/** Code is text: a code block inside a list or a quote, and inline code. */
+const VERBATIM = new Set(["code", "codespan"]);
+
+/** One top-level block: everything is cleaned except the code found in its exact place. */
 function cleanBlock(token: Token) {
   const raw = token.raw;
   let out = "";
   let cursor = 0;
   // Once a piece cannot be located, positions after it are no longer certain
-  // and inline code is cleaned like the text around it.
+  // and code is cleaned like the text around it.
   let certain = true;
   for (const leaf of leaves(token)) {
     if (!leaf.raw) continue;
-    const at = raw.indexOf(leaf.raw, cursor);
-    if (at === -1) {
+    const span = locate(raw, leaf.raw, cursor);
+    if (!span) {
       certain = false;
       continue;
     }
-    out += cleanText(raw.slice(cursor, at));
-    out += leaf.type === "codespan" && certain ? leaf.raw : cleanText(leaf.raw);
-    cursor = at + leaf.raw.length;
+    const text = raw.slice(span[0], span[1]);
+    out += cleanText(raw.slice(cursor, span[0]));
+    out += VERBATIM.has(leaf.type) && certain ? text : cleanText(text);
+    cursor = span[1];
   }
   return out + cleanText(raw.slice(cursor));
 }
