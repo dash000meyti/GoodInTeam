@@ -1,11 +1,18 @@
 import Link from "next/link";
 import { FolderKanbanIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { ColorDot } from "@/components/shared/color-dot";
+import {
+  FrameBox,
+  FrameCell,
+  FrameFiller,
+  FrameGrid,
+  HEADING_CLASS,
+} from "@/components/shell/frame";
+import { packRows } from "@/components/site/frame-plan";
 import { isOverdue } from "@/lib/due";
 import { formatDate, formatHours, formatPercent } from "@/lib/format";
 import { markdownToText } from "@/lib/markdown";
@@ -17,6 +24,12 @@ import { panelContext } from "@/server/page-context";
 import { ProjectFormDialog } from "./_components/project-form";
 import { ProjectStatusBadge } from "./_components/project-status-badge";
 
+/**
+ * Projects (framed): the page box, then every project as a cell of one
+ * framed grid (cells share hairlines; the whole cell links to the project).
+ * Clients get the same grid with what their portal shares (the service nulls
+ * progress / tracked time that isn't shared).
+ */
 export default async function ProjectsPage() {
   const { actor, t, fmt, href, locale, now, tz } = await panelContext();
   const list = await listProjects(actor);
@@ -24,6 +37,7 @@ export default async function ProjectsPage() {
   const staff = isStaff(actor);
   const clients = admin ? clientOptions(actor) : [];
   const p = t.projects;
+  const spans = list.map(() => undefined);
 
   const newButton = admin ? (
     <ProjectFormDialog
@@ -52,25 +66,25 @@ export default async function ProjectsPage() {
           action={newButton}
         />
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {list.map((proj) => {
-            // A due day is overdue only after it ends (app timezone), not from 00:00.
-            const late =
-              proj.status === "active" && isOverdue(proj.dueDate, { allDay: true, now, tz });
-            return (
-              <Link key={proj.id} href={href(`/panel/projects/${proj.id}`)} className="group">
-                <Card className="relative h-full gap-4 overflow-hidden p-6 transition-shadow group-hover:shadow-dropdown">
-                  <span
-                    aria-hidden
-                    className="absolute inset-x-0 top-0 h-1"
-                    style={{ backgroundColor: proj.color }}
-                  />
+        <FrameBox as="section" density="compact" ariaLabel={p.title}>
+          <FrameGrid cols={3}>
+            {list.map((proj) => {
+              // A due day is overdue only after it ends (app timezone), not from 00:00.
+              const late =
+                proj.status === "active" && isOverdue(proj.dueDate, { allDay: true, now, tz });
+              return (
+                <FrameCell key={proj.id} as="article" hover className="group flex flex-col gap-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <ColorDot color={proj.color} />
-                        <h2 className="truncate font-bold group-hover:text-primary-ink">
-                          {proj.name}
+                        <ColorDot color={proj.color} className="rounded-none" />
+                        <h2 className={cn(HEADING_CLASS.box, "truncate")}>
+                          <Link
+                            href={href(`/panel/projects/${proj.id}`)}
+                            className="group-hover:text-primary-ink after:absolute after:inset-0"
+                          >
+                            {proj.name}
+                          </Link>
                         </h2>
                       </div>
                       <p className="mt-1 truncate text-sm text-muted-foreground">
@@ -89,7 +103,7 @@ export default async function ProjectsPage() {
                     <div className="mt-auto space-y-2">
                       <div className="flex items-center justify-between text-xs font-semibold">
                         <span className="text-muted-foreground">{p.progress}</span>
-                        <span>{formatPercent(proj.progress, locale)}</span>
+                        <span className="tabular-nums">{formatPercent(proj.progress, locale)}</span>
                       </div>
                       <Progress
                         value={proj.progress}
@@ -101,14 +115,16 @@ export default async function ProjectsPage() {
                   {(proj.trackedMs != null || proj.dueDate) && (
                     <div
                       className={cn(
-                        "flex items-center justify-between border-t border-dashed pt-3 text-xs text-muted-foreground",
+                        "flex items-center justify-between gap-3 border-t border-dashed border-frame-line pt-3 text-xs text-muted-foreground",
                         proj.progress == null && "mt-auto",
                       )}
                     >
                       {proj.trackedMs != null ? (
                         <span>
                           {p.timeSpent}:{" "}
-                          <b className="text-foreground">{formatHours(proj.trackedMs, locale)}</b>{" "}
+                          <b className="text-foreground tabular-nums">
+                            {formatHours(proj.trackedMs, locale)}
+                          </b>{" "}
                           {t.common.hours}
                         </span>
                       ) : (
@@ -121,11 +137,17 @@ export default async function ProjectsPage() {
                       )}
                     </div>
                   )}
-                </Card>
-              </Link>
-            );
-          })}
-        </div>
+                </FrameCell>
+              );
+            })}
+            <FrameFiller
+              units={{
+                md: packRows(spans, 3, "md").trailing,
+                lg: packRows(spans, 3, "lg").trailing,
+              }}
+            />
+          </FrameGrid>
+        </FrameBox>
       )}
     </>
   );

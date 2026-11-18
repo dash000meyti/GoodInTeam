@@ -6,17 +6,18 @@ import {
   ExternalLinkIcon,
   GitBranchIcon,
   GlobeIcon,
+  MegaphoneIcon,
   WalletIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorDot } from "@/components/shared/color-dot";
 import { Markdown } from "@/components/shared/markdown";
+import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { STAT_VALUE_CLASS, StatCard, StatGrid } from "@/components/panel/stat-card";
-import { FrameCell } from "@/components/shell/frame";
+import { STAT_VALUE_CLASS, StatCard, StatRow } from "@/components/panel/stat-card";
+import { FrameBox, FrameCell, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { daysUntil } from "@/lib/due";
 import { env } from "@/lib/env";
 import { formatDate, formatDateTime, formatHours, formatNumber, formatPercent } from "@/lib/format";
@@ -34,6 +35,7 @@ import { ProjectDocsPanel } from "../../docs/_components/project-docs-panel";
 import { ProjectFinancePanel } from "../../finance/_components/project-finance-panel";
 import { ProjectTasksPanel } from "../../tasks/_components/project-tasks-panel";
 import { ProjectTimePanel } from "../../time/_components/project-time-panel";
+import { KeyValueRow, SectionCell } from "../_components/frame-parts";
 import { MilestonesPanel } from "../_components/milestones-panel";
 import { ProjectActions } from "../_components/project-actions";
 import type { ProjectFormValues } from "../_components/project-form";
@@ -44,6 +46,14 @@ import { kindLabels } from "../_components/update-kinds";
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
+/** Strip path segment: only Latin slugs (the pixel font has no Persian glyphs). */
+const LATIN_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i;
+
+/**
+ * Project detail (framed): the page box carries the project's stats and the
+ * tab strip as its last rows; each tab's content follows as framed boxes
+ * (the module panels of other tabs render their own boxes).
+ */
 export default async function ProjectPage({
   params,
   searchParams,
@@ -117,18 +127,63 @@ export default async function ProjectPage({
     shareDocs: project.shareDocs,
   };
 
+  const statCells = [
+    progress != null && (
+      <FrameCell key="progress" className="flex flex-col gap-2">
+        <p className="pt-1.5 text-sm leading-5 font-semibold text-muted-foreground">{p.progress}</p>
+        <p className={STAT_VALUE_CLASS}>{formatPercent(progress, locale)}</p>
+        <Progress value={progress} className="mt-1" />
+      </FrameCell>
+    ),
+    stats.trackedMs != null && (
+      <StatCard
+        key="time"
+        label={p.timeSpent}
+        value={`${formatHours(stats.trackedMs, locale)} ${t.common.hours}`}
+        hint={
+          project.estimateHours
+            ? `/ ${formatNumber(project.estimateHours, locale)} ${t.common.hours}`
+            : undefined
+        }
+        icon={ClockIcon}
+        tone="info"
+      />
+    ),
+    project.dueDate && (
+      <StatCard
+        key="due"
+        label={p.dueDate}
+        value={formatDate(project.dueDate, fmt)}
+        hint={dueHint}
+        icon={CalendarIcon}
+        tone={daysLeft != null && daysLeft < 0 ? "destructive" : "warning"}
+      />
+    ),
+    admin && project.budgetMinor != null && (
+      <StatCard
+        key="budget"
+        label={p.budget}
+        value={formatMoney(project.budgetMinor, project.currency, locale, { compact: true })}
+        hint={p[`billing_${project.billingType}`]}
+        icon={WalletIcon}
+        tone="success"
+      />
+    ),
+  ].filter(Boolean);
+
   return (
-    <>
+    <Tabs defaultValue={activeTab} className="gap-0">
       <PageHeader
         title={
-          <span className="flex items-center gap-3">
-            <ColorDot color={project.color} className="size-3.5" />
-            {project.name}
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <ColorDot color={project.color} className="size-3.5 rounded-none" />
+            <span className="min-w-0">{project.name}</span>
             <ProjectStatusBadge status={project.status} t={p} />
           </span>
         }
         crumbs={[{ label: p.title, href: href("/panel/projects") }, { label: project.name }]}
         description={project.client?.name}
+        path={["PROJECTS", ...(LATIN_SLUG.test(project.slug) ? [project.slug] : [])]}
         actions={
           admin && (
             <ProjectActions
@@ -138,134 +193,140 @@ export default async function ProjectPage({
             />
           )
         }
-      />
-
-      <StatGrid>
-        {progress != null && (
-          <FrameCell className="flex flex-col gap-2">
-            <p className="pt-1.5 text-sm leading-5 font-semibold text-muted-foreground">
-              {p.progress}
-            </p>
-            <p className={STAT_VALUE_CLASS}>{formatPercent(progress, locale)}</p>
-            <Progress value={progress} className="mt-1" />
+      >
+        {statCells.length > 0 && <StatRow>{statCells}</StatRow>}
+        {/* The framed tab strip: the box's last row, chips like the site's filter row. */}
+        <FrameGrid cols={1}>
+          <FrameCell className="py-3">
+            <TabsList className="-mx-1 max-w-[calc(100%+0.5rem)] scrollbar-thin justify-start overflow-x-auto px-1 py-0.5">
+              <TabsTrigger value="overview" className="flex-none">
+                {p.overview}
+              </TabsTrigger>
+              {tabs.milestones && (
+                <TabsTrigger value="milestones" className="flex-none">
+                  {p.milestones}
+                </TabsTrigger>
+              )}
+              <TabsTrigger value="updates" className="flex-none">
+                {p.updates}
+              </TabsTrigger>
+              {tabs.tasks && (
+                <TabsTrigger value="tasks" className="flex-none">
+                  {p.tabTasks}
+                </TabsTrigger>
+              )}
+              {tabs.time && (
+                <TabsTrigger value="time" className="flex-none">
+                  {p.tabTime}
+                </TabsTrigger>
+              )}
+              <TabsTrigger value="calendar" className="flex-none">
+                {p.tabCalendar}
+              </TabsTrigger>
+              {tabs.contracts && (
+                <TabsTrigger value="contracts" className="flex-none">
+                  {p.tabContracts}
+                </TabsTrigger>
+              )}
+              {tabs.finance && (
+                <TabsTrigger value="finance" className="flex-none">
+                  {p.tabFinance}
+                </TabsTrigger>
+              )}
+              {tabs.docs && (
+                <TabsTrigger value="docs" className="flex-none">
+                  {p.tabDocs}
+                </TabsTrigger>
+              )}
+              {tabs.portal && (
+                <TabsTrigger value="portal" className="flex-none">
+                  {p.portal}
+                </TabsTrigger>
+              )}
+            </TabsList>
           </FrameCell>
-        )}
-        {stats.trackedMs != null && (
-          <StatCard
-            label={p.timeSpent}
-            value={`${formatHours(stats.trackedMs, locale)} ${t.common.hours}`}
-            hint={
-              project.estimateHours ? `/ ${project.estimateHours} ${t.common.hours}` : undefined
-            }
-            icon={ClockIcon}
-            tone="info"
-          />
-        )}
-        {project.dueDate && (
-          <StatCard
-            label={p.dueDate}
-            value={formatDate(project.dueDate, fmt)}
-            hint={dueHint}
-            icon={CalendarIcon}
-            tone={daysLeft != null && daysLeft < 0 ? "destructive" : "warning"}
-          />
-        )}
-        {admin && project.budgetMinor != null && (
-          <StatCard
-            label={p.budget}
-            value={formatMoney(project.budgetMinor, project.currency, locale, { compact: true })}
-            hint={p[`billing_${project.billingType}`]}
-            icon={WalletIcon}
-            tone="success"
-          />
-        )}
-      </StatGrid>
+        </FrameGrid>
+      </PageHeader>
 
-      <Tabs defaultValue={activeTab} className="mt-8">
-        <TabsList className="max-w-full justify-start overflow-x-auto">
-          <TabsTrigger value="overview">{p.overview}</TabsTrigger>
-          {tabs.milestones && <TabsTrigger value="milestones">{p.milestones}</TabsTrigger>}
-          <TabsTrigger value="updates">{p.updates}</TabsTrigger>
-          {tabs.tasks && <TabsTrigger value="tasks">{p.tabTasks}</TabsTrigger>}
-          {tabs.time && <TabsTrigger value="time">{p.tabTime}</TabsTrigger>}
-          <TabsTrigger value="calendar">{p.tabCalendar}</TabsTrigger>
-          {tabs.contracts && <TabsTrigger value="contracts">{p.tabContracts}</TabsTrigger>}
-          {tabs.finance && <TabsTrigger value="finance">{p.tabFinance}</TabsTrigger>}
-          {tabs.docs && <TabsTrigger value="docs">{p.tabDocs}</TabsTrigger>}
-          {tabs.portal && <TabsTrigger value="portal">{p.portal}</TabsTrigger>}
-        </TabsList>
-
-        <TabsContent value="overview">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>{t.common.description}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {project.description ? (
-                  <Markdown source={project.description} />
-                ) : (
-                  <p className="text-sm text-muted-foreground">—</p>
+      <TabsContent value="overview">
+        <FrameBox as="div" density="compact">
+          <FrameGrid cols="2-1">
+            <SectionCell title={t.common.description} titleId="pj-description">
+              {project.description ? (
+                <Markdown source={project.description} />
+              ) : (
+                <p className="text-sm text-muted-foreground">—</p>
+              )}
+            </SectionCell>
+            <SectionCell title={t.common.details} titleId="pj-details">
+              <dl>
+                <KeyValueRow label={p.client}>{project.client?.name ?? p.noClient}</KeyValueRow>
+                <KeyValueRow label={p.startDate}>{formatDate(project.startDate, fmt)}</KeyValueRow>
+                {staff && (
+                  <KeyValueRow label={p.billingType}>
+                    {p[`billing_${project.billingType}`]}
+                  </KeyValueRow>
                 )}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>{t.common.details}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <Row label={p.client} value={project.client?.name ?? p.noClient} />
-                <Row label={p.startDate} value={formatDate(project.startDate, fmt)} />
-                {staff && <Row label={p.billingType} value={p[`billing_${project.billingType}`]} />}
                 {admin && project.hourlyRateMinor != null && (
-                  <Row
-                    label={p.hourlyRate}
-                    value={formatMoney(project.hourlyRateMinor, project.currency, locale)}
-                  />
+                  <KeyValueRow label={p.hourlyRate}>
+                    {formatMoney(project.hourlyRateMinor, project.currency, locale)}
+                  </KeyValueRow>
                 )}
                 {admin &&
                   stats.money.map((m) => (
-                    <Row
+                    <KeyValueRow
                       key={m.kind + m.currency}
                       label={
                         m.kind === "income"
                           ? t.panel.monthIncome.split(" ")[0]!
                           : t.panel.monthExpense.split(" ")[0]!
                       }
-                      value={formatMoney(m.total, m.currency, locale)}
-                    />
+                    >
+                      {formatMoney(m.total, m.currency, locale)}
+                    </KeyValueRow>
                   ))}
-                {project.websiteUrl && (
-                  <a
-                    href={project.websiteUrl}
-                    target="_blank"
-                    rel="noopener"
-                    className="flex items-center gap-2 font-semibold text-primary-ink hover:underline"
-                  >
-                    <GlobeIcon className="size-4" /> {p.websiteUrl}{" "}
-                    <ExternalLinkIcon className="size-3" />
-                  </a>
-                )}
-                {staff && project.repoUrl && (
-                  <a
-                    href={project.repoUrl}
-                    target="_blank"
-                    rel="noopener"
-                    className="flex items-center gap-2 font-semibold text-primary-ink hover:underline"
-                  >
-                    <GitBranchIcon className="size-4" /> {p.repoUrl}{" "}
-                    <ExternalLinkIcon className="size-3" />
-                  </a>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+              </dl>
+              {(project.websiteUrl || (staff && project.repoUrl)) && (
+                <div className="mt-4 space-y-2 border-t border-frame-line pt-4 text-sm">
+                  {project.websiteUrl && (
+                    <a
+                      href={project.websiteUrl}
+                      target="_blank"
+                      rel="noopener"
+                      className="flex items-center gap-2 font-semibold text-primary-ink hover:underline"
+                    >
+                      <GlobeIcon className="size-4" /> {p.websiteUrl}{" "}
+                      <ExternalLinkIcon className="size-3" />
+                    </a>
+                  )}
+                  {staff && project.repoUrl && (
+                    <a
+                      href={project.repoUrl}
+                      target="_blank"
+                      rel="noopener"
+                      className="flex items-center gap-2 font-semibold text-primary-ink hover:underline"
+                    >
+                      <GitBranchIcon className="size-4" /> {p.repoUrl}{" "}
+                      <ExternalLinkIcon className="size-3" />
+                    </a>
+                  )}
+                </div>
+              )}
+            </SectionCell>
+          </FrameGrid>
+        </FrameBox>
+      </TabsContent>
 
-        {showProgress && (
-          <TabsContent value="milestones">
-            <Card>
-              <CardContent>
+      {showProgress && (
+        <TabsContent value="milestones">
+          <FrameBox as="div" density="compact">
+            <FrameGrid cols={1}>
+              <SectionCell
+                title={p.milestones}
+                titleId="pj-milestones"
+                description={`${p.progressMode}: ${p[`progress_${project.progressMode}`]}`}
+                flush
+              >
                 <MilestonesPanel
                   projectId={project.id}
                   editable={admin}
@@ -278,95 +339,105 @@ export default async function ProjectPage({
                     dueLabel: m.dueDate ? formatDate(m.dueDate, fmt) : null,
                   }))}
                 />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
+              </SectionCell>
+            </FrameGrid>
+          </FrameBox>
+        </TabsContent>
+      )}
 
-        <TabsContent value="updates">
-          <div className="space-y-6">
-            {staff && <UpdateComposer projectId={project.id} locale={locale} />}
-            {updates.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted-foreground">{t.common.empty}</p>
-            ) : (
-              <ol className="space-y-4">
-                {updates.map((u) => (
-                  <li key={u.id}>
-                    <Card className="gap-3 p-6">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge
-                          variant={
-                            u.kind === "release"
-                              ? "success"
-                              : u.kind === "issue"
-                                ? "destructive"
-                                : u.kind === "request"
-                                  ? "warning"
-                                  : "info"
-                          }
-                        >
-                          {kindLabels[locale][u.kind]}
-                        </Badge>
-                        <h3 className="font-bold">{u.title}</h3>
-                        {staff && !u.visibleToClient && (
-                          <Badge variant="neutral">{t.common.draft}</Badge>
-                        )}
-                        <span className="ms-auto text-xs text-muted-foreground">
-                          {u.author?.name} · {formatDateTime(u.createdAt, fmt)}
-                        </span>
-                      </div>
-                      {u.bodyMd && <Markdown source={u.bodyMd} />}
-                    </Card>
-                  </li>
-                ))}
-              </ol>
+      <TabsContent value="updates">
+        {updates.length === 0 && !staff ? (
+          <EmptyState icon={MegaphoneIcon} title={t.common.empty} />
+        ) : (
+          <FrameBox as="section" density="compact" ariaLabel={p.updates}>
+            {staff && (
+              <FrameGrid cols={1}>
+                <FrameCell className="py-3">
+                  <UpdateComposer projectId={project.id} locale={locale} />
+                </FrameCell>
+              </FrameGrid>
             )}
-          </div>
+            {updates.length === 0 ? (
+              <FrameGrid cols={1}>
+                <FrameCell>
+                  <EmptyState icon={MegaphoneIcon} title={t.common.empty} className="py-8" />
+                </FrameCell>
+              </FrameGrid>
+            ) : (
+              <FrameGrid cols={1}>
+                {updates.map((u) => (
+                  <FrameCell key={u.id} as="article" className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge
+                        variant={
+                          u.kind === "release"
+                            ? "success"
+                            : u.kind === "issue"
+                              ? "destructive"
+                              : u.kind === "request"
+                                ? "warning"
+                                : "info"
+                        }
+                      >
+                        {kindLabels[locale][u.kind]}
+                      </Badge>
+                      <h3 className={HEADING_CLASS.box}>{u.title}</h3>
+                      {staff && !u.visibleToClient && (
+                        <Badge variant="neutral">{t.common.draft}</Badge>
+                      )}
+                      <span className="ms-auto text-xs text-muted-foreground">
+                        {u.author?.name} · {formatDateTime(u.createdAt, fmt)}
+                      </span>
+                    </div>
+                    {u.bodyMd && <Markdown source={u.bodyMd} />}
+                  </FrameCell>
+                ))}
+              </FrameGrid>
+            )}
+          </FrameBox>
+        )}
+      </TabsContent>
+
+      {tabs.tasks && (
+        <TabsContent value="tasks">
+          <ProjectTasksPanel projectId={project.id} ctx={ctx} clientView={isClient} />
         </TabsContent>
+      )}
 
-        {tabs.tasks && (
-          <TabsContent value="tasks">
-            <ProjectTasksPanel projectId={project.id} ctx={ctx} clientView={isClient} />
-          </TabsContent>
-        )}
-
-        {tabs.time && (
-          <TabsContent value="time">
-            <ProjectTimePanel projectId={project.id} ctx={ctx} clientView={isClient} />
-          </TabsContent>
-        )}
-
-        <TabsContent value="calendar">
-          <ProjectEventsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
+      {tabs.time && (
+        <TabsContent value="time">
+          <ProjectTimePanel projectId={project.id} ctx={ctx} clientView={isClient} />
         </TabsContent>
+      )}
 
-        {tabs.contracts && (
-          <TabsContent value="contracts">
-            <ProjectContractsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
-          </TabsContent>
-        )}
+      <TabsContent value="calendar">
+        <ProjectEventsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
+      </TabsContent>
 
-        {tabs.finance && (
-          <TabsContent value="finance">
-            <ProjectFinancePanel projectId={project.id} ctx={ctx} clientView={isClient} />
-          </TabsContent>
-        )}
+      {tabs.contracts && (
+        <TabsContent value="contracts">
+          <ProjectContractsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
+        </TabsContent>
+      )}
 
-        {tabs.docs && (
-          <TabsContent value="docs">
-            <ProjectDocsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
-          </TabsContent>
-        )}
+      {tabs.finance && (
+        <TabsContent value="finance">
+          <ProjectFinancePanel projectId={project.id} ctx={ctx} clientView={isClient} />
+        </TabsContent>
+      )}
 
-        {tabs.portal && (
-          <TabsContent value="portal">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{p.portal}</CardTitle>
-                  <CardDescription>{p.portalHint}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
+      {tabs.docs && (
+        <TabsContent value="docs">
+          <ProjectDocsPanel projectId={project.id} ctx={ctx} clientView={isClient} />
+        </TabsContent>
+      )}
+
+      {tabs.portal && (
+        <TabsContent value="portal">
+          <FrameBox as="div" density="compact">
+            <FrameGrid cols={2}>
+              <SectionCell title={p.portal} titleId="pj-portal" description={p.portalHint} flush>
+                <ul className="divide-y divide-dashed divide-frame-line text-sm">
                   {(
                     [
                       "portalEnabled",
@@ -377,55 +448,39 @@ export default async function ProjectPage({
                       "shareDocs",
                     ] as const
                   ).map((k) => (
-                    <div
+                    <li
                       key={k}
-                      className="flex items-center justify-between border-b border-dashed py-2 last:border-0"
+                      className="flex items-center justify-between gap-3 px-(--cell-pad) py-2.5"
                     >
                       <span>{p[k]}</span>
                       <Badge variant={project[k] ? "success" : "neutral"}>
                         {project[k] ? t.common.yes : t.common.no}
                       </Badge>
-                    </div>
+                    </li>
                   ))}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>{p.publicLink}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ShareLinkCard
-                    projectId={project.id}
-                    url={
-                      project.shareToken
-                        ? `${env.siteUrl}${href(`/p/${project.shareToken}`)}`
-                        : null
-                    }
-                  />
-                  {project.shareToken && (
-                    <Link
-                      href={href(`/p/${project.shareToken}`)}
-                      target="_blank"
-                      className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-ink hover:underline"
-                    >
-                      {t.common.open} <ExternalLinkIcon className="size-3" />
-                    </Link>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        )}
-      </Tabs>
-    </>
-  );
-}
-
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-dashed pb-2 last:border-0">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold">{value}</span>
-    </div>
+                </ul>
+              </SectionCell>
+              <SectionCell title={p.publicLink} titleId="pj-public-link">
+                <ShareLinkCard
+                  projectId={project.id}
+                  url={
+                    project.shareToken ? `${env.siteUrl}${href(`/p/${project.shareToken}`)}` : null
+                  }
+                />
+                {project.shareToken && (
+                  <Link
+                    href={href(`/p/${project.shareToken}`)}
+                    target="_blank"
+                    className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary-ink hover:underline"
+                  >
+                    {t.common.open} <ExternalLinkIcon className="size-3" />
+                  </Link>
+                )}
+              </SectionCell>
+            </FrameGrid>
+          </FrameBox>
+        </TabsContent>
+      )}
+    </Tabs>
   );
 }
