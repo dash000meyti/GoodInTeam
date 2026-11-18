@@ -22,4 +22,8 @@ export const clients: Record<keyof typeof fa, string> = {
   emptyHint: "Add clients and teams to link projects, invoices and contracts to them.",
   projectsCount: "{n} projects",
   archive: "Archive",
+  contact: "Contact",
+  userDisabled: "Disabled",
+  lastLogin: "Last sign-in",
+  noContact: "No contact details yet.",
 };

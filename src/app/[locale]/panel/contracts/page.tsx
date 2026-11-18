@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -24,7 +23,15 @@ import {
 import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard, StatGrid } from "@/components/panel/stat-card";
+import { StatCard, StatRow } from "@/components/panel/stat-card";
+import {
+  FrameBox,
+  FrameCell,
+  FrameFiller,
+  FrameGrid,
+  HEADING_CLASS,
+} from "@/components/shell/frame";
+import { packRows } from "@/components/site/frame-plan";
 import { ContractKindBadge, ContractStatusBadge } from "@/components/contracts/contract-badges";
 import { format } from "@/i18n/format-message";
 import { formatDate, formatDateTime, formatNumber, formatRelative } from "@/lib/format";
@@ -47,6 +54,12 @@ type Tab = (typeof TABS)[number];
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? "";
 
+/**
+ * Contracts (framed). Admins: the page box carries the three KPIs; the list
+ * is one box whose rows are the view chips, the filters and the table (or
+ * the template cells). Clients: their documents as one framed grid. Members
+ * have no access.
+ */
 export default async function ContractsPage({
   searchParams,
 }: PageProps<"/[locale]/panel/contracts">) {
@@ -115,97 +128,114 @@ async function AdminContracts({
         description={c.subtitle}
         crumbs={[{ label: t.nav.dashboard, href: href("/panel") }, { label: c.title }]}
         actions={newButton}
-      />
-
-      <StatGrid>
-        <StatCard
-          label={c.kpiAwaiting}
-          value={formatNumber(stats.awaiting, locale)}
-          hint={
-            stats.viewedAwaiting > 0
-              ? format(c.kpiAwaitingHint, { n: formatNumber(stats.viewedAwaiting, locale) })
-              : undefined
-          }
-          icon={HourglassIcon}
-          tone="warning"
-        />
-        <StatCard
-          label={c.kpiSignedMonth}
-          value={formatNumber(stats.signedThisMonth, locale)}
-          icon={CalendarCheck2Icon}
-          tone="success"
-        />
-        <StatCard
-          label={c.kpiAvgTime}
-          value={stats.avgTimeToSignMs != null ? formatSpan(stats.avgTimeToSignMs, locale, c) : "—"}
-          hint={
-            stats.avgTimeToSignMs != null
-              ? format(c.kpiAvgTimeHint, { n: formatNumber(stats.signedCount, locale) })
-              : c.kpiNoData
-          }
-          icon={TimerIcon}
-          tone="info"
-        />
-      </StatGrid>
-
-      <nav
-        aria-label={c.title}
-        className="-mx-4 mt-8 flex scrollbar-none gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0"
       >
-        <div className="inline-flex h-10 items-center gap-1 rounded-xl bg-muted p-1">
-          {TABS.map((k) => {
-            const active = k === tab;
-            return (
-              <Link
-                key={k}
-                href={tabHref(k)}
-                scroll={false}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "inline-flex h-full items-center gap-1.5 rounded-lg px-3 text-sm font-semibold whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground",
-                  active && "bg-background text-foreground shadow-card dark:bg-card",
-                )}
-              >
-                {k === "templates" && <LayoutTemplateIcon className="size-4" />}
-                {c[`tab_${k}`]}
-                <span
-                  className={cn(
-                    "rounded-md px-1.5 text-xs tabular-nums",
-                    active
-                      ? "bg-primary/16 text-primary-dark dark:text-primary-light"
-                      : "bg-grey-500/16",
-                  )}
-                >
-                  {formatNumber(stats.tabs[k], locale)}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
-
-      {tab === "templates" ? (
-        <TemplatesTab ctx={ctx} />
-      ) : (
-        <div className="mt-6 space-y-4">
-          <ContractsFilters basePath={base} tab={tab} q={q} clientId={clientId} clients={clients} />
-          <DocumentsList
-            ctx={ctx}
-            rows={await listContracts(actor, {
-              status: tab === "all" ? undefined : tab,
-              q: q || undefined,
-              clientId: clientId || undefined,
-            })}
-            filtered={!!(q || clientId || tab !== "all")}
-            clearHref={base}
-            newButton={newButton}
+        <StatRow>
+          <StatCard
+            label={c.kpiAwaiting}
+            value={formatNumber(stats.awaiting, locale)}
+            hint={
+              stats.viewedAwaiting > 0
+                ? format(c.kpiAwaitingHint, { n: formatNumber(stats.viewedAwaiting, locale) })
+                : undefined
+            }
+            icon={HourglassIcon}
+            tone="warning"
           />
-        </div>
-      )}
+          <StatCard
+            label={c.kpiSignedMonth}
+            value={formatNumber(stats.signedThisMonth, locale)}
+            icon={CalendarCheck2Icon}
+            tone="success"
+          />
+          <StatCard
+            label={c.kpiAvgTime}
+            value={
+              stats.avgTimeToSignMs != null ? formatSpan(stats.avgTimeToSignMs, locale, c) : "—"
+            }
+            hint={
+              stats.avgTimeToSignMs != null
+                ? format(c.kpiAvgTimeHint, { n: formatNumber(stats.signedCount, locale) })
+                : c.kpiNoData
+            }
+            icon={TimerIcon}
+            tone="info"
+          />
+        </StatRow>
+      </PageHeader>
+
+      <FrameBox as="section" density="compact" ariaLabel={c.title}>
+        {/* First row: the view chips (the site's filter row). */}
+        <FrameGrid cols={1}>
+          <FrameCell className="py-3">
+            <nav
+              aria-label={c.title}
+              className="-mx-1 flex max-w-[calc(100%+0.5rem)] scrollbar-thin gap-1.5 overflow-x-auto px-1 py-0.5"
+            >
+              {TABS.map((k) => {
+                const active = k === tab;
+                return (
+                  <Link
+                    key={k}
+                    href={tabHref(k)}
+                    scroll={false}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border px-3 text-sm font-semibold whitespace-nowrap transition-colors",
+                      active
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-frame-line bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+                    )}
+                  >
+                    {k === "templates" && <LayoutTemplateIcon className="size-4" />}
+                    {c[`tab_${k}`]}
+                    <span className={cn("text-xs tabular-nums", active && "opacity-80")}>
+                      {formatNumber(stats.tabs[k], locale)}
+                    </span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </FrameCell>
+        </FrameGrid>
+
+        {tab === "templates" ? (
+          <TemplatesRows ctx={ctx} />
+        ) : (
+          <>
+            <FrameGrid cols={1}>
+              <FrameCell className="py-3">
+                <ContractsFilters
+                  basePath={base}
+                  tab={tab}
+                  q={q}
+                  clientId={clientId}
+                  clients={clients}
+                />
+              </FrameCell>
+            </FrameGrid>
+            <FrameGrid cols={1}>
+              <FrameCell pad="none">
+                <DocumentsList
+                  ctx={ctx}
+                  rows={await listContracts(actor, {
+                    status: tab === "all" ? undefined : tab,
+                    q: q || undefined,
+                    clientId: clientId || undefined,
+                  })}
+                  filtered={!!(q || clientId || tab !== "all")}
+                  clearHref={base}
+                  newButton={newButton}
+                />
+              </FrameCell>
+            </FrameGrid>
+          </>
+        )}
+      </FrameBox>
     </>
   );
 }
 
+/** The documents cell's body: the table edge to edge (md+), hairline rows on phones. */
 function DocumentsList({
   ctx,
   rows,
@@ -252,8 +282,7 @@ function DocumentsList({
 
   return (
     <>
-      {/* Desktop table */}
-      <Card className="hidden py-0 md:flex">
+      <div className="hidden md:block">
         <Table>
           <TableHeader>
             <TableRow>
@@ -282,7 +311,7 @@ function DocumentsList({
                     )}
                     {r.project && (
                       <span className="flex min-w-0 items-center gap-1 truncate">
-                        <ColorDot color={r.project.color} className="size-2" />
+                        <ColorDot color={r.project.color} className="size-2 rounded-none" />
                         {r.project.name}
                       </span>
                     )}
@@ -303,10 +332,9 @@ function DocumentsList({
             ))}
           </TableBody>
         </Table>
-      </Card>
+      </div>
 
-      {/* Mobile cards */}
-      <ul className="grid gap-3 md:hidden">
+      <ul className="divide-y divide-frame-line md:hidden">
         {rows.map((r) => {
           const last = r.signedAt
             ? [c.colSigned, r.signedAt]
@@ -319,27 +347,28 @@ function DocumentsList({
                   : null;
           return (
             <li key={r.id}>
-              <Link href={href(`/panel/contracts/${r.id}`)} className="block">
-                <Card className="gap-3 p-4 transition-shadow hover:shadow-dropdown">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="min-w-0 font-semibold">{r.title}</p>
-                    <ContractStatusBadge
-                      status={r.effectiveStatus}
-                      requireSignature={r.requireSignature}
-                      t={c}
-                    />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <ContractKindBadge kind={r.kind} t={c} />
-                    {r.client && <span>{r.client.name}</span>}
-                    {r.project && <span>· {r.project.name}</span>}
-                    {last && (
-                      <span className="ms-auto">
-                        {last[0] as string} {rel(last[1] as Date)}
-                      </span>
-                    )}
-                  </div>
-                </Card>
+              <Link
+                href={href(`/panel/contracts/${r.id}`)}
+                className="block space-y-2 px-(--cell-pad) py-3 transition-colors hover:bg-card"
+              >
+                <span className="flex items-start justify-between gap-3">
+                  <span className="min-w-0 font-semibold">{r.title}</span>
+                  <ContractStatusBadge
+                    status={r.effectiveStatus}
+                    requireSignature={r.requireSignature}
+                    t={c}
+                  />
+                </span>
+                <span className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <ContractKindBadge kind={r.kind} t={c} />
+                  {r.client && <span>{r.client.name}</span>}
+                  {r.project && <span>· {r.project.name}</span>}
+                  {last && (
+                    <span className="ms-auto">
+                      {last[0] as string} {rel(last[1] as Date)}
+                    </span>
+                  )}
+                </span>
               </Link>
             </li>
           );
@@ -349,99 +378,119 @@ function DocumentsList({
   );
 }
 
-function TemplatesTab({ ctx }: { ctx: PanelContext }) {
+/** The templates view: more rows of the list box (template cells, or the starters). */
+function TemplatesRows({ ctx }: { ctx: PanelContext }) {
   const { actor, t, href, fmt, locale } = ctx;
   const c = t.contracts;
   const templates = listTemplates(actor);
   const starters = listStarterTemplates().sort(
     (a, b) => Number(b.locale === locale) - Number(a.locale === locale),
   );
+  const templateSpans = templates.map(() => undefined);
+  const starterSpans = starters.map(() => undefined);
+
+  if (templates.length > 0) {
+    return (
+      <FrameGrid cols={3}>
+        {templates.map((tpl) => (
+          <FrameCell key={tpl.id} as="article" className="flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 space-y-2">
+                <h3 className={HEADING_CLASS.box}>{tpl.title}</h3>
+                <div className="flex flex-wrap gap-1.5">
+                  <ContractKindBadge kind={tpl.kind} t={c} />
+                  <Badge variant={tpl.requireSignature ? "info" : "violet"}>
+                    {tpl.requireSignature ? c.signatureRequired : c.approvalOnly}
+                  </Badge>
+                  <Badge variant="neutral">{tpl.locale.toUpperCase()}</Badge>
+                </div>
+              </div>
+              <DeleteTemplateButton id={tpl.id} />
+            </div>
+            <p className="line-clamp-3 text-sm text-muted-foreground">{tpl.excerpt}</p>
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-dashed border-frame-line pt-4">
+              <span className="text-xs text-muted-foreground">
+                {format(c.placeholdersCount, {
+                  n: formatNumber(tpl.placeholders.length, locale),
+                })}
+                {" · "}
+                {formatDate(tpl.updatedAt, fmt)}
+              </span>
+              <div className="flex gap-2">
+                <Button asChild variant="ghost" size="sm">
+                  <Link href={href(`/panel/contracts/${tpl.id}/edit`)}>
+                    <PencilIcon /> {t.common.edit}
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={href(`/panel/contracts/new?from=${tpl.id}`)}>
+                    {c.useTemplate} <ArrowUpRightIcon className="rtl:-scale-x-100" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </FrameCell>
+        ))}
+        <FrameFiller
+          units={{
+            md: packRows(templateSpans, 3, "md").trailing,
+            lg: packRows(templateSpans, 3, "lg").trailing,
+          }}
+        />
+      </FrameGrid>
+    );
+  }
 
   return (
-    <div className="mt-6 space-y-8">
-      {templates.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {templates.map((tpl) => (
-            <Card key={tpl.id} className="gap-4 p-6">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-2">
-                  <h3 className="font-bold">{tpl.title}</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    <ContractKindBadge kind={tpl.kind} t={c} />
-                    <Badge variant={tpl.requireSignature ? "info" : "violet"}>
-                      {tpl.requireSignature ? c.signatureRequired : c.approvalOnly}
-                    </Badge>
-                    <Badge variant="neutral">{tpl.locale.toUpperCase()}</Badge>
-                  </div>
-                </div>
-                <DeleteTemplateButton id={tpl.id} />
+    <>
+      <FrameGrid cols={1}>
+        <FrameCell>
+          <EmptyState
+            icon={LayoutTemplateIcon}
+            title={c.templatesEmpty}
+            description={c.templatesEmptyHint}
+            action={<InstallStartersButton />}
+          />
+        </FrameCell>
+      </FrameGrid>
+      <FrameGrid cols={1}>
+        <FrameCell header className="space-y-1">
+          <h2 className={HEADING_CLASS.box}>{c.startersTitle}</h2>
+          <p className="text-sm text-muted-foreground">{c.startersHint}</p>
+        </FrameCell>
+      </FrameGrid>
+      <FrameGrid cols={2}>
+        {starters.map((s) => (
+          <FrameCell key={s.key} as="article" className="flex flex-col gap-3">
+            <div dir={s.locale === "fa" ? "rtl" : "ltr"} className="flex flex-1 flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <ContractKindBadge kind={s.kind} t={t.contracts} />
+                <Badge variant="neutral">{s.locale.toUpperCase()}</Badge>
               </div>
-              <p className="line-clamp-3 text-sm text-muted-foreground">{tpl.excerpt}</p>
-              <div className="mt-auto flex items-center justify-between gap-2 border-t border-dashed pt-4">
-                <span className="text-xs text-muted-foreground">
-                  {format(c.placeholdersCount, {
-                    n: formatNumber(tpl.placeholders.length, locale),
-                  })}
-                  {" · "}
-                  {formatDate(tpl.updatedAt, fmt)}
-                </span>
-                <div className="flex gap-2">
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href={href(`/panel/contracts/${tpl.id}/edit`)}>
-                      <PencilIcon /> {t.common.edit}
-                    </Link>
-                  </Button>
-                  <Button asChild variant="soft" size="sm">
-                    <Link href={href(`/panel/contracts/new?from=${tpl.id}`)}>
-                      {c.useTemplate} <ArrowUpRightIcon className="rtl:-scale-x-100" />
-                    </Link>
-                  </Button>
-                </div>
+              <h3 className={HEADING_CLASS.box}>{s.title}</h3>
+              <p className="text-sm text-muted-foreground">{s.summary}</p>
+              <div className="mt-auto flex justify-end pt-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link href={href(`/panel/contracts/new?starter=${s.key}`)}>
+                    {c.useTemplate} <ArrowUpRightIcon className="rtl:-scale-x-100" />
+                  </Link>
+                </Button>
               </div>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon={LayoutTemplateIcon}
-          title={c.templatesEmpty}
-          description={c.templatesEmptyHint}
-          action={<InstallStartersButton />}
+            </div>
+          </FrameCell>
+        ))}
+        <FrameFiller
+          units={{
+            md: packRows(starterSpans, 2, "md").trailing,
+            lg: packRows(starterSpans, 2, "lg").trailing,
+          }}
         />
-      )}
-
-      {templates.length === 0 && (
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-lg font-bold">{c.startersTitle}</h2>
-            <p className="text-sm text-muted-foreground">{c.startersHint}</p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2">
-            {starters.map((s) => (
-              <Card key={s.key} className="gap-3 p-6" dir={s.locale === "fa" ? "rtl" : "ltr"}>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <ContractKindBadge kind={s.kind} t={t.contracts} />
-                  <Badge variant="neutral">{s.locale.toUpperCase()}</Badge>
-                </div>
-                <h3 className="font-bold">{s.title}</h3>
-                <p className="text-sm text-muted-foreground">{s.summary}</p>
-                <div className="mt-auto flex justify-end pt-2">
-                  <Button asChild variant="soft" size="sm">
-                    <Link href={href(`/panel/contracts/new?starter=${s.key}`)}>
-                      {c.useTemplate} <ArrowUpRightIcon className="rtl:-scale-x-100" />
-                    </Link>
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
+      </FrameGrid>
+    </>
   );
 }
 
-/** Client portal: documents sent to the signed-in client (read-only). */
+/** Client portal: documents sent to the signed-in client, as one framed grid (read-only). */
 async function ClientContracts({ ctx }: { ctx: PanelContext }) {
   const { actor, t, fmt, href, now } = ctx;
   const c = t.contracts;
@@ -450,84 +499,93 @@ async function ClientContracts({ ctx }: { ctx: PanelContext }) {
   const rows = (await listContracts(actor, {})).sort(
     (a, b) => Number(isPending(b.effectiveStatus)) - Number(isPending(a.effectiveStatus)),
   );
+  const spans = rows.map(() => undefined);
   return (
     <>
       <PageHeader title={c.portalTitle} description={c.portalSubtitle} />
       {rows.length === 0 ? (
         <EmptyState icon={FileSignatureIcon} title={c.portalEmpty} />
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {rows.map((r) => {
-            const pending = r.effectiveStatus === "sent" || r.effectiveStatus === "viewed";
-            const signed = r.effectiveStatus === "signed";
-            return (
-              <Card key={r.id} className="gap-4 p-6">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 space-y-2">
-                    <h2 className="font-bold">{r.title}</h2>
-                    <ContractKindBadge kind={r.kind} t={c} />
-                  </div>
-                  <ContractStatusBadge
-                    status={r.effectiveStatus}
-                    requireSignature={r.requireSignature}
-                    t={c}
-                  />
-                </div>
-                <dl className="grid grid-cols-2 gap-2 text-xs">
-                  {r.project && (
-                    <div className="col-span-2">
-                      <dt className="text-muted-foreground">{c.fieldProject}</dt>
-                      <dd className="font-semibold">{r.project.name}</dd>
+        <FrameBox as="section" density="compact" ariaLabel={c.portalTitle}>
+          <FrameGrid cols={3}>
+            {rows.map((r) => {
+              const pending = r.effectiveStatus === "sent" || r.effectiveStatus === "viewed";
+              const signed = r.effectiveStatus === "signed";
+              return (
+                <FrameCell key={r.id} as="article" className="flex flex-col gap-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-2">
+                      <h2 className={HEADING_CLASS.box}>{r.title}</h2>
+                      <ContractKindBadge kind={r.kind} t={c} />
                     </div>
-                  )}
-                  <div>
-                    <dt className="text-muted-foreground">{c.sentAt}</dt>
-                    <dd className="font-semibold">{formatDate(r.sentAt, fmt)}</dd>
+                    <ContractStatusBadge
+                      status={r.effectiveStatus}
+                      requireSignature={r.requireSignature}
+                      t={c}
+                    />
                   </div>
-                  {(signed || pending || r.effectiveStatus === "declined") && (
+                  <dl className="grid grid-cols-2 gap-2 border-t border-dashed border-frame-line pt-3 text-xs">
+                    {r.project && (
+                      <div className="col-span-2">
+                        <dt className="text-muted-foreground">{c.fieldProject}</dt>
+                        <dd className="font-semibold">{r.project.name}</dd>
+                      </div>
+                    )}
                     <div>
-                      <dt className="text-muted-foreground">
-                        {signed
-                          ? r.requireSignature
-                            ? c.signedAt
-                            : c.approvedAt
-                          : pending
-                            ? c.expiresAt
-                            : c.declinedAt}
-                      </dt>
-                      <dd className="font-semibold">
-                        {signed
-                          ? formatDate(r.signedAt, fmt)
-                          : pending
-                            ? r.expiresAt
-                              ? formatRelative(r.expiresAt, fmt, now)
-                              : c.noExpiry
-                            : formatDate(r.declinedAt, fmt)}
-                      </dd>
+                      <dt className="text-muted-foreground">{c.sentAt}</dt>
+                      <dd className="font-semibold">{formatDate(r.sentAt, fmt)}</dd>
                     </div>
+                    {(signed || pending || r.effectiveStatus === "declined") && (
+                      <div>
+                        <dt className="text-muted-foreground">
+                          {signed
+                            ? r.requireSignature
+                              ? c.signedAt
+                              : c.approvedAt
+                            : pending
+                              ? c.expiresAt
+                              : c.declinedAt}
+                        </dt>
+                        <dd className="font-semibold">
+                          {signed
+                            ? formatDate(r.signedAt, fmt)
+                            : pending
+                              ? r.expiresAt
+                                ? formatRelative(r.expiresAt, fmt, now)
+                                : c.noExpiry
+                              : formatDate(r.declinedAt, fmt)}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                  {r.shareToken && (
+                    <Button
+                      asChild
+                      variant={pending ? "default" : "outline"}
+                      className="mt-auto w-full"
+                    >
+                      <Link href={href(`/sign/${r.shareToken}`)}>
+                        {pending
+                          ? r.requireSignature
+                            ? c.reviewAndSign
+                            : c.reviewAndApprove
+                          : signed
+                            ? c.viewSignedCopy
+                            : c.viewDocument}
+                      </Link>
+                    </Button>
                   )}
-                </dl>
-                {r.shareToken && (
-                  <Button
-                    asChild
-                    variant={pending ? "default" : "outline"}
-                    className="mt-auto w-full"
-                  >
-                    <Link href={href(`/sign/${r.shareToken}`)}>
-                      {pending
-                        ? r.requireSignature
-                          ? c.reviewAndSign
-                          : c.reviewAndApprove
-                        : signed
-                          ? c.viewSignedCopy
-                          : c.viewDocument}
-                    </Link>
-                  </Button>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+                </FrameCell>
+              );
+            })}
+            <FrameFiller
+              units={{
+                md: packRows(spans, 3, "md").trailing,
+                lg: packRows(spans, 3, "lg").trailing,
+              }}
+            />
+          </FrameGrid>
+        </FrameBox>
       )}
     </>
   );

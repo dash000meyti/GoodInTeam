@@ -50,20 +50,20 @@ export function RecoveryKeyPanel({
 
   return (
     <div className="grid gap-5">
-      <div className="flex items-start gap-3 rounded-xl bg-warning/12 p-4 text-sm text-[#7a4100] dark:text-[#ffd666]">
+      <div className="flex items-start gap-3 border border-warning/40 bg-warning/10 p-4 text-sm text-[#7a4100] dark:text-[#ffd666]">
         <KeySquareIcon className="mt-0.5 size-5 shrink-0" />
         <p className="leading-7">{v.recoveryBody}</p>
       </div>
       <div
         dir="ltr"
-        className="grid grid-cols-3 gap-2 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 p-4 sm:grid-cols-4 md:grid-cols-5"
+        className="grid grid-cols-3 gap-2 border border-dashed border-frame-line bg-card bg-[radial-gradient(var(--dots)_1px,transparent_1.5px)] [background-size:12px_12px] p-4 sm:grid-cols-4 md:grid-cols-5"
         data-testid="recovery-key"
         aria-label={v.recoveryKey}
       >
         {groups.map((g, i) => (
           <code
             key={i}
-            className="rounded-lg bg-background px-2 py-1.5 text-center font-mono text-sm font-bold tracking-widest shadow-card select-all dark:bg-card"
+            className="border border-frame-line bg-background px-2 py-1.5 text-center font-mono text-sm font-bold tracking-widest select-all"
           >
             {g}
           </code>
@@ -79,7 +79,7 @@ export function RecoveryKeyPanel({
       </div>
       <label
         htmlFor={id}
-        className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-sm font-semibold has-[[data-state=checked]]:border-primary-ink has-[[data-state=checked]]:bg-primary/5"
+        className="flex cursor-pointer items-start gap-3 border border-frame-line p-4 text-sm font-semibold has-[[data-state=checked]]:border-primary-ink has-[[data-state=checked]]:bg-primary/5"
       >
         <Checkbox
           id={id}

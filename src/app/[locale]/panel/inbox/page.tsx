@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { InboxIcon, SearchIcon } from "lucide-react";
+import { InboxIcon, SearchIcon, SearchXIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { messages } from "@/i18n/messages";
 import { budgetRanges } from "@/lib/content";
 import { formatDateTime, formatNumber, formatRelative } from "@/lib/format";
@@ -13,6 +14,10 @@ import { leadCounts, listLeads } from "@/server/modules/leads/service";
 import { panelContext } from "@/server/page-context";
 import { LeadsBoard, type LeadRow } from "./_components/leads-board";
 
+/**
+ * Inbox (framed): the page box, then one box whose first row holds the status
+ * chips and the search and whose second row lists the leads edge to edge.
+ */
 export default async function InboxPage({ searchParams }: PageProps<"/[locale]/panel/inbox">) {
   const { actor, t, href, fmt, locale, now } = await panelContext({ roles: ["owner", "admin"] });
   const sp = await searchParams;
@@ -58,6 +63,7 @@ export default async function InboxPage({ searchParams }: PageProps<"/[locale]/p
     receivedFull: formatDateTime(l.createdAt, fmt),
   }));
 
+  /** A status chip (the site's filter chip: 32px, hairline, the active one filled with ink). */
   const tab = (s: string | undefined, label: string, n: number) => {
     const active = s === status;
     const params = new URLSearchParams();
@@ -68,15 +74,18 @@ export default async function InboxPage({ searchParams }: PageProps<"/[locale]/p
       <Link
         key={s ?? "all"}
         href={href(`/panel/inbox${qs ? `?${qs}` : ""}`)}
+        aria-current={active ? "page" : undefined}
         className={cn(
-          "inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold whitespace-nowrap transition-colors",
+          "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[6px] border px-3 text-sm font-semibold whitespace-nowrap transition-colors",
           active
-            ? "border-transparent bg-grey-800 text-white dark:bg-white dark:text-grey-800"
-            : "border-border text-muted-foreground hover:text-foreground",
+            ? "border-foreground bg-foreground text-background"
+            : "border-frame-line bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground",
         )}
       >
         {label}
-        <span className="text-xs tabular-nums opacity-70">{formatNumber(n, locale)}</span>
+        <span className={cn("text-xs tabular-nums", active && "opacity-80")}>
+          {formatNumber(n, locale)}
+        </span>
       </Link>
     );
   };
@@ -88,27 +97,42 @@ export default async function InboxPage({ searchParams }: PageProps<"/[locale]/p
         description={c.inboxSubtitle}
         crumbs={[{ label: t.nav.dashboard, href: href("/panel") }, { label: c.inboxTitle }]}
       />
-      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center">
-        <div className="-mx-1 flex scrollbar-none gap-2 overflow-x-auto px-1 pb-1">
-          {tab(undefined, t.common.all, total)}
-          {leadStatuses.map((s) => tab(s, c[`leadStatus_${s}`], counts[s] ?? 0))}
-        </div>
-        <form method="get" className="relative lg:ms-auto lg:w-72">
-          {status && <input type="hidden" name="status" value={status} />}
-          <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            name="q"
-            defaultValue={q}
-            placeholder={c.searchLeads}
-            className="ps-9"
-            aria-label={t.common.search}
-          />
-        </form>
-      </div>
-      {rows.length === 0 ? (
+      {total === 0 && !q ? (
         <EmptyState icon={InboxIcon} title={c.inboxEmpty} description={c.inboxEmptyHint} />
       ) : (
-        <LeadsBoard rows={rows} />
+        <FrameBox as="section" density="compact" ariaLabel={c.inboxTitle}>
+          <FrameGrid cols={1}>
+            <FrameCell className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center">
+              <nav
+                aria-label={t.common.status}
+                className="-mx-1 flex max-w-[calc(100%+0.5rem)] min-w-0 scrollbar-thin gap-1.5 overflow-x-auto px-1 py-0.5"
+              >
+                {tab(undefined, t.common.all, total)}
+                {leadStatuses.map((s) => tab(s, c[`leadStatus_${s}`], counts[s] ?? 0))}
+              </nav>
+              <form method="get" className="relative shrink-0 lg:ms-auto lg:w-72">
+                {status && <input type="hidden" name="status" value={status} />}
+                <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  name="q"
+                  defaultValue={q}
+                  placeholder={c.searchLeads}
+                  className="ps-9"
+                  aria-label={t.common.search}
+                />
+              </form>
+            </FrameCell>
+          </FrameGrid>
+          <FrameGrid cols={1}>
+            <FrameCell pad="none">
+              {rows.length === 0 ? (
+                <EmptyState icon={SearchXIcon} title={t.common.noMatches} className="py-10" />
+              ) : (
+                <LeadsBoard rows={rows} />
+              )}
+            </FrameCell>
+          </FrameGrid>
+        </FrameBox>
       )}
     </>
   );

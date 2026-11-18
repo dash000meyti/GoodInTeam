@@ -23,12 +23,13 @@ export function UpdateComposer({ projectId, locale }: { projectId: string; local
   });
   if (!open)
     return (
-      <Button variant="soft" size="sm" onClick={() => setOpen(true)}>
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
         <PlusIcon /> {t.projects.addUpdate}
       </Button>
     );
   return (
-    <form onSubmit={form.submit} className="grid gap-4 rounded-xl border border-dashed p-4">
+    // Lives in its own row of the updates box: no extra frame of its own.
+    <form onSubmit={form.submit} className="grid gap-4 py-1">
       <input type="hidden" name="projectId" value={projectId} />
       <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
         <Field label={t.projects.updateTitle} error={form.errors.title?.[0]}>

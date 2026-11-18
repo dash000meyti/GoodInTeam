@@ -1,5 +1,5 @@
-import { PageSkeleton } from "@/components/panel/page-skeleton";
+import { ContractPrintSkeleton } from "../../_components/skeletons";
 
 export default function Loading() {
-  return <PageSkeleton />;
+  return <ContractPrintSkeleton />;
 }

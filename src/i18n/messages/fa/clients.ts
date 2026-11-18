@@ -20,4 +20,8 @@ export const clients = {
   emptyHint: "مشتری‌ها و تیم‌ها را اضافه کنید تا پروژه، فاکتور و قرارداد به آن‌ها وصل شود.",
   projectsCount: "{n} پروژه",
   archive: "بایگانی",
+  contact: "اطلاعات تماس",
+  userDisabled: "غیرفعال",
+  lastLogin: "آخرین ورود",
+  noContact: "اطلاعات تماسی ثبت نشده است.",
 } as const satisfies Record<string, string>;

@@ -37,7 +37,7 @@ export function SignedCelebration({
   return (
     <div
       role="status"
-      className="relative overflow-hidden rounded-2xl border border-success/30 bg-success/10 p-6 text-center print:hidden"
+      className="relative overflow-hidden bg-success/10 p-6 text-center print:hidden"
     >
       <style>{`
         @keyframes gt-confetti { 0% { transform: translate3d(0,-10px,0) rotate(0); opacity: 1 }

@@ -16,9 +16,10 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { CopyButton } from "@/components/shared/copy-button";
 import { PageHeader } from "@/components/panel/page-header";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { ContractDocument } from "@/components/contracts/contract-document";
 import { ContractKindBadge, ContractStatusBadge } from "@/components/contracts/contract-badges";
 import { SignatureMark } from "@/components/contracts/signature-mark";
@@ -32,11 +33,18 @@ import { shortHash } from "@/server/modules/contracts/lifecycle";
 import { brandAndOwner, getContract, longDate } from "@/server/modules/contracts/service";
 import { describeUserAgent } from "@/server/modules/contracts/user-agent";
 import { panelContext, type PanelContext } from "@/server/page-context";
+import { FrameNote, KeyValueRow, SectionCell } from "../../projects/_components/frame-parts";
 import { ContractActions } from "../_components/contract-actions";
 import type { MessageLang, ShareMessageParts } from "../_components/share-dialog";
 
 type Detail = Awaited<ReturnType<typeof getContract>>;
 
+/**
+ * Contract detail (framed, like the invoice detail): the page box, notices as
+ * tinted note boxes, then the document as a paper box (a meta row over the
+ * typeset body) beside one aside box with the details, signatures and
+ * timeline as section rows.
+ */
 export default async function ContractPage({
   params,
 }: PageProps<"/[locale]/panel/contracts/[id]">) {
@@ -61,18 +69,16 @@ export default async function ContractPage({
             { label: c.tab_templates, href: href("/panel/contracts?tab=templates") },
             { label: k.title },
           ]}
+          path={["CONTRACTS", "TEMPLATES"]}
           actions={
-            <Link
-              href={href(`/panel/contracts/${k.id}/edit`)}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-ink hover:underline"
-            >
-              <PencilIcon className="size-4" /> {c.editTemplate}
-            </Link>
+            <Button asChild variant="outline">
+              <Link href={href(`/panel/contracts/${k.id}/edit`)}>
+                <PencilIcon /> {c.editTemplate}
+              </Link>
+            </Button>
           }
         />
-        <Card className="p-6 sm:p-10">
-          <ContractDocument bodyMd={k.bodyMd} locale={d.docLocale} />
-        </Card>
+        <DocumentBox ctx={ctx} d={d} />
       </>
     );
   }
@@ -112,6 +118,7 @@ export default async function ContractPage({
         }
         crumbs={[{ label: c.title, href: href("/panel/contracts") }, { label: k.title }]}
         description={[k.client?.name, k.project?.name].filter(Boolean).join(" · ") || undefined}
+        path={["CONTRACTS", k.kind, `V${k.version}`]}
         actions={
           <ContractActions
             id={k.id}
@@ -132,28 +139,51 @@ export default async function ContractPage({
         }
       />
 
-      {d.integrity.verified === false && (
-        <Alert icon={ShieldAlertIcon} tone="destructive">
-          {c.integrityFail}
-        </Alert>
-      )}
-      {d.unresolved.length > 0 && (
-        <Alert icon={AlertTriangleIcon} tone="warning">
-          {format(c.unresolvedInDoc, {
-            n: formatNumber(d.unresolved.length, ctx.locale),
-            list: d.unresolved.map((x) => `{{${x}}}`).join("، "),
-          })}
-        </Alert>
-      )}
-      {d.effectiveStatus === "declined" && k.declineReason && (
-        <Alert icon={XCircleIcon} tone="destructive">
-          <b>{c.declineReasonLabel}:</b> {k.declineReason}
-        </Alert>
-      )}
+      <div className="flex flex-col gap-6 lg:gap-8">
+        {d.integrity.verified === false && (
+          <FrameNote icon={ShieldAlertIcon} tone="destructive">
+            {c.integrityFail}
+          </FrameNote>
+        )}
+        {d.unresolved.length > 0 && (
+          <FrameNote icon={AlertTriangleIcon} tone="warning">
+            {format(c.unresolvedInDoc, {
+              n: formatNumber(d.unresolved.length, ctx.locale),
+              list: d.unresolved.map((x) => `{{${x}}}`).join("، "),
+            })}
+          </FrameNote>
+        )}
+        {d.effectiveStatus === "declined" && k.declineReason && (
+          <FrameNote icon={XCircleIcon} tone="destructive">
+            <b>{c.declineReasonLabel}:</b> {k.declineReason}
+          </FrameNote>
+        )}
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <Card className="gap-0 overflow-hidden py-0">
-          <div className="flex flex-wrap items-center gap-2 border-b border-dashed bg-muted/40 px-4 py-3 text-xs text-muted-foreground sm:px-8">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <DocumentBox ctx={ctx} d={d} meta />
+          <FrameBox as="aside" density="compact" ariaLabel={c.detailsCard}>
+            <DetailsSection ctx={ctx} d={d} />
+            <SignaturesSection ctx={ctx} d={d} />
+            <TimelineSection ctx={ctx} d={d} />
+          </FrameBox>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/** The document as paper: an optional meta row (kind, version, fingerprint) over the body. */
+function DocumentBox({ ctx, d, meta }: { ctx: PanelContext; d: Detail; meta?: boolean }) {
+  const c = ctx.t.contracts;
+  const k = d.contract;
+  return (
+    <FrameBox as="article" density="compact" className="bg-card" ariaLabel={k.title}>
+      {meta && (
+        <FrameGrid cols={1}>
+          <FrameCell
+            tone="card"
+            className="flex flex-wrap items-center gap-2 py-3 text-xs text-muted-foreground"
+          >
             <ContractKindBadge kind={k.kind} t={c} />
             <span>{format(c.versionN, { n: formatNumber(k.version, ctx.locale) })}</span>
             {k.contentHash && (
@@ -161,121 +191,84 @@ export default async function ContractPage({
                 <FingerprintIcon className="size-3.5" /> {shortHash(k.contentHash)}
               </span>
             )}
-          </div>
-          <div className="px-4 py-8 sm:px-10 sm:py-10">
-            <ContractDocument bodyMd={k.bodyMd} locale={d.docLocale} />
-          </div>
-        </Card>
-
-        <div className="space-y-6">
-          <DetailsCard ctx={ctx} d={d} />
-          <SignaturesCard ctx={ctx} d={d} />
-          <TimelineCard ctx={ctx} d={d} />
-        </div>
-      </div>
-    </>
-  );
-}
-
-function Alert({
-  icon: Icon,
-  tone,
-  children,
-}: {
-  icon: LucideIcon;
-  tone: "warning" | "destructive";
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      role="note"
-      className={cn(
-        "mb-6 flex gap-3 rounded-2xl border p-4 text-sm",
-        tone === "warning"
-          ? "border-warning/40 bg-warning/10"
-          : "border-destructive/30 bg-destructive/8",
+          </FrameCell>
+        </FrameGrid>
       )}
-    >
-      <Icon
-        className={cn(
-          "mt-0.5 size-5 shrink-0",
-          tone === "warning" ? "text-[#b76e00] dark:text-warning" : "text-destructive",
-        )}
-      />
-      <p className="min-w-0 break-words">{children}</p>
-    </div>
+      <FrameGrid cols={1}>
+        <FrameCell tone="card" pad="none" className="px-4 py-8 sm:px-10 sm:py-10">
+          <ContractDocument bodyMd={k.bodyMd} locale={d.docLocale} />
+        </FrameCell>
+      </FrameGrid>
+    </FrameBox>
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start justify-between gap-4 border-b border-dashed py-2.5 text-sm last:border-0">
-      <span className="shrink-0 text-muted-foreground">{label}</span>
-      <span className="min-w-0 text-end font-semibold break-words">{children}</span>
-    </div>
-  );
-}
+/** A square hairline code chip (hash, link). */
+const CODE_CLASS = "border border-frame-line bg-card px-2 py-1.5 font-mono text-[11px]";
 
-function DetailsCard({ ctx, d }: { ctx: PanelContext; d: Detail }) {
+function DetailsSection({ ctx, d }: { ctx: PanelContext; d: Detail }) {
   const { t, fmt, href } = ctx;
   const c = t.contracts;
   const k = d.contract;
   const dt = (v: Date | null) => (v ? formatDateTime(v, fmt) : "—");
   return (
-    <Card className="gap-2 py-5">
-      <CardHeader className="px-5">
-        <CardTitle className="text-base">{c.detailsCard}</CardTitle>
-      </CardHeader>
-      <CardContent className="px-5">
-        {k.client && (
-          <Row label={c.fieldClient}>
-            <Link href={href(`/panel/clients/${k.client.id}`)} className="hover:text-primary-ink">
-              {k.client.name}
-            </Link>
-          </Row>
-        )}
-        {k.project && (
-          <Row label={c.fieldProject}>
-            <Link href={href(`/panel/projects/${k.project.id}`)} className="hover:text-primary-ink">
-              {k.project.name}
-            </Link>
-          </Row>
-        )}
-        {(k.signerName || k.signerEmail) && (
-          <Row label={c.signer}>
-            <span className="block">{k.signerName}</span>
-            {k.signerEmail && (
-              <span dir="ltr" className="block text-xs font-normal text-muted-foreground">
-                {k.signerEmail}
-              </span>
-            )}
-          </Row>
-        )}
-        <Row label={c.sentAt}>{dt(k.sentAt)}</Row>
-        <Row label={c.firstViewedAt}>{dt(k.firstViewedAt)}</Row>
-        {k.signedAt && (
-          <Row label={k.requireSignature ? c.signedAt : c.approvedAt}>{dt(k.signedAt)}</Row>
-        )}
-        {k.declinedAt && <Row label={c.declinedAt}>{dt(k.declinedAt)}</Row>}
-        <Row label={c.expiresAt}>{k.expiresAt ? dt(k.expiresAt) : c.noExpiry}</Row>
-        <Row label={c.version}>
-          {format(c.versionN, { n: formatNumber(k.version, ctx.locale) })}
-        </Row>
-        {d.createdByName && <Row label={c.createdBy}>{d.createdByName}</Row>}
-        <div className="space-y-2 pt-3">
+    <FrameGrid cols={1}>
+      <SectionCell title={c.detailsCard} titleId="ct-details">
+        <dl>
+          {k.client && (
+            <KeyValueRow label={c.fieldClient}>
+              <Link href={href(`/panel/clients/${k.client.id}`)} className="hover:text-primary-ink">
+                {k.client.name}
+              </Link>
+            </KeyValueRow>
+          )}
+          {k.project && (
+            <KeyValueRow label={c.fieldProject}>
+              <Link
+                href={href(`/panel/projects/${k.project.id}`)}
+                className="hover:text-primary-ink"
+              >
+                {k.project.name}
+              </Link>
+            </KeyValueRow>
+          )}
+          {(k.signerName || k.signerEmail) && (
+            <KeyValueRow label={c.signer}>
+              <span className="block">{k.signerName}</span>
+              {k.signerEmail && (
+                <span dir="ltr" className="block text-xs font-normal text-muted-foreground">
+                  {k.signerEmail}
+                </span>
+              )}
+            </KeyValueRow>
+          )}
+          <KeyValueRow label={c.sentAt}>{dt(k.sentAt)}</KeyValueRow>
+          <KeyValueRow label={c.firstViewedAt}>{dt(k.firstViewedAt)}</KeyValueRow>
+          {k.signedAt && (
+            <KeyValueRow label={k.requireSignature ? c.signedAt : c.approvedAt}>
+              {dt(k.signedAt)}
+            </KeyValueRow>
+          )}
+          {k.declinedAt && <KeyValueRow label={c.declinedAt}>{dt(k.declinedAt)}</KeyValueRow>}
+          <KeyValueRow label={c.expiresAt}>
+            {k.expiresAt ? dt(k.expiresAt) : c.noExpiry}
+          </KeyValueRow>
+          <KeyValueRow label={c.version}>
+            {format(c.versionN, { n: formatNumber(k.version, ctx.locale) })}
+          </KeyValueRow>
+          {d.createdByName && <KeyValueRow label={c.createdBy}>{d.createdByName}</KeyValueRow>}
+        </dl>
+        <div className="mt-4 space-y-2 border-t border-frame-line pt-4">
           <p className="text-xs text-muted-foreground">{c.contentHash}</p>
           {k.contentHash ? (
             <>
-              <code
-                dir="ltr"
-                className="block rounded-lg bg-muted px-2 py-1.5 font-mono text-[11px] break-all"
-              >
+              <code dir="ltr" className={cn(CODE_CLASS, "block break-all")}>
                 {k.contentHash}
               </code>
               <p
                 className={cn(
                   "flex items-center gap-1.5 text-xs font-semibold",
-                  d.integrity.verified ? "text-[#118d57] dark:text-[#77ed8b]" : "text-destructive",
+                  d.integrity.verified ? "text-success-ink" : "text-destructive",
                 )}
               >
                 {d.integrity.verified ? (
@@ -291,114 +284,109 @@ function DetailsCard({ ctx, d }: { ctx: PanelContext; d: Detail }) {
           )}
         </div>
         {d.signUrl && (
-          <div className="space-y-2 pt-4">
+          <div className="mt-4 space-y-2">
             <p className="text-xs text-muted-foreground">{c.signLink}</p>
             <div className="flex gap-2">
-              <code
-                dir="ltr"
-                className="min-w-0 flex-1 truncate rounded-lg bg-muted px-2 py-1.5 font-mono text-[11px]"
-              >
+              <code dir="ltr" className={cn(CODE_CLASS, "min-w-0 flex-1 truncate")}>
                 {d.signUrl}
               </code>
               <CopyButton value={d.signUrl} size="icon-sm" />
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </SectionCell>
+    </FrameGrid>
   );
 }
 
-function SignaturesCard({ ctx, d }: { ctx: PanelContext; d: Detail }) {
+function SignaturesSection({ ctx, d }: { ctx: PanelContext; d: Detail }) {
   const { t, fmt } = ctx;
   const c = t.contracts;
   const k = d.contract;
   return (
-    <Card className="gap-2 py-5">
-      <CardHeader className="px-5">
-        <CardTitle className="text-base">{c.signatures}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 px-5">
+    <FrameGrid cols={1}>
+      <SectionCell title={c.signatures} titleId="ct-signatures" flush>
         {d.signatures.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">{c.noSignatures}</p>
+          <p className="px-(--cell-pad) py-6 text-center text-sm text-muted-foreground">
+            {c.noSignatures}
+          </p>
         ) : (
-          d.signatures.map((s) => {
-            const outdated = s.version !== k.version;
-            const device = describeUserAgent(s.userAgent);
-            return (
-              <div
-                key={s.id}
-                className={cn("space-y-3 rounded-xl border p-4", outdated && "opacity-70")}
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      {s.role === "owner" ? c.roleOwner : c.roleClient}
-                    </p>
-                    <p className="font-bold">{s.name}</p>
-                  </div>
-                  {outdated ? (
-                    <Badge variant="warning">
-                      {format(c.sigOutdated, { n: formatNumber(s.version, ctx.locale) })}
-                    </Badge>
-                  ) : (
-                    <Badge variant="success">
-                      {format(c.versionN, { n: formatNumber(s.version, ctx.locale) })}
-                    </Badge>
-                  )}
-                </div>
-                <SignatureMark
-                  image={s.signatureImage}
-                  typedName={s.typedName}
-                  alt={`${c.sigDrawn}: ${s.name}`}
-                  approvedLabel={c.status_approved}
-                />
-                <dl className="grid gap-1 text-xs">
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground">{c.sigTime}</dt>
-                    <dd>{formatDateTime(s.signedAt, fmt)}</dd>
-                  </div>
-                  {s.typedName && s.signatureImage && (
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-muted-foreground">{c.sigTyped}</dt>
-                      <dd>{s.typedName}</dd>
+          <ul className="divide-y divide-dashed divide-frame-line">
+            {d.signatures.map((s) => {
+              const outdated = s.version !== k.version;
+              const device = describeUserAgent(s.userAgent);
+              return (
+                <li key={s.id} className={cn("space-y-3 p-(--cell-pad)", outdated && "opacity-70")}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        {s.role === "owner" ? c.roleOwner : c.roleClient}
+                      </p>
+                      <p className="font-bold">{s.name}</p>
                     </div>
-                  )}
-                  {s.email && (
+                    {outdated ? (
+                      <Badge variant="warning">
+                        {format(c.sigOutdated, { n: formatNumber(s.version, ctx.locale) })}
+                      </Badge>
+                    ) : (
+                      <Badge variant="success">
+                        {format(c.versionN, { n: formatNumber(s.version, ctx.locale) })}
+                      </Badge>
+                    )}
+                  </div>
+                  <SignatureMark
+                    image={s.signatureImage}
+                    typedName={s.typedName}
+                    alt={`${c.sigDrawn}: ${s.name}`}
+                    approvedLabel={c.status_approved}
+                  />
+                  <dl className="grid gap-1 text-xs">
                     <div className="flex justify-between gap-3">
-                      <dt className="text-muted-foreground">{t.common.email}</dt>
-                      <dd dir="ltr">{s.email}</dd>
+                      <dt className="text-muted-foreground">{c.sigTime}</dt>
+                      <dd>{formatDateTime(s.signedAt, fmt)}</dd>
                     </div>
-                  )}
-                  {s.ip && (
+                    {s.typedName && s.signatureImage && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-muted-foreground">{c.sigTyped}</dt>
+                        <dd>{s.typedName}</dd>
+                      </div>
+                    )}
+                    {s.email && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-muted-foreground">{t.common.email}</dt>
+                        <dd dir="ltr">{s.email}</dd>
+                      </div>
+                    )}
+                    {s.ip && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-muted-foreground">{c.sigIp}</dt>
+                        <dd dir="ltr" className="font-mono">
+                          {s.ip}
+                        </dd>
+                      </div>
+                    )}
+                    {device && (
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-muted-foreground">{c.sigDevice}</dt>
+                        <dd dir="ltr" title={s.userAgent ?? undefined}>
+                          {device}
+                        </dd>
+                      </div>
+                    )}
                     <div className="flex justify-between gap-3">
-                      <dt className="text-muted-foreground">{c.sigIp}</dt>
-                      <dd dir="ltr" className="font-mono">
-                        {s.ip}
+                      <dt className="text-muted-foreground">{c.fingerprint}</dt>
+                      <dd dir="ltr" className="font-mono" title={s.contentHash}>
+                        {shortHash(s.contentHash)}
                       </dd>
                     </div>
-                  )}
-                  {device && (
-                    <div className="flex justify-between gap-3">
-                      <dt className="text-muted-foreground">{c.sigDevice}</dt>
-                      <dd dir="ltr" title={s.userAgent ?? undefined}>
-                        {device}
-                      </dd>
-                    </div>
-                  )}
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-muted-foreground">{c.fingerprint}</dt>
-                    <dd dir="ltr" className="font-mono" title={s.contentHash}>
-                      {shortHash(s.contentHash)}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            );
-          })
+                  </dl>
+                </li>
+              );
+            })}
+          </ul>
         )}
-      </CardContent>
-    </Card>
+      </SectionCell>
+    </FrameGrid>
   );
 }
 
@@ -413,18 +401,19 @@ const eventIcons: Record<string, LucideIcon> = {
   reminded: BellRingIcon,
 };
 
+/** Icon ink per event (the tile itself is a neutral hairline square, like the invoice timeline). */
 const eventTone: Record<string, string> = {
-  created: "bg-grey-500/16 text-grey-700 dark:text-grey-300",
-  updated: "bg-warning/16 text-[#b76e00] dark:text-warning",
-  sent: "bg-info/16 text-[#006c9c] dark:text-info",
-  viewed: "bg-violet/16 text-violet",
-  signed: "bg-success/16 text-[#118d57] dark:text-success",
-  declined: "bg-destructive/16 text-destructive",
-  voided: "bg-grey-500/16 text-grey-700 dark:text-grey-300",
-  reminded: "bg-info/16 text-[#006c9c] dark:text-info",
+  created: "text-muted-foreground",
+  updated: "text-warning-ink",
+  sent: "text-info-ink",
+  viewed: "text-[#5119b7] dark:text-[#c684ff]",
+  signed: "text-success-ink",
+  declined: "text-destructive",
+  voided: "text-muted-foreground",
+  reminded: "text-info-ink",
 };
 
-function TimelineCard({ ctx, d }: { ctx: PanelContext; d: Detail }) {
+function TimelineSection({ ctx, d }: { ctx: PanelContext; d: Detail }) {
   const { t, fmt, now } = ctx;
   const c = t.contracts;
   const label = (e: Detail["events"][number]) => {
@@ -448,15 +437,12 @@ function TimelineCard({ ctx, d }: { ctx: PanelContext; d: Detail }) {
   };
   const events = [...d.events].reverse();
   return (
-    <Card className="gap-2 py-5">
-      <CardHeader className="px-5">
-        <CardTitle className="text-base">{c.timeline}</CardTitle>
-      </CardHeader>
-      <CardContent className="px-5">
+    <FrameGrid cols={1}>
+      <SectionCell title={c.timeline} titleId="ct-timeline">
         {events.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">{t.common.empty}</p>
+          <p className="py-2 text-center text-sm text-muted-foreground">{t.common.empty}</p>
         ) : (
-          <ol className="relative space-y-5 before:absolute before:inset-y-2 before:start-[15px] before:w-px before:bg-border">
+          <ol className="relative space-y-5 before:absolute before:inset-y-2 before:start-[13px] before:w-px before:bg-frame-line">
             {events.map((e) => {
               const Icon = eventIcons[e.type] ?? FilePlus2Icon;
               const meta = (e.meta ?? {}) as Record<string, unknown>;
@@ -466,13 +452,13 @@ function TimelineCard({ ctx, d }: { ctx: PanelContext; d: Detail }) {
                 <li key={e.id} className="relative flex gap-3">
                   <span
                     className={cn(
-                      "relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full ring-4 ring-card",
+                      "z-10 flex size-7 shrink-0 items-center justify-center border border-frame-line bg-card",
                       eventTone[e.type],
                     )}
                   >
-                    <Icon className="size-4" />
+                    <Icon className="size-3.5" />
                   </span>
-                  <div className="min-w-0 flex-1 space-y-0.5 pt-1">
+                  <div className="min-w-0 flex-1 space-y-0.5">
                     <p className="text-sm font-semibold">{label(e)}</p>
                     <p className="text-xs text-muted-foreground">
                       <time dateTime={e.at.toISOString()} title={formatDateTime(e.at, fmt)}>
@@ -488,7 +474,7 @@ function TimelineCard({ ctx, d }: { ctx: PanelContext; d: Detail }) {
                       </p>
                     )}
                     {reason && (
-                      <p className="mt-1 rounded-lg bg-muted px-2 py-1 text-xs break-words">
+                      <p className="mt-1 border border-dashed border-frame-line bg-card px-2 py-1 text-xs break-words">
                         {reason}
                       </p>
                     )}
@@ -498,7 +484,7 @@ function TimelineCard({ ctx, d }: { ctx: PanelContext; d: Detail }) {
             })}
           </ol>
         )}
-      </CardContent>
-    </Card>
+      </SectionCell>
+    </FrameGrid>
   );
 }
