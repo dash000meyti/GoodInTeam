@@ -141,6 +141,16 @@ viewed → `viewed`; else `sent`.
   client view sets `viewedAt` through a server action called after mount, and notifies every
   owner/admin (`invoice.viewed`, in each admin's language).
 
+### Update semantics
+
+Every `update*Input` is a true partial: a field that is absent keeps its value — a transaction's
+`status`, an account's `kind` and `currency`, an invoice's `currency` and lines. Each create/update
+pair in `schemas.ts` derives from one default-free `…Fields` object; only the create schemas add
+defaults (`status: cleared`, `kind: bank`, `currency: IRT`, `items: []`), because zod 4 keeps
+`.default()` inside `.partial()` (see `docs/conventions.md` → Forms). `updateInvoice` replaces
+**all** lines when `items` is sent (an empty list removes them and releases their time entries)
+and leaves them alone when it is not.
+
 ### Overdue job
 
 `markOverdueInvoices(now)` (exported from `invoices.ts`) flips `sent | viewed | partial`

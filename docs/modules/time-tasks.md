@@ -175,7 +175,9 @@ immediately; re-registering a name replaces it). Jobs must be idempotent and qui
 | member      | only their own entries; only projects they are assigned to; no rates/earnings            | tasks of assigned projects + personal tasks they created or are assigned to                                 |
 | client      | no access to `/panel/time`; `ProjectTimePanel clientView` only if `share_time`           | no access to `/panel/tasks`; `ProjectTasksPanel clientView` only `visible_to_client` tasks if `share_tasks` |
 
-Personal tasks are private to their creator/assignee — even for admins.
+Personal tasks are private to their creator/assignee — even for admins. One rule decides it
+everywhere: `taskAccessWhere(actor)` in `tasks/access.ts`, used by the Tasks pages, the dashboard,
+the calendar's task overlay and the ICS feed. Import it; never re-implement it in another module.
 
 ## Components for the project page
 

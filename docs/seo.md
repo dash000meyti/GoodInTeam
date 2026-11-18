@@ -18,7 +18,9 @@ Perplexity, Claude, Gemini (**GEO**). Implementation details: `docs/modules/cont
   `noindex, follow`; paginated pages are self-canonical.
 - `sitemap.xml` (`src/app/sitemap.ts`): sections × locales (the brand pages `/studio` and
   `/code` included), every published post and course with `lastModified`, `hreflang`
-  alternates and cover images.
+  alternates and cover images. `lastModified`, `dateModified` and `article:modified_time` come
+  from `posts.updated_at`, which only an edit or a publish toggle moves — never a page view
+  (see [modules/content.md](modules/content.md), "`updated_at` is the editorial date").
 - `robots.txt` (`src/app/robots.ts`): public content open to everyone; `/panel`, `/api/`,
   `/login`, `/setup`, `/sign/`, `/p/`, `/i/` disallowed (both locales). AI crawlers are
   **explicitly welcomed** for public content (decision: GEO visibility matters more than opting

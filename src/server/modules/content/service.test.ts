@@ -18,7 +18,15 @@ const { db, getDb } = await import("@/server/db/client");
 const s = await import("@/server/db/schema");
 const { eq } = await import("drizzle-orm");
 const svc = await import("./service");
-const { postInput, updatePostInput } = await import("./schemas");
+const {
+  postInput,
+  savePostInput,
+  seriesInput,
+  testimonialInput,
+  updatePostInput,
+  updateSeriesInput,
+  updateTestimonialInput,
+} = await import("./schemas");
 
 let owner: Actor;
 const ids: Record<string, string> = {};
@@ -147,5 +155,160 @@ describe("service brand sync across translationKey siblings", () => {
 
   it("rejects an unknown brand", () => {
     expect(() => updatePostInput.parse({ id: ids.fa, meta: { brand: "nope" } })).toThrow();
+  });
+});
+
+describe("partial updates of series and testimonials", () => {
+  it("renaming a series keeps its locale, status and level", () => {
+    const created = svc.createSeries(
+      owner,
+      seriesInput.parse({
+        locale: "en",
+        title: "Next.js basics",
+        status: "published",
+        level: "advanced",
+        sort: "3",
+      }),
+    );
+    svc.updateSeries(owner, updateSeriesInput.parse({ id: created.id, title: "Next.js 16" }));
+    const after = db.select().from(s.series).where(eq(s.series.id, created.id)).get()!;
+    expect(after).toMatchObject({
+      title: "Next.js 16",
+      slug: created.slug,
+      locale: "en",
+      status: "published",
+      level: "advanced",
+      sort: 3,
+    });
+  });
+
+  it("create still defaults a series to fa / draft", () => {
+    const created = svc.createSeries(owner, seriesInput.parse({ title: "مبانی" }));
+    expect(created).toMatchObject({ locale: "fa", status: "draft" });
+  });
+
+  it("hiding a testimonial keeps its locale and rating", () => {
+    const created = svc.createTestimonial(
+      owner,
+      testimonialInput.parse({ locale: "en", author: "Sara", quote: "Great work", rating: "4" }),
+    );
+    expect(created).toMatchObject({ locale: "en", rating: 4, published: true });
+    svc.updateTestimonial(
+      owner,
+      updateTestimonialInput.parse({ id: created.id, published: "false" }),
+    );
+    const after = db.select().from(s.testimonials).where(eq(s.testimonials.id, created.id)).get()!;
+    expect(after).toMatchObject({ locale: "en", rating: 4, published: false, author: "Sara" });
+  });
+
+  it("an {id}-only testimonial update is a harmless no-op; an unknown id is not found", () => {
+    const created = svc.createTestimonial(
+      owner,
+      testimonialInput.parse({ locale: "en", author: "Omid", quote: "Solid" }),
+    );
+    const row = svc.updateTestimonial(owner, updateTestimonialInput.parse({ id: created.id }));
+    expect(row).toEqual(created);
+    expect(() =>
+      svc.updateTestimonial(owner, updateTestimonialInput.parse({ id: "missing", author: "x" })),
+    ).toThrowError(expect.objectContaining({ code: "not_found" }));
+    expect(() =>
+      svc.updateTestimonial(owner, updateTestimonialInput.parse({ id: "missing" })),
+    ).toThrowError(expect.objectContaining({ code: "not_found" }));
+  });
+});
+
+describe("the editor's save form (savePostInput)", () => {
+  const full = { title: "T", type: "article", locale: "en", contentMd: "body", status: "draft" };
+
+  it("accepts the full form the editor sends", () => {
+    expect(savePostInput.parse({ ...full, id: "", publishedDate: "", publishedTime: "" })).toEqual(
+      full,
+    );
+  });
+
+  it.each(["type", "locale", "contentMd", "status"] as const)(
+    "requires %s instead of falling back to a create default",
+    (key) => {
+      const { [key]: _omit, ...rest } = full;
+      void _omit;
+      const parsed = savePostInput.safeParse({ ...rest, id: "p1" });
+      expect(parsed.success).toBe(false);
+    },
+  );
+});
+
+/**
+ * `posts.updated_at` is the post's editorial "last modified" date: the visible
+ * "Updated on", JSON-LD `dateModified`, `article:modified_time`, the sitemap
+ * `lastmod`, llms-full.txt and the Markdown mirrors all read it. The column
+ * bumps itself on every UPDATE, so a write that is not an edit must keep it.
+ */
+describe("updated_at only moves when a post is edited", () => {
+  const OLD = new Date("2026-01-05T10:00:00Z");
+  const post = (id: string) => db.select().from(s.posts).where(eq(s.posts.id, id)).get()!;
+  /** Pin `updated_at` in the past (an explicit value is stored as given). */
+  const age = (...postIds: string[]) => {
+    for (const id of postIds)
+      db.update(s.posts).set({ updatedAt: OLD }).where(eq(s.posts.id, id)).run();
+  };
+  const create = (raw: Record<string, unknown>) => svc.createPost(owner, postInput.parse(raw)).id;
+
+  it("a page view counts without touching updated_at", () => {
+    const id = create({ title: "Launch notes", locale: "en", status: "published" });
+    age(id);
+    svc.recordView(id);
+    svc.recordView(id);
+    expect(post(id)).toMatchObject({ views: 2, updatedAt: OLD });
+  });
+
+  it("an edit still moves it", () => {
+    const id = create({ title: "Changelog", locale: "en", status: "published" });
+    age(id);
+    svc.recordView(id);
+    expect(post(id).updatedAt).toEqual(OLD);
+    update({ id, title: "Changelog 2026" });
+    expect(post(id).updatedAt.getTime()).toBeGreaterThan(OLD.getTime());
+    expect(post(id).views).toBe(1); // the edit keeps the counter
+  });
+
+  it("the brand sync changes the sibling's brand, not its updated_at", () => {
+    age(ids.fa!, ids.en!);
+    update({ id: ids.fa, meta: { brand: "team" } });
+    expect(metaOf(ids.en!).brand).toBe("team");
+    expect(post(ids.en!).updatedAt).toEqual(OLD);
+    // The row that was edited is, of course, modified.
+    expect(post(ids.fa!).updatedAt.getTime()).toBeGreaterThan(OLD.getTime());
+  });
+
+  it("giving a post its translation key (first translation) keeps updated_at", () => {
+    const id = create({ title: "Old article", locale: "fa", status: "published" });
+    // A legacy row without a key gets one when its first translation is created.
+    db.update(s.posts)
+      .set({ translationKey: null, updatedAt: OLD })
+      .where(eq(s.posts.id, id))
+      .run();
+    const translation = svc.createTranslation(owner, id);
+    const source = post(id);
+    expect(source.translationKey).toBeTruthy();
+    expect(post(translation.id)).toMatchObject({
+      locale: "en",
+      translationKey: source.translationKey,
+    });
+    expect(source.updatedAt).toEqual(OLD);
+  });
+
+  it("deleting a series detaches its lessons without touching their updated_at", () => {
+    const series = svc.createSeries(owner, seriesInput.parse({ title: "Course", locale: "en" }));
+    const id = create({
+      type: "tutorial",
+      locale: "en",
+      title: "Lesson 1",
+      seriesId: series.id,
+      seriesOrder: 1,
+    });
+    expect(post(id).seriesId).toBe(series.id);
+    age(id);
+    svc.deleteSeries(owner, series.id);
+    expect(post(id)).toMatchObject({ seriesId: null, seriesOrder: null, updatedAt: OLD });
   });
 });

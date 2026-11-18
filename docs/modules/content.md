@@ -73,8 +73,13 @@ inherits the brand. Seed mapping: web, mobile, AI → `code`; consulting → `te
 service relation), so the brand pages show no work; a brand field on `work` posts would be the
 honest way to add one. See [Public pages](#public-pages).
 
-`updatePostInput` is a true partial: fields that are absent stay as they are (zod 4 applies
-`.default()` inside `.partial()`, so the defaults of `postInput` are removed for updates).
+`updatePostInput`, `updateSeriesInput` and `updateTestimonialInput` are true partials: a field
+that is absent stays as it is. Each create/update pair derives from one default-free field shape
+in `schemas.ts` (`postFields`, `seriesFields`, `testimonialFields`); only the create schemas add
+defaults (type `article`, locale `fa`, status `draft`, empty body), because zod 4 keeps
+`.default()` inside `.partial()` (see `docs/conventions.md` → Forms). The editor saves through
+`savePostInput`, a full form for create and update: type, locale, body and status are required,
+never defaulted.
 
 Translations share `translationKey`. The header language menu (icon button + dropdown, next to
 the theme toggle) and `hreflang` alternates point to
@@ -87,6 +92,19 @@ the translation; without one, the toggle falls back to the section index.
 query time: `status in (published, scheduled) AND coalesce(published_at, created_at) <= now`.
 Cached queries shorten their lifetime when the next scheduled post goes live within the hour,
 so scheduled posts appear on time without a cron job.
+
+### `updated_at` is the editorial date
+
+`posts.updated_at` is what readers and crawlers get as "last modified": the visible "Updated on"
+line, JSON-LD `dateModified`, `article:modified_time`, the sitemap `lastmod`, `llms-full.txt` and
+the Markdown mirrors. The column bumps itself on every UPDATE (`$onUpdateFn`), so only an edit
+may move it: `updatePost` and `setPostStatus` (a publish toggle) set it. Every other write to
+`posts` keeps the stored value with `keepUpdatedAt()` in `content/service.ts` (drizzle skips
+`$onUpdateFn` when `set` names the column): the view counter (`recordView`), the brand sync to
+translation siblings, the translation key a post gets with its first translation, and the
+removal of a series from its lessons. A new non-editorial write to `posts` must do the same.
+A dedicated editorial `modified_at` (set only when title, excerpt, body, cover or meta change)
+is planned; until then `updated_at` plays that role.
 
 ## Caching & rendering
 

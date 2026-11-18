@@ -71,17 +71,26 @@ export const postMetaInput = z.object({
   ).optional(),
 });
 
-export const postInput = z.object({
-  type: z.enum(postTypes).default("article"),
-  locale: zLocale.default("fa"),
+/**
+ * Post fields, declared once WITHOUT defaults. `postInput` (create) adds the
+ * defaults, `updatePostInput` makes every field optional and `savePostInput`
+ * (the editor's full form) requires them. Never derive an update schema from
+ * `postInput`: zod 4 keeps `.default()` inside `.partial()`, which made a
+ * partial update (e.g. the MCP `content_update_post` tool with just a title)
+ * reset the type to "article", the locale to "fa", the status to "draft" and
+ * wipe the body. The same rule holds for series and testimonials below.
+ */
+const postFields = z.object({
+  type: z.enum(postTypes),
+  locale: zLocale,
   title: z.string().trim().min(1).max(200),
   slug: zSlug,
   excerpt: zNullString(600),
-  contentMd: z.string().max(400_000).default(""),
+  contentMd: z.string().max(400_000),
   coverUrl: zNullString(1000),
   coverAlt: zNullString(300),
   videoUrl: zNullString(1000),
-  status: z.enum(postStatuses).default("draft"),
+  status: z.enum(postStatuses),
   /** ISO datetime / epoch ms. Future + published → scheduled. */
   publishedAt: z.preprocess(
     (v) => (v === "" || v === undefined ? undefined : v === null ? null : new Date(v as string)),
@@ -98,24 +107,29 @@ export const postInput = z.object({
   sort: zOptNumber,
   meta: postMetaInput.optional(),
 });
+
+export const postInput = postFields.extend({
+  type: postFields.shape.type.default("article"),
+  locale: postFields.shape.locale.default("fa"),
+  contentMd: postFields.shape.contentMd.default(""),
+  status: postFields.shape.status.default("draft"),
+});
 export type PostInput = z.input<typeof postInput>;
 
+/** Partial update: a field that is absent stays as it is. */
+export const updatePostInput = postFields.partial().extend({ id: zId });
+
 /**
- * Partial update: a field that is absent stays as it is. The defaults of
- * `postInput` (type, locale, contentMd, status) must not apply here — zod 4
- * still applies `.default()` inside `.partial()`, which made a partial update
- * (e.g. the MCP `content_update_post` tool with just a title) reset the type
- * to "article", the locale to "fa", the status to "draft" and wipe the body.
+ * Editor save: one full form that creates (no `id`) or updates. The editor
+ * always sends type, locale, body and status, so they are required here — an
+ * update through this form can never fall back to a create default. The
+ * publish date arrives as a calendar day + wall-clock time (app timezone).
  */
-export const updatePostInput = postInput
-  .extend({
-    type: z.enum(postTypes).optional(),
-    locale: zLocale.optional(),
-    contentMd: z.string().max(400_000).optional(),
-    status: z.enum(postStatuses).optional(),
-  })
-  .partial()
-  .extend({ id: zId });
+export const savePostInput = postFields.extend({
+  id: zOptString(64),
+  publishedDate: zOptString(10),
+  publishedTime: zOptString(5),
+});
 
 export const listPostsInput = z.object({
   type: z.enum(postTypes).optional(),
@@ -141,8 +155,8 @@ export const checkSlugInput = z.object({
   excludeId: zOptString(64),
 });
 
-export const seriesInput = z.object({
-  locale: zLocale.default("fa"),
+const seriesFields = z.object({
+  locale: zLocale,
   title: z.string().trim().min(1).max(200),
   slug: zSlug,
   description: zNullString(2000),
@@ -151,13 +165,17 @@ export const seriesInput = z.object({
     (v) => (v === "" ? null : v),
     z.enum(["beginner", "intermediate", "advanced"]).nullable().optional(),
   ),
-  status: z.enum(["draft", "published"]).default("draft"),
+  status: z.enum(["draft", "published"]),
   sort: zOptNumber,
 });
-export const updateSeriesInput = seriesInput.partial().extend({ id: zId });
+export const seriesInput = seriesFields.extend({
+  locale: seriesFields.shape.locale.default("fa"),
+  status: seriesFields.shape.status.default("draft"),
+});
+export const updateSeriesInput = seriesFields.partial().extend({ id: zId });
 
-export const testimonialInput = z.object({
-  locale: zLocale.default("fa"),
+const testimonialFields = z.object({
+  locale: zLocale,
   author: z.string().trim().min(1).max(120),
   role: zNullString(120),
   company: zNullString(120),
@@ -172,7 +190,10 @@ export const testimonialInput = z.object({
   published: zBool.optional(),
   sort: zOptNumber,
 });
-export const updateTestimonialInput = testimonialInput.partial().extend({ id: zId });
+export const testimonialInput = testimonialFields.extend({
+  locale: testimonialFields.shape.locale.default("fa"),
+});
+export const updateTestimonialInput = testimonialFields.partial().extend({ id: zId });
 
 export const syndicationInput = z.object({
   postId: zId,

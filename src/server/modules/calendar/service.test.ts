@@ -18,6 +18,8 @@ const { db, getDb } = await import("@/server/db/client");
 const s = await import("@/server/db/schema");
 const svc = await import("./service");
 const feeds = await import("./feeds");
+const tasksSvc = await import("@/server/modules/tasks/service");
+const { taskAccessWhere } = await import("@/server/modules/tasks/access");
 const { dayStartMs } = await import("@/components/calendar/grid");
 
 const TZ = "Asia/Tehran";
@@ -305,5 +307,157 @@ describe("ICS feed", () => {
     const memberIcs = feeds.buildFeed(memberToken)!;
     expect(memberIcs).toContain("Acme sync");
     expect(memberIcs).not.toContain("Dentist");
+  });
+});
+
+/**
+ * The calendar has no task access rule of its own: its task overlay and the ICS
+ * feed use `taskAccessWhere` from the tasks module. A private copy once let
+ * admins see other users' personal tasks ("private, even for admins").
+ */
+describe("task overlay: same access as the tasks module", () => {
+  let admin: Actor;
+  let other: Actor;
+  const task: Record<string, string> = {};
+  const DUE = at("2027-03-10T08:00:00Z");
+  const WINDOW = range("2027-03-01", "2027-03-20");
+  const NOW = Date.parse("2027-03-05T08:00:00Z");
+
+  beforeAll(() => {
+    const users = db
+      .insert(s.users)
+      .values([
+        { email: "a@x.test", name: "Admin", role: "admin" },
+        { email: "n@x.test", name: "Other member", role: "member" },
+      ])
+      .returning()
+      .all();
+    admin = actor({ id: users[0]!.id, role: "admin" });
+    other = actor({ id: users[1]!.id, role: "member" });
+    const projectId = (name: string) =>
+      db
+        .select()
+        .from(s.projects)
+        .all()
+        .find((p) => p.name === name)!.id;
+    const shared = projectId("Shared"); // `member` is assigned to it
+    const closed = projectId("Private"); // nobody is assigned
+    const add = (key: string, v: { createdBy: Actor; assignee?: Actor; projectId?: string }) => {
+      task[key] = db
+        .insert(s.tasks)
+        .values({
+          title: `task:${key}`,
+          status: "todo",
+          dueAt: DUE,
+          dueAllDay: false,
+          createdBy: v.createdBy.user.id,
+          assigneeId: v.assignee?.user.id ?? null,
+          projectId: v.projectId ?? null,
+        })
+        .returning()
+        .get().id;
+    };
+    // Personal tasks (no project): private to their creator / assignee.
+    add("otherPrivate", { createdBy: other, assignee: other });
+    add("otherUnassigned", { createdBy: other });
+    add("ownerPersonal", { createdBy: owner });
+    add("adminPersonal", { createdBy: admin });
+    add("memberPersonal", { createdBy: member });
+    add("otherForMember", { createdBy: other, assignee: member });
+    add("otherForOwner", { createdBy: other, assignee: owner });
+    // Project tasks: admins see all, members those of their projects.
+    add("sharedTask", { createdBy: owner, projectId: shared });
+    add("closedTask", { createdBy: owner, projectId: closed });
+    add("closedForMember", { createdBy: owner, assignee: member, projectId: closed });
+    add("closedByMember", { createdBy: member, projectId: closed });
+  });
+
+  const names = (ids: Iterable<string>) => {
+    const byId = new Map(Object.entries(task).map(([k, id]) => [id, k]));
+    return [...ids].map((id) => byId.get(id) ?? id).sort();
+  };
+  const viaCalendar = (a: Actor) =>
+    names(svc.listCalendarItems(a, { ...WINDOW, sources: ["tasks"] }).map((i) => i.id));
+  const viaTasks = async (a: Actor) =>
+    names((await tasksSvc.listTasks(a, {}, NOW)).map((t) => t.id));
+  const viaFeed = (a: Actor) => {
+    const token = feeds.ensureFeed(a).url.split("/").at(-2)!;
+    const ics = feeds.buildFeed(token, { includeTasks: true, now: NOW })!;
+    return names([...ics.matchAll(/^UID:task-([^@]+)@/gm)].map((m) => m[1]!));
+  };
+
+  it.each([
+    [
+      "owner",
+      () => owner,
+      [
+        "closedByMember",
+        "closedForMember",
+        "closedTask",
+        "otherForOwner",
+        "ownerPersonal",
+        "sharedTask",
+      ],
+    ],
+    [
+      "admin",
+      () => admin,
+      ["adminPersonal", "closedByMember", "closedForMember", "closedTask", "sharedTask"],
+    ],
+    ["member", () => member, ["memberPersonal", "otherForMember", "sharedTask"]],
+    [
+      "another member",
+      () => other,
+      ["otherForMember", "otherForOwner", "otherPrivate", "otherUnassigned"],
+    ],
+  ] as const)(
+    "%s: the calendar shows exactly the tasks the tasks module shows",
+    async (_, who, expected) => {
+      const a = who();
+      expect(viaCalendar(a)).toEqual(await viaTasks(a));
+      expect(viaCalendar(a)).toEqual([...expected]);
+    },
+  );
+
+  it("another user's personal task is hidden from the owner and the admin", () => {
+    for (const a of [owner, admin]) {
+      const seen = viaCalendar(a);
+      expect(seen).not.toContain("otherPrivate");
+      expect(seen).not.toContain("otherUnassigned");
+      expect(seen).not.toContain("memberPersonal");
+    }
+    // The agenda (the `calendar_agenda` tool) reads the same list.
+    const { text } = svc.agenda(owner, { days: 31, from: "2027-03-01", includeTasks: true });
+    expect(text).toContain("task:ownerPersonal");
+    expect(text).not.toContain("task:otherPrivate");
+    expect(text).not.toContain("task:otherUnassigned");
+  });
+
+  it("client: no task from either module", async () => {
+    expect(() => viaCalendar(clientUser)).toThrowError(
+      expect.objectContaining({ code: "forbidden" }),
+    );
+    await expect(viaTasks(clientUser)).rejects.toMatchObject({ code: "forbidden" });
+    expect(
+      db.select({ id: s.tasks.id }).from(s.tasks).where(taskAccessWhere(clientUser)).all(),
+    ).toEqual([]);
+  });
+
+  it("the ICS feed (?tasks=1) never carries a task its user can't open", async () => {
+    for (const a of [owner, admin, member, other]) {
+      const allowed = new Set(await viaTasks(a));
+      for (const key of viaFeed(a)) expect(allowed, `${a.user.role} feed: ${key}`).toContain(key);
+    }
+    // "My" tasks of the feed: assigned to me, or unassigned ones I may see.
+    expect(viaFeed(owner)).toEqual([
+      "closedByMember",
+      "closedTask",
+      "otherForOwner",
+      "ownerPersonal",
+      "sharedTask",
+    ]);
+    expect(viaFeed(admin)).toEqual(["adminPersonal", "closedByMember", "closedTask", "sharedTask"]);
+    expect(viaFeed(member)).toEqual(["memberPersonal", "otherForMember"]);
+    expect(viaFeed(other)).toEqual(["otherPrivate", "otherUnassigned"]);
   });
 });

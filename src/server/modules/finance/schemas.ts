@@ -31,31 +31,45 @@ const zOptTime = z.preprocess(
 const zCurrency = z.enum(currencyCodes as [string, ...string[]]);
 const zPage = z.coerce.number().int().min(1).max(10_000).optional();
 
+/*
+ * Each create + update pair below shares one `…Fields` object declared WITHOUT
+ * defaults: the create schema adds its defaults, the update schema is
+ * `fields.partial()` plus the id. Never write `createInput.partial()` — zod 4
+ * keeps `.default()` inside `.partial()`, so a partial update reset every
+ * omitted field that has a default (a pending transaction became "cleared", a
+ * USD account "IRT", and an invoice would have lost its lines).
+ */
+
 // ─── Accounts ───────────────────────────────────────────────────────────────
 
-export const accountInput = z.object({
+const accountFields = z.object({
   name: z.string().trim().min(1).max(120),
-  kind: z.enum(accountKinds).default("bank"),
-  currency: zCurrency.default("IRT"),
+  kind: z.enum(accountKinds),
+  currency: zCurrency,
   /** Opening balance in MAJOR units of the account currency (may be negative). */
   openingBalance: zOptMoney,
   color: zColor.optional(),
   notes: zNullString(2000),
 });
-export const updateAccountInput = accountInput.partial().extend({ id: zId });
+export const accountInput = accountFields.extend({
+  kind: accountFields.shape.kind.default("bank"),
+  currency: accountFields.shape.currency.default("IRT"),
+});
+export const updateAccountInput = accountFields.partial().extend({ id: zId });
 
 // ─── Categories ─────────────────────────────────────────────────────────────
 
-export const categoryInput = z.object({
+const categoryFields = z.object({
   name: z.string().trim().min(1).max(80),
   kind: z.enum(categoryKinds),
   color: zColor.optional(),
 });
-export const updateCategoryInput = categoryInput.partial().extend({ id: zId });
+export const categoryInput = categoryFields;
+export const updateCategoryInput = categoryFields.partial().extend({ id: zId });
 
 // ─── Transactions ───────────────────────────────────────────────────────────
 
-export const transactionInput = z.object({
+const transactionFields = z.object({
   kind: z.enum(transactionKinds),
   /** Account the money is in (income/expense) or leaves from (transfer). */
   accountId: zId,
@@ -72,16 +86,20 @@ export const transactionInput = z.object({
   /** Free-text counterparty when it is not a saved client. */
   counterparty: zNullString(200),
   description: zNullString(2000),
-  status: z.enum(["cleared", "pending"]).default("cleared"),
+  status: z.enum(["cleared", "pending"]),
   tags: zTags.optional(),
   /** Transfers only: destination account. */
   transferAccountId: zNullString(64),
   /** Transfers only: MAJOR units received in the destination currency (defaults to `amount`). */
   transferAmount: zOptMoney,
 });
+export const transactionInput = transactionFields.extend({
+  status: transactionFields.shape.status.default("cleared"),
+});
 export type TransactionInput = z.input<typeof transactionInput>;
 
-export const updateTransactionInput = transactionInput.partial().extend({ id: zId });
+/** Partial update: an absent field keeps the transaction's current value (status included). */
+export const updateTransactionInput = transactionFields.partial().extend({ id: zId });
 
 export const listTransactionsInput = z.object({
   accountId: zOptString(64),
@@ -107,7 +125,7 @@ export const importCsvInput = z.object({
 
 // ─── FX rates ───────────────────────────────────────────────────────────────
 
-export const fxRateInput = z.object({
+const fxRateFields = z.object({
   /** Currency being priced (e.g. "USD"). */
   currency: zCurrency,
   /** Units of the BASE currency that one unit of `currency` is worth (major per major). */
@@ -118,7 +136,8 @@ export const fxRateInput = z.object({
   /** Day "YYYY-MM-DD" (defaults to today). */
   date: zOptDay,
 });
-export const updateFxRateInput = fxRateInput.partial().extend({ id: zId });
+export const fxRateInput = fxRateFields;
+export const updateFxRateInput = fxRateFields.partial().extend({ id: zId });
 
 // ─── Reports & ledgers ──────────────────────────────────────────────────────
 
@@ -153,7 +172,7 @@ export const invoiceItemInput = z.object({
   timeEntryIds: z.array(zId).max(5000).optional(),
 });
 
-export const invoiceInput = z.object({
+const invoiceFields = z.object({
   clientId: zNullString(64),
   projectId: zNullString(64),
   /** Leave empty to auto-number as `${prefix}${year}-NNN`. */
@@ -161,8 +180,9 @@ export const invoiceInput = z.object({
   /** Day "YYYY-MM-DD"; defaults to today. */
   issueDate: zOptDay,
   dueDate: zNullString(20),
-  currency: zCurrency.default("IRT"),
-  items: z.array(invoiceItemInput).max(200).default([]),
+  currency: zCurrency,
+  /** On update: when sent, replaces ALL lines; leave it out to keep the lines as they are. */
+  items: z.array(invoiceItemInput).max(200),
   /** MAJOR units. */
   discount: zOptMoney,
   /** Tax percent (9 = 9%). Stored as basis points. */
@@ -172,8 +192,14 @@ export const invoiceInput = z.object({
   /** Also mark as sent (creates the public share link). */
   send: z.boolean().optional(),
 });
+export const invoiceInput = invoiceFields.extend({
+  currency: invoiceFields.shape.currency.default("IRT"),
+  items: invoiceFields.shape.items.default([]),
+});
 export type InvoiceInput = z.input<typeof invoiceInput>;
-export const updateInvoiceInput = invoiceInput.partial().extend({ id: zId });
+
+/** Partial update: an absent `currency` / `items` keeps the invoice's currency and lines. */
+export const updateInvoiceInput = invoiceFields.partial().extend({ id: zId });
 
 export const listInvoicesInput = z.object({
   /** Status filter. "open" = sent | viewed | partial | overdue. */
