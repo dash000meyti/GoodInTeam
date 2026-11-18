@@ -41,7 +41,14 @@ import {
   type VaultKeyMaterial,
 } from "@/lib/vault-crypto";
 import { importVaultItemsAction, updateVaultKeysAction } from "@/server/modules/vault/actions";
-import { BACKUP_FORMAT, downloadText, parseBackup, toCsv, type VaultBackup } from "./formats";
+import {
+  BACKUP_FORMAT,
+  downloadText,
+  parseBackup,
+  restoreBatches,
+  toCsv,
+  type VaultBackup,
+} from "./formats";
 import type { LinkOption } from "./item-detail";
 import { isVaultItemType, TYPE_FIELDS, type VaultEntry, type VaultItemRecord } from "./item-types";
 import {
@@ -464,15 +471,24 @@ function BackupCard({
         ...blob,
       });
     }
-    const res = await importVaultItemsAction({ items });
-    if (!res.ok) {
-      toast.error(res.error.message);
-      return true;
+    // A backup can be larger than one server action may carry, so it goes up
+    // in batches. Restoring is idempotent (existing ids are skipped), so a
+    // batch that fails can simply be retried with the same file.
+    let imported = 0;
+    let skipped = 0;
+    for (const batch of restoreBatches(items)) {
+      const res = await importVaultItemsAction({ items: batch });
+      if (!res.ok) {
+        toast.error(res.error.message);
+        return true;
+      }
+      imported += res.data.imported;
+      skipped += res.data.skipped;
     }
     toast.success(
       format(v.importDone, {
-        imported: formatNumber(res.data.imported, locale),
-        skipped: formatNumber(res.data.skipped, locale),
+        imported: formatNumber(imported, locale),
+        skipped: formatNumber(skipped, locale),
       }),
     );
     return true;

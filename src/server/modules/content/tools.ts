@@ -49,7 +49,7 @@ export const contentTools = [
     name: "content_create_post",
     title: "Create post",
     description:
-      "Create a post. contentMd is Markdown (owner content may include HTML). slug is optional (generated from the title, Persian letters allowed). status defaults to 'draft'; 'published' with a future publishedAt (ISO) becomes 'scheduled'. Start articles with a 2–3 sentence TL;DR in `excerpt` (used for AEO). For type 'work' put client/year/role/stack/metrics in meta.",
+      "Create a post. contentMd is Markdown and may contain a safe subset of HTML (text and layout tags, tables, details/summary, figure, images, video and audio, a video embed from www.youtube-nocookie.com); script, style, forms, event handlers, inline styles, classes and ids are removed when the post is rendered. slug is optional (generated from the title, Persian letters allowed). status defaults to 'draft'; 'published' with a future publishedAt (ISO) becomes 'scheduled'. Start articles with a 2–3 sentence TL;DR in `excerpt` (used for AEO). For type 'work' put client/year/role/stack/metrics in meta.",
     input: postInput,
     scope: "write",
     roles: [...ADMIN],

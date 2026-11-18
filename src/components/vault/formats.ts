@@ -170,6 +170,29 @@ export function parseBackup(raw: unknown): VaultBackup | null {
   };
 }
 
+/**
+ * Size of one restore request, in characters of ciphertext. One item is at
+ * most 700,000 (server/modules/vault/schemas.ts), so a batch (which always
+ * holds at least one item) stays well under the 2 MB server-action body limit.
+ */
+export const RESTORE_BATCH_CHARS = 900_000;
+
+/** Split the items of a backup into requests that each fit the server-action body limit. */
+export function restoreBatches<T extends { ciphertext: string }>(items: T[]) {
+  const batches: T[][] = [];
+  let size = 0;
+  for (const item of items) {
+    const cost = item.ciphertext.length + 300; // ids, type, iv and JSON punctuation
+    if (!batches.length || size + cost > RESTORE_BATCH_CHARS) {
+      batches.push([]);
+      size = 0;
+    }
+    batches[batches.length - 1]!.push(item);
+    size += cost;
+  }
+  return batches;
+}
+
 /** Trigger a browser download of a text file. */
 export function downloadText(filename: string, text: string, type = "text/plain") {
   const blob = new Blob([text], { type: `${type};charset=utf-8` });

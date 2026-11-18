@@ -12,11 +12,12 @@ import { localePath, locales, type Locale } from "@/i18n/config";
 import { messages } from "@/i18n/messages";
 import { env } from "@/lib/env";
 import { postPath, type ContentType } from "@/lib/content";
+import { sanitizeMarkdownHtml } from "@/lib/html-sanitize";
 import {
   getPublicProfile,
   getPublishedPost,
   getSeriesWithLessons,
-  listFullPosts,
+  listAllFullPosts,
   listPublished,
   listSeries,
   listServices,
@@ -28,6 +29,10 @@ import {
  * GEO outputs for LLMs and agents: Markdown mirrors (`*.md`), /llms.txt and
  * /llms-full.txt. Pure string builders over the cached content queries —
  * callers (route handlers) must be request-time (`await connection()`).
+ *
+ * These files publish a post's Markdown SOURCE. Raw HTML in it is reduced to
+ * the same safe subset as the rendered page (`sanitizeMarkdownHtml`), so no
+ * output of this module carries markup the site itself would not show.
  */
 
 const abs = (p: string) => `${env.siteUrl}${p}`;
@@ -86,7 +91,8 @@ export function postToMarkdown(
           series: post.seriesTitle,
         });
   const tldr = post.excerpt ? `> **${t.site.tldr}:** ${post.excerpt}\n\n` : "";
-  return `${head}# ${post.title}\n\n${tldr}${metaLines(post, t)}${post.contentMd.trim()}\n`;
+  const body = `# ${post.title}\n\n${tldr}${metaLines(post, t)}${post.contentMd.trim()}\n`;
+  return head + sanitizeMarkdownHtml(body);
 }
 
 /**
@@ -112,14 +118,15 @@ export async function brandMarkdown(locale: Locale, id: SubBrandId) {
         `- [${t.nav[b.label]}](${abs(localePath(locale, "master" in b ? "/" : b.href))}): ${t.site[b.tagline]}`,
     )
     .join("\n");
-  const md = `${frontMatter({
+  const head = frontMatter({
     title: name,
     description: t.site[brandIntro[id]],
     type: "brand",
     lang: locale,
     canonical,
-  })}# ${name}\n\n> ${t.site[brand.tagline]}\n\n${t.site[brandIntro[id]]}\n\n## ${format(t.site.brandServicesTitle, { brand: name })}\n\n${list}\n\n## ${t.site.brandsEyebrow}\n\n${family}\n`;
-  return { md, canonical };
+  });
+  const body = `# ${name}\n\n> ${t.site[brand.tagline]}\n\n${t.site[brandIntro[id]]}\n\n## ${format(t.site.brandServicesTitle, { brand: name })}\n\n${list}\n\n## ${t.site.brandsEyebrow}\n\n${family}\n`;
+  return { md: head + sanitizeMarkdownHtml(body), canonical };
 }
 
 /** Resolve a public path (without locale, without `.md`) to Markdown. */
@@ -168,7 +175,7 @@ export async function markdownForPath(
             `${i + 1}. [${l.title}](${url(locale, l)})${l.excerpt ? ` — ${l.excerpt}` : ""}`,
         )
         .join("\n");
-      const md = `${frontMatter({
+      const head = frontMatter({
         title: course.series.title,
         description: course.series.description,
         type: "course",
@@ -176,8 +183,9 @@ export async function markdownForPath(
         lang: locale,
         canonical,
         updated: course.series.updatedAt.toISOString(),
-      })}# ${course.series.title}\n\n${course.series.description ?? ""}\n\n## ${messages[locale].site.courseContents}\n\n${lessons}\n`;
-      return { md, canonical };
+      });
+      const body = `# ${course.series.title}\n\n${course.series.description ?? ""}\n\n## ${messages[locale].site.courseContents}\n\n${lessons}\n`;
+      return { md: head + sanitizeMarkdownHtml(body), canonical };
     }
     const post: PostDetail | null = await getPublishedPost(locale, ["tutorial"], a);
     if (post && !post.seriesId)
@@ -262,18 +270,16 @@ export async function buildLlmsTxt() {
     `- [Sitemap](${abs("/sitemap.xml")})`,
     "",
   );
-  return out.join("\n");
+  return sanitizeMarkdownHtml(out.join("\n"));
 }
 
 /** /llms-full.txt — every published post in full Markdown. */
 export async function buildLlmsFull() {
   const profile = await getPublicProfile();
-  const posts = await listFullPosts(
-    null,
-    ["service", "work", "article", "tutorial", "vlog", "note", "page"],
-    1000,
+  const posts = await listAllFullPosts();
+  const head = sanitizeMarkdownHtml(
+    `# ${profile.brandName.en} — full content\n\n> ${profile.bio.en}\n\nGenerated from the CMS. Each section below is one page; its canonical URL is in the metadata line.\n`,
   );
-  const head = `# ${profile.brandName.en} — full content\n\n> ${profile.bio.en}\n\nGenerated from the CMS. Each section below is one page; its canonical URL is in the metadata line.\n`;
   const body = posts
     .map((p) => {
       const md = postToMarkdown(p, {

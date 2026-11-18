@@ -112,6 +112,14 @@ FormData strings parse correctly. `""` → `undefined` (create) or `null` (clear
   target another host, `CHROMIUM_PATH` to use a local Chromium instead of `playwright install`).
   Use them for flows unit tests can't prove (e.g. `e2e/vault.spec.ts`: no plaintext ever leaves
   the browser). Clean up any data the test creates.
+- Code that needs the proxy's voucher (`requestMeta()`, server actions, the API's per-IP limit;
+  [security.md](security.md#the-proxy)) refuses a request built by hand in a unit test. Build
+  the headers with `vouchedHeaders()` from `src/server/auth/edge-testing.ts`; never weaken or
+  mock the check.
+- A spec that calls server actions without a browser uses `e2e/server-actions.ts` (it reads the
+  action ids of the build behind `BASE_URL`; an action answers only on a page that uses it).
+  `e2e/zz-sign-in-throttle.spec.ts` sorts last on purpose: it spends part of the failed-sign-in
+  budget of the test machine's address.
 
 ## Commits
 

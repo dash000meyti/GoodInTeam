@@ -1,7 +1,11 @@
 import { renderMarkdown } from "@/lib/markdown";
 import { cn } from "@/lib/utils";
 
-/** Server component: renders markdown with the `prose-gt` typography. */
+/**
+ * Server component: renders markdown with the `prose-gt` typography.
+ * Raw HTML is escaped; with `allowHtml` (published content) a safe subset is
+ * kept and everything else is removed (see `renderMarkdown`).
+ */
 export async function Markdown({
   source,
   className,

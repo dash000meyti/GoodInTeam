@@ -9,6 +9,7 @@ lives under `/en`.
 ```
 src/server/modules/content/
   queries.ts      PUBLIC cached reads ('use cache' + cacheTag("content")) — site, feeds, GEO
+  query-args.ts   argument schemas of the cached reads (every cached function is a public endpoint)
   service.ts      CMS (admin only): posts, status rules, slugs, translations, syndication,
                   series (courses), testimonials, view counter
   schemas.ts      zod inputs (shared by actions and tools)
@@ -17,6 +18,8 @@ src/server/modules/content/
   geo.ts          Markdown mirrors, /llms.txt, /llms-full.txt builders
 src/server/modules/leads/{schemas,service,actions,tools}.ts   contact form → leads
 src/server/modules/media/{storage,image-size,service,actions,tools}.ts   uploads
+src/app/api/media/route.ts  POST: upload one file (session cookie, same origin, ≤ 20 MB)
+src/lib/html-sanitize.ts    the safe subset of HTML for published content (server only)
 src/lib/content.ts          URL rules (postPath), blog types, SEO limits, YouTube ids (pure)
 src/lib/arabic-shaping.ts   Persian shaping + bidi runs for OG images (pure, tested)
 
@@ -113,7 +116,21 @@ is planned; until then `updated_at` plays that role.
   (and `generateMetadata`, sitemap, feeds, GEO routes) calls `await connection()` first, then
   the cached functions in `queries.ts`.
 - `queries.ts`: `'use cache'` + `cacheTag("content")` + `cacheLife("hours")` (or shorter, see
-  scheduling). `renderContent(md)` caches Markdown → HTML (Shiki) by content (`max`).
+  scheduling).
+- **Every cached function is a public endpoint** (it has a server reference id, like an
+  action; [../security.md](../security.md#cached-functions)). Each one checks its arguments
+  first with the schemas in `query-args.ts` (`checkArgs`): locale and type enums, row ids by
+  shape, search text ≤ 200 characters, tag/stack ≤ 100, limits and page sizes ≤ 100. A call with
+  anything else throws before any query runs, and a function that throws caches nothing. The
+  three reads fed from the URL (`listPublished`, `getPublishedPost`, `getSeriesWithLessons`)
+  are plain wrappers around their cached part: an over-long tag, a year outside the calendar or
+  a slug no post can have is answered as an empty list / not found, without an error.
+  `llms-full.txt` uses `listAllFullPosts()` (no arguments) instead of a large `limit`.
+- **No cached function takes content as an argument.** `renderPost(postId, version)` renders
+  the body of a post: the key is the post id and the version the caller saw (`updatedAt`), the
+  body is loaded inside from the row that is visible now. It returns null for a post that is
+  not public; `renderPostBody(post)` is the convenience for callers that hold the post. Used by
+  the blog, work, service, about and lesson pages and by the feed.
 - `getPublicProfile()` and `getPublicTimezone()` (studio time zone for the public and panel
   clocks) are cached with the tags `content` + `settings`.
 - Invalidation: CMS actions call `updateTag("content")` (read-your-own-writes); tools and route
@@ -170,9 +187,10 @@ the bundled variable fonts (Vazirmatn incl. Latin, Public Sans) and stored in
 
 - `/panel/content`: posts table (type, language, status, date, views) + filters & search,
   KPIs. Editor (`/panel/content/new?type=…`, `/panel/content/<id>`): title → auto slug
-  (editable, live availability check per locale + URL namespace), TL;DR, Markdown (owner
-  content may contain HTML), cover (media library or URL) + alt, tags, type cards (case study
-  meta/metrics/gallery/linked project, service icon + FAQ, video URL, course + lesson order),
+  (editable, live availability check per locale + URL namespace), TL;DR, Markdown (may contain
+  a safe subset of HTML, see "Raw HTML in posts"), cover (media library or URL) + alt, tags,
+  type cards (case study meta/metrics/gallery/linked project, service icon + FAQ, video URL,
+  course + lesson order),
   SEO title/description with counters and a live Google preview, status & publish date/time
   (app timezone), featured, translations ("create translation" → linked draft in the other
   locale), syndication (POSSE: record the URL of each copy on X, LinkedIn, Telegram,
@@ -190,6 +208,29 @@ the bundled variable fonts (Vazirmatn incl. Latin, Public Sans) and stored in
 - `/panel/media`: drag & drop upload (≤ 20 MB; PNG, JPG, WebP, AVIF, GIF, SVG, PDF, MP4),
   sha256 de-duplication, alt text, copy URL, delete. One library box: the drop zone row, the
   kind chips, the files as cells of one framed grid (1 / 2 / 3 / 4 columns, dots fillers).
+  The uploader sends one `POST /api/media` per file (not a server action: actions share a 2 MB
+  body limit) and refreshes the list when the batch is done.
+
+### Raw HTML in posts
+
+A post's Markdown may contain HTML, but only a **safe subset** reaches a reader; there is no
+raw-HTML mode (posts are served on the panel's origin, and an admin or an API token can
+publish). `renderMarkdown(md, { allowHtml: true })` passes its whole output through the
+allow-list in `src/lib/html-sanitize.ts` (the `sanitize-html` library, pinned, server only):
+
+| Kept                                                                                                          | Removed                                                                                              |
+| ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| headings, paragraphs, lists, `blockquote`, `pre`/`code`, `kbd`, `sub`/`sup`, `mark`, `abbr`, `time`…          | `script`, `style`, `link`, `meta`, `base`                                                            |
+| `div`, `section`, `figure`/`figcaption`, `details`/`summary`, tables (`colspan`, `rowspan`, `align`, `scope`) | forms, `input` (except task-list checkboxes), `button`, `select`, `textarea`                         |
+| `img`, `picture`/`source`, `video`, `audio`, `track` from http(s) or site-relative sources                    | `object`, `embed`, SVG, MathML, any `iframe` other than the video embed                              |
+| links to http(s), `mailto:`, `tel:` or relative targets (`target="_blank"` gets `rel="noopener noreferrer"`)  | `javascript:`, `data:` and every other scheme                                                        |
+| `iframe` for `https://www.youtube-nocookie.com/embed/<id>`                                                    | event-handler attributes (`onclick`, `onerror`…)                                                     |
+| `dir`, `lang`, `title`, `aria-label`, `aria-hidden`, `role`; `id` on headings                                 | `style` (except the highlighter's colours on `pre`/`span`), author `class`, `id` elsewhere, `data-*` |
+
+The feed (`feed.xml`) carries the same HTML. The Markdown mirrors and `llms-full.txt` publish
+the Markdown source; `sanitizeMarkdownHtml` reduces its raw HTML to the same subset and writes
+any other tag as text (`&lt;script>`), leaving code blocks and inline code untouched. The
+editor's preview still shows raw HTML escaped, as before.
 
 ## Contact form → leads
 
@@ -200,7 +241,8 @@ the bundled variable fonts (Vazirmatn incl. Latin, Public Sans) and stored in
 ## Media storage
 
 Files are written to `${DATA_DIR}/uploads/<id>-<safe-name>` (outside the web root). The type
-is sniffed from magic bytes (SVG additionally requires an `.svg` name and an `<svg>` root);
+is sniffed from magic bytes (SVG additionally requires an `.svg` name and an `<svg>` root),
+whatever the upload route was told;
 image dimensions come from PNG/JPEG/WebP/GIF headers (`image-size.ts`). `/media/<id>/<name>`
 streams the file with the stored type, `X-Content-Type-Options: nosniff`, an ETag, immutable
 caching for public files, single-range support (video), and

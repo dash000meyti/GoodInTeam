@@ -15,12 +15,19 @@
 
 ```
 Browser ──► src/proxy.ts ──► app/[locale]/… (RSC) ──► server/modules/*/service.ts ──► SQLite
+              │  • every path: forwarding headers vetted, request vouched for (x-gt-edge)
               │  • fa unprefixed → rewrite /fa/…
               │  • /panel without cookie → /login
               │  • *.md → /api/md (markdown mirrors)
+              │  • files (/media, /brand, /fonts, root metadata): passed through, GET/HEAD only
 AI agent ──► /api/mcp (JSON-RPC) ─┐
 Script   ──► /api/v1/tools/<name> ┴► server/api/registry.ts ──► same services
+Uploader ──► POST /api/media (session cookie, same origin, ≤ 20 MB) ──► media service
 ```
+
+The proxy runs on every path (only plain requests for `/_next/static/…` and `/_next/image`
+skip it) and server actions refuse a request it did not vouch for. The full list of what it
+does is in [security.md](security.md#the-proxy).
 
 ## Rendering & data <a id="rendering"></a>
 
@@ -44,7 +51,16 @@ Cache Components is ON. That changes the rules compared to classic Next.js:
 3. **Invalidation:** server actions call `refresh()` for panel data (always fresh per request)
    and `updateTag("content")` after editing public content. Route handlers (REST/MCP) use
    `revalidateTag("content", "max")`.
-4. **Time:** `Date.now()` during render is "current time" and is only allowed after request
+4. **A cached function is a public endpoint.** Next.js gives every `'use cache'` function a
+   server reference id, exactly like a server action. The proxy refuses such an id as an action,
+   but the function must be safe without that rule: it validates its arguments first, inside the
+   function (enum locale and types, ids by shape, short strings, `limit` ≤ 100), throws on
+   anything else, returns public data only, and never takes free-form content (a Markdown body,
+   HTML) as an argument: content is addressed by what identifies a published row and loaded
+   inside (`renderPost(postId, version)`). After `pnpm build`, the cached functions are the
+   `$$RSC_SERVER_CACHE_*` entries of `.next/server/server-reference-manifest.json`; each one
+   must be accounted for. Details: [security.md](security.md#cached-functions).
+5. **Time:** `Date.now()` during render is "current time" and is only allowed after request
    data. Use `ctx.now` from `panelContext()`; in static parts use a `'use cache'` helper.
 
 `pnpm build` validates these rules — a build error mentioning "blocking prerender" or
@@ -104,6 +120,12 @@ has the full Suspense map). They follow the same model:
 validates with zod (errors localized fa/en), and returns `ActionResult<T>`:
 `{ ok: true, data } | { ok: false, error: { code, message, fieldErrors? } }`.
 
+Every action (also `definePublicAction`) first passes one gate: the request must carry the
+proxy's voucher and the locale the proxy routed it to, and a caller without a session spends
+from a per-IP budget shared by all actions. Actions share one request body limit (2 MB); no
+action takes a file (uploads go to `POST /api/media`). See
+[security.md](security.md#request-size-and-work-per-request).
+
 ### Panel pages
 
 ```tsx
@@ -126,8 +148,9 @@ Client islands go in `_components/` next to the page and call actions through
 ### i18n
 
 - URL: `fa` unprefixed (`/blog`), others prefixed (`/en/blog`). `src/proxy.ts` rewrites.
-- Root layout `app/[locale]/layout.tsx` sets `<html lang dir>`; `next/root-params` gives
-  `locale()` anywhere on the server (`getLocale()`).
+- Root layout `app/[locale]/layout.tsx` sets `<html lang dir>` and answers a raw `[locale]`
+  value that is not a locale with `notFound()`; `next/root-params` gives `locale()` anywhere on
+  the server (`getLocale()`, whose `"fa"` fallback is for typing only).
 - Messages: `src/i18n/messages/{fa,en}/<namespace>.ts`. `fa` is the key source of truth; `en`
   is type-checked against it. Client components receive messages via `I18nProvider`
   (public site ships only `common`, `nav`, `site` to keep payloads small).

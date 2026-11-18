@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { format } from "@/i18n/format-message";
 import { useLocale, useT } from "@/i18n/client";
 import { formatDate } from "@/lib/format";
+import { MAX_IMPORT_CSV_CHARS, fitsActionBody } from "@/lib/limits";
 import { formatMoneySigned } from "@/components/finance/money";
 import { cn } from "@/lib/utils";
 import { importTransactionsAction, previewImportAction } from "@/server/modules/finance/actions";
@@ -47,15 +48,26 @@ export function ImportDialog({ trigger }: { trigger: ReactNode }) {
   const [pending, start] = useTransition();
   const [busy, setBusy] = useState<"check" | "import" | null>(null);
 
-  const check = (text: string) =>
+  // One import travels in one server action; a larger file is refused here,
+  // with a reason, instead of failing on the way to the server.
+  const tooLarge = (text: string) => {
+    if (text.length <= MAX_IMPORT_CSV_CHARS && fitsActionBody(text)) return false;
+    toast.error(f.importTooLarge);
+    return true;
+  };
+
+  const check = (text: string) => {
+    if (tooLarge(text)) return;
     start(async () => {
       setBusy("check");
       const res = await previewImportAction({ csv: text });
       if (res.ok) setPreview(res.data);
       else toast.error(res.error.message);
     });
+  };
 
-  const commit = () =>
+  const commit = () => {
+    if (tooLarge(csv)) return;
     start(async () => {
       setBusy("import");
       const res = await importTransactionsAction({ csv });
@@ -64,6 +76,7 @@ export function ImportDialog({ trigger }: { trigger: ReactNode }) {
         setOpen(false);
       } else toast.error(res.error.message);
     });
+  };
 
   const downloadSample = () => {
     const bom = String.fromCharCode(0xfeff); // so Excel opens the UTF-8 file correctly

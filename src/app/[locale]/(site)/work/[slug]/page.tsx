@@ -31,7 +31,7 @@ import {
   getPublishedPost,
   getTestimonialForProject,
   getTranslations,
-  renderContent,
+  renderPostBody,
 } from "@/server/modules/content/queries";
 
 export async function generateMetadata({
@@ -67,7 +67,7 @@ async function WorkDetail({ locale, t, slug }: { locale: Locale; t: Messages; sl
   if (!post) notFound();
   const [translations, rendered, adjacent, testimonial] = await Promise.all([
     getTranslations(post.translationKey),
-    renderContent(post.contentMd),
+    renderPostBody(post),
     getAdjacent({
       id: post.id,
       locale,

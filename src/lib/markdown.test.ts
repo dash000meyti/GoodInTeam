@@ -59,6 +59,60 @@ describe("renderMarkdown", () => {
   });
 });
 
+describe("highlighting is bounded", () => {
+  const fence = (code: string, lang = "ts") => `\`\`\`${lang}\n${code}\n\`\`\``;
+  const highlighted = (html: string) => (html.match(/<span class="line">/g) ?? []).length;
+  const line = "export const a: Record<string, number> = { x: 1 };";
+
+  it("highlights an ordinary block", async () => {
+    const { renderMarkdown } = await import("./markdown");
+    const { html } = await renderMarkdown(fence(`${line}\n${line}`));
+    expect(highlighted(html)).toBe(2);
+    expect(html).toMatch(/<span style="color:#/);
+  });
+
+  it("shows a block over the limit as plain text in the same box", async () => {
+    const { MAX_HIGHLIGHT_BLOCK, renderMarkdown } = await import("./markdown");
+    const big = Array(Math.ceil(MAX_HIGHLIGHT_BLOCK / line.length) + 5)
+      .fill(line)
+      .join("\n");
+    expect(big.length).toBeGreaterThan(MAX_HIGHLIGHT_BLOCK);
+    const { html } = await renderMarkdown(fence(big));
+    expect(highlighted(html)).toBe(0);
+    expect(html).toMatch(/^<pre class="shiki[^"]*" style="[^"]*" tabindex="0"><code>/);
+    // The text is all there, escaped.
+    expect(html).toContain("Record&lt;string, number&gt;");
+    expect(html.split("export const a").length - 1).toBe(big.split("export const a").length - 1);
+  });
+
+  it("does not hand a very long line to the highlighter", async () => {
+    const { MAX_HIGHLIGHT_LINE, renderMarkdown } = await import("./markdown");
+    const { html } = await renderMarkdown(fence(`const s = "${"x".repeat(MAX_HIGHLIGHT_LINE)}";`));
+    expect(highlighted(html)).toBe(0);
+  });
+
+  it("stops highlighting once a document used its budget", async () => {
+    const { MAX_HIGHLIGHT_DOCUMENT, renderMarkdown } = await import("./markdown");
+    const block = Array(100).fill(line).join("\n"); // ~5,000 characters
+    const blocks = Math.ceil(MAX_HIGHLIGHT_DOCUMENT / block.length) + 10;
+    const { html } = await renderMarkdown(Array(blocks).fill(fence(block)).join("\n\n"));
+    const lines = highlighted(html);
+    expect(lines).toBeGreaterThan(0);
+    expect(lines * line.length).toBeLessThanOrEqual(MAX_HIGHLIGHT_DOCUMENT);
+    // Every block is still rendered.
+    expect(html.match(/<pre class="shiki/g)).toHaveLength(blocks);
+  });
+
+  it("renders the largest document quickly", async () => {
+    const { renderMarkdown } = await import("./markdown");
+    const md = fence(Array(8000).fill(line).join("\n")); // ~400,000 characters of code
+    await renderMarkdown("warm up");
+    const started = performance.now();
+    await renderMarkdown(md, { allowHtml: true });
+    expect(performance.now() - started).toBeLessThan(1500);
+  });
+});
+
 describe("safeUrl", () => {
   it("ignores control characters when detecting the scheme", async () => {
     const { safeUrl } = await import("./markdown");

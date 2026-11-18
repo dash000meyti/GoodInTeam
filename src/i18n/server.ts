@@ -3,7 +3,11 @@ import { locale as rootLocale } from "next/root-params";
 import { isLocale, type Locale } from "./config";
 import { messages, type Messages, type Namespace } from "./messages";
 
-/** Current locale from the `[locale]` root segment (server components only). */
+/**
+ * Current locale from the `[locale]` root segment (server components only).
+ * The "fa" fallback exists for typing only: the root layout answers an unknown
+ * raw segment with `notFound()` before any page renders.
+ */
 export async function getLocale(): Promise<Locale> {
   const l = await rootLocale();
   return isLocale(l) ? l : "fa";

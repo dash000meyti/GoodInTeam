@@ -1,15 +1,28 @@
 import "server-only";
 import { Marked, type Tokens } from "marked";
 import type { HighlighterGeneric, BundledLanguage, BundledTheme } from "shiki";
+import { sanitizeContentHtml } from "./html-sanitize";
 import { slugify } from "./utils";
 
 /**
  * Markdown → HTML (server only). Used for blog posts, docs, contracts and
  * project updates. Code blocks are highlighted with Shiki (light + dark).
  *
- * Raw HTML inside markdown is ESCAPED unless `allowHtml` is true (only for
- * trusted, owner-authored public content).
+ * Raw HTML inside Markdown is ESCAPED by default. With `allowHtml` (published
+ * content only) it is kept, and the whole result is then reduced to the safe
+ * subset in ./html-sanitize.ts: there is no mode that returns raw HTML.
+ *
+ * Rendering time is bounded: the highlighter only sees code up to the limits
+ * below, the rest is shown as plain text.
  */
+
+/** Longest code block the highlighter gets (characters). */
+export const MAX_HIGHLIGHT_BLOCK = 20_000;
+/** Total code per document the highlighter gets (characters). */
+export const MAX_HIGHLIGHT_DOCUMENT = 50_000;
+/** Longest line the highlighter gets; a block with a longer one stays plain. */
+export const MAX_HIGHLIGHT_LINE = 2_000;
+
 let highlighterPromise: Promise<HighlighterGeneric<BundledLanguage, BundledTheme>> | null = null;
 const LANGS = [
   "ts",
@@ -96,10 +109,27 @@ export interface Heading {
   id: string;
 }
 
+/** True when a code block is small enough for the highlighter. */
+function highlightable(text: string) {
+  if (text.length > MAX_HIGHLIGHT_BLOCK) return false;
+  let lineStart = 0;
+  for (;;) {
+    const lineEnd = text.indexOf("\n", lineStart);
+    if ((lineEnd === -1 ? text.length : lineEnd) - lineStart > MAX_HIGHLIGHT_LINE) return false;
+    if (lineEnd === -1) return true;
+    lineStart = lineEnd + 1;
+  }
+}
+
 export async function renderMarkdown(md: string, opts: { allowHtml?: boolean } = {}) {
   const hl = await highlighter();
   const headings: Heading[] = [];
   const used = new Map<string, number>();
+  const themes = { light: "github-light", dark: "github-dark" } as const;
+  /** Characters the highlighter may still take for this document. */
+  let budget = MAX_HIGHLIGHT_DOCUMENT;
+  /** The highlighter's own `<pre …>` (classes, colours), for blocks it does not get. */
+  let plainPre: string | null = null;
 
   const marked = new Marked({ gfm: true, breaks: false });
   marked.use({
@@ -115,11 +145,20 @@ export async function renderMarkdown(md: string, opts: { allowHtml?: boolean } =
         return `<h${depth} id="${id}"><a href="#${id}" class="no-underline">${text}</a></h${depth}>\n`;
       },
       code({ text, lang }: Tokens.Code) {
+        if (!highlightable(text) || text.length > budget) {
+          // Same box, no colours: the cost of a block is bounded by the limits.
+          if (plainPre === null) {
+            const empty = hl.codeToHtml("", { lang: "text", themes });
+            plainPre = empty.slice(0, empty.indexOf("<code>"));
+          }
+          return `${plainPre}<code>${escapeHtml(text)}</code></pre>`;
+        }
+        budget -= text.length;
         const language = (lang ?? "").split(/\s/)[0]?.toLowerCase() || "text";
         const loaded = hl.getLoadedLanguages().includes(language as BundledLanguage);
         return hl.codeToHtml(text, {
           lang: loaded ? language : "text",
-          themes: { light: "github-light", dark: "github-dark" },
+          themes,
           colorReplacements: CODE_COLOR_FIXES,
         });
       },
@@ -144,7 +183,7 @@ export async function renderMarkdown(md: string, opts: { allowHtml?: boolean } =
   });
 
   const html = await marked.parse(md ?? "");
-  return { html, headings };
+  return { html: opts.allowHtml ? sanitizeContentHtml(html) : html, headings };
 }
 
 /** Plain-text excerpt from markdown (for meta descriptions / previews). */

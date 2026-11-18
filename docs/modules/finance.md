@@ -169,7 +169,9 @@ category,project,client,counterparty,description,status,tags,invoice` (amounts i
   without kind is an expense), `category`, `description`, `time`, `counterparty`, `status`.
   Delimiter `,` `;` or tab is auto-detected; Jalali dates and Persian digits work. A preview
   shows per-line errors/warnings; only valid rows are inserted (tagged `import`). Transfers
-  are skipped; unknown categories import as uncategorized.
+  are skipped; unknown categories import as uncategorized. One import is at most 1,000,000
+  characters and must fit a server action (2 MB as UTF-8); the dialog checks this first and asks
+  to split a larger file.
 
 ## Project page integration
 

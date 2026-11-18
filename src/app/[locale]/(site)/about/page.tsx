@@ -22,7 +22,7 @@ import {
   getPublicProfile,
   getPublishedPost,
   getTranslations,
-  renderContent,
+  renderPostBody,
 } from "@/server/modules/content/queries";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -59,7 +59,7 @@ async function AboutIntro({ locale, t }: { locale: Locale; t: Messages }) {
     getPublishedPost(locale, ["page"], "about"),
   ]);
   const [rendered, translations] = await Promise.all([
-    page ? renderContent(page.contentMd) : null,
+    page ? renderPostBody(page) : null,
     page ? getTranslations(page.translationKey) : [],
   ]);
   const name = profile.ownerName[locale] || profile.ownerName.en;

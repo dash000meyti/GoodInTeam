@@ -57,7 +57,9 @@ cp .env.example .env   # fill APP_SECRET, NEXT_PUBLIC_SITE_URL
 docker compose up -d --build
 ```
 
-Put Caddy/Traefik/Nginx in front for TLS. For Nginx keep `proxy_buffering off;` (streaming).
+Put Caddy/Traefik/Nginx in front for TLS. For Nginx keep `proxy_buffering off;` (streaming)
+and allow request bodies of 21 MB (`client_max_body_size 21m;`): media uploads are one file of up
+to 20 MB per request to `POST /api/media`; every other request is far smaller.
 
 ### B) Coolify / Dokploy / CapRover (auto-deploy on push to `main`)
 

@@ -19,6 +19,7 @@ import { textMatch } from "@/server/db/search";
 import {
   clients,
   posts,
+  postTypes,
   projects,
   series,
   syndications,
@@ -31,6 +32,17 @@ import { appTimezone, getSettings } from "@/server/modules/settings/service";
 import type { BrandId } from "@/components/brand/brands";
 import { renderMarkdown } from "@/lib/markdown";
 import type { Locale } from "@/i18n/config";
+import {
+  MAX_LABEL,
+  MAX_LIMIT,
+  MAX_PAGE,
+  MAX_QUERY_TEXT,
+  MAX_SLUG,
+  MAX_YEAR,
+  MIN_YEAR,
+  checkArgs,
+  queryArgs,
+} from "./query-args";
 
 /**
  * PUBLIC, CACHED content reads for the website, feeds, sitemap and GEO files.
@@ -43,6 +55,12 @@ import type { Locale } from "@/i18n/config";
  *   database at build time.
  * - Visibility: status published|scheduled AND publishedAt <= now. The cache
  *   lifetime shrinks automatically when a scheduled post is about to go live.
+ * - Every cached function is a PUBLIC ENDPOINT (it has a server reference id,
+ *   like an action): it checks its arguments first (`checkArgs`, schemas in
+ *   ./query-args.ts), returns public data only, and never takes free-form
+ *   content as an argument. Functions fed from the URL (search text, tag,
+ *   slug, page) have a plain wrapper that answers impossible values itself, so
+ *   an odd URL is an empty list or a 404, never an error.
  */
 export const CONTENT_TAG = "content";
 
@@ -167,13 +185,47 @@ export interface ListOptions {
   orderBy?: "date" | "sort";
 }
 
+const int = (v: number | undefined, fallback: number) =>
+  Number.isFinite(v) ? Math.trunc(v as number) : fallback;
+
+/**
+ * Published posts, filtered and paged. Filters come from the URL, so values
+ * no post can have (an over-long tag, a year outside the calendar) answer
+ * with an empty page here instead of reaching the cached query.
+ */
 export async function listPublished(opts: ListOptions) {
+  const pageSize = Math.min(Math.max(int(opts.pageSize, 12), 1), MAX_LIMIT);
+  const year = opts.year === undefined ? undefined : int(opts.year, NaN);
+  if (
+    (opts.tag?.length ?? 0) > MAX_LABEL ||
+    (opts.stack?.length ?? 0) > MAX_LABEL ||
+    (year !== undefined && !(year >= MIN_YEAR && year <= MAX_YEAR))
+  ) {
+    return { items: [] as PostCard[], total: 0, page: 1, pages: 1, pageSize };
+  }
+  return listPublishedCached({
+    locale: opts.locale,
+    types: opts.types,
+    tag: opts.tag || undefined,
+    q: opts.q?.slice(0, MAX_QUERY_TEXT) || undefined,
+    stack: opts.stack || undefined,
+    year,
+    featured: opts.featured || undefined,
+    standalone: opts.standalone || undefined,
+    page: Math.min(Math.max(int(opts.page, 1), 1), MAX_PAGE),
+    pageSize,
+    orderBy: opts.orderBy === "sort" ? "sort" : undefined,
+  });
+}
+
+async function listPublishedCached(input: ListOptions) {
   "use cache";
+  const opts = checkArgs(queryArgs.list, input);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
 
-  const pageSize = Math.min(Math.max(opts.pageSize ?? 12, 1), 100);
+  const pageSize = opts.pageSize ?? 12;
   const where = and(
     visible(now),
     eq(posts.locale, opts.locale),
@@ -223,6 +275,7 @@ function bullets(md: string, max = 5) {
 /** Services (sorted) with highlight bullets extracted from their body. */
 export async function listServices(locale: Locale) {
   "use cache";
+  checkArgs(queryArgs.locale, locale);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -239,6 +292,7 @@ export async function listServices(locale: Locale) {
 /** Tag cloud for a set of types (count desc). */
 export async function listTags(locale: Locale, types: PostType[]) {
   "use cache";
+  checkArgs(queryArgs.localeAndTypes, [locale, types]);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -255,6 +309,7 @@ export async function listTags(locale: Locale, types: PostType[]) {
 /** Stacks and years used by published case studies (for /work filter chips). */
 export async function listWorkFacets(locale: Locale) {
   "use cache";
+  checkArgs(queryArgs.locale, locale);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -285,7 +340,18 @@ export async function getPublishedPost(
   types: PostType[],
   slug: string,
 ): Promise<PostDetail | null> {
+  // The slug comes from the URL: one that no post can have is simply not found.
+  if (typeof slug !== "string" || !slug || slug.length > MAX_SLUG) return null;
+  return getPublishedPostCached(locale, types, slug);
+}
+
+async function getPublishedPostCached(
+  locale: Locale,
+  types: PostType[],
+  slug: string,
+): Promise<PostDetail | null> {
   "use cache";
+  checkArgs(queryArgs.postBySlug, [locale, types, slug]);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -315,6 +381,7 @@ export async function getPublishedPost(
 /** Visible translations of a piece (same translationKey), including itself. */
 export async function getTranslations(translationKey: string | null) {
   "use cache";
+  checkArgs(queryArgs.optionalRowId, translationKey);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -342,6 +409,7 @@ export async function getAdjacent(post: {
   createdAt: Date;
 }) {
   "use cache";
+  checkArgs(queryArgs.adjacent, post);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -378,6 +446,7 @@ export async function getRelated(
   limit = 3,
 ) {
   "use cache";
+  checkArgs(queryArgs.related, [post, types, limit]);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -410,13 +479,18 @@ export async function getRelated(
 /** Outbound copies of a post on social networks (POSSE), only posted ones with a URL. */
 export async function getSyndicationLinks(postId: string) {
   "use cache";
+  checkArgs(queryArgs.rowId, postId);
   cacheTag(CONTENT_TAG);
-  cacheLife("hours");
+  const now = Date.now();
+  contentLife(now);
+  // Only for a post that is visible now: where a draft was shared is not public.
   return db
     .select({ network: syndications.network, url: syndications.externalUrl })
     .from(syndications)
+    .innerJoin(posts, eq(posts.id, syndications.postId))
     .where(
       and(
+        visible(now),
         eq(syndications.postId, postId),
         eq(syndications.status, "posted"),
         isNotNull(syndications.externalUrl),
@@ -442,6 +516,7 @@ export interface SeriesCard {
 
 export async function listSeries(locale: Locale): Promise<SeriesCard[]> {
   "use cache";
+  checkArgs(queryArgs.locale, locale);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -490,7 +565,14 @@ export async function listSeries(locale: Locale): Promise<SeriesCard[]> {
 }
 
 export async function getSeriesWithLessons(locale: Locale, slug: string) {
+  // The slug comes from the URL: one that no course can have is simply not found.
+  if (typeof slug !== "string" || !slug || slug.length > MAX_SLUG) return null;
+  return getSeriesWithLessonsCached(locale, slug);
+}
+
+async function getSeriesWithLessonsCached(locale: Locale, slug: string) {
   "use cache";
+  checkArgs(queryArgs.seriesBySlug, [locale, slug]);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -518,6 +600,7 @@ export async function getSeriesWithLessons(locale: Locale, slug: string) {
 
 export async function listTestimonials(locale: Locale, limit = 12) {
   "use cache";
+  checkArgs(queryArgs.localeAndLimit, [locale, limit]);
   cacheTag(CONTENT_TAG);
   cacheLife("hours");
   return db
@@ -545,6 +628,7 @@ export async function listTestimonials(locale: Locale, limit = 12) {
 /** Testimonial linked to a case study's project (directly, or via the project's client). */
 export async function getTestimonialForProject(projectId: string | null, locale: Locale) {
   "use cache";
+  checkArgs(queryArgs.projectTestimonial, [projectId, locale]);
   cacheTag(CONTENT_TAG);
   cacheLife("hours");
   if (!projectId) return null;
@@ -634,6 +718,7 @@ export async function getPublicTimezone() {
 /** Names shown in the trust marquee: clients of published case studies + testimonial companies. */
 export async function listPublicClientNames(locale: Locale) {
   "use cache";
+  checkArgs(queryArgs.locale, locale);
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
@@ -664,14 +749,41 @@ export async function listPublicClientNames(locale: Locale) {
 // ─── Rendering ──────────────────────────────────────────────────────────────
 
 /**
- * Markdown → HTML (+ headings for the TOC) for owner-authored public content.
- * Content-addressed cache: the Markdown string is the key, so edits naturally
- * produce a new entry (Shiki highlighting runs once per version).
+ * The body of a published post as HTML (+ headings for the TOC), with the
+ * safe subset of raw HTML (see `renderMarkdown`).
+ *
+ * The cache key is what identifies published content: the post id and the
+ * version the caller saw (`updatedAt`, epoch ms). The body itself is loaded
+ * here, from the row that is visible NOW, so the function can only ever
+ * render (and cache) text that is already public, and an edit gets a new
+ * entry. Returns null when the post is not visible.
  */
-export async function renderContent(md: string) {
+export async function renderPost(postId: string, version: number) {
   "use cache";
-  cacheLife("max");
-  return renderMarkdown(md, { allowHtml: true });
+  checkArgs(queryArgs.postVersion, [postId, version]);
+  cacheTag(CONTENT_TAG);
+  const now = Date.now();
+  const row = db
+    .select({ contentMd: posts.contentMd, updatedAt: posts.updatedAt })
+    .from(posts)
+    .where(and(visible(now), eq(posts.id, postId)))
+    .get();
+  if (row && row.updatedAt.getTime() === version) {
+    contentLife(now);
+  } else {
+    // Not public, or not the version that is public now (the caller read the
+    // post a moment before an edit): such an entry is never kept for long.
+    cacheLife("seconds");
+  }
+  return row ? renderMarkdown(row.contentMd, { allowHtml: true }) : null;
+}
+
+/**
+ * `renderPost` for a post the caller already holds. A post that stopped being
+ * public between the two reads renders as an empty body.
+ */
+export async function renderPostBody(post: { id: string; updatedAt: Date }) {
+  return (await renderPost(post.id, post.updatedAt.getTime())) ?? { html: "", headings: [] };
 }
 
 // ─── Sitemap / feeds / GEO ──────────────────────────────────────────────────
@@ -709,12 +821,29 @@ export async function listAllSeries() {
     .all();
 }
 
-/** Full posts with Markdown — feeds (one locale) and llms-full.txt (all). */
-export async function listFullPosts(locale: Locale | null, types: PostType[], limit = 50) {
+/** Full posts of one locale with Markdown, newest first (feeds). */
+export async function listFullPosts(locale: Locale, types: PostType[], limit = 50) {
+  "use cache";
+  checkArgs(queryArgs.fullPosts, [locale, types, limit]);
+  cacheTag(CONTENT_TAG);
+  const now = Date.now();
+  contentLife(now);
+  return fullPosts(now, locale, types, limit);
+}
+
+/** Upper bound of llms-full.txt (a site of this kind has a few hundred posts at most). */
+const ALL_POSTS_CAP = 1000;
+
+/** Every visible post of every locale with Markdown (llms-full.txt). Takes no arguments. */
+export async function listAllFullPosts() {
   "use cache";
   cacheTag(CONTENT_TAG);
   const now = Date.now();
   contentLife(now);
+  return fullPosts(now, null, [...postTypes], ALL_POSTS_CAP);
+}
+
+function fullPosts(now: number, locale: Locale | null, types: PostType[], limit: number) {
   const rows = db
     .select({
       ...cardColumns,

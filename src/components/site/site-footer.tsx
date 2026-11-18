@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { RssIcon } from "lucide-react";
 import { brands } from "@/components/brand/brands";
 import { PixelLogo } from "@/components/brand/pixel-logo";
-import { localePath, type Locale } from "@/i18n/config";
+import { isLocale, localePath, type Locale } from "@/i18n/config";
 import type { Messages } from "@/i18n/messages";
 import { getMessages } from "@/i18n/server";
 import { getPublicProfile } from "@/server/modules/content/queries";
@@ -14,6 +14,8 @@ import { SocialLinks } from "./social-links";
 
 async function CurrentYear({ locale }: { locale: Locale }) {
   "use cache";
+  // A cached function is a public endpoint: check the argument before any work.
+  if (!isLocale(locale)) throw new Error("Invalid locale");
   cacheLife("days");
   return (
     <>
