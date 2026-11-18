@@ -108,3 +108,10 @@ pages and hides staff UI) with a "new page for this project" shortcut for staff.
 `docs_list` (tree or flat; `projectId`, `visibility`, `archived` filters), `docs_get` (markdown +
 breadcrumbs + children), `docs_search` (snippets), `docs_create`, `docs_update`, `docs_delete`
 (destructive; subpages move up). Portal users can use the read tools and only get `client` pages.
+
+`docs_update` (and the editor's save) is a true partial update: only the fields that are sent
+change. A title-only call keeps the body and the visibility; `""` / `null` clears the icon, the
+parent and the links. `updateDocInput` and `docInput` derive from one default-free `docFields`
+shape, so the create defaults (empty body, `private`) never apply to an update — that is what lets
+a member save an edit to a colleague's `team` page: the editor sends no `visibility` for a page the
+user can't manage, and the server no longer reads the missing key as a change to `private`.

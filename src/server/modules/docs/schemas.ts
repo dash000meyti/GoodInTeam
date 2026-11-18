@@ -2,11 +2,17 @@ import { z } from "zod";
 import { docVisibilities } from "@/server/db/schema";
 import { zId, zNullString, zOptString } from "@/lib/zod-helpers";
 
-export const docInput = z.object({
+/**
+ * Page fields, declared once WITHOUT defaults. `docInput` (create) adds the
+ * defaults; `updateDocInput` makes every field optional. Never derive the update
+ * schema from `docInput`: zod 4 keeps `.default()` inside `.partial()`, which
+ * made a title-only update wipe the body and reset the page to "private".
+ */
+const docFields = z.object({
   title: z.string().trim().min(1).max(200),
   /** A single emoji (or short text) shown before the title. */
   icon: zNullString(16),
-  contentMd: z.string().max(500_000).default(""),
+  contentMd: z.string().max(500_000),
   parentId: zNullString(64),
   projectId: zNullString(64),
   clientId: zNullString(64),
@@ -14,11 +20,17 @@ export const docInput = z.object({
    * private = only the author · team = all staff · client = staff + portal users of
    * the linked project's client (when the project shares docs) or of the linked client.
    */
-  visibility: z.enum(docVisibilities).default("private"),
+  visibility: z.enum(docVisibilities),
+});
+
+export const docInput = docFields.extend({
+  contentMd: docFields.shape.contentMd.default(""),
+  visibility: docFields.shape.visibility.default("private"),
 });
 export type DocInput = z.input<typeof docInput>;
 
-export const updateDocInput = docInput.partial().extend({ id: zId });
+/** Partial update: an absent field stays as it is; "" / null clears icon, parent and links. */
+export const updateDocInput = docFields.partial().extend({ id: zId });
 
 export const listDocsInput = z.object({
   projectId: zOptString(64),
