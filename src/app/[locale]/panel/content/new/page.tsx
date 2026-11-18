@@ -18,6 +18,7 @@ export default async function NewPostPage({
     <>
       <PageHeader
         title={format(t.content.newOfType, { type: typeLabel })}
+        path={["CONTENT", "NEW", type]}
         crumbs={[
           { label: t.nav.dashboard, href: href("/panel") },
           { label: t.content.title, href: href("/panel/content") },

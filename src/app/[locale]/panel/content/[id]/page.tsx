@@ -20,7 +20,8 @@ export default async function EditPostPage({ params }: PageProps<"/[locale]/pane
   return (
     <>
       <PageHeader
-        title={post.title}
+        title={<bdi>{post.title}</bdi>}
+        path={["CONTENT", post.type]}
         crumbs={[
           { label: t.nav.dashboard, href: href("/panel") },
           { label: t.content.title, href: href("/panel/content") },
