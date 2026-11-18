@@ -149,6 +149,8 @@ export const finance = {
   downloadSample: "دانلود فایل نمونه",
   line: "سطر",
   importMore: "فقط ۵۰۰ ردیف اول نمایش داده می‌شود.",
+  importTooLarge:
+    "این فایل برای یک بار ورود بزرگ است. آن را به فایل‌های کوچک‌تر (هر کدام حدود ۱۰٬۰۰۰ ردیف) تقسیم کنید و یکی‌یکی وارد کنید.",
   import_err_badDate: "تاریخ نامعتبر",
   import_err_badAmount: "مبلغ نامعتبر",
   import_err_badKind: "نوع نامعتبر",

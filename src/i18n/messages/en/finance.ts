@@ -151,6 +151,8 @@ export const finance: Record<keyof typeof fa, string> = {
   downloadSample: "Download sample file",
   line: "Line",
   importMore: "Only the first 500 rows are shown.",
+  importTooLarge:
+    "This file is too large for one import. Split it into smaller files (about 10,000 rows each) and import them one by one.",
   import_err_badDate: "Invalid date",
   import_err_badAmount: "Invalid amount",
   import_err_badKind: "Invalid kind",

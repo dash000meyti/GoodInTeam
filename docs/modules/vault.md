@@ -131,7 +131,9 @@ separator, capitalisation, number).
   was valid when it was made.
 - **Restore**: items that decrypt with the current key are uploaded as is; otherwise the user enters
   the backup's master password or recovery key, the browser decrypts each item and re-encrypts it
-  with the current key. Items whose id already exists are skipped (idempotent).
+  with the current key. Items whose id already exists are skipped (idempotent). The items go up
+  in batches of about 900,000 characters of ciphertext (`restoreBatches`), because one server
+  action carries at most 2 MB; a batch that fails can be retried with the same file.
 - **Unencrypted export** (CSV or JSON): strong warning, "I understand" checkbox and master
   password re-entry. CSV columns: `type,title,url,username,password,totp,notes,project,client,favorite,extra`
   (`extra` = JSON of the remaining fields). Values are written verbatim (no spreadsheet-formula

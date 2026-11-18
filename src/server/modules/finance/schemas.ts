@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { accountKinds, categoryKinds, invoiceStatuses, transactionKinds } from "@/server/db/schema";
+import { MAX_IMPORT_CSV_CHARS } from "@/lib/limits";
 import { currencyCodes } from "@/lib/money";
 import { zBool, zColor, zId, zNullString, zOptNumber, zOptString, zTags } from "@/lib/zod-helpers";
 
@@ -119,8 +120,9 @@ export const listTransactionsInput = z.object({
 });
 export type ListTransactionsInput = z.output<typeof listTransactionsInput>;
 
+/** One import must fit a server action (src/lib/limits.ts); larger files are split. */
 export const importCsvInput = z.object({
-  csv: z.string().min(1).max(2_000_000),
+  csv: z.string().min(1).max(MAX_IMPORT_CSV_CHARS),
 });
 
 // ─── FX rates ───────────────────────────────────────────────────────────────
