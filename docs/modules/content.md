@@ -188,8 +188,9 @@ the bundled variable fonts (Vazirmatn incl. Latin, Public Sans) and stored in
 - `/panel/content`: posts table (type, language, status, date, views) + filters & search,
   KPIs. Editor (`/panel/content/new?type=…`, `/panel/content/<id>`): title → auto slug
   (editable, live availability check per locale + URL namespace), TL;DR, Markdown (may contain
-  a safe subset of HTML, see "Raw HTML in posts"), cover (media library or URL) + alt, tags, type cards (case study
-  meta/metrics/gallery/linked project, service icon + FAQ, video URL, course + lesson order),
+  a safe subset of HTML, see "Raw HTML in posts"), cover (media library or URL) + alt, tags,
+  type cards (case study meta/metrics/gallery/linked project, service icon + FAQ, video URL,
+  course + lesson order),
   SEO title/description with counters and a live Google preview, status & publish date/time
   (app timezone), featured, translations ("create translation" → linked draft in the other
   locale), syndication (POSSE: record the URL of each copy on X, LinkedIn, Telegram,
