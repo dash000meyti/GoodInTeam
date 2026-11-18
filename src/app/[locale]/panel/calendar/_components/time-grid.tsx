@@ -29,6 +29,11 @@ const pad = (n: number) => String(n).padStart(2, "0");
 /** Items drawn in the all-day row rather than the time grid. */
 const isBar = (i: CalendarItem) => i.allDay || i.end - i.start >= DAY_MS;
 
+/**
+ * Week / day time grid in the frame language: day columns and the header and
+ * all-day rows share solid hairlines (edge to edge in the calendar box),
+ * hour lines are lighter, today's number sits on a yellow square.
+ */
 export function TimeGridView({
   days,
   items,
@@ -71,7 +76,7 @@ export function TimeGridView({
     <div className={cn(!single && "overflow-x-auto")}>
       <div className={cn(!single && "min-w-[42rem]")}>
         {/* Day headers */}
-        <div className="grid border-b border-dashed" style={{ gridTemplateColumns: cols }}>
+        <div className="grid border-b border-frame-line" style={{ gridTemplateColumns: cols }}>
           <div aria-hidden />
           {days.map((key) => {
             const today = key === cal.todayKey;
@@ -81,7 +86,7 @@ export function TimeGridView({
                 href={dayHref(key)}
                 aria-label={format(c.openDay, { date: dateLabel(key, cal.locale) })}
                 className={cn(
-                  "group flex flex-col items-center gap-0.5 py-2 transition-colors hover:bg-accent/60",
+                  "group flex flex-col items-center gap-0.5 border-s border-frame-line py-2 transition-colors hover:bg-card",
                   single && "flex-row justify-center gap-2",
                 )}
               >
@@ -95,8 +100,9 @@ export function TimeGridView({
                 </span>
                 <span
                   className={cn(
-                    "flex size-8 items-center justify-center rounded-full text-base font-extrabold tabular-nums",
-                    today && "bg-primary text-primary-foreground",
+                    "flex size-8 items-center justify-center text-base font-extrabold tabular-nums",
+                    today &&
+                      "bg-primary text-primary-foreground shadow-[0_0_0_1px_var(--brand-ink)]",
                   )}
                 >
                   {dayNumber(key, cal.locale)}
@@ -108,7 +114,7 @@ export function TimeGridView({
 
         {/* All-day row */}
         <div
-          className="grid border-b border-dashed"
+          className="grid border-b border-frame-line"
           style={{
             gridTemplateColumns: cols,
             gridTemplateRows: `repeat(${Math.max(1, laneCount)}, 1.5rem) 0.375rem`,
@@ -127,7 +133,7 @@ export function TimeGridView({
               aria-label={format(c.createOn, { date: dateLabel(key, cal.locale) })}
               onClick={() => cal.openCreate({ date: key, allDay: true })}
               className={cn(
-                "cursor-pointer border-s border-dashed transition-colors outline-none hover:bg-primary/4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                "cursor-pointer border-s border-frame-line transition-colors outline-none hover:bg-primary/4 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                 isWeekend(weekdayOfKey(key), cal.locale) && "bg-muted/25 dark:bg-muted/15",
               )}
               style={{ gridColumn: i + 2, gridRow: "1 / -1" }}
@@ -212,7 +218,10 @@ function DayColumn({
 
   return (
     <div
-      className={cn("relative border-s border-dashed", weekend && "bg-muted/25 dark:bg-muted/15")}
+      className={cn(
+        "relative border-s border-frame-line",
+        weekend && "bg-muted/25 dark:bg-muted/15",
+      )}
     >
       {HOURS.map((h) => (
         <button
@@ -229,7 +238,7 @@ function DayColumn({
               endTime: `${pad((h + 1) % 24)}:${pad(half)}`,
             });
           }}
-          className="absolute inset-x-0 cursor-pointer border-t border-dashed border-border/80 outline-none after:pointer-events-none after:absolute after:inset-x-0 after:top-1/2 after:border-t after:border-dotted after:border-border/50 first:border-t-0 hover:bg-primary/4 focus-visible:bg-primary/8 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="absolute inset-x-0 cursor-pointer border-t border-frame-line/70 outline-none after:pointer-events-none after:absolute after:inset-x-0 after:top-1/2 after:border-t after:border-dotted after:border-frame-line/60 first:border-t-0 hover:bg-primary/4 focus-visible:bg-primary/8 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
           style={{ top: h * HOUR, height: HOUR }}
         />
       ))}

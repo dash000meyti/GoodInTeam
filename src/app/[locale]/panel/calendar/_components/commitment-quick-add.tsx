@@ -9,12 +9,14 @@ import { ColorDot } from "@/components/shared/color-dot";
 import { DatePicker } from "@/components/shared/date-picker";
 import { SelectField } from "@/components/shared/select-field";
 import { useActionForm } from "@/components/shared/use-action-form";
+import { StatIcon } from "@/components/panel/stat-card";
+import { HEADING_CLASS } from "@/components/shell/frame";
 import { addDaysKey } from "@/components/calendar/grid";
 import { useT } from "@/i18n/client";
 import { createCommitmentAction } from "@/server/modules/calendar/actions";
 import { useCalendar } from "./calendar-context";
 
-/** One-line "I just promised…" form: what + to whom + due (promisedAt = now). */
+/** One-line "I just promised…" form: what + to whom + due (promisedAt = now). Frameless: the page puts it in a cell. */
 export function CommitmentQuickAdd() {
   const t = useT();
   const c = t.calendar;
@@ -52,17 +54,15 @@ export function CommitmentQuickAdd() {
       aria-label={c.quickAddTitle}
     >
       <div className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
-          <HandshakeIcon className="size-5" />
-        </span>
+        <StatIcon icon={HandshakeIcon} tone="destructive" />
         <div>
-          <h2 className="font-bold">{c.quickAddTitle}</h2>
+          <h2 className={HEADING_CLASS.box}>{c.quickAddTitle}</h2>
           <p className="text-xs text-muted-foreground">{c.quickAddHint}</p>
         </div>
       </div>
       <input type="hidden" name={byClient ? "clientId" : "projectId"} value={whom} />
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_12rem_11rem_7rem_auto] md:items-end">
-        <div className="grid gap-1.5">
+      <div className="grid gap-3 md:grid-cols-2 md:items-end xl:grid-cols-[minmax(0,1fr)_12rem_11rem_7rem_auto]">
+        <div className="grid gap-1.5 md:col-span-2 xl:col-span-1">
           <Label htmlFor="cq-title">{c.what}</Label>
           <Input
             id="cq-title"
