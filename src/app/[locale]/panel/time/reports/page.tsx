@@ -9,7 +9,7 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -32,6 +32,7 @@ import { timeProjectOptions, timeReport, timeUserOptions } from "@/server/module
 import { panelContext } from "@/server/page-context";
 import { ParamSelect } from "../_components/param-select";
 import { ProjectDonut, StackedHoursChart, type ChartBucket } from "../_components/report-charts";
+import { DotsFiller } from "../../calendar/_components/dots-filler";
 import { ReportFilters } from "../_components/report-filters";
 import { dayParts, moneyText, param, withParams } from "../_lib/views";
 
@@ -214,20 +215,29 @@ export default async function TimeReportsPage({
         <div className="flex flex-col gap-6 lg:gap-8">
           <FrameBox as="div" density="compact">
             <FrameGrid cols="2-1">
-              <FrameCell as="section" pad="none" aria-labelledby="rep-hours">
+              <FrameCell
+                as="section"
+                pad="none"
+                aria-labelledby="rep-hours"
+                className="flex flex-col"
+              >
                 <CardHeader>
+                  {/* single-line headers keep the two cells' hairlines level (the total is a KPI above) */}
                   <h2 id="rep-hours" className={HEADING_CLASS.box}>
                     {daily ? tt.dailyHours : tt.weeklyBuckets}
                   </h2>
-                  <CardDescription>
-                    {formatHours(report.totalMs, locale)} {tt.hoursUnit}
-                  </CardDescription>
                 </CardHeader>
                 <div className="p-(--cell-pad)">
                   <StackedHoursChart data={chartData} series={series} />
                 </div>
+                <DotsFiller />
               </FrameCell>
-              <FrameCell as="section" pad="none" aria-labelledby="rep-projects">
+              <FrameCell
+                as="section"
+                pad="none"
+                aria-labelledby="rep-projects"
+                className="flex flex-col"
+              >
                 <CardHeader>
                   <h2 id="rep-projects" className={HEADING_CLASS.box}>
                     {tt.byProject}
@@ -244,6 +254,7 @@ export default async function TimeReportsPage({
                     }))}
                   />
                 </div>
+                <DotsFiller />
               </FrameCell>
             </FrameGrid>
           </FrameBox>

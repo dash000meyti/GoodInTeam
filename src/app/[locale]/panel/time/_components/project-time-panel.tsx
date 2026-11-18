@@ -2,7 +2,7 @@ import "server-only";
 import Link from "next/link";
 import { ClockIcon, CoinsIcon, TimerIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { CardAction, CardDescription, CardHeader } from "@/components/ui/card";
+import { CardAction, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/panel/empty-state";
 import { StatCard, StatGrid } from "@/components/panel/stat-card";
@@ -18,6 +18,7 @@ import { AppError } from "@/server/errors";
 import { projectTimeSummary } from "@/server/modules/time/service";
 import type { PanelContext } from "@/server/page-context";
 import { dayParts } from "../_lib/views";
+import { DotsFiller } from "../../calendar/_components/dots-filler";
 import { WeeklyHoursChart } from "./report-charts";
 
 const H = 3_600_000;
@@ -78,17 +79,31 @@ export async function ProjectTimePanel({
 
       <FrameBox as="div" density="compact">
         <FrameGrid cols={1} className="lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          <FrameCell as="section" pad="none" aria-labelledby="ptime-weeks">
+          <FrameCell
+            as="section"
+            pad="none"
+            aria-labelledby="ptime-weeks"
+            className="flex flex-col"
+          >
             <CardHeader>
               <h2 id="ptime-weeks" className={HEADING_CLASS.box}>
                 {tt.weeklyHours}
               </h2>
-              <CardDescription>
+              {/* the range sits at inline-end: one-line headers keep both cells' hairlines level */}
+              <CardAction className="text-xs text-muted-foreground">
                 {format(tt.weekRange, {
-                  from: formatDayLabel(data.weeks[0]!.weekStart, { ...fmt, withYear: true }),
-                  to: formatDayLabel(data.weeks.at(-1)!.weekStart, { ...fmt, withYear: true }),
+                  from: formatDayLabel(data.weeks[0]!.weekStart, {
+                    ...fmt,
+                    withYear: true,
+                    short: true,
+                  }),
+                  to: formatDayLabel(data.weeks.at(-1)!.weekStart, {
+                    ...fmt,
+                    withYear: true,
+                    short: true,
+                  }),
                 })}
-              </CardDescription>
+              </CardAction>
             </CardHeader>
             <div className="p-(--cell-pad)">
               <WeeklyHoursChart
@@ -100,6 +115,7 @@ export async function ProjectTimePanel({
                 }))}
               />
             </div>
+            <DotsFiller />
           </FrameCell>
 
           <FrameCell as="section" pad="none" aria-labelledby="ptime-recent">
@@ -107,8 +123,9 @@ export async function ProjectTimePanel({
               <h2 id="ptime-recent" className={HEADING_CLASS.box}>
                 {tt.recentEntries}
               </h2>
+              {/* -my-1.5: the button overlaps the row's padding, keeping both headers 52px */}
               {!clientView && isStaff(actor) && (
-                <CardAction>
+                <CardAction className="-my-1.5">
                   <Button asChild variant="ghost" size="sm">
                     <Link href={href("/panel/time")}>{t.common.viewAll}</Link>
                   </Button>

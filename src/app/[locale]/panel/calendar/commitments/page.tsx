@@ -170,7 +170,8 @@ export default async function CommitmentsPage({
         <FrameGrid cols={1} className="xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <FrameCell pad="none" className="flex min-w-0 flex-col">
             {(clientRefs.length > 0 || projectRefs.length > 0) && (
-              <div className="border-b border-frame-line px-(--cell-pad) py-3">
+              // min-h-13 + py-2: as tall as the side cell's header row (hairlines level)
+              <div className="flex min-h-13 items-center border-b border-frame-line px-(--cell-pad) py-2">
                 <CommitmentFilters
                   clients={clientRefs}
                   projects={projectRefs}
