@@ -32,6 +32,9 @@ import { logActivity } from "@/server/activity";
 import { AppError, forbidden, notFound } from "@/server/errors";
 import { appTimezone } from "@/server/modules/settings/service";
 import { assertProjectRead, projectAccessWhere } from "@/server/modules/projects/service";
+// The ONE task access rule (personal tasks stay private, even for admins). Never
+// re-implement it here: a private copy let admins see other users' personal tasks.
+import { taskAccessWhere } from "@/server/modules/tasks/access";
 import { notify } from "@/server/modules/notifications/service";
 import { messages } from "@/i18n/messages";
 import { markdownToText } from "@/lib/markdown";
@@ -109,16 +112,6 @@ function loadEventForWrite(actor: Actor, id: string) {
   if (!canEditEvent(actor, row))
     throw forbidden("Only the creator or an admin can change this event");
   return row;
-}
-
-/** Tasks visible on a member's calendar: assigned to / created by them, or in their projects. */
-function taskAccessWhere(actor: Actor): SQL | undefined {
-  if (isAdmin(actor)) return undefined;
-  return or(
-    eq(tasks.assigneeId, actor.user.id),
-    eq(tasks.createdBy, actor.user.id),
-    inArray(tasks.projectId, memberProjectIds(actor.user.id)),
-  );
 }
 
 function projectClientId(projectId: string) {

@@ -50,8 +50,9 @@ src/i18n/messages/{fa,en}/calendar.ts
 - **Sources** (toggle chips, remembered in the `gt_cal_hidden` cookie so there's no flash):
   events, commitments, tasks (due dates → `/panel/tasks?task=<id>`), projects (project and
   milestone due dates → project page), invoices (due dates, admins only →
-  `/panel/invoices/<id>`). Overlays are read-only; the tasks table is read directly (no
-  dependency on the tasks module code).
+  `/panel/invoices/<id>`). Overlays are read-only. The task overlay reads the tasks table with
+  the tasks module's own access rule (`taskAccessWhere` from `tasks/access.ts`); the calendar
+  has no task rule of its own.
 
 Everything is computed in the **app timezone** (`appTimezone()`), never the browser's.
 
@@ -102,8 +103,10 @@ A one-line quick form ("what + to whom + due") sits at the top.
 ## ICS feed
 
 - Each staff user can create a private feed in **Calendar → Subscribe**:
-  `https://<site>/api/calendar/<token>/feed.ics` (`?tasks=1` adds open task due dates as
-  all-day events). Regenerating invalidates the old URL immediately.
+  `https://<site>/api/calendar/<token>/feed.ics` (`?tasks=1` adds the due dates of the user's
+  open tasks as all-day events: tasks assigned to them, plus unassigned ones they created —
+  for admins every unassigned task they may see — always inside the task access rule below).
+  Regenerating invalidates the old URL immediately.
 - Storage: `settings` row `calendar.feeds` = `{ [userId]: { nonce, createdAt } }`. The token is
   `HMAC(APP_SECRET, userId:nonce)` (40 hex chars), so the DB alone never reveals a feed URL;
   rotating `APP_SECRET` invalidates all feeds.
@@ -119,13 +122,17 @@ A one-line quick form ("what + to whom + due") sits at the top.
 
 ## Access
 
-| Role        | Calendar                                                                                                                                                                   |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| owner/admin | everything; edit all events; invoice overlay                                                                                                                               |
-| member      | events they created + events of projects they're assigned to; task overlay: assigned/created/project tasks; may edit only events they created; can't link clients directly |
-| client      | no calendar page; `ProjectEventsPanel` shows only `visibleToClient` events of their portal projects, without description/attendees/reminders                               |
+| Role        | Calendar                                                                                                                                                                                                                |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| owner/admin | all events; edit all events; invoice overlay; task overlay: all project tasks + personal tasks they created or are assigned to                                                                                          |
+| member      | events they created + events of projects they're assigned to; task overlay: tasks of assigned projects + personal tasks they created or are assigned to; may edit only events they created; can't link clients directly |
+| client      | no calendar page; `ProjectEventsPanel` shows only `visibleToClient` events of their portal projects, without description/attendees/reminders                                                                            |
 
-`eventAccessWhere(actor)` in `service.ts` is the single SQL filter.
+`eventAccessWhere(actor)` in `service.ts` is the single SQL filter for events. Tasks use
+`taskAccessWhere(actor)` from the tasks module (`tasks/access.ts`) in the overlay and in the ICS
+feed, so the calendar shows exactly the tasks the Tasks pages show: another user's personal task
+(no project) stays private, even for the owner and admins (`calendar/service.test.ts` proves the
+parity for owner, admin, member and client).
 
 ## Project page panel
 

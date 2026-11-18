@@ -7,6 +7,7 @@ import { hmac, safeEqual } from "@/server/auth/crypto";
 import { logActivity } from "@/server/activity";
 import { notFound } from "@/server/errors";
 import { appTimezone } from "@/server/modules/settings/service";
+import { taskAccessWhere } from "@/server/modules/tasks/access";
 import { env } from "@/lib/env";
 import { newToken } from "@/lib/ids";
 import { DAY_MS } from "@/lib/tz";
@@ -228,11 +229,15 @@ export function buildFeed(token: string, opts: { includeTasks?: boolean; now?: n
     const taskRows = db.query.tasks
       .findMany({
         where: and(
+          // Never wider than the tasks module: without it an admin's feed carried
+          // other users' unassigned personal tasks.
+          taskAccessWhere(actor),
           isNotNull(tasks.dueAt),
           gte(tasks.dueAt, new Date(now - 30 * DAY_MS)),
           ne(tasks.status, "canceled"),
           ne(tasks.status, "done"),
-          // "My" tasks: assigned to me, or unassigned ones I created (admins: all unassigned).
+          // "My" tasks: assigned to me, or unassigned ones I created (admins: every
+          // unassigned task they may see — project tasks and their own personal ones).
           or(
             eq(tasks.assigneeId, actor.user.id),
             and(
