@@ -2,9 +2,8 @@ import "server-only";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/server/db/client";
 import { apiTokens, users } from "@/server/db/schema";
-import { env } from "@/lib/env";
-import { clientIp } from "@/server/auth/client-ip";
 import { hmac } from "@/server/auth/crypto";
+import { vouchedClientIp } from "@/server/auth/edge";
 import { rateLimit } from "@/server/auth/rate-limit";
 import type { Actor } from "@/server/auth/actor";
 import { AppError } from "@/server/errors";
@@ -48,7 +47,7 @@ function findToken(header: string) {
 export function actorFromRequest(req: Request): Actor {
   const { row, problem } = findToken(req.headers.get("authorization") ?? "");
   if (!row) {
-    const ip = clientIp(req.headers, env.trustProxy) ?? "unknown";
+    const ip = vouchedClientIp(req.headers) ?? "unknown";
     const failures = rateLimit(`api:auth-fail:${ip}`, API_AUTH_FAILURES_PER_IP, 60_000);
     if (!failures.ok) {
       throw new AppError("rate_limited", "Too many failed authentication attempts");

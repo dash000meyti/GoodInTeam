@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { notFound } from "next/navigation";
+import { locale as rootLocale } from "next/root-params";
 import { InlineScript } from "@/components/shared/inline-script";
 import { Providers } from "@/components/shared/providers";
 import { bootInitScript, presetInitScript } from "@/components/shared/theme";
@@ -47,7 +48,10 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/[locale]">) {
-  const locale = await getLocale();
+  // The RAW root param decides: `getLocale()` falls back to "fa" for typing,
+  // so it can never tell a real locale from `/brand/…` or `/api/…` (a path
+  // that reached `[locale]` without a locale prefix). Those are not pages.
+  const locale = await rootLocale();
   if (!isLocale(locale)) notFound();
   const { dir } = localeMeta[locale];
   return (

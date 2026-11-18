@@ -17,6 +17,7 @@ const { db, getDb } = await import("@/server/db/client");
 const s = await import("@/server/db/schema");
 const { hmac } = await import("@/server/auth/crypto");
 const { clearRateLimits, rateLimitBucketCount } = await import("@/server/auth/rate-limit");
+const { vouchedHeaders } = await import("@/server/auth/edge-testing");
 const { API_AUTH_FAILURES_PER_IP, API_RATE_LIMIT, actorFromRequest } = await import("./auth");
 
 const randomToken = () =>
@@ -37,12 +38,13 @@ function makeToken(userId: string, extra: Partial<typeof s.apiTokens.$inferInser
   return raw;
 }
 
+/** A request as the route handler sees it: the proxy vetted its forwarding headers. */
 const req = (token: string | null, ip = "198.51.100.1") =>
   new Request("http://localhost/api/v1/tools", {
-    headers: {
+    headers: vouchedHeaders({
       ...(token === null ? {} : { authorization: `Bearer ${token}` }),
       "x-forwarded-for": ip,
-    },
+    }),
   });
 
 function errorOf(fn: () => unknown) {
@@ -126,6 +128,22 @@ describe("actorFromRequest", () => {
       "unauthorized",
     );
     expect(actorFromRequest(req(good)).user.id).toBe(userId);
+  });
+
+  it("gives a request the proxy did not vouch for no address of its own", () => {
+    // Without the voucher nobody vetted the forwarding headers: every such
+    // request shares one failure bucket, whatever address it claims.
+    const unvouched = (ip: string) =>
+      new Request("http://localhost/api/v1/tools", {
+        headers: { authorization: `Bearer ${randomToken()}`, "x-forwarded-for": ip },
+      });
+    for (let i = 0; i < API_AUTH_FAILURES_PER_IP; i++) {
+      expect(errorOf(() => actorFromRequest(unvouched(`203.0.113.${i}`))).code).toBe(
+        "unauthorized",
+      );
+    }
+    expect(errorOf(() => actorFromRequest(unvouched("203.0.113.200"))).code).toBe("rate_limited");
+    expect(rateLimitBucketCount("api")).toBe(1);
   });
 
   it("keys the request budget by token id, so look-alike tokens can't exhaust it", () => {
