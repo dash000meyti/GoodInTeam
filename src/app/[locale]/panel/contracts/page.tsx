@@ -24,7 +24,7 @@ import {
 import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard } from "@/components/panel/stat-card";
+import { StatCard, StatGrid } from "@/components/panel/stat-card";
 import { ContractKindBadge, ContractStatusBadge } from "@/components/contracts/contract-badges";
 import { format } from "@/i18n/format-message";
 import { formatDate, formatDateTime, formatNumber, formatRelative } from "@/lib/format";
@@ -117,7 +117,7 @@ async function AdminContracts({
         actions={newButton}
       />
 
-      <div className="grid gap-6 sm:grid-cols-3">
+      <StatGrid>
         <StatCard
           label={c.kpiAwaiting}
           value={formatNumber(stats.awaiting, locale)}
@@ -146,7 +146,7 @@ async function AdminContracts({
           icon={TimerIcon}
           tone="info"
         />
-      </div>
+      </StatGrid>
 
       <nav
         aria-label={c.title}

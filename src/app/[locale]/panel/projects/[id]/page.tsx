@@ -15,7 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorDot } from "@/components/shared/color-dot";
 import { Markdown } from "@/components/shared/markdown";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard } from "@/components/panel/stat-card";
+import { STAT_VALUE_CLASS, StatCard, StatGrid } from "@/components/panel/stat-card";
+import { FrameCell } from "@/components/shell/frame";
 import { daysUntil } from "@/lib/due";
 import { env } from "@/lib/env";
 import { formatDate, formatDateTime, formatHours, formatNumber, formatPercent } from "@/lib/format";
@@ -139,13 +140,15 @@ export default async function ProjectPage({
         }
       />
 
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid>
         {progress != null && (
-          <Card className="gap-3 p-6">
-            <p className="text-sm font-semibold text-muted-foreground">{p.progress}</p>
-            <p className="text-2xl font-extrabold">{formatPercent(progress, locale)}</p>
-            <Progress value={progress} />
-          </Card>
+          <FrameCell className="flex flex-col gap-2">
+            <p className="pt-1.5 text-sm leading-5 font-semibold text-muted-foreground">
+              {p.progress}
+            </p>
+            <p className={STAT_VALUE_CLASS}>{formatPercent(progress, locale)}</p>
+            <Progress value={progress} className="mt-1" />
+          </FrameCell>
         )}
         {stats.trackedMs != null && (
           <StatCard
@@ -176,7 +179,7 @@ export default async function ProjectPage({
             tone="success"
           />
         )}
-      </div>
+      </StatGrid>
 
       <Tabs defaultValue={activeTab} className="mt-8">
         <TabsList className="max-w-full justify-start overflow-x-auto">

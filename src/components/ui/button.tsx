@@ -8,8 +8,8 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        /** Primary brand action */
-        default: "bg-primary text-primary-foreground hover:bg-primary-hover hover:shadow-primary",
+        /** Primary brand action (yellow fill, ink text; no glow, like the site's pills) */
+        default: "bg-primary text-primary-foreground hover:bg-primary-hover",
         /** Minimals "contained inherit": high-contrast neutral button */
         inherit:
           "bg-grey-800 text-white hover:bg-grey-700 dark:bg-white dark:text-grey-800 dark:hover:bg-grey-300",
@@ -17,8 +17,9 @@ const buttonVariants = cva(
         soft: "bg-primary/12 text-primary-dark hover:bg-primary/24 dark:text-primary-light",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive",
+        /** The site's outline pill at panel size: hairline on the card surface */
         outline:
-          "border border-input bg-transparent hover:border-foreground/30 hover:bg-accent dark:hover:border-foreground/40",
+          "border border-frame-line bg-card hover:border-foreground/40 dark:hover:border-foreground/40",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/70",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary-ink underline-offset-4 hover:underline",

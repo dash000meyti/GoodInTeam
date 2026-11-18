@@ -13,6 +13,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { KpiCard } from "@/components/finance/kpi-card";
+import { StatGrid } from "@/components/panel/stat-card";
 import { Money } from "@/components/finance/money";
 import { format } from "@/i18n/format-message";
 import { formatNumber } from "@/lib/format";
@@ -110,7 +111,7 @@ export default async function AccountPage({
       />
       <FinanceNav active="accounts" href={href} t={f} />
 
-      <div className="mb-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid className="mb-6">
         <KpiCard label={f.balance} value={money(account.balance)} icon={WalletIcon} />
         <KpiCard
           label={f.openingBalance}
@@ -137,10 +138,10 @@ export default async function AccountPage({
           icon={ArrowUpRightIcon}
           tone="destructive"
         />
-      </div>
+      </StatGrid>
 
       <Card className="gap-0 overflow-hidden py-0">
-        <CardHeader className="border-b border-dashed py-5">
+        <CardHeader>
           <CardTitle>{f.statement}</CardTitle>
         </CardHeader>
         {data.total === 0 ? (

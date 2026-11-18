@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard } from "@/components/panel/stat-card";
+import { StatCard, StatGrid } from "@/components/panel/stat-card";
 import { localePath } from "@/i18n/config";
 import { postPath } from "@/lib/content";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -62,7 +62,7 @@ export default async function ContentPage({ searchParams }: PageProps<"/[locale]
         actions={<NewPostMenu />}
       />
       <ContentNav active="posts" href={href} t={t} />
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid className="mb-6">
         <StatCard
           label={c.kpiPublished}
           value={formatNumber(counts.published, locale)}
@@ -86,7 +86,7 @@ export default async function ContentPage({ searchParams }: PageProps<"/[locale]
           icon={EyeIcon}
           tone="violet"
         />
-      </div>
+      </StatGrid>
       <PostFilters {...filters} />
       {rows.length === 0 ? (
         <EmptyState

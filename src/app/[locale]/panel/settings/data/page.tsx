@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/panel/stat-card";
+import {StatCard, StatGrid} from "@/components/panel/stat-card";
 import { format } from "@/i18n/format-message";
 import { formatDateTime, formatNumber, formatRelative } from "@/lib/format";
 import { localeMeta } from "@/i18n/config";
@@ -36,7 +36,7 @@ export default async function DataSettingsPage() {
     <div className="space-y-6">
       <SettingsHeader title={s.dataTitle} description={s.dataSubtitle} />
 
-      <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+      <StatGrid>
         <StatCard
           label={s.dbSize}
           value={bytes(stats.files.db)}
@@ -68,7 +68,7 @@ export default async function DataSettingsPage() {
           icon={HardDriveIcon}
           tone="warning"
         />
-      </div>
+      </StatGrid>
 
       <SettingsCard
         icon={DownloadIcon}

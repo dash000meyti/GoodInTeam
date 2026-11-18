@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard } from "@/components/panel/stat-card";
+import { StatCard, StatGrid } from "@/components/panel/stat-card";
 import { format } from "@/i18n/format-message";
 import { formatDuration, formatHours, formatNumber, formatPercent, formatTime } from "@/lib/format";
 import { addDays, startOfDay, startOfWeek, toDateInputValue, weekStartFor } from "@/lib/tz";
@@ -144,7 +144,7 @@ export default async function TimePage({ searchParams }: PageProps<"/[locale]/pa
         {self && <StartTimerBar projects={projects} tasks={tasks} />}
         {self && <RunningTimers timers={runningViews} projects={projects} serverNow={now} />}
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatGrid>
           <StatCard
             label={tt.todayTotal}
             value={<span className="font-mono">{formatDuration(todayMs, locale)}</span>}
@@ -185,7 +185,7 @@ export default async function TimePage({ searchParams }: PageProps<"/[locale]/pa
               tone="violet"
             />
           )}
-        </div>
+        </StatGrid>
 
         {days.size === 0 ? (
           <EmptyState

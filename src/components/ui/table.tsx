@@ -1,6 +1,13 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
+/*
+ * Tables inside framed boxes (docs/design-system.md "Frame"): rows share
+ * solid `--frame-line` hairlines like cells, the head row has no fill, a row
+ * hovers to the card surface (like a hover cell) and the first/last columns
+ * line up with the box's 20px cell padding.
+ */
+
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div data-slot="table-container" className="relative w-full scrollbar-thin overflow-x-auto">
@@ -17,7 +24,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("bg-muted/60 [&_tr]:border-b-0", className)}
+      className={cn("[&_tr]:border-frame-line [&_tr]:hover:bg-transparent", className)}
       {...props}
     />
   );
@@ -37,7 +44,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
       data-slot="table-footer"
-      className={cn("border-t bg-muted/50 font-semibold", className)}
+      className={cn("border-t border-frame-line bg-card font-semibold", className)}
       {...props}
     />
   );
@@ -48,7 +55,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b border-dashed transition-colors hover:bg-accent/60 data-[state=selected]:bg-primary/8",
+        "border-b border-frame-line transition-colors hover:bg-card data-[state=selected]:bg-primary/8",
         className,
       )}
       {...props}
@@ -61,7 +68,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-11 px-3 text-start align-middle text-[13px] font-semibold whitespace-nowrap text-muted-foreground first:ps-5 last:pe-5 [&:has([role=checkbox])]:pe-0",
+        "h-10 px-3 text-start align-middle text-[13px] font-semibold whitespace-nowrap text-muted-foreground first:ps-5 last:pe-5 [&:has([role=checkbox])]:pe-0",
         className,
       )}
       {...props}

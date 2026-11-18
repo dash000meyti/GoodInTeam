@@ -126,7 +126,7 @@ export default async function RatesPage() {
           </div>
 
           <Card className="gap-0 overflow-hidden py-0">
-            <CardHeader className="border-b border-dashed py-5">
+            <CardHeader>
               <CardTitle>{f.history}</CardTitle>
             </CardHeader>
             <Table>

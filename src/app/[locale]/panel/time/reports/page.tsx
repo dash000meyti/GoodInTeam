@@ -21,7 +21,7 @@ import {
 import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard } from "@/components/panel/stat-card";
+import { StatCard, StatGrid } from "@/components/panel/stat-card";
 import { format } from "@/i18n/format-message";
 import { formatDate, formatDuration, formatHours, formatNumber, formatPercent } from "@/lib/format";
 import { startOfWeek, toDateInputValue, weekStartFor } from "@/lib/tz";
@@ -165,7 +165,7 @@ export default async function TimeReportsPage({
         </div>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid>
         <StatCard
           label={tt.totalHours}
           value={<span className="font-mono">{formatDuration(report.totalMs, locale)}</span>}
@@ -201,7 +201,7 @@ export default async function TimeReportsPage({
           icon={CalendarDaysIcon}
           tone="info"
         />
-      </div>
+      </StatGrid>
 
       {report.totalMs === 0 ? (
         <EmptyState
@@ -243,7 +243,7 @@ export default async function TimeReportsPage({
           </div>
 
           <Card className="mt-6 gap-0 overflow-hidden py-0">
-            <CardHeader className="border-b border-dashed py-5">
+            <CardHeader>
               <CardTitle>{tt.breakdown}</CardTitle>
             </CardHeader>
             <Table>

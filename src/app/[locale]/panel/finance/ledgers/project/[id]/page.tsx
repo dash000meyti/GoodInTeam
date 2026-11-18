@@ -17,6 +17,7 @@ import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { KpiCard } from "@/components/finance/kpi-card";
+import { StatGrid } from "@/components/panel/stat-card";
 import { Money, MoneyStack } from "@/components/finance/money";
 import { format } from "@/i18n/format-message";
 import { formatHours, formatNumber } from "@/lib/format";
@@ -84,7 +85,7 @@ export default async function ProjectLedgerPage({
       />
       <FinanceNav active="ledgers" href={href} t={f} />
 
-      <div className="mb-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid className="mb-6">
         <KpiCard
           label={f.colIncome}
           icon={ArrowDownLeftIcon}
@@ -153,7 +154,7 @@ export default async function ProjectLedgerPage({
             ) : undefined
           }
         />
-      </div>
+      </StatGrid>
 
       <div className="grid gap-6 2xl:grid-cols-3">
         <div className="2xl:col-span-2">

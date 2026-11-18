@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { KpiCard } from "@/components/finance/kpi-card";
+import { StatGrid } from "@/components/panel/stat-card";
 import { Money, MoneyStack } from "@/components/finance/money";
 import { formatDate, formatHours, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -126,7 +127,7 @@ export async function ProjectFinancePanel({
   const options = txFormOptions(ctx.actor);
   return (
     <section className="space-y-6" aria-label={f.pf_title}>
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid>
         <KpiCard
           label={f.colIncome}
           icon={ArrowDownLeftIcon}
@@ -222,7 +223,7 @@ export async function ProjectFinancePanel({
             ) : undefined
           }
         />
-      </div>
+      </StatGrid>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

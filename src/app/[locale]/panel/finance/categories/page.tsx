@@ -42,7 +42,7 @@ export default async function CategoriesPage() {
           const Icon = kind === "income" ? ArrowDownLeftIcon : ArrowUpRightIcon;
           return (
             <Card key={kind} className="gap-0 pb-2">
-              <CardHeader className="border-b border-dashed pb-5">
+              <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <span
                     className={

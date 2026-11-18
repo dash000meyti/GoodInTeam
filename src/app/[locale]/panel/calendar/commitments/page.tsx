@@ -17,7 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard } from "@/components/panel/stat-card";
+import { StatCard, StatGrid } from "@/components/panel/stat-card";
 import { dayKeyOf } from "@/components/calendar/grid";
 import { dateLabel, timeLabel } from "@/components/calendar/format";
 import type { CalendarRef } from "@/components/calendar/types";
@@ -116,7 +116,7 @@ export default async function CommitmentsPage({
         <CommitmentQuickAdd />
       </Card>
 
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+      <StatGrid>
         <StatCard
           label={c.keepRate}
           value={stats.keepRate != null ? formatPercent(stats.keepRate * 100, locale) : "—"}
@@ -155,7 +155,7 @@ export default async function CommitmentsPage({
           icon={HourglassIcon}
           tone="info"
         />
-      </div>
+      </StatGrid>
 
       <div className="mt-6 grid items-start gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">

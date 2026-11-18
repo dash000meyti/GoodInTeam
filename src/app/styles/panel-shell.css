@@ -384,6 +384,17 @@
     }
   }
 
+  /*
+   * ── Framed content (the site's frame language at panel density) ──
+   * Boxes are `.frame-box[data-density="compact"]` (frame.css); an
+   * EmptyState inside a box or a cell drops its own frame and only centres
+   * its content.
+   */
+  :is(.frame-box, .frame-cell) .frame-box[data-slot="empty-state"] {
+    border: 0;
+    background: none;
+  }
+
   /* ── Panel guide bubble (§10.6): never a dialog ── */
   .pm-guide {
     position: fixed;

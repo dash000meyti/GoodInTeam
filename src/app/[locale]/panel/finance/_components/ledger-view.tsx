@@ -103,7 +103,7 @@ export function LedgerTables({
     <div className="space-y-6">
       {groups.map((g) => (
         <Card key={g.currency} className="gap-0 overflow-hidden py-0">
-          <CardHeader className="border-b border-dashed py-5">
+          <CardHeader>
             <CardTitle className="flex flex-wrap items-center gap-3">
               <Badge variant="neutral" className="font-mono text-sm">
                 {g.currency}

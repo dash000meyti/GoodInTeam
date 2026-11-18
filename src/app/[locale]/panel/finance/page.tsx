@@ -31,6 +31,7 @@ import { ColorDot } from "@/components/shared/color-dot";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
 import { KpiCard } from "@/components/finance/kpi-card";
+import { StatGrid } from "@/components/panel/stat-card";
 import { Approx, Money, MoneyStack } from "@/components/finance/money";
 import { InvoiceStatusBadge } from "@/components/finance/invoice-status-badge";
 import { format } from "@/i18n/format-message";
@@ -109,7 +110,7 @@ export default async function FinanceOverviewPage() {
         />
       ) : (
         <>
-          <div className="mb-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          <StatGrid className="mb-6">
             <KpiCard
               label={f.monthIncome}
               icon={ArrowDownLeftIcon}
@@ -192,7 +193,7 @@ export default async function FinanceOverviewPage() {
               }
               hint={format(f.openInvoicesCount, { n: formatNumber(o.receivables.count, locale) })}
             />
-          </div>
+          </StatGrid>
 
           <FinanceAnalytics
             rows={o.analytics.rows}
@@ -378,7 +379,7 @@ function ProfitabilityCard({ o, ctx }: { o: Overview; ctx: PanelContext }) {
   const rows = o.profitability;
   return (
     <Card className="mt-6 gap-0 overflow-hidden pb-0">
-      <CardHeader className="pb-5">
+      <CardHeader>
         <CardTitle>{f.profitability}</CardTitle>
         <CardDescription>{f.profitabilityHint}</CardDescription>
       </CardHeader>

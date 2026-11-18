@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/panel/empty-state";
-import { StatCard } from "@/components/panel/stat-card";
+import { StatCard, StatGrid } from "@/components/panel/stat-card";
 import { PulseDot } from "@/components/time/pulse-dot";
 import { format } from "@/i18n/format-message";
 import { formatDuration, formatHours, formatPercent, formatTime } from "@/lib/format";
@@ -59,7 +59,7 @@ export async function ProjectTimePanel({
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <StatGrid>
         <StatCard
           label={tt.trackedTotal}
           value={<span className="font-mono">{formatDuration(data.totalMs, locale)}</span>}
@@ -79,7 +79,7 @@ export async function ProjectTimePanel({
           icon={CoinsIcon}
           tone="success"
         />
-      </div>
+      </StatGrid>
 
       <div className="grid gap-6 lg:grid-cols-5 lg:items-start">
         <Card className="lg:col-span-3">
@@ -105,7 +105,7 @@ export async function ProjectTimePanel({
         </Card>
 
         <Card className="gap-0 lg:col-span-2">
-          <CardHeader className="pb-4">
+          <CardHeader>
             <CardTitle>{tt.recentEntries}</CardTitle>
             {!clientView && isStaff(actor) && (
               <CardAction>

@@ -16,7 +16,7 @@ import { Highlighted } from "@/components/docs/highlight";
 import { VisibilityBadge } from "@/components/docs/visibility-badge";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
-import { StatCard } from "@/components/panel/stat-card";
+import { StatCard, StatGrid } from "@/components/panel/stat-card";
 import { format } from "@/i18n/format-message";
 import { formatDate, formatNumber, formatRelative } from "@/lib/format";
 import { isStaff } from "@/server/auth/actor";
@@ -71,7 +71,7 @@ function SearchResults({ ctx, q }: { ctx: PanelContext; q: string }) {
   const staff = isStaff(actor);
   return (
     <Card className="gap-0 py-0">
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 border-b border-dashed py-5">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <CardTitle className="text-base">
           {format(d.searchResults, { q: `\u2068${q}\u2069` })}
         </CardTitle>
@@ -165,15 +165,15 @@ function StaffHome({ ctx, newButton }: { ctx: PanelContext; newButton: React.Rea
           <LockIcon /> {d.statPrivate}: {n(stats.private)}
         </Badge>
       </div>
-      <div className="hidden gap-4 sm:grid sm:grid-cols-2 2xl:grid-cols-4">
+      <StatGrid className="hidden sm:block">
         <StatCard label={d.statPages} value={n(stats.total)} icon={BookOpenIcon} tone="primary" />
         <StatCard label={d.statTeam} value={n(stats.team)} icon={UsersIcon} tone="info" />
         <StatCard label={d.statClient} value={n(stats.client)} icon={Share2Icon} tone="violet" />
         <StatCard label={d.statPrivate} value={n(stats.private)} icon={LockIcon} tone="warning" />
-      </div>
+      </StatGrid>
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card className="gap-0 py-0">
-          <CardHeader className="border-b border-dashed py-5">
+          <CardHeader>
             <CardTitle className="text-base">{d.recentlyUpdated}</CardTitle>
           </CardHeader>
           <ul className="divide-y divide-dashed">

@@ -2,7 +2,12 @@ import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Friendly empty state (dashed box, icon, title, description, CTA). */
+/**
+ * Empty state (the site's EmptyCell at panel density): an icon on a dotted
+ * hairline tile, title, description, CTA. On its own it is a framed box;
+ * inside a box or a cell (a Card, a FrameCell) it drops its frame and only
+ * centres its content (panel-shell.css).
+ */
 export function EmptyState({
   icon: Icon,
   title,
@@ -18,17 +23,24 @@ export function EmptyState({
 }) {
   return (
     <div
+      data-slot="empty-state"
+      data-density="compact"
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-muted/30 px-6 py-14 text-center",
+        "frame-box flex flex-col items-center justify-center gap-3 px-6 py-12 text-center",
         className,
       )}
     >
       {Icon && (
-        <div className="mb-1 flex size-16 items-center justify-center rounded-2xl bg-primary/10 text-primary-ink">
-          <Icon className="size-8" strokeWidth={1.5} />
-        </div>
+        <span
+          aria-hidden
+          className="mb-1 flex size-14 items-center justify-center border border-frame-line bg-card bg-[radial-gradient(var(--dots)_1px,transparent_1.5px)] [background-size:12px_12px] text-muted-foreground"
+        >
+          <Icon className="size-7" strokeWidth={1.5} />
+        </span>
       )}
-      <h3 className="text-lg font-bold">{title}</h3>
+      <h3 className="text-lg font-bold [:lang(en)_&]:tracking-[-0.015em] [:lang(fa)_&]:font-extrabold">
+        {title}
+      </h3>
       {description && <p className="max-w-sm text-sm text-muted-foreground">{description}</p>}
       {action && <div className="mt-2">{action}</div>}
     </div>
