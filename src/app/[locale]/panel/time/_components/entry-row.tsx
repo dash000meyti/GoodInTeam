@@ -48,6 +48,7 @@ export interface EntryRowView {
   values: EntryFormValues;
 }
 
+/** One timeline row (edge to edge in its day section; hairlines between rows). */
 export function EntryRow({ entry, serverNow }: { entry: EntryRowView; serverNow: number }) {
   const t = useT();
   const tt = t.time;
@@ -68,13 +69,13 @@ export function EntryRow({ entry, serverNow }: { entry: EntryRowView; serverNow:
   return (
     <li
       className={cn(
-        "group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/40 sm:px-6",
+        "group flex items-center gap-3 px-(--cell-pad) py-3 transition-colors hover:bg-card",
         pending && "opacity-60",
       )}
     >
       <span
         aria-hidden
-        className="h-10 w-1 shrink-0 rounded-full bg-grey-500/30"
+        className="h-10 w-1 shrink-0 bg-grey-500/30"
         style={entry.project ? { backgroundColor: entry.project.color } : undefined}
       />
       <button
@@ -105,7 +106,7 @@ export function EntryRow({ entry, serverNow }: { entry: EntryRowView; serverNow:
         {entry.billable && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="flex size-7 items-center justify-center rounded-lg bg-success/12 text-[#118d57] dark:text-[#77ed8b]">
+              <span className="flex size-7 items-center justify-center border border-frame-line bg-card text-success-ink">
                 <CoinsIcon className="size-3.5" aria-label={tt.billable} />
               </span>
             </TooltipTrigger>

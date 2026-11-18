@@ -2,17 +2,11 @@ import "server-only";
 import Link from "next/link";
 import { ClockIcon, CoinsIcon, TimerIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { CardAction, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/panel/empty-state";
 import { StatCard, StatGrid } from "@/components/panel/stat-card";
+import { FrameBox, FrameCell, FrameGrid, HEADING_CLASS } from "@/components/shell/frame";
 import { PulseDot } from "@/components/time/pulse-dot";
 import { format } from "@/i18n/format-message";
 import { formatDuration, formatHours, formatPercent, formatTime } from "@/lib/format";
@@ -29,7 +23,8 @@ import { WeeklyHoursChart } from "./report-charts";
 const H = 3_600_000;
 
 /**
- * Time on one project: KPIs, hours per week (last 12 weeks) and recent entries.
+ * Time on one project: KPIs (a stat grid), then one box with hours per week
+ * (last 12 weeks) and recent entries as two cells sharing a hairline.
  * For the project detail page (staff) and the client portal (`clientView`:
  * no rates/earnings/user names; renders nothing unless the project shares time).
  */
@@ -58,7 +53,7 @@ export async function ProjectTimePanel({
   const thisWeek = data.weeks.at(-1)?.ms ?? 0;
 
   return (
-    <div className="grid gap-6">
+    <div className="flex flex-col gap-6 lg:gap-8">
       <StatGrid>
         <StatCard
           label={tt.trackedTotal}
@@ -81,47 +76,51 @@ export async function ProjectTimePanel({
         />
       </StatGrid>
 
-      <div className="grid gap-6 lg:grid-cols-5 lg:items-start">
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>{tt.weeklyHours}</CardTitle>
-            <CardDescription>
-              {format(tt.weekRange, {
-                from: formatDayLabel(data.weeks[0]!.weekStart, { ...fmt, withYear: true }),
-                to: formatDayLabel(data.weeks.at(-1)!.weekStart, { ...fmt, withYear: true }),
-              })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <WeeklyHoursChart
-              label={tt.hoursCol}
-              data={data.weeks.map((w) => ({
-                label: dayParts(w.weekStart, ctx).label,
-                hours: Math.round((w.ms / H) * 100) / 100,
-                billable: Math.round((w.billableMs / H) * 100) / 100,
-              }))}
-            />
-          </CardContent>
-        </Card>
+      <FrameBox as="div" density="compact">
+        <FrameGrid cols={1} className="lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <FrameCell as="section" pad="none" aria-labelledby="ptime-weeks">
+            <CardHeader>
+              <h2 id="ptime-weeks" className={HEADING_CLASS.box}>
+                {tt.weeklyHours}
+              </h2>
+              <CardDescription>
+                {format(tt.weekRange, {
+                  from: formatDayLabel(data.weeks[0]!.weekStart, { ...fmt, withYear: true }),
+                  to: formatDayLabel(data.weeks.at(-1)!.weekStart, { ...fmt, withYear: true }),
+                })}
+              </CardDescription>
+            </CardHeader>
+            <div className="p-(--cell-pad)">
+              <WeeklyHoursChart
+                label={tt.hoursCol}
+                data={data.weeks.map((w) => ({
+                  label: dayParts(w.weekStart, ctx).label,
+                  hours: Math.round((w.ms / H) * 100) / 100,
+                  billable: Math.round((w.billableMs / H) * 100) / 100,
+                }))}
+              />
+            </div>
+          </FrameCell>
 
-        <Card className="gap-0 lg:col-span-2">
-          <CardHeader>
-            <CardTitle>{tt.recentEntries}</CardTitle>
-            {!clientView && isStaff(actor) && (
-              <CardAction>
-                <Button asChild variant="ghost" size="sm">
-                  <Link href={href("/panel/time")}>{t.common.viewAll}</Link>
-                </Button>
-              </CardAction>
-            )}
-          </CardHeader>
-          <CardContent>
+          <FrameCell as="section" pad="none" aria-labelledby="ptime-recent">
+            <CardHeader>
+              <h2 id="ptime-recent" className={HEADING_CLASS.box}>
+                {tt.recentEntries}
+              </h2>
+              {!clientView && isStaff(actor) && (
+                <CardAction>
+                  <Button asChild variant="ghost" size="sm">
+                    <Link href={href("/panel/time")}>{t.common.viewAll}</Link>
+                  </Button>
+                </CardAction>
+              )}
+            </CardHeader>
             {data.recent.length === 0 ? (
               <EmptyState icon={TimerIcon} title={tt.noEntries} className="py-8" />
             ) : (
-              <ul className="divide-y divide-dashed">
+              <ul className="divide-y divide-frame-line">
                 {data.recent.map((e) => (
-                  <li key={e.id} className="flex items-center gap-3 py-3">
+                  <li key={e.id} className="flex items-center gap-3 px-(--cell-pad) py-3">
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">
                         <bdi>{e.description || e.task?.title || tt.noDescription}</bdi>
@@ -145,9 +144,9 @@ export async function ProjectTimePanel({
                 ))}
               </ul>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </FrameCell>
+        </FrameGrid>
+      </FrameBox>
     </div>
   );
 }

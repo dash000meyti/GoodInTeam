@@ -38,6 +38,7 @@ export const time = {
   duplicate: "کپی",
   deleteEntryBody: "این زمان ثبت‌شده برای همیشه حذف می‌شود.",
   dayTotal: "مجموع روز",
+  timeline: "زمان‌های ثبت‌شده",
   loadMore: "نمایش هفته قبل",
   noEntries: "هنوز زمانی ثبت نشده",
   noEntriesHint: "تایمر را روشن کنید یا زمانی را دستی اضافه کنید؛ همه‌چیز همین‌جا جمع می‌شود.",

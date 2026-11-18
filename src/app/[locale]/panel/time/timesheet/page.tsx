@@ -1,10 +1,20 @@
 import Link from "next/link";
-import { CalendarRangeIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import {
+  CalendarDaysIcon,
+  CalendarRangeIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  CoinsIcon,
+  PieChartIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
+import { StatCard, StatRow } from "@/components/panel/stat-card";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { format } from "@/i18n/format-message";
-import { formatDate, formatDuration, formatHours } from "@/lib/format";
+import { formatDate, formatDuration, formatHours, formatNumber, formatPercent } from "@/lib/format";
 import { addDays, fromDateInput, startOfWeek, toDateInputValue, weekStartFor } from "@/lib/tz";
 import { isAdmin } from "@/server/auth/actor";
 import { taskPickerOptions } from "@/server/modules/tasks/service";
@@ -20,6 +30,11 @@ import { AddTimeButton, TimeUIProvider } from "../_components/time-ui";
 import { TimesheetGrid } from "../_components/timesheet-grid";
 import { dayParts, param, withParams } from "../_lib/views";
 
+/**
+ * Timesheet (framed): the page box carries the week's KPIs as its second row;
+ * the project × day grid sits edge to edge in its own box, its cells square
+ * and sharing hairlines.
+ */
 export default async function TimesheetPage({
   searchParams,
 }: PageProps<"/[locale]/panel/time/timesheet">) {
@@ -47,6 +62,8 @@ export default async function TimesheetPage({
       user: userParam,
       week: week ? toDateInputValue(week, tz) : undefined,
     });
+  const activeDays = sheet.dayTotals.filter((ms) => ms > 0).length;
+  const billablePct = sheet.totalMs ? (sheet.billableMs / sheet.totalMs) * 100 : 0;
   const Prev = locale === "fa" ? ChevronRightIcon : ChevronLeftIcon;
   const Next = locale === "fa" ? ChevronLeftIcon : ChevronRightIcon;
 
@@ -83,7 +100,7 @@ export default async function TimesheetPage({
                 ]}
               />
             )}
-            <div className="flex items-center rounded-lg border border-input">
+            <div className="flex items-center rounded-lg border border-frame-line bg-card">
               <Button asChild variant="ghost" size="icon" className="rounded-e-none">
                 <Link href={link(addDays(weekStart, -7, tz))} aria-label={tt.prevWeek}>
                   <Prev />
@@ -92,7 +109,7 @@ export default async function TimesheetPage({
               <Button
                 asChild
                 variant="ghost"
-                className="rounded-none border-x border-input px-3 aria-[current=page]:text-primary-ink"
+                className="rounded-none border-x border-frame-line px-3 aria-[current=page]:text-primary-ink"
               >
                 <Link href={link(null)} aria-current={isCurrent ? "page" : undefined}>
                   {tt.currentWeek}
@@ -107,49 +124,76 @@ export default async function TimesheetPage({
             {self && <AddTimeButton />}
           </>
         }
-      />
+      >
+        <StatRow>
+          <StatCard
+            label={tt.totalHours}
+            value={<span className="font-mono">{formatDuration(sheet.totalMs, locale)}</span>}
+            hint={`${formatHours(sheet.totalMs, locale)} ${tt.hoursUnit}`}
+            icon={ClockIcon}
+          />
+          <StatCard
+            label={tt.billablePct}
+            value={formatPercent(billablePct, locale)}
+            hint={format(tt.billableOf, { h: formatHours(sheet.billableMs, locale) })}
+            icon={CoinsIcon}
+            tone="success"
+          />
+          <StatCard
+            label={tt.avgPerDay}
+            value={
+              <span className="font-mono">
+                {formatDuration(activeDays ? sheet.totalMs / activeDays : 0, locale)}
+              </span>
+            }
+            hint={format(tt.avgPerDayHint, { n: formatNumber(activeDays, locale) })}
+            icon={CalendarDaysIcon}
+            tone="info"
+          />
+          <StatCard
+            label={tt.byProject}
+            value={formatNumber(sheet.rows.length, locale)}
+            icon={PieChartIcon}
+            tone="violet"
+          />
+        </StatRow>
+      </PageHeader>
 
-      <Card className="gap-0 overflow-hidden py-0">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-dashed px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-info/12 text-info-ink">
-              <CalendarRangeIcon className="size-5" />
-            </span>
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground">{tt.weekTotal}</p>
-              <p className="font-mono text-xl font-black tabular-nums">
-                {formatDuration(sheet.totalMs, locale)}
-              </p>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {format(tt.billableOf, { h: formatHours(sheet.billableMs, locale) })}
-          </p>
-        </div>
-        <TimesheetGrid
-          editable={self}
-          days={sheet.days.map((d, i) => ({
-            key: sheet.dayKeys[i]!,
-            today: sheet.dayKeys[i] === todayKey,
-            ...dayParts(d, ctx),
-          }))}
-          rows={sheet.rows.map((r) => ({
-            projectId: r.projectId,
-            name: r.name,
-            color: r.color,
-            cells: r.cells.map((ms) => ({ ms, label: ms ? formatDuration(ms, locale) : "" })),
-            total: formatDuration(r.totalMs, locale),
-          }))}
-          dayTotals={sheet.dayTotals.map((ms) => (ms ? formatDuration(ms, locale) : "—"))}
-          total={formatDuration(sheet.totalMs, locale)}
-        />
+      <FrameBox as="section" density="compact" ariaLabel={tt.timesheet}>
+        <FrameGrid cols={1}>
+          <FrameCell pad="none">
+            <TimesheetGrid
+              editable={self}
+              days={sheet.days.map((d, i) => ({
+                key: sheet.dayKeys[i]!,
+                today: sheet.dayKeys[i] === todayKey,
+                ...dayParts(d, ctx),
+              }))}
+              rows={sheet.rows.map((r) => ({
+                projectId: r.projectId,
+                name: r.name,
+                color: r.color,
+                cells: r.cells.map((ms) => ({ ms, label: ms ? formatDuration(ms, locale) : "" })),
+                total: formatDuration(r.totalMs, locale),
+              }))}
+              dayTotals={sheet.dayTotals.map((ms) => (ms ? formatDuration(ms, locale) : "—"))}
+              total={formatDuration(sheet.totalMs, locale)}
+            />
+          </FrameCell>
+        </FrameGrid>
         {sheet.rows.length === 0 && (
-          <div className="border-t border-dashed px-6 py-8 text-center">
-            <p className="font-bold">{tt.emptyWeek}</p>
-            {self && <p className="mt-1 text-sm text-muted-foreground">{tt.emptyWeekHint}</p>}
-          </div>
+          <FrameGrid cols={1}>
+            <FrameCell>
+              <EmptyState
+                icon={CalendarRangeIcon}
+                title={tt.emptyWeek}
+                description={self ? tt.emptyWeekHint : undefined}
+                className="py-8"
+              />
+            </FrameCell>
+          </FrameGrid>
         )}
-      </Card>
+      </FrameBox>
     </TimeUIProvider>
   );
 }

@@ -152,11 +152,8 @@ export function ProjectDonut({
                   {formatPercent(pct, locale)}
                 </span>
               </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${pct}%`, backgroundColor: i.color }}
-                />
+              <div className="h-1.5 bg-muted">
+                <div className="h-full" style={{ width: `${pct}%`, backgroundColor: i.color }} />
               </div>
             </li>
           );
