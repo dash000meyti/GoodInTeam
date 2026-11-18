@@ -12,13 +12,16 @@ vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 let actor: Actor | null = null;
 vi.mock("@/server/auth/session", () => ({ getActor: async () => actor }));
 
-const uploadMedia = vi.fn(
-  async (_actor: Actor, file: File, _opts: { alt?: string | null; isPublic?: boolean }) => ({
-    id: "m1",
-    url: `/media/m1/${file.name}`,
-    duplicate: false,
-  }),
-);
+type Upload = (
+  actor: Actor,
+  file: File,
+  opts: { alt?: string | null; isPublic?: boolean },
+) => Promise<{ id: string; url: string; duplicate: boolean }>;
+const uploadMedia = vi.fn<Upload>(async (_actor, file) => ({
+  id: "m1",
+  url: `/media/m1/${file.name}`,
+  duplicate: false,
+}));
 vi.mock("@/server/modules/media/service", () => ({ uploadMedia }));
 
 const { POST } = await import("./route");
