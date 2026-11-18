@@ -2,6 +2,7 @@ import { DocEditor } from "@/components/docs/doc-editor";
 import type { DocVisibility } from "@/components/docs/visibility-badge";
 import { panelContext } from "@/server/page-context";
 import { editorOptions } from "../_components/editor-props";
+import { DocsPagesBarSlot } from "../_components/pages-bar";
 
 /**
  * New page. `?parentId=` nests it (and inherits the parent's visibility and
@@ -9,7 +10,7 @@ import { editorOptions } from "../_components/editor-props";
  */
 export default async function NewDocPage({ searchParams }: PageProps<"/[locale]/panel/docs/new">) {
   const ctx = await panelContext({ roles: ["owner", "admin", "member"] });
-  const { t, href, fmt } = ctx;
+  const { actor, t, href, fmt } = ctx;
   const sp = await searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) ?? null;
   const options = editorOptions(ctx);
@@ -34,6 +35,7 @@ export default async function NewDocPage({ searchParams }: PageProps<"/[locale]/
       }}
       {...options}
       fmt={fmt}
+      pagesBar={<DocsPagesBarSlot actor={actor} />}
       crumbs={[{ label: t.docs.title, href: href("/panel/docs") }, { label: t.docs.newPageTitle }]}
     />
   );

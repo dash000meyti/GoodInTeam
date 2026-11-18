@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { BookOpenIcon, ChevronLeftIcon, FileTextIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardDescription, CardHeader } from "@/components/ui/card";
+import { DocIconTile } from "@/components/docs/doc-icon-tile";
 import { VisibilityBadge } from "@/components/docs/visibility-badge";
 import { EmptyState } from "@/components/panel/empty-state";
+import { HEADING_CLASS } from "@/components/shell/frame";
 import { formatDate } from "@/lib/format";
 import { isStaff } from "@/server/auth/actor";
 import { flattenDocTree, projectDocs } from "@/server/modules/docs/service";
@@ -18,6 +20,9 @@ import type { PanelContext } from "@/server/page-context";
  * `client` pages (and only when the project shares docs). `clientView` also
  * hides staff-only UI (badges, "new page") and limits the list to client pages,
  * so staff can preview what the client sees.
+ *
+ * Framed: one box (a Card) — the header row (h2, hint, "new page"), then the
+ * page tree as rows sharing hairlines, edge to edge.
  */
 export async function ProjectDocsPanel({
   projectId,
@@ -38,13 +43,13 @@ export async function ProjectDocsPanel({
   return (
     <Card className="gap-0 py-0">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <BookOpenIcon className="size-4 text-primary-ink" /> {d.projectDocs}
-        </CardTitle>
+        <h2 className={`flex items-center gap-2 ${HEADING_CLASS.box}`}>
+          <BookOpenIcon className="size-4 shrink-0 text-primary-ink" /> {d.projectDocs}
+        </h2>
         <CardDescription>{d.projectDocsHint}</CardDescription>
         {staffUi && (
           <CardAction>
-            <Button size="sm" variant="soft" asChild>
+            <Button size="sm" variant="outline" asChild>
               <Link href={href(`/panel/docs/new?projectId=${projectId}`)}>
                 <PlusIcon /> {d.newPage}
               </Link>
@@ -53,34 +58,30 @@ export async function ProjectDocsPanel({
         )}
       </CardHeader>
       {rows.length === 0 ? (
-        <div className="p-5">
-          <EmptyState
-            icon={FileTextIcon}
-            title={d.projectDocsEmpty}
-            className="py-10"
-            action={
-              staffUi && (
-                <Button variant="outline" asChild>
-                  <Link href={href(`/panel/docs/new?projectId=${projectId}`)}>
-                    <PlusIcon /> {d.addProjectDoc}
-                  </Link>
-                </Button>
-              )
-            }
-          />
-        </div>
+        <EmptyState
+          icon={FileTextIcon}
+          title={d.projectDocsEmpty}
+          className="py-10"
+          action={
+            staffUi && (
+              <Button variant="outline" asChild>
+                <Link href={href(`/panel/docs/new?projectId=${projectId}`)}>
+                  <PlusIcon /> {d.addProjectDoc}
+                </Link>
+              </Button>
+            )
+          }
+        />
       ) : (
-        <ul className="divide-y divide-dashed">
+        <ul className="divide-y divide-frame-line">
           {rows.map((r) => (
             <li key={r.id}>
               <Link
                 href={href(`/panel/docs/${r.id}`)}
-                className="flex items-center gap-3 py-3 pe-5 transition-colors hover:bg-accent/50"
-                style={{ paddingInlineStart: 20 + r.depth * 20 }}
+                className="flex items-center gap-3 py-2.5 pe-(--cell-pad) transition-colors hover:bg-card"
+                style={{ paddingInlineStart: `calc(var(--cell-pad) + ${r.depth * 20}px)` }}
               >
-                <span className="flex w-6 shrink-0 justify-center text-lg leading-none">
-                  {r.icon ?? <FileTextIcon className="size-4 text-muted-foreground" />}
-                </span>
+                <DocIconTile icon={r.icon} />
                 <span className="min-w-0 flex-1 truncate font-semibold">
                   <bdi>{r.title}</bdi>
                 </span>

@@ -1,5 +1,5 @@
-import { PageSkeleton } from "@/components/panel/page-skeleton";
+import { PostEditorSkeleton } from "../_components/content-skeletons";
 
 export default function Loading() {
-  return <PageSkeleton />;
+  return <PostEditorSkeleton />;
 }

@@ -30,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { SelectField } from "@/components/shared/select-field";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { localePath } from "@/i18n/config";
 import { useLocale, useT } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
@@ -82,7 +83,39 @@ function filterTree(nodes: Node[], match: (n: Node) => boolean): Node[] {
   return out;
 }
 
+/**
+ * The page tree beside the docs pages (xl+): a sticky framed box whose rows
+ * share hairlines — header (Docs + New page), search and filter, the tree
+ * (scrolls inside the box), the archive link. Below xl the pages render
+ * `DocsPagesBar` under their header instead.
+ */
 export function DocsSidebar({
+  items,
+  canEdit,
+  archivedCount,
+}: {
+  items: DocTreeItem[];
+  canEdit: boolean;
+  archivedCount: number;
+}) {
+  return (
+    <aside className="hidden xl:block">
+      <FrameBox
+        as="div"
+        density="compact"
+        className="sticky below-chrome flex max-h-chrome flex-col"
+      >
+        <TreePanel items={items} canEdit={canEdit} archivedCount={archivedCount} />
+      </FrameBox>
+    </aside>
+  );
+}
+
+/**
+ * Below xl: a toolbar box under the page header — the page tree in
+ * a drawer and the docs search (the sidebar box takes over from xl).
+ */
+export function DocsPagesBar({
   items,
   canEdit,
   archivedCount,
@@ -94,35 +127,32 @@ export function DocsSidebar({
   const t = useT();
   const [open, setOpen] = useState(false);
   return (
-    <>
-      {/* Mobile / tablet: compact bar + drawer */}
-      <div className="flex items-center gap-2 lg:hidden">
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="shrink-0">
-              <PanelRightOpenIcon className="ltr:rotate-180" /> {t.docs.showPages}
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="start" className="w-[88%] max-w-sm gap-0 p-0">
-            <SheetTitle className="sr-only">{t.docs.pages}</SheetTitle>
-            <TreePanel
-              items={items}
-              canEdit={canEdit}
-              archivedCount={archivedCount}
-              onNavigate={() => setOpen(false)}
-              inSheet
-            />
-          </SheetContent>
-        </Sheet>
-        <SearchBox className="flex-1" />
-      </div>
-      {/* Desktop: sticky card */}
-      <aside className="hidden lg:block">
-        <div className="sticky below-chrome flex max-h-chrome flex-col overflow-hidden rounded-2xl bg-card shadow-card dark:border dark:border-border">
-          <TreePanel items={items} canEdit={canEdit} archivedCount={archivedCount} />
-        </div>
-      </aside>
-    </>
+    <FrameBox as="div" density="compact" className="mb-6 xl:hidden print:hidden">
+      <FrameGrid cols={1}>
+        <FrameCell className="flex items-center gap-2 py-3">
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="shrink-0">
+                <PanelRightOpenIcon className="ltr:rotate-180" /> {t.docs.showPages}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="start" className="w-[88%] max-w-sm gap-0 p-0">
+              <SheetTitle className="sr-only">{t.docs.pages}</SheetTitle>
+              <div className="flex min-h-0 flex-1 flex-col">
+                <TreePanel
+                  items={items}
+                  canEdit={canEdit}
+                  archivedCount={archivedCount}
+                  onNavigate={() => setOpen(false)}
+                  inSheet
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+          <SearchBox className="min-w-0 flex-1" />
+        </FrameCell>
+      </FrameGrid>
+    </FrameBox>
   );
 }
 
@@ -335,19 +365,23 @@ function TreePanel({
           onDragLeave={() => drop?.id === node.id && setDrop(null)}
           onDrop={(e) => dnd && onDrop(e, node)}
           className={cn(
-            "group relative flex items-center gap-0.5 rounded-lg pe-1 text-sm transition-colors",
+            "group relative flex items-center gap-0.5 pe-2 text-sm transition-colors",
             active
-              ? "bg-primary/10 font-semibold text-primary-dark dark:text-primary-light"
-              : "text-foreground/85 hover:bg-accent",
+              ? "bg-card font-semibold text-foreground"
+              : "text-foreground/85 hover:bg-card hover:text-foreground",
             dragId === node.id && "opacity-40",
-            zone === "inside" && "bg-primary/8 ring-2 ring-primary/60",
+            zone === "inside" && "bg-primary/12 ring-1 ring-foreground/40 ring-inset",
             zone === "before" &&
-              "before:absolute before:inset-x-2 before:-top-px before:h-0.5 before:rounded-full before:bg-primary",
+              "before:absolute before:inset-x-0 before:-top-px before:h-0.5 before:bg-foreground",
             zone === "after" &&
-              "after:absolute after:inset-x-2 after:-bottom-px after:h-0.5 after:rounded-full after:bg-primary",
+              "after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground",
           )}
-          style={{ paddingInlineStart: depth * 14 + 2 }}
+          style={{ paddingInlineStart: depth * 14 + 10 }}
         >
+          {/* the open page: an ink bar on the start edge (the row is a cell-wide strip) */}
+          {active && (
+            <span aria-hidden className="absolute inset-y-1 start-0 w-0.5 bg-foreground" />
+          )}
           <button
             type="button"
             tabIndex={hasChildren ? 0 : -1}
@@ -441,81 +475,95 @@ function TreePanel({
             </div>
           )}
         </div>
-        {open && (
-          <ul role="group" className="mt-0.5 space-y-0.5">
-            {node.children.map((c) => renderNode(c, depth + 1))}
-          </ul>
-        )}
+        {open && <ul role="group">{node.children.map((c) => renderNode(c, depth + 1))}</ul>}
       </li>
     );
   };
 
+  // Rows of the box (FrameGrids sharing hairlines): in the sidebar box on large
+  // screens, in the drawer on phones (where the overlay drops the markers).
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="space-y-3 border-b border-dashed p-4">
-        <div className={cn("flex items-center justify-between gap-2", inSheet && "pe-10")}>
+    <>
+      <FrameGrid cols={1}>
+        <FrameCell
+          className={cn("flex items-center justify-between gap-2 py-3", inSheet && "pe-12")}
+        >
           <Link
             href={localePath(locale, "/panel/docs")}
             onClick={onNavigate}
-            className="flex items-center gap-2 font-bold hover:text-primary-ink"
+            className="flex min-w-0 items-center gap-2 font-bold hover:text-primary-ink"
           >
-            <BookOpenIcon className="size-4 text-primary-ink" /> {d.title}
+            <BookOpenIcon className="size-4 shrink-0 text-primary-ink" />
+            <span className="truncate">{d.title}</span>
           </Link>
           {canEdit && (
-            <Button size="sm" variant="soft" asChild>
+            <Button size="sm" variant="outline" asChild>
               <Link href={localePath(locale, "/panel/docs/new")} onClick={onNavigate}>
                 <PlusIcon /> {d.newPage}
               </Link>
             </Button>
           )}
-        </div>
-        <SearchBox className="hidden lg:block" onNavigate={onNavigate} />
-        {items.length > 0 && (
-          <SelectField
-            value={activeFilter}
-            onChange={setFilter}
-            options={filterOptions}
-            size="sm"
-            className="w-full"
-          />
-        )}
-      </div>
-      <nav
-        aria-label={d.pages}
-        aria-busy={pending}
-        className={cn("min-h-0 flex-1 overflow-y-auto p-2", pending && "opacity-70")}
-      >
-        {tree.length === 0 ? (
-          <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-            {items.length === 0 ? d.emptyTree : d.noMatches}
-          </p>
-        ) : (
-          <ul role="tree" aria-label={d.pages} className="space-y-0.5">
-            {tree.map((n) => renderNode(n, 0))}
-          </ul>
-        )}
-        {dnd && items.length > 1 && (
-          <p className="mt-3 hidden px-3 text-[11px] text-muted-foreground lg:block">
-            {d.dragHint}
-          </p>
-        )}
-      </nav>
-      {canEdit && (
-        <div className="border-t border-dashed p-2">
-          <Link
-            href={localePath(locale, "/panel/docs/archive")}
-            onClick={onNavigate}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <ArchiveIcon className="size-4" /> {d.archive}
-            {archivedCount > 0 && (
-              <Badge variant="neutral" className="ms-auto">
-                {formatNumber(archivedCount, locale)}
-              </Badge>
+        </FrameCell>
+      </FrameGrid>
+      {(!inSheet || items.length > 0) && (
+        <FrameGrid cols={1}>
+          <FrameCell className="space-y-2.5 py-3">
+            {/* phones search from the toolbar box beside the drawer button */}
+            {!inSheet && <SearchBox onNavigate={onNavigate} />}
+            {items.length > 0 && (
+              <SelectField
+                value={activeFilter}
+                onChange={setFilter}
+                options={filterOptions}
+                size="sm"
+                className="w-full"
+              />
             )}
-          </Link>
-        </div>
+          </FrameCell>
+        </FrameGrid>
       )}
-    </div>
+      <FrameGrid cols={1} className="min-h-0 flex-1 grid-rows-[minmax(0,1fr)]">
+        <FrameCell pad="none" className="flex min-h-0 flex-col">
+          <nav
+            aria-label={d.pages}
+            aria-busy={pending}
+            className={cn("min-h-0 flex-1 overflow-y-auto py-2", pending && "opacity-70")}
+          >
+            {tree.length === 0 ? (
+              <p className="px-(--cell-pad) py-6 text-center text-sm text-muted-foreground">
+                {items.length === 0 ? d.emptyTree : d.noMatches}
+              </p>
+            ) : (
+              <ul role="tree" aria-label={d.pages}>
+                {tree.map((n) => renderNode(n, 0))}
+              </ul>
+            )}
+            {dnd && items.length > 1 && (
+              <p className="mt-3 hidden px-(--cell-pad) text-[11px] text-muted-foreground lg:block">
+                {d.dragHint}
+              </p>
+            )}
+          </nav>
+        </FrameCell>
+      </FrameGrid>
+      {canEdit && (
+        <FrameGrid cols={1}>
+          <FrameCell pad="none">
+            <Link
+              href={localePath(locale, "/panel/docs/archive")}
+              onClick={onNavigate}
+              className="flex items-center gap-2 px-(--cell-pad) py-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+            >
+              <ArchiveIcon className="size-4" /> {d.archive}
+              {archivedCount > 0 && (
+                <Badge variant="neutral" className="ms-auto">
+                  {formatNumber(archivedCount, locale)}
+                </Badge>
+              )}
+            </Link>
+          </FrameCell>
+        </FrameGrid>
+      )}
+    </>
   );
 }
