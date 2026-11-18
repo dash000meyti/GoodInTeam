@@ -1,18 +1,23 @@
 import { Suspense } from "react";
 import { DocsSidebar } from "@/components/docs/docs-sidebar";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isStaff } from "@/server/auth/actor";
-import { countArchivedDocs, listDocRows } from "@/server/modules/docs/service";
+import { countArchivedDocs } from "@/server/modules/docs/service";
 import { panelContext } from "@/server/page-context";
+import { docTreeItems } from "./_components/pages-bar";
 
 /**
- * Docs shell: page tree on the start side (streams in with the session) and
- * the current page next to it. Each child segment has its own loading.tsx so
- * navigating between pages keeps the tree and shows a skeleton instantly.
+ * Docs shell: from xl, the page tree is a sticky framed box on the start side
+ * (streams in with the session) next to the current page; below xl each page
+ * renders the tree's toolbar box under its own header (`DocsPagesBarSlot`) —
+ * the page box needs the full width there for its title, actions and decor.
+ * Each child segment has its own loading.tsx so navigating between pages
+ * keeps the tree and shows a skeleton instantly.
  */
 export default function DocsLayout({ children }: LayoutProps<"/[locale]/panel/docs">) {
   return (
-    <div className="grid gap-6 lg:grid-cols-[17rem_minmax(0,1fr)] xl:grid-cols-[18.5rem_minmax(0,1fr)]">
+    <div className="grid gap-6 xl:grid-cols-[18.5rem_minmax(0,1fr)] xl:gap-8">
       <Suspense fallback={<SidebarSkeleton />}>
         <DocsSidebarSlot />
       </Suspense>
@@ -23,32 +28,50 @@ export default function DocsLayout({ children }: LayoutProps<"/[locale]/panel/do
 
 async function DocsSidebarSlot() {
   const { actor } = await panelContext();
-  const items = listDocRows(actor).map((r) => ({
-    id: r.id,
-    parentId: r.parentId,
-    title: r.title,
-    icon: r.icon,
-    visibility: r.visibility,
-    projectId: r.projectId,
-    projectName: r.projectName,
-    projectColor: r.projectColor,
-  }));
   return (
-    <DocsSidebar items={items} canEdit={isStaff(actor)} archivedCount={countArchivedDocs(actor)} />
+    <DocsSidebar
+      items={docTreeItems(actor)}
+      canEdit={isStaff(actor)}
+      archivedCount={countArchivedDocs(actor)}
+    />
   );
 }
 
+/** The sidebar box while it streams: the same rows (header, search + filter, tree, archive). */
 function SidebarSkeleton() {
   return (
-    <>
-      <Skeleton className="h-9 rounded-lg lg:hidden" />
-      <div className="hidden space-y-3 rounded-2xl bg-card p-4 shadow-card lg:block dark:border dark:border-border">
-        <Skeleton className="h-6 w-28" />
-        <Skeleton className="h-9 w-full" />
-        {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={i} className="h-7" style={{ marginInlineStart: (i % 3) * 14 }} />
-        ))}
-      </div>
-    </>
+    <div className="hidden xl:block" aria-hidden>
+      <FrameBox as="div" density="compact" className="sticky below-chrome">
+        <FrameGrid cols={1}>
+          <FrameCell className="flex items-center justify-between gap-2 py-3">
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-8 w-24 rounded-md" />
+          </FrameCell>
+        </FrameGrid>
+        <FrameGrid cols={1}>
+          <FrameCell className="space-y-2.5 py-3">
+            <Skeleton className="h-9 w-full rounded-lg" />
+            <Skeleton className="h-8 w-full rounded-lg" />
+          </FrameCell>
+        </FrameGrid>
+        <FrameGrid cols={1}>
+          <FrameCell pad="none" className="py-2">
+            {[0, 1, 1, 0, 1, 2, 0].map((depth, i) => (
+              <div key={i} className="flex h-8 items-center px-(--cell-pad)">
+                <Skeleton
+                  className="h-4"
+                  style={{ marginInlineStart: depth * 14 + 24, width: `${70 - depth * 10}%` }}
+                />
+              </div>
+            ))}
+          </FrameCell>
+        </FrameGrid>
+        <FrameGrid cols={1}>
+          <FrameCell className="py-3">
+            <Skeleton className="h-5 w-24" />
+          </FrameCell>
+        </FrameGrid>
+      </FrameBox>
+    </div>
   );
 }
