@@ -98,7 +98,7 @@ export function TypographySection({ t }: { t: Messages }) {
         previewClassName="block bg-none"
         code={`import { Markdown } from "@/components/shared/markdown"; // server component
 <Markdown source={post.bodyMd} />            // → <div className="prose-gt">…</div>
-<Markdown source={trustedHtml} allowHtml />  // raw HTML only for owner-authored public content`}
+<Markdown source={post.bodyMd} allowHtml />  // published content: keeps a safe subset of HTML`}
       >
         <Markdown source={d.proseSample} className="max-w-2xl" />
       </Example>

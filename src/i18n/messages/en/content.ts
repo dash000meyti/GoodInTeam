@@ -45,7 +45,8 @@ export const content: Record<keyof typeof fa, string> = {
   excerptHint:
     "2–3 sentences that answer the core question. Shown above the post, in search results and in AI answers.",
   fieldContent: "Body (Markdown)",
-  contentHtmlNote: "HTML is allowed (owner content only). ## headings build the table of contents.",
+  contentHtmlNote:
+    "You can use a safe subset of HTML (text, tables, details, images, video embeds); scripts, styles and anything else are removed. ## headings build the table of contents.",
   fieldCover: "Cover image",
   coverAlt: "Image alt text",
   coverUrlPlaceholder: "/media/… or https://…",
