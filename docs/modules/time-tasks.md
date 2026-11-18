@@ -38,13 +38,20 @@ src/i18n/messages/{fa,en}/{time,tasks,notifications}.ts
   onto the entry (re-snapshotted when the project of an un-invoiced entry changes), so later
   rate changes don't rewrite history. `billable` defaults to true unless the project is
   `internal`.
+- **Layout (framed, docs/design-system.md "Frame"):** the page box carries the four KPIs (today,
+  week, billable %, earned — admins — or daily average) as its second row; the **tracker box**
+  holds the start bar and, below it, the running timers as cells sharing hairlines (2 per row
+  at md, 3 at lg); the **timeline** is one box with a section per day. Timesheet/Reports
+  buttons are icon-only between sm and xl.
 - **Start bar:** description, project, task (filtered by project), billable toggle, Enter
-  starts. **Running cards:** live duration, inline description/project edit, billable toggle,
-  stop, edit, discard. Timers running > 10 h are flagged ("forgot to stop?") and a background
-  job sends a one-time notification linking to `/panel/time?entry=<id>` (opens the editor).
-- **Timeline:** current week (Saturday-start for fa, Monday for en), grouped by day with day
-  totals; "show previous week" adds `?weeks=N`. Row actions: edit, continue (new timer with the
-  same fields), duplicate (copy placed right after the original), delete.
+  starts. **Running timer cells:** live duration, inline description/project edit, billable
+  toggle, stop, edit, discard. Timers running > 10 h are flagged ("forgot to stop?") and a
+  background job sends a one-time notification linking to `/panel/time?entry=<id>` (opens the
+  editor).
+- **Timeline:** current week (Saturday-start for fa, Monday for en), a section per day (header
+  row with the day total, rows edge to edge); "show previous week" (the box's last row) adds
+  `?weeks=N`. Row actions: edit, continue (new timer with the same fields), duplicate (copy
+  placed right after the original), delete.
 - **Manual entry / edit dialog:** date (Jalali picker for fa) + start/end times or date +
   duration. Accepted combinations (also for the API), resolved by `resolveEntryTimes`:
   1. `startedAt` + `endedAt` (ISO) or `startedAt` + `duration`;
@@ -57,12 +64,15 @@ src/i18n/messages/{fa,en}/{time,tasks,notifications}.ts
   Validation: end > start, max 24 h per entry. Durations accept `1:30`, `90m`, `1.5h`, `1.5`
   (hours), `۱ ساعت و ۲۰ دقیقه`. Durations are always computed on the server.
 
-- **Timesheet** (`/panel/time/timesheet?week=YYYY-MM-DD`): project × 7 days, row/day totals,
+- **Timesheet** (`/panel/time/timesheet?week=YYYY-MM-DD`): week KPIs in the page box; project ×
+  7 days in its own box (square cells sharing hairlines, today's column tinted, the project
+  column pinned while the grid scrolls inside the box on phones), row/day totals,
   previous/next week; clicking a cell opens "add time" prefilled with that day + project.
 - **Reports** (`/panel/time/reports?range=this_week|last_week|this_month|last_month|last_30|custom&from&to&project&user`):
-  KPIs (total, billable %, earned per currency — admins, daily average over active days),
-  stacked hours-per-day chart by project (per week when the range is > 62 days), project donut,
-  project → task breakdown table and **CSV export** (`GET /api/time/export?from=&to=&user=&project=`,
+  range chips, project/user selects and KPIs (total, billable %, earned per currency — admins,
+  daily average over active days) as rows of the page box; stacked hours-per-day chart by
+  project (per week when the range is > 62 days) and project donut as two cells of one box;
+  project → task breakdown table (its own box) and **CSV export** (`GET /api/time/export?from=&to=&user=&project=`,
   UTF-8 with BOM, Gregorian + Jalali date columns).
 - Entries spanning midnight are split per day in timesheet/reports and clipped to the range.
 
@@ -74,9 +84,14 @@ src/i18n/messages/{fa,en}/{time,tasks,notifications}.ts
   date), Waiting, Someday, Done (latest 50). Filters: project (incl. "personal"), priority, tag,
   search. State lives in the URL (`?list=&view=board&project=&priority=&tag=&q=&task=`) via
   `history.replaceState`. Lists show top-level tasks; subtasks live in the detail sheet.
+- **Layout (framed):** the page box (List/Board chips), then one box: quick add as its first
+  row; below it the smart lists cell (rows with square icon tiles from lg, a chip bar on
+  phones) and the main cell (filters row, then the list sections or the board).
 - **Board** (`?view=board`): columns todo / in_progress / waiting / done (completed in the last
-  14 days). Native HTML5 drag & drop with a drop indicator; every card also has a "Move to"
-  menu (keyboard / touch). Dropping sets `sort` to the midpoint of its neighbours.
+  14 days), sharing hairlines inside the tasks box (a horizontal scroll inside the box below
+  xl); cards are square hairline tiles. Native HTML5 drag & drop with a drop indicator; every
+  card also has a "Move to" menu (keyboard / touch). Dropping sets `sort` to the midpoint of
+  its neighbours.
 - **Task row:** round checkbox (priority-tinted) with a pop animation; completion is delayed a
   beat for the animation and the toast offers **Undo** (which also deletes the auto-created next
   occurrence of a recurring task).
