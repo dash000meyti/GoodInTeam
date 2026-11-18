@@ -418,6 +418,27 @@ describe("Markdown mirrors carry the sanitised source", () => {
     sanitizeMarkdownHtml('<a b="'.repeat(50_000));
     sanitizeMarkdownHtml(`<a ${"b ".repeat(100_000)}`);
     sanitizeMarkdownHtml("<".repeat(200_000));
+    // Many pieces in one block, with and without a place where they can be found.
+    sanitizeMarkdownHtml(`- ${"`<a>` <b>x</b> ".repeat(20_000)}\n`);
+    sanitizeMarkdownHtml(`> ${"`<a>` <b>x</b>\n> \tfoo <i>\n".repeat(10_000)}`);
+    sanitizeMarkdownHtml(`${"- a `<x>`\n  b <y>\n\n  ```\n  <z>\n  ```\n".repeat(5_000)}`);
     expect(performance.now() - started).toBeLessThan(2_000);
+  });
+
+  it("bounds the work on a document full of different tags", () => {
+    const tags = Array.from(
+      { length: 30_000 },
+      (_, i) => `<b title="t${i}" onclick="x(${i})">x</b>`,
+    );
+    const started = performance.now();
+    const out = sanitizeMarkdownHtml(`${tags.join(" ")}\n`);
+    expect(performance.now() - started).toBeLessThan(3_000);
+    expect(out).not.toMatch(/onclick/);
+    // The first ones keep their (cleaned) attributes; past the budget a tag keeps its name only.
+    expect(out).toContain('<b title="t0">x</b>');
+    expect(out).toContain("<b>x</b>");
+    expect(out.match(/<b[ >]/g)).toHaveLength(30_000);
+    // The budget is per document.
+    expect(sanitizeMarkdownHtml('<b title="again">x</b>\n')).toBe('<b title="again">x</b>\n');
   });
 });

@@ -222,6 +222,20 @@ function stripComments(text: string) {
   }
 }
 
+/** A start tag without attributes: `<b>`, `<br/>`. */
+const BARE_TAG = /^<[A-Za-z][A-Za-z0-9-]*\s*\/?>$/;
+/** Elements that are only kept with the right attributes (see `exclusiveFilter`). */
+const NEEDS_ATTRIBUTES = new Set(["iframe", "input"]);
+/**
+ * Start tags with attributes that one document may send through the
+ * sanitiser. Past it a tag keeps its name and loses its attributes, so the
+ * work per document is bounded whatever it contains.
+ */
+const MAX_ATTRIBUTE_TAGS = 2_000;
+/** Per call of `sanitizeMarkdownHtml`: results by tag text, and what is left of the budget. */
+let cleaned = new Map<string, string>();
+let budget = MAX_ATTRIBUTE_TAGS;
+
 /** Something shaped like an HTML tag: kept as a safe tag, or made inert text. */
 function cleanTag(match: string) {
   const inert = `&lt;${cleanText(match.slice(1))}`;
@@ -232,11 +246,20 @@ function cleanTag(match: string) {
     .toLowerCase();
   if (!allowedTags.has(name)) return inert;
   if (closing) return VOID_TAGS.has(name) ? "" : `</${name}>`;
+  const bare = VOID_TAGS.has(name) ? `<${name} />` : `<${name}>`;
+  if (NEEDS_ATTRIBUTES.has(name) && BARE_TAG.test(match)) return inert;
+  if (BARE_TAG.test(match)) return bare;
+  const known = cleaned.get(match);
+  if (known !== undefined) return known;
+  if (budget <= 0) return NEEDS_ATTRIBUTES.has(name) ? inert : bare;
+  budget--;
   // The sanitiser cleans the attributes. It also closes the element, which
   // the source does later (or never, for a void element).
   const clean = sanitizeContentHtml(match);
   const end = `</${name}>`;
-  return (clean.endsWith(end) ? clean.slice(0, -end.length) : clean) || inert;
+  const result = (clean.endsWith(end) ? clean.slice(0, -end.length) : clean) || inert;
+  cleaned.set(match, result);
+  return result;
 }
 
 function cleanText(text: string): string {
@@ -278,6 +301,19 @@ function leaves(token: Node, out: Token[] = []) {
 const isPrefix = (ch: string | undefined) => ch === " " || ch === "\t" || ch === ">";
 /** How many places a multi-line piece is tried at (bounds the work on hostile input). */
 const MAX_CANDIDATES = 16;
+/**
+ * A piece starts close to where the previous one ended (between two pieces
+ * there is only list, quote or table punctuation), so it is looked for in
+ * this many characters. Keeps a piece that is not there from costing a scan
+ * of the whole block.
+ */
+const SEARCH_WINDOW = 1024;
+
+/** `raw.indexOf(piece, from)`, looking no further than the search window. */
+function find(raw: string, piece: string, from: number) {
+  const at = raw.slice(from, from + SEARCH_WINDOW + piece.length).indexOf(piece);
+  return at === -1 ? -1 : from + at;
+}
 
 /**
  * Where `piece` (the raw text of a token) sits in `raw` at or after `from`.
@@ -286,11 +322,11 @@ const MAX_CANDIDATES = 16;
  * behind such a prefix. Returns the span in `raw`, or null.
  */
 function locate(raw: string, piece: string, from: number): [number, number] | null {
-  const exact = raw.indexOf(piece, from);
+  const exact = find(raw, piece, from);
   if (exact !== -1) return [exact, exact + piece.length];
   const lines = piece.split("\n");
   if (lines.length < 2) return null;
-  let start = raw.indexOf(lines[0]!, from);
+  let start = find(raw, lines[0]!, from);
   for (let tries = 0; start !== -1 && tries < MAX_CANDIDATES; tries++) {
     let pos = start + lines[0]!.length;
     let ok = true;
@@ -316,7 +352,7 @@ function locate(raw: string, piece: string, from: number): [number, number] | nu
       }
     }
     if (ok) return [start, pos];
-    start = raw.indexOf(lines[0]!, start + 1);
+    start = find(raw, lines[0]!, start + 1);
   }
   return null;
 }
@@ -329,19 +365,15 @@ function cleanBlock(token: Token) {
   const raw = token.raw;
   let out = "";
   let cursor = 0;
-  // Once a piece cannot be located, positions after it are no longer certain
-  // and code is cleaned like the text around it.
-  let certain = true;
   for (const leaf of leaves(token)) {
     if (!leaf.raw) continue;
     const span = locate(raw, leaf.raw, cursor);
-    if (!span) {
-      certain = false;
-      continue;
-    }
+    // Once a piece cannot be located, positions after it are no longer
+    // certain: the rest of the block is cleaned as text, code included.
+    if (!span) break;
     const text = raw.slice(span[0], span[1]);
     out += cleanText(raw.slice(cursor, span[0]));
-    out += VERBATIM.has(leaf.type) && certain ? text : cleanText(text);
+    out += VERBATIM.has(leaf.type) ? text : cleanText(text);
     cursor = span[1];
   }
   return out + cleanText(raw.slice(cursor));
@@ -361,6 +393,8 @@ function cleanBlock(token: Token) {
  */
 export function sanitizeMarkdownHtml(md: string) {
   if (!md.includes("<")) return md;
+  cleaned = new Map();
+  budget = MAX_ATTRIBUTE_TAGS;
   let out = "";
   for (const token of lexer.lexer(md)) {
     out += token.type === "code" || !token.raw.includes("<") ? token.raw : cleanBlock(token);
