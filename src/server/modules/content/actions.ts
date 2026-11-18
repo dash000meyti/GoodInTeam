@@ -5,13 +5,14 @@ import { z } from "zod";
 import { defineAction, definePublicAction } from "@/server/action";
 import { rateLimit } from "@/server/auth/rate-limit";
 import { requestMeta } from "@/server/auth/request";
-import { zId, zOptString } from "@/lib/zod-helpers";
+import { zId } from "@/lib/zod-helpers";
 import { fromDateInput } from "@/lib/tz";
 import { appTimezone } from "@/server/modules/settings/service";
 import { CONTENT_TAG } from "./queries";
 import {
   checkSlugInput,
   postInput,
+  savePostInput,
   seriesInput,
   setStatusInput,
   syndicationInput,
@@ -52,14 +53,8 @@ export const updatePostAction = defineAction(
  * Editor save (create or update). The panel sends the publish date as a
  * calendar day + wall-clock time; they're interpreted in the app timezone.
  */
-const editorInput = postInput.extend({
-  id: zOptString(64),
-  publishedDate: zOptString(10),
-  publishedTime: zOptString(5),
-});
-
 export const savePostAction = defineAction(
-  { input: editorInput, roles: [...ADMIN] },
+  { input: savePostInput, roles: [...ADMIN] },
   ({ id, publishedDate, publishedTime, ...input }, actor) => {
     const publishedAt =
       publishedDate && /^\d{4}-\d{2}-\d{2}$/.test(publishedDate)

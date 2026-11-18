@@ -596,6 +596,13 @@ export function updateTestimonial(
   { id, ...input }: z.output<typeof updateTestimonialInput>,
 ) {
   assertAdmin(actor);
+  // Nothing sent → nothing changes (the update schema adds no defaults, and
+  // drizzle rejects an empty `set`).
+  if (Object.values(input).every((v) => v === undefined)) {
+    const current = db.select().from(testimonials).where(eq(testimonials.id, id)).get();
+    if (!current) throw notFound("Testimonial");
+    return current;
+  }
   const row = db.update(testimonials).set(input).where(eq(testimonials.id, id)).returning().get();
   if (!row) throw notFound("Testimonial");
   logActivity(actor, "content.testimonial_update", "testimonial", id, row.author);

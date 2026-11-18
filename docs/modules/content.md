@@ -73,8 +73,13 @@ inherits the brand. Seed mapping: web, mobile, AI → `code`; consulting → `te
 service relation), so the brand pages show no work; a brand field on `work` posts would be the
 honest way to add one. See [Public pages](#public-pages).
 
-`updatePostInput` is a true partial: fields that are absent stay as they are (zod 4 applies
-`.default()` inside `.partial()`, so the defaults of `postInput` are removed for updates).
+`updatePostInput`, `updateSeriesInput` and `updateTestimonialInput` are true partials: a field
+that is absent stays as it is. Each create/update pair derives from one default-free field shape
+in `schemas.ts` (`postFields`, `seriesFields`, `testimonialFields`); only the create schemas add
+defaults (type `article`, locale `fa`, status `draft`, empty body), because zod 4 keeps
+`.default()` inside `.partial()` (see `docs/conventions.md` → Forms). The editor saves through
+`savePostInput`, a full form for create and update: type, locale, body and status are required,
+never defaulted.
 
 Translations share `translationKey`. The header language menu (icon button + dropdown, next to
 the theme toggle) and `hreflang` alternates point to

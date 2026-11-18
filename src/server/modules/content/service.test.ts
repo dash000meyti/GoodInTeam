@@ -18,7 +18,15 @@ const { db, getDb } = await import("@/server/db/client");
 const s = await import("@/server/db/schema");
 const { eq } = await import("drizzle-orm");
 const svc = await import("./service");
-const { postInput, updatePostInput } = await import("./schemas");
+const {
+  postInput,
+  savePostInput,
+  seriesInput,
+  testimonialInput,
+  updatePostInput,
+  updateSeriesInput,
+  updateTestimonialInput,
+} = await import("./schemas");
 
 let owner: Actor;
 const ids: Record<string, string> = {};
@@ -148,4 +156,83 @@ describe("service brand sync across translationKey siblings", () => {
   it("rejects an unknown brand", () => {
     expect(() => updatePostInput.parse({ id: ids.fa, meta: { brand: "nope" } })).toThrow();
   });
+});
+
+describe("partial updates of series and testimonials", () => {
+  it("renaming a series keeps its locale, status and level", () => {
+    const created = svc.createSeries(
+      owner,
+      seriesInput.parse({
+        locale: "en",
+        title: "Next.js basics",
+        status: "published",
+        level: "advanced",
+        sort: "3",
+      }),
+    );
+    svc.updateSeries(owner, updateSeriesInput.parse({ id: created.id, title: "Next.js 16" }));
+    const after = db.select().from(s.series).where(eq(s.series.id, created.id)).get()!;
+    expect(after).toMatchObject({
+      title: "Next.js 16",
+      slug: created.slug,
+      locale: "en",
+      status: "published",
+      level: "advanced",
+      sort: 3,
+    });
+  });
+
+  it("create still defaults a series to fa / draft", () => {
+    const created = svc.createSeries(owner, seriesInput.parse({ title: "مبانی" }));
+    expect(created).toMatchObject({ locale: "fa", status: "draft" });
+  });
+
+  it("hiding a testimonial keeps its locale and rating", () => {
+    const created = svc.createTestimonial(
+      owner,
+      testimonialInput.parse({ locale: "en", author: "Sara", quote: "Great work", rating: "4" }),
+    );
+    expect(created).toMatchObject({ locale: "en", rating: 4, published: true });
+    svc.updateTestimonial(
+      owner,
+      updateTestimonialInput.parse({ id: created.id, published: "false" }),
+    );
+    const after = db.select().from(s.testimonials).where(eq(s.testimonials.id, created.id)).get()!;
+    expect(after).toMatchObject({ locale: "en", rating: 4, published: false, author: "Sara" });
+  });
+
+  it("an {id}-only testimonial update is a harmless no-op; an unknown id is not found", () => {
+    const created = svc.createTestimonial(
+      owner,
+      testimonialInput.parse({ locale: "en", author: "Omid", quote: "Solid" }),
+    );
+    const row = svc.updateTestimonial(owner, updateTestimonialInput.parse({ id: created.id }));
+    expect(row).toEqual(created);
+    expect(() =>
+      svc.updateTestimonial(owner, updateTestimonialInput.parse({ id: "missing", author: "x" })),
+    ).toThrowError(expect.objectContaining({ code: "not_found" }));
+    expect(() =>
+      svc.updateTestimonial(owner, updateTestimonialInput.parse({ id: "missing" })),
+    ).toThrowError(expect.objectContaining({ code: "not_found" }));
+  });
+});
+
+describe("the editor's save form (savePostInput)", () => {
+  const full = { title: "T", type: "article", locale: "en", contentMd: "body", status: "draft" };
+
+  it("accepts the full form the editor sends", () => {
+    expect(savePostInput.parse({ ...full, id: "", publishedDate: "", publishedTime: "" })).toEqual(
+      full,
+    );
+  });
+
+  it.each(["type", "locale", "contentMd", "status"] as const)(
+    "requires %s instead of falling back to a create default",
+    (key) => {
+      const { [key]: _omit, ...rest } = full;
+      void _omit;
+      const parsed = savePostInput.safeParse({ ...rest, id: "p1" });
+      expect(parsed.success).toBe(false);
+    },
+  );
 });
