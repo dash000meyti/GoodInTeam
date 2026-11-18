@@ -1,6 +1,12 @@
-import { PageSkeleton } from "@/components/panel/page-skeleton";
+import { PageHeaderSkeleton } from "@/components/panel/page-skeleton";
+import { InvoiceDetailSkeleton } from "../../finance/_components/finance-skeletons";
 
-/** Suspense boundary so navigations inside this segment stream instantly. */
+/** An invoice while it streams: the page box, then the paper document beside the side box. */
 export default function Loading() {
-  return <PageSkeleton />;
+  return (
+    <div aria-busy>
+      <PageHeaderSkeleton />
+      <InvoiceDetailSkeleton />
+    </div>
+  );
 }

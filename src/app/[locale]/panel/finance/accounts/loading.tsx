@@ -1,6 +1,11 @@
-import { PageSkeleton } from "@/components/panel/page-skeleton";
+import { CellsBoxSkeleton, FinanceHeaderSkeleton } from "../_components/finance-skeletons";
 
-/** Suspense boundary so navigations inside this segment stream instantly. */
+/** Accounts while they stream: the page box (nav + totals), then the accounts box. */
 export default function Loading() {
-  return <PageSkeleton />;
+  return (
+    <div aria-busy>
+      <FinanceHeaderSkeleton kpis={3} />
+      <CellsBoxSkeleton count={3} />
+    </div>
+  );
 }

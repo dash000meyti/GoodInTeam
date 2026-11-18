@@ -1,6 +1,11 @@
-import { PageSkeleton } from "@/components/panel/page-skeleton";
+import { FinanceHeaderSkeleton, OverviewSkeleton } from "./_components/finance-skeletons";
 
-/** Suspense boundary so navigations inside this segment stream instantly. */
+/** Overview while it streams: the page box (nav + KPIs), the analytics and profitability boxes. */
 export default function Loading() {
-  return <PageSkeleton />;
+  return (
+    <div aria-busy>
+      <FinanceHeaderSkeleton kpis={4} />
+      <OverviewSkeleton />
+    </div>
+  );
 }
