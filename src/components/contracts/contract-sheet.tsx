@@ -153,11 +153,13 @@ export function ContractSheet({
   return (
     <article
       data-contract-print
+      data-density="compact"
       dir={localeMeta[docLocale].dir}
       lang={docLocale}
       style={paperStyle}
       className={cn(
-        "mx-auto w-full max-w-[210mm] rounded-2xl px-5 py-8 shadow-card ring-1 ring-black/5 sm:px-[16mm] sm:py-[18mm] print:max-w-none print:rounded-none print:p-0 print:shadow-none print:ring-0",
+        // On screen a framed paper box (square hairline, corner markers); on paper nothing but the page.
+        "frame-box mx-auto w-full max-w-[210mm] px-5 py-8 sm:px-[16mm] sm:py-[18mm] print:max-w-none print:border-0 print:p-0 print:before:hidden print:after:hidden",
         className,
       )}
     >

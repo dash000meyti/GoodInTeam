@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeftIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import {
   AuditSummary,
   ContractSheet,
@@ -66,19 +67,25 @@ export default async function ContractPrintPage({
   return (
     <>
       <ContractPrintStyles />
-      <div
-        data-print-hide
-        className="mx-auto mb-6 flex max-w-[210mm] flex-wrap items-center justify-between gap-3"
-      >
-        <Button asChild variant="ghost">
-          <Link href={href(`/panel/contracts/${k.id}`)}>
-            <ChevronLeftIcon className="rtl:rotate-180" /> {t.common.back}
-          </Link>
-        </Button>
-        <div className="flex items-center gap-3">
-          <p className="hidden text-xs text-muted-foreground sm:block">{t.contracts.printHint}</p>
-          <PrintButton label={t.contracts.printButton} variant="default" />
-        </div>
+      {/* Screen-only toolbar box over the A4 sheet (hidden on paper). */}
+      <div data-print-hide className="mx-auto mb-6 max-w-[210mm]">
+        <FrameBox as="div" density="compact">
+          <FrameGrid cols={1}>
+            <FrameCell className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+              <Button asChild variant="ghost">
+                <Link href={href(`/panel/contracts/${k.id}`)}>
+                  <ChevronLeftIcon className="rtl:rotate-180" /> {t.common.back}
+                </Link>
+              </Button>
+              <div className="flex items-center gap-3">
+                <p className="hidden text-xs text-muted-foreground sm:block">
+                  {t.contracts.printHint}
+                </p>
+                <PrintButton label={t.contracts.printButton} variant="default" />
+              </div>
+            </FrameCell>
+          </FrameGrid>
+        </FrameBox>
       </div>
       <ContractSheet
         brandName={brandName}
