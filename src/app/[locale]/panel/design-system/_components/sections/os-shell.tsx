@@ -4,6 +4,8 @@ import { Dock, DockTile, type DockEntry } from "@/components/shell/dock";
 import { DockLinks } from "@/components/shell/dock-links";
 import { OsLights } from "@/components/shell/os-lights";
 import { Window } from "@/components/shell/window";
+import { PanelStrip } from "@/components/panel/page-frame";
+import { FrameBox } from "@/components/shell/frame";
 import { FrameCell, FrameGrid, FrameSection, framePath } from "@/components/site/frame";
 import type { Messages } from "@/i18n/messages";
 import { ClockDemo, MenubarDemo } from "../demos";
@@ -15,7 +17,9 @@ import { DsSection } from "../section";
  * (a non-fixed demo via `pm-dock-demo`), windows, lights, the clock and the
  * frame primitives. Static samples: the real chrome lives in the panel layout.
  */
-const frameCode = `import { FrameCell, FrameGrid, FrameSection, framePath } from "@/components/site/frame";
+const frameCode = `import { PanelStrip } from "@/components/panel/page-frame";
+import { FrameBox } from "@/components/shell/frame";
+import { FrameCell, FrameGrid, FrameSection, framePath } from "@/components/site/frame";
 <FrameSection id="x" labelledBy="x-title" strip={{ index: 1, path: framePath("good-in-team", "x") }}
   guide={{ key: "x", say: t.guide.x }}>
   <FrameGrid cols={1}><FrameCell header>…h2#x-title…</FrameCell></FrameGrid>
@@ -23,6 +27,14 @@ const frameCode = `import { FrameCell, FrameGrid, FrameSection, framePath } from
     <FrameCell>…</FrameCell><FrameCell tone="card">…</FrameCell><FrameCell tone="dots">…</FrameCell>
   </FrameGrid>
 </FrameSection>`;
+
+const frameCompactCode = `import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
+// Panel density: client-safe primitives, no outer margin (use gap-6 / gap-8 between boxes).
+<FrameBox as="section" density="compact" strip={<PanelStrip />} ariaLabel={…}>
+  <FrameGrid cols={1}><FrameCell header>…h2…</FrameCell></FrameGrid>
+  <FrameGrid cols={3}><FrameCell>…</FrameCell><FrameCell tone="card">…</FrameCell>…</FrameGrid>
+</FrameBox>
+// Card, PageHeader, StatGrid and EmptyState are built on it.`;
 
 const windowCode = `import { Window } from "@/components/shell/window";
 <Window path={[{ id: "PORTAL", text: "PORTAL" }, { id: "PROGRESS", text: "PROGRESS" }]}>…</Window>
@@ -175,6 +187,34 @@ export function OsShellSection({ t }: { t: Messages }) {
             </FrameCell>
           </FrameGrid>
         </FrameSection>
+      </Example>
+
+      <Example
+        title={d.osShellFrameCompact}
+        description={d.osShellFrameCompactHint}
+        code={frameCompactCode}
+        previewClassName="block"
+      >
+        <FrameBox as="div" density="compact" strip={<PanelStrip />}>
+          <FrameGrid cols={1}>
+            <FrameCell header>
+              <p className="text-[17px] font-bold">{d.osShellFrameCompact}</p>
+            </FrameCell>
+          </FrameGrid>
+          <FrameGrid cols={3}>
+            <FrameCell>
+              <code className="text-xs" dir="ltr">
+                --cell-pad: 16/20px
+              </code>
+            </FrameCell>
+            <FrameCell tone="card" hover>
+              <code className="text-xs" dir="ltr">
+                tone=&quot;card&quot; hover
+              </code>
+            </FrameCell>
+            <FrameCell tone="dots" aria-hidden className="min-h-16" />
+          </FrameGrid>
+        </FrameBox>
       </Example>
 
       <Example title={d.osShellWindow} code={windowCode} previewClassName="gap-5">

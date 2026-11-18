@@ -79,9 +79,15 @@ export const designSystem: Record<keyof typeof fa, string> = {
 
   sec_surfaces: "Cards & layout",
   sec_surfacesDesc:
-    "Every page starts with a PageHeader, then a StatCard row, then content cards. Empty lists always get an EmptyState.",
+    "Panel pages are stacks of framed boxes, the site's frame language at panel density: the PageHeader box first (its strip, title and decor; stats can be its second row), then Cards and framed grids. Empty lists always get an EmptyState.",
   card: "Card",
+  cardHint:
+    "A framed box: square, one hairline, a marker on every corner, no shadow. The header row has a hairline under it; inside a dialog the markers drop out.",
   statCard: "Stat card",
+  statCardHint:
+    "Several stats form one framed grid (StatGrid, or StatRow inside an existing box): the cells share hairlines.",
+  pageHeaderHint:
+    "The page's first box: strip with the route path, crumbs, title, description and actions, and a decor window from lg.",
   emptyState: "Empty state",
   pageHeader: "Page header",
   demoProject: "Acme learning platform",
@@ -275,6 +281,9 @@ export const designSystem: Record<keyof typeof fa, string> = {
   osShellFrame: "Framed box",
   osShellFrameHint:
     "A header row stacked on a 3-column grid; the line between the two grids must show.",
+  osShellFrameCompact: "Framed box, panel density",
+  osShellFrameCompactHint:
+    'The same box, cells and strip, tighter (density="compact"): idle strip lights, and the page\'s layout sets the gaps between boxes.',
   osShellWindow: "Window with a path list",
   osShellMenubar: "Menu bar",
   osShellMenubarHint:

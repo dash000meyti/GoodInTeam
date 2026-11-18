@@ -64,7 +64,8 @@ export function DataSection({ t, locale, now }: { t: Messages; locale: Locale; n
         title={d.table}
         className="lg:col-span-2"
         previewClassName="block p-0 sm:p-0 bg-none"
-        code={`<Card className="py-0">
+        code={`// Rows share solid --frame-line hairlines; a row hovers to the card surface.
+<Card className="gap-0 py-0">
   <Table>
     <TableHeader><TableRow><TableHead>…</TableHead></TableRow></TableHeader>
     <TableBody>

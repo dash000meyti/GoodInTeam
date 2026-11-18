@@ -255,7 +255,8 @@ export function NavigationSection({ t }: { t: Messages }) {
       <Example
         title={d.tabs}
         previewClassName="block"
-        code={`<Tabs defaultValue="overview">
+        code={`// Triggers read like the site's filter chips; the active one is filled with ink.
+<Tabs defaultValue="overview">
   <TabsList>
     <TabsTrigger value="overview">…</TabsTrigger>
     <TabsTrigger value="milestones">…</TabsTrigger>
@@ -275,7 +276,7 @@ export function NavigationSection({ t }: { t: Messages }) {
             <TabsContent
               key={k}
               value={k}
-              className="rounded-xl border border-dashed bg-card p-4 text-sm text-muted-foreground"
+              className="border border-dashed border-frame-line bg-card p-4 text-sm text-muted-foreground"
             >
               {d[`tab_${k}Body`]}
             </TabsContent>
@@ -313,15 +314,15 @@ export function NavigationSection({ t }: { t: Messages }) {
           aria-label="breadcrumb"
           className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
         >
-          <a href="#navigation" className="hover:text-foreground hover:underline">
+          <a href="#navigation" className="hover:text-foreground">
             {d.demoDashboard}
           </a>
-          <span className="size-1 rounded-full bg-grey-500" />
-          <a href="#navigation" className="hover:text-foreground hover:underline">
+          <ChevronLeftIcon aria-hidden className="size-3.5 opacity-50 ltr:rotate-180" />
+          <a href="#navigation" className="hover:text-foreground">
             {d.demoPageTitle}
           </a>
-          <span className="size-1 rounded-full bg-grey-500" />
-          <span className="text-foreground/70">{d.demoProject}</span>
+          <ChevronLeftIcon aria-hidden className="size-3.5 opacity-50 ltr:rotate-180" />
+          <span className="text-foreground/80">{d.demoProject}</span>
         </nav>
         <Button variant="ghost" size="sm" className="ms-auto text-muted-foreground">
           <ChevronLeftIcon className="rtl:rotate-180" /> {t.common.back}

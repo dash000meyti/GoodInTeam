@@ -65,7 +65,7 @@ export async function Example({
   return (
     <figure
       className={cn(
-        "flex min-w-0 flex-col overflow-hidden rounded-2xl border bg-card shadow-card",
+        "flex min-w-0 flex-col overflow-hidden border border-frame-line bg-card",
         className,
       )}
     >
