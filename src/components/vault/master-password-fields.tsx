@@ -101,7 +101,7 @@ export function MasterPasswordFields({
         {suggested && suggested === value.password && (
           <p
             dir="ltr"
-            className="rounded-lg border border-dashed border-primary/40 bg-primary/8 px-3 py-2 text-center font-mono text-sm font-semibold break-all text-primary-dark select-all dark:text-primary-light"
+            className="border border-dashed border-primary/40 bg-primary/8 px-3 py-2 text-center font-mono text-sm font-semibold break-all text-primary-dark select-all dark:text-primary-light"
             data-testid="suggested-passphrase"
           >
             {suggested}

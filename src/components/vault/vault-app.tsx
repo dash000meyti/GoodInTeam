@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +35,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/panel/empty-state";
 import { PageHeader } from "@/components/panel/page-header";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { SelectField } from "@/components/shared/select-field";
 import { localePath } from "@/i18n/config";
 import { useLocale, useT } from "@/i18n/client";
@@ -270,7 +270,7 @@ function VaultWorkspace({
   );
 
   return (
-    <>
+    <Tabs value={tab} onValueChange={setTab} className="gap-0">
       <PageHeader
         title={v.title}
         description={
@@ -287,58 +287,70 @@ function VaultWorkspace({
             {newMenu}
           </>
         }
-      />
+      >
+        {/* The framed tab strip: the page box's last row. */}
+        <FrameGrid cols={1}>
+          <FrameCell className="py-3">
+            <TabsList className="-mx-1 max-w-[calc(100%+0.5rem)] scrollbar-thin justify-start overflow-x-auto px-1 py-0.5 max-sm:[&_svg]:hidden">
+              <TabsTrigger value="items" className="flex-none">
+                <KeyRoundIcon /> {v.tabItems}
+                {entries && (
+                  <span className="text-xs tabular-nums opacity-80">
+                    {formatNumber(entries.length, locale)}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="generator" className="flex-none">
+                <WandSparklesIcon /> {v.tabGenerator}
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex-none">
+                <SlidersHorizontalIcon />
+                <span className="sm:hidden">{v.tabSettingsShort}</span>
+                <span className="hidden sm:inline">{v.tabSettings}</span>
+              </TabsTrigger>
+            </TabsList>
+          </FrameCell>
+        </FrameGrid>
+      </PageHeader>
 
-      <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="max-w-full overflow-x-auto max-sm:w-full max-sm:[&_svg]:hidden">
-          <TabsTrigger value="items">
-            <KeyRoundIcon /> {v.tabItems}
-            {entries && (
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {formatNumber(entries.length, locale)}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="generator">
-            <WandSparklesIcon /> {v.tabGenerator}
-          </TabsTrigger>
-          <TabsTrigger value="settings">
-            <SlidersHorizontalIcon />
-            <span className="sm:hidden">{v.tabSettingsShort}</span>
-            <span className="hidden sm:inline">{v.tabSettings}</span>
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="items" className="mt-3 space-y-6">
-          {entries === null ? (
-            <div className="grid gap-6 xl:grid-cols-2" aria-label={v.decrypting}>
+      <TabsContent value="items">
+        {entries === null ? (
+          <FrameBox as="div" density="compact" ariaLabel={v.decrypting}>
+            <FrameGrid cols={1} className="xl:grid-cols-2">
               {Array.from({ length: Math.min(Math.max(Math.ceil(items.length / 2), 2), 4) }).map(
                 (_, i) => (
-                  <Skeleton key={i} className="h-44 rounded-2xl" />
+                  <FrameCell key={i} className="space-y-3">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </FrameCell>
                 ),
               )}
-            </div>
-          ) : entries.length === 0 ? (
-            <EmptyState
-              icon={KeyRoundIcon}
-              title={v.emptyTitle}
-              description={v.emptyBody}
-              action={
-                <div className="flex flex-wrap justify-center gap-2">
-                  {(["login", "server", "database", "api_key"] as const).map((type) => {
-                    const Icon = TYPE_ICONS[type];
-                    return (
-                      <Button key={type} variant="outline" onClick={() => openNew(type)}>
-                        <Icon /> {v[`type_${type}`]}
-                      </Button>
-                    );
-                  })}
-                </div>
-              }
-            />
-          ) : (
-            <>
-              <Card className="gap-3 p-4">
+            </FrameGrid>
+          </FrameBox>
+        ) : entries.length === 0 ? (
+          <EmptyState
+            icon={KeyRoundIcon}
+            title={v.emptyTitle}
+            description={v.emptyBody}
+            action={
+              <div className="flex flex-wrap justify-center gap-2">
+                {(["login", "server", "database", "api_key"] as const).map((type) => {
+                  const Icon = TYPE_ICONS[type];
+                  return (
+                    <Button key={type} variant="outline" onClick={() => openNew(type)}>
+                      <Icon /> {v[`type_${type}`]}
+                    </Button>
+                  );
+                })}
+              </div>
+            }
+          />
+        ) : (
+          <FrameBox as="section" density="compact" ariaLabel={v.tabItems}>
+            {/* First row: search, project and favourites; the type chips under them. */}
+            <FrameGrid cols={1}>
+              <FrameCell className="space-y-3 py-3">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center">
                   <div className="relative flex-1">
                     <SearchIcon className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -380,7 +392,7 @@ function VaultWorkspace({
                   </div>
                 </div>
                 <div
-                  className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1"
+                  className="-mx-1 flex scrollbar-thin gap-1.5 overflow-x-auto px-1 py-0.5"
                   role="tablist"
                   aria-label={v.itemType}
                 >
@@ -398,102 +410,118 @@ function VaultWorkspace({
                           aria-selected={active}
                           onClick={() => setTypeFilter(ty)}
                           className={cn(
-                            "inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors",
+                            "inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-[6px] border px-3 text-sm font-semibold whitespace-nowrap transition-colors",
                             active
-                              ? "bg-primary/12 text-primary-dark dark:text-primary-light"
-                              : "text-muted-foreground hover:bg-accent",
+                              ? "border-foreground bg-foreground text-background"
+                              : "border-frame-line bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground",
                           )}
                         >
                           {Icon && <Icon className="size-3.5" />}
                           {ty === "all" ? v.allTypes : v[`type_${ty}`]}
-                          <span className="tabular-nums opacity-70">{formatNumber(n, locale)}</span>
+                          <span className={cn("text-xs tabular-nums", active && "opacity-80")}>
+                            {formatNumber(n, locale)}
+                          </span>
                         </button>
                       );
                     })}
                 </div>
-              </Card>
+              </FrameCell>
+            </FrameGrid>
 
-              {groups.length === 0 ? (
-                <EmptyState
-                  icon={SearchIcon}
-                  title={v.noResults}
-                  action={
-                    filtersActive && (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setQuery("");
-                          setTypeFilter("all");
-                          setProjectFilter("");
-                          setFavOnly(false);
-                        }}
-                      >
-                        <XIcon /> {v.clearFilters}
-                      </Button>
-                    )
-                  }
-                />
-              ) : (
-                <div className="columns-1 gap-6 xl:columns-2">
-                  {groups.map(({ type, items: list }) => {
-                    const Icon = TYPE_ICONS[type];
-                    return (
-                      <section
-                        key={type}
-                        aria-labelledby={`vault-group-${type}`}
-                        className="mb-6 break-inside-avoid overflow-hidden rounded-2xl bg-card shadow-card dark:border dark:border-border"
-                      >
-                        <h3
-                          id={`vault-group-${type}`}
-                          className="flex items-center gap-2 border-b border-dashed px-4 py-3 text-sm font-bold"
+            {groups.length === 0 ? (
+              <FrameGrid cols={1}>
+                <FrameCell>
+                  <EmptyState
+                    icon={SearchIcon}
+                    title={v.noResults}
+                    className="py-8"
+                    action={
+                      filtersActive && (
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setQuery("");
+                            setTypeFilter("all");
+                            setProjectFilter("");
+                            setFavOnly(false);
+                          }}
                         >
-                          <Icon className="size-4 text-muted-foreground" /> {v[`type_${type}`]}
-                          <Badge variant="neutral" className="ms-auto">
-                            {formatNumber(list.length, locale)}
-                          </Badge>
-                        </h3>
-                        <ul className="divide-y divide-dashed">
-                          {list.map((e) => (
-                            <ItemRow
-                              key={e.id}
-                              entry={e}
-                              project={e.projectId ? projectMap.get(e.projectId) : null}
-                              onOpen={() => {
-                                setSelectedId(e.id);
-                                setDetailOpen(true);
-                              }}
-                            />
-                          ))}
-                        </ul>
-                      </section>
-                    );
-                  })}
-                </div>
-              )}
-            </>
-          )}
-        </TabsContent>
+                          <XIcon /> {v.clearFilters}
+                        </Button>
+                      )
+                    }
+                  />
+                </FrameCell>
+              </FrameGrid>
+            ) : (
+              // One cell per item type, two columns from xl; a dots filler completes the last row.
+              <FrameGrid cols={1} className="xl:grid-cols-2">
+                {groups.map(({ type, items: list }) => {
+                  const Icon = TYPE_ICONS[type];
+                  return (
+                    <FrameCell
+                      key={type}
+                      as="section"
+                      pad="none"
+                      aria-labelledby={`vault-group-${type}`}
+                    >
+                      <h3
+                        id={`vault-group-${type}`}
+                        className="flex min-h-12 items-center gap-2 border-b border-frame-line px-(--cell-pad) py-3 text-sm font-bold"
+                      >
+                        <Icon className="size-4 text-muted-foreground" /> {v[`type_${type}`]}
+                        <Badge variant="neutral" className="ms-auto">
+                          {formatNumber(list.length, locale)}
+                        </Badge>
+                      </h3>
+                      <ul className="divide-y divide-dashed divide-frame-line">
+                        {list.map((e) => (
+                          <ItemRow
+                            key={e.id}
+                            entry={e}
+                            project={e.projectId ? projectMap.get(e.projectId) : null}
+                            onOpen={() => {
+                              setSelectedId(e.id);
+                              setDetailOpen(true);
+                            }}
+                          />
+                        ))}
+                      </ul>
+                    </FrameCell>
+                  );
+                })}
+                {groups.length % 2 === 1 && (
+                  <FrameCell tone="dots" aria-hidden className="hidden xl:block" />
+                )}
+              </FrameGrid>
+            )}
+          </FrameBox>
+        )}
+      </TabsContent>
 
-        <TabsContent value="generator" className="mt-3">
-          <Card className="max-w-2xl p-6">
-            <PasswordGenerator />
-          </Card>
-        </TabsContent>
+      <TabsContent value="generator">
+        <FrameBox as="section" density="compact" className="max-w-2xl" ariaLabel={v.tabGenerator}>
+          <FrameGrid cols={1}>
+            <FrameCell pad="lg">
+              <PasswordGenerator />
+            </FrameCell>
+          </FrameGrid>
+        </FrameBox>
+      </TabsContent>
 
-        <TabsContent value="settings" className="mt-3">
-          {material && (
-            <VaultSettings
-              material={material}
-              records={items}
-              entries={entries ?? []}
-              projects={projects}
-              clients={clients}
-              account={account}
-              fmt={fmt}
-            />
-          )}
-        </TabsContent>
-      </Tabs>
+      <TabsContent value="settings">
+        {material && (
+          <VaultSettings
+            material={material}
+            records={items}
+            entries={entries ?? []}
+            projects={projects}
+            clients={clients}
+            account={account}
+            fmt={fmt}
+          />
+        )}
+      </TabsContent>
 
       <ItemDetail
         entry={selected}
@@ -517,6 +545,6 @@ function VaultWorkspace({
           setDetailOpen(true);
         }}
       />
-    </>
+    </Tabs>
   );
 }

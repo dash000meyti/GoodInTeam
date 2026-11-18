@@ -105,7 +105,7 @@ export function PasswordGenerator({
         </ToggleGroupItem>
       </ToggleGroup>
 
-      <div className="rounded-xl border border-dashed bg-muted/40 p-3">
+      <div className="border border-dashed border-frame-line bg-card p-3">
         <p
           dir="ltr"
           className={cn(

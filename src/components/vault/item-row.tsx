@@ -30,12 +30,12 @@ export function ItemRow({
 
   return (
     <li
-      className="group relative flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/60"
+      className="group relative flex items-center gap-3 px-(--cell-pad) py-3 transition-colors hover:bg-card"
       data-testid="vault-item"
     >
       <span
         className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-xl",
+          "flex size-10 shrink-0 items-center justify-center",
           p ? TYPE_TONES[type] : "bg-destructive/12 text-destructive",
         )}
       >

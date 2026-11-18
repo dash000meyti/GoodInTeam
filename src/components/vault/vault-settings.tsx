@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -60,7 +61,7 @@ function SectionCard({
   title,
   description,
   children,
-  tone = "bg-primary/12 text-primary-ink",
+  tone = "text-primary-ink",
 }: {
   icon: ReactNode;
   title: string;
@@ -69,18 +70,20 @@ function SectionCard({
   tone?: string;
 }) {
   return (
-    <Card className="gap-5">
+    <FrameCell as="section" pad="none" className="flex flex-col">
       <CardHeader className="flex items-start gap-4">
-        <span className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${tone}`}>
+        <span
+          className={`flex size-10 shrink-0 items-center justify-center border border-frame-line bg-card ${tone}`}
+        >
           {icon}
         </span>
         <div className="space-y-1.5">
-          <CardTitle className="text-base">{title}</CardTitle>
+          <CardTitle>{title}</CardTitle>
           {description && <CardDescription className="leading-6">{description}</CardDescription>}
         </div>
       </CardHeader>
-      <CardContent>{children}</CardContent>
-    </Card>
+      <div className="flex-1 p-(--cell-pad)">{children}</div>
+    </FrameCell>
   );
 }
 
@@ -108,62 +111,65 @@ export function VaultSettings({
   const locale = useLocale();
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <SectionCard
-        icon={<ShieldCheckIcon className="size-5" />}
-        title={v.securityTitle}
-        description={v.securityBody}
-      >
-        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 text-sm">
-          <dt className="text-muted-foreground">{v.cipherLabel}</dt>
-          <dd dir="ltr" className="text-end font-semibold rtl:text-start">
-            AES-256-GCM
-          </dd>
-          <dt className="text-muted-foreground">{v.kdfLabel}</dt>
-          <dd dir="ltr" className="text-end font-semibold rtl:text-start">
-            {material.kdf}
-          </dd>
-          <dt className="text-muted-foreground">{v.iterationsLabel}</dt>
-          <dd className="font-semibold">{formatNumber(material.iterations, locale)}</dd>
-          <dt className="text-muted-foreground">{v.autoLockLabel}</dt>
-          <dd className="font-semibold">{v.autoLockValue}</dd>
-          <dt className="text-muted-foreground">{v.itemsLabel}</dt>
-          <dd className="font-semibold">{formatNumber(records.length, locale)}</dd>
-          <dt className="text-muted-foreground">{v.vaultCreatedAt}</dt>
-          <dd className="font-semibold">{formatDateTime(material.createdAt, fmt)}</dd>
-          <dt className="text-muted-foreground">{v.keysChangedAt}</dt>
-          <dd className="font-semibold">{formatDateTime(material.updatedAt, fmt)}</dd>
-        </dl>
-      </SectionCard>
+    // Six section cells in one framed box: two columns from lg, sharing hairlines.
+    <FrameBox as="div" density="compact">
+      <FrameGrid cols={1} className="lg:grid-cols-2">
+        <SectionCard
+          icon={<ShieldCheckIcon className="size-5" />}
+          title={v.securityTitle}
+          description={v.securityBody}
+        >
+          <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 text-sm">
+            <dt className="text-muted-foreground">{v.cipherLabel}</dt>
+            <dd dir="ltr" className="text-end font-semibold rtl:text-start">
+              AES-256-GCM
+            </dd>
+            <dt className="text-muted-foreground">{v.kdfLabel}</dt>
+            <dd dir="ltr" className="text-end font-semibold rtl:text-start">
+              {material.kdf}
+            </dd>
+            <dt className="text-muted-foreground">{v.iterationsLabel}</dt>
+            <dd className="font-semibold">{formatNumber(material.iterations, locale)}</dd>
+            <dt className="text-muted-foreground">{v.autoLockLabel}</dt>
+            <dd className="font-semibold">{v.autoLockValue}</dd>
+            <dt className="text-muted-foreground">{v.itemsLabel}</dt>
+            <dd className="font-semibold">{formatNumber(records.length, locale)}</dd>
+            <dt className="text-muted-foreground">{v.vaultCreatedAt}</dt>
+            <dd className="font-semibold">{formatDateTime(material.createdAt, fmt)}</dd>
+            <dt className="text-muted-foreground">{v.keysChangedAt}</dt>
+            <dd className="font-semibold">{formatDateTime(material.updatedAt, fmt)}</dd>
+          </dl>
+        </SectionCard>
 
-      <ChangePasswordCard material={material} />
-      <RecoveryCard material={material} account={account} />
-      <BackupCard material={material} records={records} />
-      <PlainExportCard
-        material={material}
-        entries={entries}
-        projects={projects}
-        clients={clients}
-      />
-
-      <SectionCard
-        icon={<Trash2Icon className="size-5" />}
-        title={v.dangerZone}
-        description={v.dangerBody}
-        tone="bg-destructive/12 text-destructive"
-      >
-        <ResetVaultDialog
-          trigger={
-            <Button
-              variant="outline"
-              className="border-destructive/40 text-destructive hover:bg-destructive/8"
-            >
-              <Trash2Icon /> {v.resetVault}
-            </Button>
-          }
+        <ChangePasswordCard material={material} />
+        <RecoveryCard material={material} account={account} />
+        <BackupCard material={material} records={records} />
+        <PlainExportCard
+          material={material}
+          entries={entries}
+          projects={projects}
+          clients={clients}
         />
-      </SectionCard>
-    </div>
+
+        <SectionCard
+          icon={<Trash2Icon className="size-5" />}
+          title={v.dangerZone}
+          description={v.dangerBody}
+          tone="text-destructive"
+        >
+          <ResetVaultDialog
+            trigger={
+              <Button
+                variant="outline"
+                className="border-destructive/40 text-destructive hover:bg-destructive/8"
+              >
+                <Trash2Icon /> {v.resetVault}
+              </Button>
+            }
+          />
+        </SectionCard>
+      </FrameGrid>
+    </FrameBox>
   );
 }
 
@@ -264,10 +270,10 @@ function RecoveryCard({ material, account }: { material: VaultKeyMaterial; accou
       icon={<KeySquareIcon className="size-5" />}
       title={v.regenerateRecovery}
       description={v.regenerateRecoveryBody}
-      tone="bg-warning/16 text-[#b76e00] dark:text-warning"
+      tone="text-warning-ink"
     >
       {!hasRecovery && (
-        <p className="mb-4 flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+        <p className="mb-4 flex items-center gap-2 border border-destructive/30 bg-destructive/8 px-3 py-2 text-sm font-medium text-destructive">
           <TriangleAlertIcon className="size-4 shrink-0" /> {v.noRecoveryKey}
         </p>
       )}
@@ -513,7 +519,7 @@ function BackupCard({
       icon={<DownloadIcon className="size-5" />}
       title={v.backupTitle}
       description={v.backupBody}
-      tone="bg-info/12 text-info-ink"
+      tone="text-info-ink"
     >
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" onClick={exportBackup}>
@@ -693,7 +699,7 @@ function PlainExportCard({
       icon={<FileWarningIcon className="size-5" />}
       title={v.exportPlain}
       description={v.exportPlainBody}
-      tone="bg-destructive/12 text-destructive"
+      tone="text-destructive"
     >
       <Button variant="outline" onClick={() => setOpen(true)}>
         <FileWarningIcon /> {v.exportPlain}
@@ -717,7 +723,7 @@ function PlainExportCard({
             <DialogDescription className="leading-7">{v.exportPlainWarning}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm font-semibold">
+            <label className="flex cursor-pointer items-start gap-3 border border-destructive/30 bg-destructive/5 p-3 text-sm font-semibold">
               <Checkbox
                 checked={understood}
                 onCheckedChange={(c) => setUnderstood(c === true)}

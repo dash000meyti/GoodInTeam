@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { FrameBox, FrameCell, FrameGrid } from "@/components/shell/frame";
 import { useLocale, useT } from "@/i18n/client";
 import { formatNumber } from "@/lib/format";
 import { createVaultKeys, type MasterWrap, type RecoveryWrap } from "@/lib/vault-crypto";
@@ -45,11 +45,10 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
         >
           <span
             className={cn(
-              "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors",
-              i < current && "bg-primary text-primary-foreground",
-              i === current &&
-                "bg-primary/16 text-primary-dark ring-2 ring-primary-ink dark:text-primary-light",
-              i > current && "bg-muted text-muted-foreground",
+              "flex size-7 shrink-0 items-center justify-center border text-xs font-bold transition-colors",
+              i < current && "border-[var(--primary-dark)] bg-primary text-primary-foreground",
+              i === current && "border-foreground bg-foreground text-background",
+              i > current && "border-frame-line bg-card text-muted-foreground",
             )}
             aria-current={i === current ? "step" : undefined}
           >
@@ -63,7 +62,9 @@ export function Stepper({ steps, current }: { steps: string[]; current: number }
           >
             {label}
           </span>
-          {i < steps.length - 1 && <span className="h-px min-w-3 flex-1 bg-border" aria-hidden />}
+          {i < steps.length - 1 && (
+            <span className="h-px min-w-3 flex-1 bg-frame-line" aria-hidden />
+          )}
         </li>
       ))}
     </ol>
@@ -87,14 +88,14 @@ export function SetupWizard({ account }: { account: string }) {
       icon: ShieldCheckIcon,
       title: v.howTitle1,
       body: v.howBody1,
-      tone: "bg-primary/12 text-primary-ink",
+      tone: "text-primary-ink",
     },
-    { icon: CloudOffIcon, title: v.howTitle2, body: v.howBody2, tone: "bg-info/12 text-info-ink" },
+    { icon: CloudOffIcon, title: v.howTitle2, body: v.howBody2, tone: "text-info-ink" },
     {
       icon: TriangleAlertIcon,
       title: v.howTitle3,
       body: v.howBody3,
-      tone: "bg-warning/16 text-[#b76e00] dark:text-warning",
+      tone: "text-warning-ink",
     },
   ];
 
@@ -122,24 +123,36 @@ export function SetupWizard({ account }: { account: string }) {
     });
 
   return (
-    <Card className="mx-auto w-full max-w-2xl gap-8 p-6 sm:p-10">
-      <div className="space-y-3 text-center">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-primary/12 text-primary-ink">
-          <KeyRoundIcon className="size-8" strokeWidth={1.5} />
-        </div>
-        <h2 className="text-xl font-extrabold">{v.setupTitle}</h2>
-        <p className="mx-auto max-w-md text-sm text-muted-foreground">{v.setupSubtitle}</p>
-      </div>
-      <Stepper steps={[v.stepIntro, v.stepPassword, v.stepRecovery]} current={step} />
+    // One framed box: the heading row, the stepper row, then the step's rows.
+    <FrameBox
+      as="section"
+      density="compact"
+      ariaLabel={v.setupTitle}
+      className="mx-auto w-full max-w-2xl"
+    >
+      <FrameGrid cols={1}>
+        <FrameCell pad="lg" className="space-y-3 text-center">
+          <div className="mx-auto flex size-16 items-center justify-center border border-frame-line bg-card bg-[radial-gradient(var(--dots)_1px,transparent_1.5px)] [background-size:12px_12px] text-primary-ink">
+            <KeyRoundIcon className="size-8" strokeWidth={1.5} />
+          </div>
+          <h2 className="text-xl font-extrabold">{v.setupTitle}</h2>
+          <p className="mx-auto max-w-md text-sm text-muted-foreground">{v.setupSubtitle}</p>
+        </FrameCell>
+      </FrameGrid>
+      <FrameGrid cols={1}>
+        <FrameCell className="py-3">
+          <Stepper steps={[v.stepIntro, v.stepPassword, v.stepRecovery]} current={step} />
+        </FrameCell>
+      </FrameGrid>
 
       {step === 0 && (
-        <div className="grid gap-6">
-          <ul className="grid gap-4">
+        <>
+          <FrameGrid cols={1} as="ul">
             {how.map(({ icon: Icon, title, body, tone }) => (
-              <li key={title} className="flex gap-4 rounded-xl border border-dashed p-4">
+              <FrameCell key={title} as="li" className="flex gap-4">
                 <span
                   className={cn(
-                    "flex size-11 shrink-0 items-center justify-center rounded-xl",
+                    "flex size-11 shrink-0 items-center justify-center border border-frame-line bg-card",
                     tone,
                   )}
                 >
@@ -149,64 +162,74 @@ export function SetupWizard({ account }: { account: string }) {
                   <p className="font-bold">{title}</p>
                   <p className="text-sm leading-7 text-muted-foreground">{body}</p>
                 </div>
-              </li>
+              </FrameCell>
             ))}
-          </ul>
-          <Button size="lg" onClick={() => setStep(1)}>
-            {v.getStarted}
-          </Button>
-        </div>
+          </FrameGrid>
+          <FrameGrid cols={1}>
+            <FrameCell className="grid">
+              <Button size="lg" onClick={() => setStep(1)}>
+                {v.getStarted}
+              </Button>
+            </FrameCell>
+          </FrameGrid>
+        </>
       )}
 
       {step === 1 && (
-        <form
-          className="grid gap-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (masterPasswordReady(pw)) generate();
-          }}
-        >
-          <MasterPasswordFields value={pw} onChange={setPw} autoFocus />
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-            <Button type="button" variant="ghost" onClick={() => setStep(0)}>
-              <ArrowLeftIcon className="rtl:rotate-180" /> {t.common.back}
-            </Button>
-            <Button type="submit" size="lg" disabled={!masterPasswordReady(pw) || generating}>
-              {generating && <Loader2Icon className="animate-spin" />}
-              {generating ? v.creatingKeys : v.continue}
-            </Button>
-          </div>
-        </form>
+        <FrameGrid cols={1}>
+          <FrameCell pad="lg">
+            <form
+              className="grid gap-6"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (masterPasswordReady(pw)) generate();
+              }}
+            >
+              <MasterPasswordFields value={pw} onChange={setPw} autoFocus />
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+                <Button type="button" variant="ghost" onClick={() => setStep(0)}>
+                  <ArrowLeftIcon className="rtl:rotate-180" /> {t.common.back}
+                </Button>
+                <Button type="submit" size="lg" disabled={!masterPasswordReady(pw) || generating}>
+                  {generating && <Loader2Icon className="animate-spin" />}
+                  {generating ? v.creatingKeys : v.continue}
+                </Button>
+              </div>
+            </form>
+          </FrameCell>
+        </FrameGrid>
       )}
 
       {step === 2 && keys && (
-        <div className="grid gap-6">
-          <h3 className="text-lg font-bold">{v.recoveryTitle}</h3>
-          <RecoveryKeyPanel
-            recoveryKey={keys.recoveryKey}
-            account={account}
-            saved={saved}
-            onSavedChange={setSaved}
-          />
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={creating}
-              onClick={() => {
-                setKeys(null);
-                setStep(1);
-              }}
-            >
-              <ArrowLeftIcon className="rtl:rotate-180" /> {t.common.back}
-            </Button>
-            <Button size="lg" disabled={!saved || creating} onClick={create}>
-              {creating && <Loader2Icon className="animate-spin" />}
-              {v.createVault}
-            </Button>
-          </div>
-        </div>
+        <FrameGrid cols={1}>
+          <FrameCell pad="lg" className="grid gap-6">
+            <h3 className="text-lg font-bold">{v.recoveryTitle}</h3>
+            <RecoveryKeyPanel
+              recoveryKey={keys.recoveryKey}
+              account={account}
+              saved={saved}
+              onSavedChange={setSaved}
+            />
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={creating}
+                onClick={() => {
+                  setKeys(null);
+                  setStep(1);
+                }}
+              >
+                <ArrowLeftIcon className="rtl:rotate-180" /> {t.common.back}
+              </Button>
+              <Button size="lg" disabled={!saved || creating} onClick={create}>
+                {creating && <Loader2Icon className="animate-spin" />}
+                {v.createVault}
+              </Button>
+            </div>
+          </FrameCell>
+        </FrameGrid>
       )}
-    </Card>
+    </FrameBox>
   );
 }
